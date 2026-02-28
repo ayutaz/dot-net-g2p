@@ -141,11 +141,19 @@ namespace DotNetG2P.NJD
             }
 
             var details = new WordDetails(pos, conjugationType, conjugationForm, originalForm, reading, pron);
-            return new NjdNode(surface, details)
+            var node = new NjdNode(surface, details)
             {
                 AccentType = accentPosition,
                 ChainRule = chainRule,
             };
+
+            // WordDetailsから発音情報をコピー（NjdNode.FromTokensと同じパターン）
+            if (details.Pronunciation != null && details.Pronunciation.MoraCount > 0)
+            {
+                node.Pronunciation = details.Pronunciation;
+            }
+
+            return node;
         }
 
         // ====== 数字列構造体 ======

@@ -133,14 +133,11 @@ namespace DotNetG2P.NMeCab
             /// <summary>フィールド8: 発音</summary>
             public string Pronunciation => _features[8];
 
-            /// <summary>フィールド9: アクセント修飾型</summary>
-            public string AccentModificationType => _features[9];
+            /// <summary>フィールド9: アクセント核位置/モーラ数</summary>
+            public string AccentInfo => _features[9];
 
-            /// <summary>フィールド13: アクセント核位置/モーラ数</summary>
-            public string AccentInfo => _features[13];
-
-            /// <summary>フィールド14: アクセント結合タイプ</summary>
-            public string ChainRule => _features[14];
+            /// <summary>フィールド10: アクセント結合タイプ</summary>
+            public string ChainRule => _features[10];
         }
     }
 }

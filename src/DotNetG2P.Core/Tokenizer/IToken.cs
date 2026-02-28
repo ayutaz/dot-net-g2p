@@ -39,13 +39,10 @@ namespace DotNetG2P
         /// <summary>フィールド8: 発音</summary>
         string Pronunciation { get; }
 
-        /// <summary>フィールド9: アクセント修飾型</summary>
-        string AccentModificationType { get; }
-
-        /// <summary>フィールド13: アクセント核位置/モーラ数</summary>
+        /// <summary>フィールド9: アクセント核位置/モーラ数</summary>
         string AccentInfo { get; }
 
-        /// <summary>フィールド14: アクセント結合タイプ</summary>
+        /// <summary>フィールド10: アクセント結合タイプ</summary>
         string ChainRule { get; }
     }
 }

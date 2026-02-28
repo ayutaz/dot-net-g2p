@@ -104,9 +104,9 @@ namespace DotNetG2P.Models
         /// <summary>
         /// カタカナ文字列とアクセント核位置から Pronunciation を構築する。
         /// jpreprocess の parse_mora_str に準拠した最長一致でモーラ分割を行う。
-        /// シングルクォーテーション(') の直後のモーラは無声化される。
+        /// シングルクォーテーション(') はモーラの直後に付く無声化マーカーとして処理する。
         /// </summary>
-        /// <param name="katakana">カタカナ文字列（例: "コンニチワ"、"デ'ス"）</param>
+        /// <param name="katakana">カタカナ文字列（例: "コンニチワ"、"デス'"）</param>
         /// <param name="accentPosition">アクセント核位置（0=平板型）</param>
         /// <returns>構築された Pronunciation</returns>
         public static Pronunciation FromKatakana(string katakana, int accentPosition)
@@ -201,10 +201,10 @@ namespace DotNetG2P.Models
                     if (currentPos + key.Length <= s.Length &&
                         string.Compare(s, currentPos, key, 0, key.Length, StringComparison.Ordinal) == 0)
                     {
-                        // 無声化マーカー（'）チェック
+                        // 無声化マーカーチェック: ' (U+0027) または ' (U+2019)
                         bool unvoiced = false;
                         int advanceLen = key.Length;
-                        if (currentPos + key.Length < s.Length && s[currentPos + key.Length] == '\'')
+                        if (currentPos + key.Length < s.Length && IsUnvoicedMarker(s[currentPos + key.Length]))
                         {
                             unvoiced = true;
                             advanceLen += 1; // ' の分を進める
@@ -254,6 +254,16 @@ namespace DotNetG2P.Models
         public override string ToString()
         {
             return $"{ToKatakana()} [{AccentPosition}]";
+        }
+
+        /// <summary>
+        /// 無声化マーカー文字かどうかを判定する。
+        /// naist-jdic辞書では ' (U+2019, RIGHT SINGLE QUOTATION MARK) が使用される。
+        /// ASCII ' (U+0027) も互換性のためサポートする。
+        /// </summary>
+        private static bool IsUnvoicedMarker(char c)
+        {
+            return c == '\'' || c == '\u2019';
         }
 
         // ===== 内部: カタカナ→モーラ変換 =====
@@ -473,24 +483,15 @@ namespace DotNetG2P.Models
         /// <summary>
         /// カタカナ文字列をモーラ列に変換する（最長一致法）。
         /// jpreprocess の parse_mora_str に準拠。
-        /// シングルクォーテーション(') の直後のモーラは無声化される。
+        /// シングルクォーテーション(') はモーラの直後に付く無声化マーカーとして処理する。
         /// </summary>
         private static List<Mora> ParseKatakanaToMoras(string katakana)
         {
             var moras = new List<Mora>();
             int pos = 0;
-            bool nextUnvoiced = false;
 
             while (pos < katakana.Length)
             {
-                // シングルクォーテーションは無声化マーカー
-                if (katakana[pos] == '\'')
-                {
-                    nextUnvoiced = true;
-                    pos++;
-                    continue;
-                }
-
                 bool matched = false;
                 for (int i = 0; i < _sortedKatakanaKeys.Count; i++)
                 {
@@ -500,15 +501,22 @@ namespace DotNetG2P.Models
                     {
                         var (consonant, vowel) = MoraPhonemeMap[kind];
 
-                        // 無声化マーカーがある場合、母音を無声母音に変換
-                        if (nextUnvoiced && vowel.HasValue)
+                        // 無声化マーカーチェック: カタカナの直後に ' (U+0027) または ' (U+2019) があれば無声化
+                        bool unvoiced = false;
+                        int advanceLen = key.Length;
+                        if (pos + key.Length < katakana.Length && IsUnvoicedMarker(katakana[pos + key.Length]))
+                        {
+                            unvoiced = true;
+                            advanceLen += 1;
+                        }
+
+                        if (unvoiced && vowel.HasValue)
                         {
                             vowel = vowel.Value.ToUnvoiced();
                         }
-                        nextUnvoiced = false;
 
                         moras.Add(new Mora(consonant, vowel, kind));
-                        pos += key.Length;
+                        pos += advanceLen;
                         matched = true;
                         break;
                     }
