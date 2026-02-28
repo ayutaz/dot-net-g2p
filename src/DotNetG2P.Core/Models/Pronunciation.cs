@@ -26,8 +26,51 @@ namespace DotNetG2P.Models
             AccentPosition = accentPosition;
         }
 
-        /// <summary>モーラ数を返す</summary>
-        public int MoraCount => Moras.Count;
+        /// <summary>
+        /// 発音モーラ数を返す（Touten/Questionはカウントしない）。
+        /// jpreprocess の mora_size() に準拠。
+        /// </summary>
+        public int MoraCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < Moras.Count; i++)
+                {
+                    var kind = Moras[i].Kind;
+                    if (kind != MoraKind.Touten && kind != MoraKind.Question)
+                        count++;
+                }
+                return count;
+            }
+        }
+
+        /// <summary>モーラリストが空かどうか</summary>
+        public bool IsEmpty => Moras.Count == 0;
+
+        /// <summary>句点（Touten）のみの発音かどうか</summary>
+        public bool IsTouten => MoraMatches(MoraKind.Touten);
+
+        /// <summary>疑問符（Question）のみの発音かどうか</summary>
+        public bool IsQuestion => MoraMatches(MoraKind.Question);
+
+        /// <summary>
+        /// 単一モーラで、そのKindが指定のものと一致するかどうか。
+        /// jpreprocess の mora_matches() に準拠。
+        /// </summary>
+        public bool MoraMatches(MoraKind kind)
+        {
+            return Moras.Count == 1 && Moras[0].Kind == kind;
+        }
+
+        /// <summary>
+        /// 別のPronunciationからモーラを結合する（カナフィラー結合用）。
+        /// jpreprocess の transfer_from() に準拠。
+        /// </summary>
+        public void TransferFrom(Pronunciation other)
+        {
+            Moras.AddRange(other.Moras);
+        }
 
         /// <summary>
         /// 音素文字列を返す。各モーラの音素をスペース区切りで連結。
@@ -95,6 +138,117 @@ namespace DotNetG2P.Models
             }
 
             return new Mora(consonant, vowel, kind);
+        }
+
+        /// <summary>
+        /// 文字列がモーラ変換可能かどうか判定する。
+        /// jpreprocess の is_mora_convertable() に準拠。
+        /// カタカナ・ひらがな・全角アルファベット・特殊カタカナの全てがモーラ辞書に存在するかどうか。
+        /// </summary>
+        public static bool IsMoraConvertable(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+                return false;
+            // 文字列全体が1つのセグメントとしてモーラ変換可能か判定
+            // ParseMoraSegments で1セグメントかつモーラ数>0ならOK
+            var segments = ParseMoraSegments(s);
+            if (segments.Count == 1 && segments[0].moras.Count > 0)
+            {
+                // 全モーラがToutenでないことを確認
+                foreach (var m in segments[0].moras)
+                {
+                    if (m.Kind == MoraKind.Touten)
+                        return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 表層形文字列をモーラセグメントに分割する。
+        /// jpreprocess の parse_mora_str() に準拠。
+        /// カナ変換できない部分はToutenモーラのセグメントとして分割される。
+        /// 例: "バリー・ペーン" → [("バリー", [Ba,Ri,Long]), ("・", [Touten]), ("ペーン", [Pe,Long,N])]
+        /// </summary>
+        /// <param name="s">入力文字列</param>
+        /// <returns>セグメントのリスト。各セグメントは(部分文字列, モーラリスト)のタプル。</returns>
+        public static List<(string text, List<Mora> moras)> ParseMoraSegments(string s)
+        {
+            if (s == "*")
+                return new List<(string, List<Mora>)>();
+
+            if (s == "\uFF1F") // ？ (全角疑問符)
+            {
+                return new List<(string, List<Mora>)>
+                {
+                    (s, new List<Mora> { new Mora(null, null, MoraKind.Question) })
+                };
+            }
+
+            var result = new List<(string text, List<Mora> moras)>();
+            int segmentStart = 0;
+            var currentMoras = new List<Mora>();
+            int currentPos = 0;
+
+            while (currentPos < s.Length)
+            {
+                // 最長一致でモーラを探す
+                bool matched = false;
+                for (int i = 0; i < _sortedKatakanaKeys.Count; i++)
+                {
+                    var (key, kind) = _sortedKatakanaKeys[i];
+                    if (currentPos + key.Length <= s.Length &&
+                        string.Compare(s, currentPos, key, 0, key.Length, StringComparison.Ordinal) == 0)
+                    {
+                        // 無声化マーカー（'）チェック
+                        bool unvoiced = false;
+                        int advanceLen = key.Length;
+                        if (currentPos + key.Length < s.Length && s[currentPos + key.Length] == '\'')
+                        {
+                            unvoiced = true;
+                            advanceLen += 1; // ' の分を進める
+                        }
+
+                        var mora = CreateMora(kind, unvoiced);
+                        currentMoras.Add(mora);
+                        currentPos += advanceLen;
+                        matched = true;
+                        break;
+                    }
+                }
+
+                if (!matched)
+                {
+                    // カナ変換できない文字が見つかった
+                    // 既存のモーラがあれば先にセグメントとして確定
+                    if (currentMoras.Count > 0)
+                    {
+                        result.Add((s.Substring(segmentStart, currentPos - segmentStart), currentMoras));
+                        currentMoras = new List<Mora>();
+                        segmentStart = currentPos;
+                    }
+
+                    // 認識できない文字をスキップしてToutenセグメントを作成
+                    // 連続する認識不能文字をまとめる
+                    int unmatchedStart = currentPos;
+                    currentPos++;
+                    // 次の認識可能文字まで進める（1文字ずつ）
+                    // jpreprocessの挙動: 認識不能部分はまとめてToutenセグメント
+
+                    result.Add((s.Substring(unmatchedStart, currentPos - unmatchedStart),
+                        new List<Mora> { new Mora(null, null, MoraKind.Touten) }));
+                    segmentStart = currentPos;
+                }
+            }
+
+            // 残りのモーラをセグメントとして追加
+            if (currentMoras.Count > 0)
+            {
+                result.Add((s.Substring(segmentStart, currentPos - segmentStart), currentMoras));
+            }
+
+            return result;
         }
 
         public override string ToString()

@@ -28,19 +28,33 @@ if (string.IsNullOrEmpty(dicPath))
     return;
 }
 
-// G2Pエンジンの動作確認
+// === M2 NJDパイプライン統合動作確認 ===
+
+Console.WriteLine("=== DotNetG2P M2 NJDパイプライン動作確認 ===");
+Console.WriteLine();
+
+// デフォルトオプション（全処理有効）で動作確認
 using var tokenizer = new NMeCabTokenizer(dicPath);
 using var engine = new G2PEngine(tokenizer);
 
 var samples = new[]
 {
+    // 基本テスト
     "こんにちは",
     "今日は良い天気です",
     "東京タワーに行きたい",
     "音声合成の研究",
+    // 数字読み変換テスト
+    "３個のりんご",
+    "１２３円",
+    "２０２５年",
+    // 無声音化テスト
+    "すきです",
+    // 複合テスト
+    "私は東京に住んでいます",
 };
 
-Console.WriteLine("=== DotNetG2P M1 動作確認 ===");
+Console.WriteLine("--- 全処理有効（デフォルト）---");
 Console.WriteLine();
 
 foreach (var text in samples)
@@ -51,4 +65,38 @@ foreach (var text in samples)
     Console.WriteLine($"カナ: {kana}");
     Console.WriteLine($"音素: {phonemes}");
     Console.WriteLine();
+}
+
+// オプション指定の動作確認: 無声音化OFF
+Console.WriteLine("--- 無声音化OFF ---");
+Console.WriteLine();
+
+using var tokenizer2 = new NMeCabTokenizer(dicPath);
+var optionsNoUnvoiced = new G2POptions { EnableUnvoicedVowel = false };
+using var engine2 = new G2PEngine(tokenizer2, optionsNoUnvoiced);
+
+var unvoicedSamples = new[] { "すきです", "東京タワー" };
+foreach (var text in unvoicedSamples)
+{
+    var phonemes = engine2.ToPhonemes(text);
+    Console.WriteLine($"入力: {text}");
+    Console.WriteLine($"音素: {phonemes}");
+    Console.WriteLine();
+}
+
+// Analyze APIのデモ
+Console.WriteLine("--- Analyze API（NjdNode詳細出力）---");
+Console.WriteLine();
+
+var analyzeText = "東京タワーに行きたい";
+Console.WriteLine($"入力: {analyzeText}");
+var nodes = engine.Analyze(analyzeText);
+for (int i = 0; i < nodes.Count; i++)
+{
+    var node = nodes[i];
+    Console.WriteLine($"  [{i}] 表層: {node.Surface}");
+    Console.WriteLine($"       品詞: {node.Details?.PartOfSpeech}");
+    Console.WriteLine($"       発音: {node.Pronunciation}");
+    Console.WriteLine($"       Acc:  {node.AccentType}");
+    Console.WriteLine($"       Chain: {node.ChainFlag}");
 }

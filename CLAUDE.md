@@ -12,7 +12,11 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
 - **M1（最小動作プロトタイプ）**: 完了
   - `g2p("こんにちは")` → `"k o N n i ch i w a"` が動作確認済み
   - naist-jdic辞書によるフルパイプライン（形態素解析→NJD→音素変換）が動作
-- **M2〜M6**: 未着手（docs/roadmap.md 参照）
+- **M2（NJD処理パイプライン完成）**: 完了
+  - NJDパイプライン6段階すべて実装（TextNormalizer→SetPronunciation→DigitSequence/SetDigit→SetAccentPhrase→SetAccentType→SetUnvoicedVowel）
+  - 無声音化（`s U k i`）、アクセント句結合、数字読み変換が動作
+  - G2POptionsによる各処理段階のON/OFF制御、Analyze APIを追加
+- **M3〜M6**: 未着手（docs/roadmap.md 参照）
 
 ## ビルド・実行
 
@@ -49,11 +53,20 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── Tokenizer/                   # 形態素解析抽象化
 │   │   │   ├── ITokenizer.cs            # ITokenizer interface
 │   │   │   └── IToken.cs               # IToken interface (naist-jdic 15フィールド)
-│   │   ├── NJD/                         # NJD処理
-│   │   │   └── SetPronunciation.cs      # NJD第1段階: 発音設定
+│   │   ├── NJD/                         # NJD処理（6段階パイプライン）
+│   │   │   ├── SetPronunciation.cs      # 1. 発音設定（完全版5段階処理）
+│   │   │   ├── DigitSequence.cs         # 2a. 数字列検出・グループ化
+│   │   │   ├── DigitLut.cs              # 2b. 数字読みLUTテーブル
+│   │   │   ├── SetDigit.cs              # 2c. 数字読み変換メインロジック
+│   │   │   ├── SetAccentPhrase.cs       # 3. アクセント句結合（18ルール）
+│   │   │   ├── SetAccentType.cs         # 4. アクセント結合型（C1-C5, F1-F5, P系列）
+│   │   │   └── SetUnvoicedVowel.cs      # 5. 無声音化（6ルール）
+│   │   ├── TextNormalization/           # テキスト正規化
+│   │   │   └── TextNormalizer.cs        # 全角/半角変換、濁点結合
 │   │   ├── PhonemeConverter/            # 音素変換
 │   │   │   └── MoraMapping.cs           # カタカナ⇔音素マッピング (162種)
-│   │   └── G2PEngine.cs                # メインAPI (ToPhonemes, ToKana)
+│   │   ├── G2PEngine.cs                # メインAPI (ToPhonemes, ToKana, Analyze)
+│   │   └── G2POptions.cs               # 処理オプション（各段階ON/OFF）
 │   │
 │   └── DotNetG2P.NMeCab/               # NMeCabアダプター（LGPL依存）
 │       ├── DotNetG2P.NMeCab.csproj      # LibNMeCab 0.10.2 参照

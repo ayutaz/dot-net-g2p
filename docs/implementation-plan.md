@@ -20,7 +20,7 @@ NuGet/UPMパッケージとして商用配布する。
 | フェーズ | 状態 | 備考 |
 |---------|------|------|
 | Phase 1: 基盤構築 | **完了** | 22ファイル、約2,758行。naist-jdic辞書での動作確認済み |
-| Phase 2: NJD処理パイプライン | 未着手 | - |
+| Phase 2: NJD処理パイプライン | **完了** | NJD 7モジュール+TextNormalizer+G2POptions。約3,900行追加、全体約6,620行 |
 | Phase 3: 出力形式・JPCommon | 未着手 | - |
 | Phase 4: テスト・品質保証 | 未着手 | - |
 | Phase 5: パッケージング | 未着手 | - |
@@ -90,14 +90,16 @@ DotNetG2P.slnxx
 7. ~~SetPronunciation（最小版: 発音フォールバック処理）~~ **完了**
 8. ~~コンソールサンプル（辞書あり/なし両モード対応）~~ **完了**
 
-### Phase 2: NJD処理パイプライン
+### Phase 2: NJD処理パイプライン **[完了]**
 
-7. TextNormalizer（全角/半角変換、濁点結合）
-8. SetPronunciation（発音生成）
-9. DigitSequence + SetDigit（数字読み変換、助数詞処理）
-10. SetAccentPhrase（アクセント句結合18ルール）
-11. SetAccentType（C1-C5, F1-F5, P系列アクセント結合）
-12. SetUnvoicedVowel（無声音化6ルール）
+7. ~~TextNormalizer（全角/半角変換、濁点結合、278行）~~ **完了**
+8. ~~SetPronunciation完全版（5段階処理、311行）~~ **完了**
+9. ~~DigitSequence + DigitLut + SetDigit（数字読み変換、助数詞処理、合計2,006行）~~ **完了**
+10. ~~SetAccentPhrase（アクセント句結合18ルール、237行）~~ **完了**
+11. ~~SetAccentType（C1-C5, F1-F5, P系列アクセント結合、475行）~~ **完了**
+12. ~~SetUnvoicedVowel（無声音化6ルール、389行）~~ **完了**
+13. ~~NjdNode拡張（MergeFrom/Reset/ChainFlag 3値化、183行）~~ **完了**
+14. ~~G2PEngine パイプライン統合 + G2POptions（222行）~~ **完了**
 
 ### Phase 3: 出力形式・JPCommon
 

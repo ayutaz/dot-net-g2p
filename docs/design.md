@@ -32,9 +32,9 @@ UniTaskは非同期ライブラリ（コード中心、データなし）であ�
 
 ---
 
-## 2. 現在の実装状況（M1完了時点）
+## 2. 現在の実装状況（M2完了時点）
 
-M1（最小動作プロトタイプ）が完了し、以下の構成で動作している:
+M1（最小動作プロトタイプ）およびM2（NJD処理パイプライン完成）が完了し、以下の構成で動作している:
 
 ```
 dot-net-g2p/
@@ -46,43 +46,52 @@ dot-net-g2p/
 │   ├── roadmap.md                     # ロードマップ
 │   └── research/                      # 調査資料（01-15）
 ├── src/
-│   ├── DotNetG2P.Core/               # コアライブラリ（netstandard2.1）
+│   ├── DotNetG2P.Core/               # コアライブラリ（netstandard2.1）約6,470行
 │   │   ├── Models/
 │   │   │   ├── Phoneme.cs            # Consonant enum (35種) + Vowel enum (10種)
 │   │   │   ├── MoraKind.cs           # MoraKind enum (~165種)
 │   │   │   ├── Mora.cs               # readonly struct Mora
-│   │   │   ├── Pronunciation.cs      # List<Mora> + AccentPosition
+│   │   │   ├── Pronunciation.cs      # List<Mora> + AccentPosition + ParseMoraSegments
 │   │   │   ├── POS.cs                # POSType enum (14種) + POS sealed class
 │   │   │   ├── WordDetails.cs        # 形態素詳細情報
 │   │   │   ├── WordEntry.cs          # 辞書エントリ
-│   │   │   ├── NjdNode.cs            # NJDノード
+│   │   │   ├── NjdNode.cs            # NJDノード（MergeFrom/Reset/ChainFlag 3値）
 │   │   │   └── AccentPhrase.cs       # VOICEVOX互換アクセント句
 │   │   ├── Tokenizer/
 │   │   │   ├── ITokenizer.cs         # 形態素解析エンジン抽象化
 │   │   │   └── IToken.cs             # トークンインターフェース（15フィールド）
-│   │   ├── NJD/
-│   │   │   └── SetPronunciation.cs   # 発音設定（最小版）
+│   │   ├── NJD/                      # NJD処理パイプライン（6段階）
+│   │   │   ├── SetPronunciation.cs   # 1. 発音設定（完全版5段階処理）
+│   │   │   ├── DigitSequence.cs      # 2a. 数字列検出・グループ化
+│   │   │   ├── DigitLut.cs           # 2b. 数字読みLUTテーブル
+│   │   │   ├── SetDigit.cs           # 2c. 数字読み変換メインロジック
+│   │   │   ├── SetAccentPhrase.cs    # 3. アクセント句結合（18ルール）
+│   │   │   ├── SetAccentType.cs      # 4. アクセント結合型（C1-C5, F1-F5, P系列）
+│   │   │   └── SetUnvoicedVowel.cs   # 5. 無声音化（6ルール）
+│   │   ├── TextNormalization/
+│   │   │   └── TextNormalizer.cs     # テキスト正規化（全角/半角変換、濁点結合）
 │   │   ├── PhonemeConverter/
 │   │   │   └── MoraMapping.cs        # 162種カタカナ⇔音素マッピング
-│   │   └── G2PEngine.cs              # メインAPI (ToPhonemes, ToKana)
+│   │   ├── G2PEngine.cs              # メインAPI (ToPhonemes, ToKana, Analyze)
+│   │   └── G2POptions.cs             # 処理オプション（各段階ON/OFF）
 │   └── DotNetG2P.NMeCab/             # NMeCabアダプター（LGPL）
 │       └── NMeCabTokenizer.cs        # LibNMeCab 0.10.2ベースのITokenizer実装
 ├── tests/
 │   └── DotNetG2P.Tests/              # xUnitテスト（スケルトン）
 └── samples/
-    └── DotNetG2P.Console/            # コンソールサンプル
+    └── DotNetG2P.Console/            # コンソールサンプル（M2対応）
 ```
 
 ### ビルド・実行
 
 ```bash
 # ビルド
-dotnet build
+dotnet build DotNetG2P.slnx
 
 # 辞書なしモード（MoraMapping動作確認のみ）
 dotnet run --project samples/DotNetG2P.Console
 
-# 辞書ありモード（完全G2P変換）
+# 辞書ありモード（完全G2P変換、NJDパイプライン付き）
 dotnet run --project samples/DotNetG2P.Console -- <naist-jdic辞書パス>
 ```
 
