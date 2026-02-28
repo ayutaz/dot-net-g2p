@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/DotNetG2P.Console/DotNetG2P.Console.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/DotNetG2P.Core/DotNetG2P.Core.csproj" />
+    <Project Path="src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj" />
+  </Folder>
+</Solution>
