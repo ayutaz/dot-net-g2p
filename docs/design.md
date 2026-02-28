@@ -32,7 +32,61 @@ UniTaskは非同期ライブラリ（コード中心、データなし）であ�
 
 ---
 
-## 2. フォルダ構成
+## 2. 現在の実装状況（M1完了時点）
+
+M1（最小動作プロトタイプ）が完了し、以下の構成で動作している:
+
+```
+dot-net-g2p/
+├── DotNetG2P.slnx                    # ソリューション（.NET 10 .slnx形式）
+├── CLAUDE.md                          # プロジェクトガイダンス
+├── docs/                              # ドキュメント
+│   ├── design.md                      # 本ドキュメント
+│   ├── implementation-plan.md         # 実装計画
+│   ├── roadmap.md                     # ロードマップ
+│   └── research/                      # 調査資料（01-15）
+├── src/
+│   ├── DotNetG2P.Core/               # コアライブラリ（netstandard2.1）
+│   │   ├── Models/
+│   │   │   ├── Phoneme.cs            # Consonant enum (35種) + Vowel enum (10種)
+│   │   │   ├── MoraKind.cs           # MoraKind enum (~165種)
+│   │   │   ├── Mora.cs               # readonly struct Mora
+│   │   │   ├── Pronunciation.cs      # List<Mora> + AccentPosition
+│   │   │   ├── POS.cs                # POSType enum (14種) + POS sealed class
+│   │   │   ├── WordDetails.cs        # 形態素詳細情報
+│   │   │   ├── WordEntry.cs          # 辞書エントリ
+│   │   │   ├── NjdNode.cs            # NJDノード
+│   │   │   └── AccentPhrase.cs       # VOICEVOX互換アクセント句
+│   │   ├── Tokenizer/
+│   │   │   ├── ITokenizer.cs         # 形態素解析エンジン抽象化
+│   │   │   └── IToken.cs             # トークンインターフェース（15フィールド）
+│   │   ├── NJD/
+│   │   │   └── SetPronunciation.cs   # 発音設定（最小版）
+│   │   ├── PhonemeConverter/
+│   │   │   └── MoraMapping.cs        # 162種カタカナ⇔音素マッピング
+│   │   └── G2PEngine.cs              # メインAPI (ToPhonemes, ToKana)
+│   └── DotNetG2P.NMeCab/             # NMeCabアダプター（LGPL）
+│       └── NMeCabTokenizer.cs        # LibNMeCab 0.10.2ベースのITokenizer実装
+├── tests/
+│   └── DotNetG2P.Tests/              # xUnitテスト（スケルトン）
+└── samples/
+    └── DotNetG2P.Console/            # コンソールサンプル
+```
+
+### ビルド・実行
+
+```bash
+# ビルド
+dotnet build
+
+# 辞書なしモード（MoraMapping動作確認のみ）
+dotnet run --project samples/DotNetG2P.Console
+
+# 辞書ありモード（完全G2P変換）
+dotnet run --project samples/DotNetG2P.Console -- <naist-jdic辞書パス>
+```
+
+## 3. 将来のフォルダ構成（M5パッケージング時）
 
 ```
 DotNetG2P/
@@ -42,7 +96,7 @@ DotNetG2P/
 │       └── build-release.yaml        # リリースCI（NuGet push + .unitypackage + GitHub Release）
 │
 ├── Directory.Build.props             # NuGet共通設定（メタデータ、署名等）
-├── DotNetG2P.sln                     # .NETソリューション
+├── DotNetG2P.slnx                     # .NETソリューション
 ├── LICENSE                           # BSD/MITライセンス
 ├── README.md
 │
@@ -163,12 +217,12 @@ DotNetG2P/
 
 ---
 
-## 3. プロジェクト構成
+## 4. プロジェクト構成
 
-### DotNetG2P.sln
+### DotNetG2P.slnx
 
 ```
-DotNetG2P.sln
+DotNetG2P.slnx
 ├── DotNetG2P.NetCore          # NuGetパッケージ用メインライブラリ
 ├── DotNetG2P.NMeCab           # NMeCabアダプター（LGPL、別NuGet）
 ├── DotNetG2P.Tests            # xUnitテスト
@@ -245,7 +299,7 @@ DotNetG2P.sln
 
 ---
 
-## 4. 名前空間設計
+## 5. 名前空間設計
 
 UniTaskの `Cysharp.Threading.Tasks` パターンに倣い、ドメイン形式の名前空間を採用:
 
@@ -269,7 +323,7 @@ DotNetG2P.NMeCab                     # NMeCabアダプター（別パッケー�
 
 ---
 
-## 5. パブリックAPI設計
+## 6. パブリックAPI設計
 
 ### メインAPI: G2PEngine
 
@@ -379,7 +433,7 @@ var labels = engine.ToFullContextLabels("今日は天気がいいですね");
 
 ---
 
-## 6. NuGet/UPM デュアルパッケージ戦略
+## 7. NuGet/UPM デュアルパッケージ戦略
 
 UniTaskのパターンに従い、**ソースの正本をUnity側に置き、NuGet用csprojはCompile Includeで参照**する。
 
@@ -463,7 +517,7 @@ UniTaskのパターンに従い、**ソースの正本をUnity側に置き、NuG
 
 ---
 
-## 7. 辞書ファイルの配置・ロード戦略
+## 8. 辞書ファイルの配置・ロード戦略
 
 ### 辞書サイズ
 
@@ -531,7 +585,7 @@ namespace DotNetG2P.Internal
 
 ---
 
-## 8. テスト戦略
+## 9. テスト戦略
 
 UniTaskと同様に、**.NET CoreテストとUnityテストの2系統**を並行運用:
 
@@ -604,7 +658,7 @@ with open("expected_output.json", "w") as f:
 
 ---
 
-## 9. ビルド・CI/CD方針
+## 10. ビルド・CI/CD方針
 
 UniTaskのCIパターンを参考にしたワークフロー:
 
@@ -674,7 +728,7 @@ jobs:
 
 ---
 
-## 10. AOT安全性チェックリスト
+## 11. AOT安全性チェックリスト
 
 Unity IL2CPP/AOT環境での動作を保証するため、以下を遵守:
 

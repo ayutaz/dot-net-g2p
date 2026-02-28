@@ -15,10 +15,21 @@ NuGet/UPMパッケージとして商用配布する。
 - **NJD処理**: jpreprocessのRustコードをベースにC#移植
 - **出力形式**: 音素列、カタカナ、韻律記号付き、AccentPhrase構造体、フルコンテキストラベル
 
+## 進捗状況
+
+| フェーズ | 状態 | 備考 |
+|---------|------|------|
+| Phase 1: 基盤構築 | **完了** | 22ファイル、約2,758行。naist-jdic辞書での動作確認済み |
+| Phase 2: NJD処理パイプライン | 未着手 | - |
+| Phase 3: 出力形式・JPCommon | 未着手 | - |
+| Phase 4: テスト・品質保証 | 未着手 | - |
+| Phase 5: パッケージング | 未着手 | - |
+| Phase 6: 独自MeCabエンジン | 未着手 | - |
+
 ## パッケージ構成
 
 ```
-DotNetG2P.sln
+DotNetG2P.slnxx
 ├── src/
 │   ├── DotNetG2P.Core/           # コアライブラリ（.NET Standard 2.1）
 │   │   ├── Models/               # データ構造
@@ -68,14 +79,16 @@ DotNetG2P.sln
 
 ## 実装フェーズ
 
-### Phase 1: 基盤構築
+### Phase 1: 基盤構築 **[完了]**
 
-1. ソリューション・プロジェクト作成（.NET Standard 2.1）
-2. コアデータ構造の実装（POS, MoraKind, Mora, Pronunciation, WordDetails, NjdNode）
-3. ITokenizer/ITokenインターフェース定義
-4. NMeCabアダプター実装（naist-jdicの15フィールドパース）
-5. MoraMapping（247種カタカナ⇔音素マッピング）
-6. 基本G2P: テキスト→形態素→カタカナ→音素列
+1. ~~ソリューション・プロジェクト作成（.NET Standard 2.1、.slnx形式）~~ **完了**
+2. ~~コアデータ構造の実装（POS, MoraKind, Mora, Pronunciation, WordDetails, WordEntry, NjdNode, AccentPhrase, Phoneme）~~ **完了**
+3. ~~ITokenizer/ITokenインターフェース定義（15フィールド対応）~~ **完了**
+4. ~~NMeCabアダプター実装（LibNMeCab 0.10.2、naist-jdicの15フィールドパース）~~ **完了**
+5. ~~MoraMapping（162種カタカナ⇔音素マッピング）~~ **完了**
+6. ~~基本G2P: テキスト→形態素→カタカナ→音素列（ToPhonemes + ToKana）~~ **完了**
+7. ~~SetPronunciation（最小版: 発音フォールバック処理）~~ **完了**
+8. ~~コンソールサンプル（辞書あり/なし両モード対応）~~ **完了**
 
 ### Phase 2: NJD処理パイプライン
 

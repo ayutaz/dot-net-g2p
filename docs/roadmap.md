@@ -9,63 +9,70 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 
 ## マイルストーン一覧
 
-| MS | 名称 | 完了条件 | 依存 |
-|----|------|---------|------|
-| **M1** | 最小動作プロトタイプ | `g2p("こんにちは")` → `"k o N n i ch i w a"` が動作 | - |
-| **M2** | NJD処理パイプライン完成 | pyopenjtalk と同等のNJD処理6段階が動作 | M1 |
-| **M3** | 出力形式の充実 | カタカナ/韻律記号/AccentPhrase/フルコンテキストラベル出力 | M2 |
-| **M4** | テスト・品質保証 | jpreprocess/pyopenjtalkとの比較テスト合格 | M2 |
-| **M5** | パッケージング | NuGet/UPMパッケージとして配布可能 | M3, M4 |
-| **M6** | 独自MeCabエンジン | NMeCab (LGPL) 依存排除、完全BSD化 | M5 |
+| MS | 名称 | 完了条件 | 依存 | 状態 |
+|----|------|---------|------|------|
+| **M1** | 最小動作プロトタイプ | `g2p("こんにちは")` → `"k o N n i ch i w a"` が動作 | - | **完了** |
+| **M2** | NJD処理パイプライン完成 | pyopenjtalk と同等のNJD処理6段階が動作 | M1 | 未着手 |
+| **M3** | 出力形式の充実 | カタカナ/韻律記号/AccentPhrase/フルコンテキストラベル出力 | M2 | 未着手 |
+| **M4** | テスト・品質保証 | jpreprocess/pyopenjtalkとの比較テスト合格 | M2 | 未着手 |
+| **M5** | パッケージング | NuGet/UPMパッケージとして配布可能 | M3, M4 | 未着手 |
+| **M6** | 独自MeCabエンジン | NMeCab (LGPL) 依存排除、完全BSD化 | M5 | 未着手 |
 
 ---
 
-## M1: 最小動作プロトタイプ
+## M1: 最小動作プロトタイプ **[完了]**
 
 **ゴール**: テキスト入力 → NMeCab形態素解析 → カタカナ読み取得 → 音素列出力
 
 ### タスク
 
-| # | タスク | 難易度 | 参考実装 | 依存 |
-|---|--------|--------|---------|------|
-| 1.1 | ソリューション・プロジェクト作成 | 低 | docs/design.md のプロジェクト構成 | - |
-| 1.2 | Phoneme enum定義 | 低 | jpreprocess `pronunciation/phoneme.rs` (13KB) | - |
-| 1.3 | MoraKind enum定義（~150種） | 中 | jpreprocess `pronunciation/mora_enum.rs` (4KB) | - |
-| 1.4 | Mora構造体 | 低 | jpreprocess `pronunciation/mora.rs` (3KB) | 1.2, 1.3 |
-| 1.5 | POS enum定義（ネスト構造） | 中 | jpreprocess `pos/` (6KB + サブファイル群 ~20KB) | - |
-| 1.6 | Pronunciation構造体 | 低 | jpreprocess `pronunciation/mod.rs` (11KB) | 1.4 |
-| 1.7 | WordDetails構造体 | 低 | jpreprocess `word_details.rs` (4KB) | 1.5, 1.6 |
-| 1.8 | NjdNode構造体 | 中 | jpreprocess `njd/node.rs` (5KB) | 1.7 |
-| 1.9 | ITokenizer / IToken インターフェース | 低 | docs/design.md のAPI定義 | 1.5 |
-| 1.10 | NMeCabTokenizer実装 | 中 | research/06, research/14 (naist-jdic 15フィールドパース) | 1.9 |
-| 1.11 | MoraMapping（247種カタカナ⇔音素） | 低 | jpreprocess `mora_dict.rs` (16KB), VOICEVOX `mora_mapping.py` | 1.3, 1.4 |
-| 1.12 | SetPronunciation（最小版） | 中 | jpreprocess `open_jtalk/pronunciation.rs` (4KB) | 1.8, 1.11 |
-| 1.13 | G2PEngine（最小版: ToPhonemes()のみ） | 中 | - | 1.10, 1.12 |
+| # | タスク | 状態 | 参考実装 |
+|---|--------|------|---------|
+| 1.1 | ソリューション・プロジェクト作成（.slnx形式） | **完了** | - |
+| 1.2 | Phoneme enum定義（Consonant 35種 + Vowel 10種） | **完了** | jpreprocess `pronunciation/phoneme.rs` |
+| 1.3 | MoraKind enum定義（~165種） | **完了** | jpreprocess `pronunciation/mora_enum.rs` |
+| 1.4 | Mora構造体（readonly struct） | **完了** | jpreprocess `pronunciation/mora.rs` |
+| 1.5 | POS enum定義（POSType 14種 + ネスト構造） | **完了** | jpreprocess `pos/` |
+| 1.6 | Pronunciation構造体 | **完了** | jpreprocess `pronunciation/mod.rs` |
+| 1.7 | WordDetails構造体 + WordEntry | **完了** | jpreprocess `word_details.rs` |
+| 1.8 | NjdNode構造体 + AccentPhrase | **完了** | jpreprocess `njd/node.rs` |
+| 1.9 | ITokenizer / IToken インターフェース（15フィールド対応） | **完了** | docs/design.md |
+| 1.10 | NMeCabTokenizer実装（LibNMeCab 0.10.2） | **完了** | research/06, research/14 |
+| 1.11 | MoraMapping（162種カタカナ⇔音素マッピング） | **完了** | VOICEVOX `mora_mapping.py` |
+| 1.12 | SetPronunciation（最小版） | **完了** | jpreprocess `pronunciation.rs` |
+| 1.13 | G2PEngine（ToPhonemes() + ToKana()） | **完了** | - |
 
-### 並列実装可能なグループ
+### 実装統計
 
-```
-グループA（データ構造）: 1.2, 1.3, 1.5, 1.8 → 並列可
-グループB（インフラ）:    1.9, 1.10, 1.11     → グループA完了後に並列可
-グループC（パイプライン）: 1.12, 1.13           → グループB完了後
-```
+- **ファイル数**: 22ファイル
+- **コード行数**: 約2,758行
+- **ソリューション形式**: .slnx（.NET 10新形式）
 
-### クリティカルパス
+### 検証結果（naist-jdic辞書使用）
 
 ```
-1.1 → 1.3 → 1.4 → 1.6 → 1.7 → 1.8 → 1.12 → 1.13
-                                         ↑
-                            1.9 → 1.10 ──┘
-                            1.11 ────────┘
+入力: こんにちは
+カナ: コンニチワ
+音素: k o N n i ch i w a
+
+入力: 今日は良い天気です
+カナ: キョーワヨイテンキデス
+音素: ky o - w a y o i t e N k i d e s u
+
+入力: 東京タワーに行きたい
+カナ: トーキョータワーニイキタイ
+音素: t o - ky o - t a w a - n i i k i t a i
+
+入力: 音声合成の研究
+カナ: オンセーゴーセーノケンキュー
+音素: o N s e - g o - s e - n o k e N ky u -
 ```
 
-### 検証方法
+### 既知の制限事項（M2以降で対応）
 
-```csharp
-using var tokenizer = new NMeCabTokenizer("path/to/naist-jdic");
-using var engine = new G2PEngine(tokenizer);
-Debug.Assert(engine.ToPhonemes("こんにちは") == "k o N n i ch i w a");
-```
+- NJD処理が SetPronunciation のみ（数字読み、アクセント句結合、無声音化は未実装）
+- 長音「ー」は音素上「-」として出力（将来的にモーラ対応を改善）
+- 一部トークンタイプで発音が欠落する場合がある
 
 ---
 
@@ -291,11 +298,11 @@ foreach (var text in testTexts) {
 ## 全体スケジュール概観
 
 ```
-M1 最小動作プロトタイプ
+M1 最小動作プロトタイプ [完了]
 ├─ 1.2-1.5 データ構造 enum/struct ──────┐
 ├─ 1.9-1.10 ITokenizer + NMeCab ────────┤
 ├─ 1.11 MoraMapping ────────────────────┤
-└─ 1.12-1.13 SetPronunciation + Engine ─┘→ ✅ "こんにちは" → 音素
+└─ 1.12-1.13 SetPronunciation + Engine ─┘→ ✅ "こんにちは" → "k o N n i ch i w a"
     │
     ▼
 M2 NJD処理パイプライン
