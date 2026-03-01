@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DotNetG2P.JPCommon;
 using DotNetG2P.Models;
 using DotNetG2P.NJD;
 using DotNetG2P.PhonemeConverter;
@@ -159,6 +160,56 @@ namespace DotNetG2P
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// テキストをESPnet韻律記号付き文字列に変換する。
+        /// 例: "こんにちは" → "^ k o [ N n i ch i w a $"
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>ESPnet韻律記号付き音素文字列</returns>
+        public string ToProsody(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrEmpty(text))
+                return "";
+
+            var nodes = RunPipeline(text);
+            return ProsodyExtractor.Extract(nodes);
+        }
+
+        /// <summary>
+        /// テキストをVOICEVOX互換のAccentPhraseリストに変換する。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>AccentPhraseのリスト</returns>
+        public IReadOnlyList<AccentPhrase> ToAccentPhrases(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrEmpty(text))
+                return Array.Empty<AccentPhrase>();
+
+            var nodes = RunPipeline(text);
+            return AccentPhraseConverter.Convert(nodes);
+        }
+
+        /// <summary>
+        /// テキストをHTSフルコンテキストラベル列に変換する。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>フルコンテキストラベル文字列のリスト</returns>
+        public IReadOnlyList<string> ToFullContextLabels(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrEmpty(text))
+                return Array.Empty<string>();
+
+            var nodes = RunPipeline(text);
+            var utterance = JPCommonBuilder.Build(nodes);
+            return FullContextLabel.Generate(utterance);
         }
 
         /// <summary>

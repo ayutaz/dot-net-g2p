@@ -38,7 +38,29 @@
       "WebFetch(domain:osdn.net)",
       "WebFetch(domain:www.dampfkraft.com)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\n日本語G2Pシステムの包括的調査ドキュメントを追加\n\n14エージェントによる並列調査の結果をdocs/research/に格納。\nOpenJTalk、pyopenjtalk、jpreprocess、ESPnet、MeCab系C#ライブラリ、\nUniDic、VOICEVOX、テキスト正規化、アクセント規則、ONNX Runtime、\nnaist-jdic辞書フォーマット等を調査し、C#/.NET向け最適アーキテクチャを提案。\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\n日本語G2Pシステムの包括的調査ドキュメントを追加\n\n14エージェントによる並列調査の結果をdocs/research/に格納。\nOpenJTalk、pyopenjtalk、jpreprocess、ESPnet、MeCab系C#ライブラリ、\nUniDic、VOICEVOX、テキスト正規化、アクセント規則、ONNX Runtime、\nnaist-jdic辞書フォーマット等を調査し、C#/.NET向け最適アーキテクチャを提案。\nEOF\n\\)\")",
+      "Bash(ForEach-Object { gh api repos/Cysharp/UniTask/git/trees/$_ --jq '.tree[].path' })",
+      "Bash(python3:*)",
+      "Bash(git commit:*)",
+      "Bash(while read f)",
+      "Bash(do rm \"$f\")",
+      "Bash(done)",
+      "Bash(dir:*)",
+      "Bash(gh repo view:*)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(python:*)",
+      "Bash(dotnet:*)",
+      "Bash(ls:*)",
+      "Bash(test:*)",
+      "Bash(git status:*)",
+      "Bash(findstr:*)",
+      "Bash(wc:*)",
+      "Bash(xxd:*)",
+      "Bash(for file in \"label/mod.rs\" \"label/utterance.rs\" \"label/breath_group.rs\" \"label/accent_phrase.rs\" \"label/word.rs\")",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(for file in \"feature/mod.rs\" \"feature/builder.rs\" \"feature/limit.rs\")",
+      "Bash(for file in \"word_attr/mod.rs\" \"word_attr/pos.rs\" \"word_attr/ctype.rs\" \"word_attr/cform.rs\")",
+      "Bash(gh search:*)"
     ]
   }
 }

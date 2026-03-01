@@ -100,3 +100,58 @@ for (int i = 0; i < nodes.Count; i++)
     Console.WriteLine($"       Acc:  {node.AccentType}");
     Console.WriteLine($"       Chain: {node.ChainFlag}");
 }
+
+// === M3 新API動作確認 ===
+
+Console.WriteLine();
+Console.WriteLine("=== DotNetG2P M3 新API動作確認 ===");
+Console.WriteLine();
+
+var m3Samples = new[] { "こんにちは", "今日は良い天気です", "東京タワーに行きたい" };
+
+// ToProsody
+Console.WriteLine("--- ToProsody（ESPnet韻律記号付き）---");
+Console.WriteLine();
+foreach (var text in m3Samples)
+{
+    var prosody = engine.ToProsody(text);
+    Console.WriteLine($"入力: {text}");
+    Console.WriteLine($"韻律: {prosody}");
+    Console.WriteLine();
+}
+
+// ToAccentPhrases
+Console.WriteLine("--- ToAccentPhrases（VOICEVOX互換）---");
+Console.WriteLine();
+foreach (var text in m3Samples)
+{
+    var phrases = engine.ToAccentPhrases(text);
+    Console.WriteLine($"入力: {text}");
+    Console.WriteLine($"  アクセント句数: {phrases.Count}");
+    for (int i = 0; i < phrases.Count; i++)
+    {
+        var p = phrases[i];
+        Console.WriteLine($"  [{i}] モーラ数={p.Moras.Count}, アクセント={p.Accent}, 疑問={p.IsInterrogative}, ポーズ={p.PauseMora != null}");
+    }
+    Console.WriteLine();
+}
+
+// ToFullContextLabels
+Console.WriteLine("--- ToFullContextLabels（HTSフルコンテキストラベル）---");
+Console.WriteLine();
+foreach (var text in m3Samples)
+{
+    var labels = engine.ToFullContextLabels(text);
+    Console.WriteLine($"入力: {text}");
+    Console.WriteLine($"  ラベル数: {labels.Count}");
+    var showCount = Math.Min(5, labels.Count);
+    for (int i = 0; i < showCount; i++)
+    {
+        Console.WriteLine($"  [{i}] {labels[i]}");
+    }
+    if (labels.Count > showCount)
+    {
+        Console.WriteLine($"  ... (残り {labels.Count - showCount} 行)");
+    }
+    Console.WriteLine();
+}
