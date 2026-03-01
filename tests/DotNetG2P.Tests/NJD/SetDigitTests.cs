@@ -530,5 +530,41 @@ namespace DotNetG2P.Tests.NJD
             Assert.False(nodes[0].ChainFlag);
             Assert.True(nodes[1].ChainFlag);
         }
+
+        // ===== null安全性テスト =====
+
+        [Fact]
+        public void Process_Detailsがnullのノードがあっても例外が発生しない()
+        {
+            // Detailsがnullのノードを含むリストで処理してもNREが発生しないことを確認
+            var nullNode = new NjdNode("テスト", null)
+            {
+                Pronunciation = new Pronunciation(),
+            };
+            var ichi = CreateKazuNode("一", "イチ", 2);
+            var ko = CreateJosuushiNode("個", "コ", 1);
+
+            var nodes = new List<NjdNode> { nullNode, ichi, ko };
+            SetDigit.Process(nodes);
+
+            // 例外が発生せずに完了すること
+            Assert.True(nodes.Count >= 2);
+        }
+
+        [Fact]
+        public void Process_月の後の一日_ツイタチに変化()
+        {
+            // 「月」の後の「一」+「日」→ ツイタチに変換されるべき
+            var gatsu = CreateJosuushiNode("月", "ガツ", 1);
+            var ichi = CreateKazuNode("一", "イチ", 2);
+            var nichi = CreateFukushiKanouNode("日", "ニチ", 1);
+
+            var nodes = new List<NjdNode> { gatsu, ichi, nichi };
+            SetDigit.Process(nodes);
+
+            // 月の後の一+日はツイタチに変換
+            Assert.Equal("一日", nodes[1].Surface);
+            Assert.Equal("ツイタチ", nodes[1].Pronunciation.ToKatakana());
+        }
     }
 }

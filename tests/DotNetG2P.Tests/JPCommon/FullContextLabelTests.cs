@@ -27,42 +27,42 @@ namespace DotNetG2P.Tests.JPCommon
 
             // 先頭sil
             Assert.Equal(
-                "xx^xx-sil+b=o/A:xx+xx+xx/B:xx-xx_xx/C:xx_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:xx_xx#xx_xx@xx_xx|xx_xx/G:4_4%0_xx_xx/H:xx_xx/I:xx-xx@xx+xx&xx-xx|xx+xx/J:1_4/K:1+1-4",
+                "xx^xx-sil+b=o/A:xx+xx+xx/B:xx-xx_xx/C:xx_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:xx_xx#xx_xx@xx_xx|xx_xx/G:4_0%0_1_xx/H:xx_xx/I:xx-xx@xx+xx&xx-xx|xx+xx/J:1_4/K:1+1-4",
                 labels[0]);
 
             // b
             Assert.Equal(
-                "xx^sil-b+o=N/A:-3+1+4/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_4#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
+                "xx^sil-b+o=N/A:-3+1+4/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_0#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
                 labels[1]);
 
             // o
             Assert.Equal(
-                "sil^b-o+N=s/A:-3+1+4/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_4#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
+                "sil^b-o+N=s/A:-3+1+4/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_0#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
                 labels[2]);
 
             // N
             Assert.Equal(
-                "b^o-N+s=a/A:-2+2+3/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_4#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
+                "b^o-N+s=a/A:-2+2+3/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_0#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
                 labels[3]);
 
             // s
             Assert.Equal(
-                "o^N-s+a=i/A:-1+3+2/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_4#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
+                "o^N-s+a=i/A:-1+3+2/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_0#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
                 labels[4]);
 
             // a
             Assert.Equal(
-                "N^s-a+i=sil/A:-1+3+2/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_4#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
+                "N^s-a+i=sil/A:-1+3+2/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_0#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
                 labels[5]);
 
             // i
             Assert.Equal(
-                "s^a-i+sil=xx/A:0+4+1/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_4#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
+                "s^a-i+sil=xx/A:0+4+1/B:xx-xx_xx/C:39_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:4_0#0_xx@1_1|1_4/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-4@1+1&1-1|1+4/J:xx_xx/K:1+1-4",
                 labels[6]);
 
             // 末尾sil
             Assert.Equal(
-                "a^i-sil+xx=xx/A:xx+xx+xx/B:xx-xx_xx/C:xx_xx+xx/D:xx+xx_xx/E:4_4!0_xx-xx/F:xx_xx#xx_xx@xx_xx|xx_xx/G:xx_xx%xx_xx_xx/H:1_4/I:xx-xx@xx+xx&xx-xx|xx+xx/J:xx_xx/K:1+1-4",
+                "a^i-sil+xx=xx/A:xx+xx+xx/B:xx-xx_xx/C:xx_xx+xx/D:xx+xx_xx/E:4_0!0_1-xx/F:xx_xx#xx_xx@xx_xx|xx_xx/G:xx_xx%xx_xx_xx/H:1_4/I:xx-xx@xx+xx&xx-xx|xx+xx/J:xx_xx/K:1+1-4",
                 labels[7]);
         }
 

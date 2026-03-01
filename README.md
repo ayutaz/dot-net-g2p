@@ -1,5 +1,9 @@
 # DotNetG2P
 
+[![CI](https://github.com/dotnetg2p/DotNetG2P/actions/workflows/ci.yml/badge.svg)](https://github.com/dotnetg2p/DotNetG2P/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 C#/.NET向け日本語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
 OpenJTalk互換のルールベースG2Pパイプラインをc#でネイティブに再実装。
 Pythonやネイティブバイナリへの依存なしに、.NETおよびUnityから日本語テキストを音素列に変換できます。

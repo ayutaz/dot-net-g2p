@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace DotNetG2P
 {
     /// <summary>
@@ -10,7 +12,7 @@ namespace DotNetG2P
         string Surface { get; }
 
         /// <summary>素性配列（辞書エントリのカンマ区切りフィールド）</summary>
-        string[] Features { get; }
+        IReadOnlyList<string> Features { get; }
 
         /// <summary>フィールド0: 品詞</summary>
         string POS { get; }

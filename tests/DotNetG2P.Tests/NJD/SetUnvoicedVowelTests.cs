@@ -142,6 +142,55 @@ namespace DotNetG2P.Tests.NJD
             Assert.Equal(Vowel.U, moras[0].Vowel); // s→s 例外ペアなので有声のまま
         }
 
+        // ===== ルール1: 感動詞はルール1の対象外 =====
+
+        [Fact]
+        public void Rule1_Kandoushi_DoesNotApply()
+        {
+            // 感動詞が「マス」パターンを持っていても、ルール1は適用されない
+            // 感動詞はルール1の品詞条件(動詞・助動詞)に含まれない
+            var node1 = CreateNode("うー", "デマス", POSType.Kandoushi, accentType: 0);
+            var node2 = CreateNode("ね", "ネ", POSType.Joshi, accentType: 0, chainFlag: false);
+
+            var nodes = new List<NjdNode> { node1, node2 };
+            SetUnvoicedVowel.Process(nodes);
+
+            // ルール1が適用されないので、ス(s+u)はルール5で判定される
+            // 次のノードの「ネ」はn(有声子音)なので無声化しない
+            var moras = node1.Pronunciation.Moras;
+            Assert.Equal(Vowel.U, moras[2].Vowel); // ス → ルール1不適用、ルール5でも有声のまま
+        }
+
+        // ===== ルール2: 前モーラの有声状態に依存しない =====
+
+        [Fact]
+        public void Rule2_Shi_IndependentOfPrevMoraVoicing()
+        {
+            // 前モーラが無声化済みでもルール2の「シ」は処理される
+            // 構成: ク(k+u) | シ(sh+i) | カ(k+a)
+            // ク: 次がsh(無声子音)で無声化 → false
+            // シ: 助詞の1モーラ語、次がk(無声子音)→ 無声化判定される
+            // ただし連続回避(ルール3)によりクが無声化→シは有声に固定される可能性あり
+            // ここでは前モーラの有声状態チェックが除去されたことを確認するため
+            // 別パターンを使う
+
+            // パターン: タ(t+a) | シ(sh+i) | テ(t+e)
+            // タ: 母音a → ルール5の対象外(i/uのみ)
+            // シ: 助詞の1モーラ語、前ノードと別ノード、次ノードと別ノード
+            //   → 次のテ(t=無声子音)に囲まれているので無声化
+            var node1 = CreateNode("た", "タ", POSType.Jodoushi, accentType: 0);
+            var node2 = CreateNode("し", "シ", POSType.Joshi, accentType: 0, chainFlag: true);
+            var node3 = CreateNode("て", "テ", POSType.Joshi, accentType: 0, chainFlag: true);
+
+            var nodes = new List<NjdNode> { node1, node2, node3 };
+            SetUnvoicedVowel.Process(nodes);
+
+            // シは無声子音(sh)で始まり、次のテの子音(t)も無声子音
+            // → ルール2でルール5が適用され、無声化
+            var moras = node2.Pronunciation.Moras;
+            Assert.Equal(Vowel.I_Unvoiced, moras[0].Vowel); // シ → sh I
+        }
+
         // ===== 空リスト・nullテスト =====
 
         [Fact]

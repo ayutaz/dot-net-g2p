@@ -296,5 +296,58 @@ namespace DotNetG2P.Tests.Models
             var pron = Pronunciation.FromKatakana("コンニチワ", 3);
             Assert.Equal("コンニチワ [3]", pron.ToString());
         }
+
+        // ===== コンストラクタ nullチェック テスト =====
+
+        [Fact]
+        public void Constructor_NullMoras_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => new Pronunciation(null!, 0));
+        }
+
+        // ===== TransferFrom nullチェック テスト =====
+
+        [Fact]
+        public void TransferFrom_Null_ThrowsArgumentNullException()
+        {
+            var pron = new Pronunciation();
+            Assert.Throws<ArgumentNullException>(() => pron.TransferFrom(null!));
+        }
+
+        // ===== パース最適化後の正確性確認 テスト =====
+
+        [Fact]
+        public void ParseMoraSegments_LongestMatchAfterOptimization_WorksCorrectly()
+        {
+            // キャ (2文字) が キ+ア (各1文字) ではなく最長一致でキャとして認識されること
+            var result = Pronunciation.ParseMoraSegments("キャット");
+            Assert.Single(result);
+            Assert.Equal(3, result[0].moras.Count);
+            Assert.Equal(MoraKind.Kya, result[0].moras[0].Kind);
+            Assert.Equal(MoraKind.Xtsu, result[0].moras[1].Kind);
+            Assert.Equal(MoraKind.To, result[0].moras[2].Kind);
+        }
+
+        [Fact]
+        public void FromKatakana_OptimizedParse_ProducesCorrectPhonemes()
+        {
+            // 多様なモーラを含む文字列で最適化後も正確にパースされることを確認
+            var pron = Pronunciation.FromKatakana("シュミレーション", 0);
+            Assert.Equal("sh u m i r e - sh o N", pron.ToPhonemeString());
+        }
+
+        [Fact]
+        public void ParseMoraSegments_AllSingleCharKatakana_WorksAfterOptimization()
+        {
+            // 全て1文字モーラの場合も正しく動作すること
+            var result = Pronunciation.ParseMoraSegments("アイウエオ");
+            Assert.Single(result);
+            Assert.Equal(5, result[0].moras.Count);
+            Assert.Equal(MoraKind.A, result[0].moras[0].Kind);
+            Assert.Equal(MoraKind.I, result[0].moras[1].Kind);
+            Assert.Equal(MoraKind.U, result[0].moras[2].Kind);
+            Assert.Equal(MoraKind.E, result[0].moras[3].Kind);
+            Assert.Equal(MoraKind.O, result[0].moras[4].Kind);
+        }
     }
 }

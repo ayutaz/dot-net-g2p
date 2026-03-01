@@ -289,6 +289,32 @@ namespace DotNetG2P.Tests.NJD
             Assert.False(node2.ChainFlag);
         }
 
+        [Fact]
+        public void Process_名詞サ変接続の後に動詞非自立_結合()
+        {
+            // 「勉強」(名詞-サ変接続) + 「し」(動詞-非自立) → Rule 12
+            var node1 = CreateNode("勉強", "ベンキョー", POSType.Meishi, sub1: "サ変接続");
+            var node2 = CreateNode("し", "シ", POSType.Doushi, sub1: "非自立", conjugationForm: "連用形");
+
+            var nodes = new List<NjdNode> { node1, node2 };
+            SetAccentPhrase.Process(nodes);
+
+            Assert.True(node2.ChainFlag);
+        }
+
+        [Fact]
+        public void Process_一般名詞の後に動詞非自立_非結合()
+        {
+            // 「猫」(名詞-一般) + 「し」(動詞-非自立) → Rule 12 不適用、Rule 13で非結合
+            var node1 = CreateNode("猫", "ネコ", POSType.Meishi, sub1: "一般");
+            var node2 = CreateNode("し", "シ", POSType.Doushi, sub1: "非自立");
+
+            var nodes = new List<NjdNode> { node1, node2 };
+            SetAccentPhrase.Process(nodes);
+
+            Assert.False(node2.ChainFlag);
+        }
+
         // ===== Rule 11: 形容詞-非自立の結合パターン =====
 
         [Fact]

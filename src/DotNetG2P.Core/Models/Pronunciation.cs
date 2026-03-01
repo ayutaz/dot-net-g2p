@@ -22,7 +22,7 @@ namespace DotNetG2P.Models
 
         public Pronunciation(List<Mora> moras, int accentPosition)
         {
-            Moras = moras;
+            Moras = moras ?? throw new ArgumentNullException(nameof(moras));
             AccentPosition = accentPosition;
         }
 
@@ -69,6 +69,7 @@ namespace DotNetG2P.Models
         /// </summary>
         public void TransferFrom(Pronunciation other)
         {
+            if (other == null) throw new ArgumentNullException(nameof(other));
             Moras.AddRange(other.Moras);
         }
 
@@ -193,28 +194,32 @@ namespace DotNetG2P.Models
 
             while (currentPos < s.Length)
             {
-                // 最長一致でモーラを探す
+                // 先頭文字でフィルタしてから最長一致でモーラを探す
                 bool matched = false;
-                for (int i = 0; i < _sortedKatakanaKeys.Count; i++)
+                char firstChar = s[currentPos];
+                if (_katakanaKeysByFirstChar.TryGetValue(firstChar, out var candidates))
                 {
-                    var (key, kind) = _sortedKatakanaKeys[i];
-                    if (currentPos + key.Length <= s.Length &&
-                        string.Compare(s, currentPos, key, 0, key.Length, StringComparison.Ordinal) == 0)
+                    for (int i = 0; i < candidates.Count; i++)
                     {
-                        // 無声化マーカーチェック: ' (U+0027) または ' (U+2019)
-                        bool unvoiced = false;
-                        int advanceLen = key.Length;
-                        if (currentPos + key.Length < s.Length && IsUnvoicedMarker(s[currentPos + key.Length]))
+                        var (key, kind) = candidates[i];
+                        if (currentPos + key.Length <= s.Length &&
+                            string.Compare(s, currentPos, key, 0, key.Length, StringComparison.Ordinal) == 0)
                         {
-                            unvoiced = true;
-                            advanceLen += 1; // ' の分を進める
-                        }
+                            // 無声化マーカーチェック: ' (U+0027) または ' (U+2019)
+                            bool unvoiced = false;
+                            int advanceLen = key.Length;
+                            if (currentPos + key.Length < s.Length && IsUnvoicedMarker(s[currentPos + key.Length]))
+                            {
+                                unvoiced = true;
+                                advanceLen += 1; // ' の分を進める
+                            }
 
-                        var mora = CreateMora(kind, unvoiced);
-                        currentMoras.Add(mora);
-                        currentPos += advanceLen;
-                        matched = true;
-                        break;
+                            var mora = CreateMora(kind, unvoiced);
+                            currentMoras.Add(mora);
+                            currentPos += advanceLen;
+                            matched = true;
+                            break;
+                        }
                     }
                 }
 
@@ -465,6 +470,12 @@ namespace DotNetG2P.Models
         private static readonly List<(string katakana, MoraKind kind)> _sortedKatakanaKeys;
 
         /// <summary>
+        /// 先頭文字でグループ化されたキーリスト（各グループ内はキー長降順）。
+        /// ParseMoraSegments の最長一致探索を高速化する。
+        /// </summary>
+        private static readonly Dictionary<char, List<(string katakana, MoraKind kind)>> _katakanaKeysByFirstChar;
+
+        /// <summary>
         /// 静的コンストラクタで最長一致用のソート済みリストを構築する。
         /// </summary>
         static Pronunciation()
@@ -478,6 +489,20 @@ namespace DotNetG2P.Models
             // 長いキーを優先してマッチさせる（最長一致）
             keys.Sort((a, b) => b.katakana.Length.CompareTo(a.katakana.Length));
             _sortedKatakanaKeys = keys;
+
+            // 先頭文字でグループ化（各グループ内もキー長降順を維持）
+            _katakanaKeysByFirstChar = new Dictionary<char, List<(string katakana, MoraKind kind)>>();
+            foreach (var entry in keys)
+            {
+                if (entry.katakana.Length == 0) continue;
+                char firstChar = entry.katakana[0];
+                if (!_katakanaKeysByFirstChar.TryGetValue(firstChar, out var list))
+                {
+                    list = new List<(string katakana, MoraKind kind)>();
+                    _katakanaKeysByFirstChar[firstChar] = list;
+                }
+                list.Add(entry);
+            }
         }
 
         /// <summary>
@@ -493,32 +518,36 @@ namespace DotNetG2P.Models
             while (pos < katakana.Length)
             {
                 bool matched = false;
-                for (int i = 0; i < _sortedKatakanaKeys.Count; i++)
+                char firstChar = katakana[pos];
+                if (_katakanaKeysByFirstChar.TryGetValue(firstChar, out var candidates))
                 {
-                    var (key, kind) = _sortedKatakanaKeys[i];
-                    if (pos + key.Length <= katakana.Length &&
-                        string.Compare(katakana, pos, key, 0, key.Length, StringComparison.Ordinal) == 0)
+                    for (int i = 0; i < candidates.Count; i++)
                     {
-                        var (consonant, vowel) = MoraPhonemeMap[kind];
-
-                        // 無声化マーカーチェック: カタカナの直後に ' (U+0027) または ' (U+2019) があれば無声化
-                        bool unvoiced = false;
-                        int advanceLen = key.Length;
-                        if (pos + key.Length < katakana.Length && IsUnvoicedMarker(katakana[pos + key.Length]))
+                        var (key, kind) = candidates[i];
+                        if (pos + key.Length <= katakana.Length &&
+                            string.Compare(katakana, pos, key, 0, key.Length, StringComparison.Ordinal) == 0)
                         {
-                            unvoiced = true;
-                            advanceLen += 1;
-                        }
+                            var (consonant, vowel) = MoraPhonemeMap[kind];
 
-                        if (unvoiced && vowel.HasValue)
-                        {
-                            vowel = vowel.Value.ToUnvoiced();
-                        }
+                            // 無声化マーカーチェック: カタカナの直後に ' (U+0027) または ' (U+2019) があれば無声化
+                            bool unvoiced = false;
+                            int advanceLen = key.Length;
+                            if (pos + key.Length < katakana.Length && IsUnvoicedMarker(katakana[pos + key.Length]))
+                            {
+                                unvoiced = true;
+                                advanceLen += 1;
+                            }
 
-                        moras.Add(new Mora(consonant, vowel, kind));
-                        pos += advanceLen;
-                        matched = true;
-                        break;
+                            if (unvoiced && vowel.HasValue)
+                            {
+                                vowel = vowel.Value.ToUnvoiced();
+                            }
+
+                            moras.Add(new Mora(consonant, vowel, kind));
+                            pos += advanceLen;
+                            matched = true;
+                            break;
+                        }
                     }
                 }
 

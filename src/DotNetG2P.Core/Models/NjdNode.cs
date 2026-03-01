@@ -60,10 +60,17 @@ namespace DotNetG2P.Models
             get
             {
                 var form = ConjugationForm;
-                return form == "連用形" || form == "連用タ接続" || form == "連用テ接続";
+                return form == "連用形"
+                    || form == "連用タ接続"
+                    || form == "連用テ接続"
+                    || form == "連用デ接続"
+                    || form == "連用ニ接続"
+                    || form == "連用ゴザイ接続";
             }
         }
 
+        /// <param name="surface">表層形（nullの場合は空文字列に正規化）</param>
+        /// <param name="details">単語詳細情報（nullを許容: 記号等で詳細情報がない場合）</param>
         public NjdNode(string surface, WordDetails details)
         {
             Surface = surface ?? "";
@@ -150,10 +157,12 @@ namespace DotNetG2P.Models
                     ChainRule = entry.ChainRule
                 };
 
-                // WordDetailsから発音情報をコピー（トークンのPronunciation/Readingフィールド由来）
+                // WordDetailsから発音情報を防御的コピー（元のWordDetailsのPronunciationが変更されないようにする）
                 if (entry.Details?.Pronunciation != null && entry.Details.Pronunciation.MoraCount > 0)
                 {
-                    node.Pronunciation = entry.Details.Pronunciation;
+                    var orig = entry.Details.Pronunciation;
+                    node.Pronunciation = new Pronunciation(
+                        new List<Mora>(orig.Moras), orig.AccentPosition);
                 }
 
                 // アクセント情報のパース（"核位置/モーラ数" → AccentType）

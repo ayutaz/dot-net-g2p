@@ -145,7 +145,7 @@ namespace DotNetG2P.JPCommon
             {
                 var ap = current.AccentPhrase;
                 int moraCount = ap.MoraCount;
-                int accent = NormalizeAccent(ap.AccentType, moraCount);
+                int accent = NormalizeAccentForA(ap.AccentType, moraCount);
                 int moraPos = current.MoraIndexInAP; // 0始まり
                 int a1 = moraPos - accent + 1; // signed
                 int a2 = moraPos + 1; // 1始まり、前方から
@@ -191,7 +191,8 @@ namespace DotNetG2P.JPCommon
             // --- E: 前アクセント句 ---
             sb.Append("/E:");
             var prevAP = FindPrevAccentPhrase(current, index, all);
-            AppendAccentPhraseE(sb, prevAP);
+            bool ePause = HasPauseBetweenPrevAP(current, prevAP, index, all);
+            AppendAccentPhraseE(sb, prevAP, ePause);
 
             // --- F: 現在アクセント句 ---
             sb.Append("/F:");
@@ -207,7 +208,8 @@ namespace DotNetG2P.JPCommon
             // --- G: 次アクセント句 ---
             sb.Append("/G:");
             var nextAP = FindNextAccentPhrase(current, index, all);
-            AppendAccentPhraseG(sb, nextAP);
+            bool gPause = HasPauseBetweenNextAP(current, nextAP, index, all);
+            AppendAccentPhraseG(sb, nextAP, gPause);
 
             // --- H: 前呼気グループ ---
             sb.Append("/H:");
@@ -252,49 +254,43 @@ namespace DotNetG2P.JPCommon
 
         // ====== 前後要素探索 ======
 
-        /// <summary>前単語を探す。現在位置からさかのぼって最初の非pause音素の単語を探す。</summary>
+        /// <summary>
+        /// 前単語を探す。BG境界（pause/sil）を越えた場合はnull（xx）を返す。
+        /// </summary>
         private static JPWord FindPrevWord(PhonemeEntry current, int index, List<PhonemeEntry> all)
         {
             if (current.IsPause)
             {
-                // pause音素の場合: 前の呼気グループの末尾単語
-                for (int i = index - 1; i >= 0; i--)
-                {
-                    if (!all[i].IsPause && all[i].Word != null)
-                        return all[i].Word;
-                }
+                // pause音素の場合: xx
                 return null;
             }
 
-            // 通常音素: 現在単語より前の単語
+            // 通常音素: 現在単語より前の単語（BG境界を越えない）
             var currentWord = current.Word;
             for (int i = index - 1; i >= 0; i--)
             {
-                if (all[i].IsPause) continue;
+                if (all[i].IsPause) return null; // BG境界に達した → xx
                 if (all[i].Word != null && all[i].Word != currentWord)
                     return all[i].Word;
             }
             return null;
         }
 
-        /// <summary>次単語を探す。</summary>
+        /// <summary>
+        /// 次単語を探す。BG境界（pause/sil）を越えた場合はnull（xx）を返す。
+        /// </summary>
         private static JPWord FindNextWord(PhonemeEntry current, int index, List<PhonemeEntry> all)
         {
             if (current.IsPause)
             {
-                // pause音素の場合: 次の呼気グループの先頭単語
-                for (int i = index + 1; i < all.Count; i++)
-                {
-                    if (!all[i].IsPause && all[i].Word != null)
-                        return all[i].Word;
-                }
+                // pause音素の場合: xx
                 return null;
             }
 
             var currentWord = current.Word;
             for (int i = index + 1; i < all.Count; i++)
             {
-                if (all[i].IsPause) continue;
+                if (all[i].IsPause) return null; // BG境界に達した → xx
                 if (all[i].Word != null && all[i].Word != currentWord)
                     return all[i].Word;
             }
@@ -394,6 +390,42 @@ namespace DotNetG2P.JPCommon
             return null;
         }
 
+        // ====== ポーズ境界判定 ======
+
+        /// <summary>
+        /// 現在のAPと前のAPの間にpauがあるか判定する。
+        /// 前APと現在APが異なるBGに属する場合、true。
+        /// </summary>
+        private static bool HasPauseBetweenPrevAP(PhonemeEntry current, JPAccentPhrase prevAP, int index, List<PhonemeEntry> all)
+        {
+            if (prevAP == null) return false;
+            var currentAP = current.IsPause ? null : current.AccentPhrase;
+            if (currentAP == null)
+            {
+                // pause音素の場合: 直前のAPと直後のAPの間にpau（=自分自身）がある
+                return true;
+            }
+            // 前APと現在APが異なるBGに属するか
+            return prevAP.ParentBreathGroup != currentAP.ParentBreathGroup;
+        }
+
+        /// <summary>
+        /// 現在のAPと次のAPの間にpauがあるか判定する。
+        /// 次APと現在APが異なるBGに属する場合、true。
+        /// </summary>
+        private static bool HasPauseBetweenNextAP(PhonemeEntry current, JPAccentPhrase nextAP, int index, List<PhonemeEntry> all)
+        {
+            if (nextAP == null) return false;
+            var currentAP = current.IsPause ? null : current.AccentPhrase;
+            if (currentAP == null)
+            {
+                // pause音素の場合: 自分自身がpauなので間にポーズがある
+                return true;
+            }
+            // 現在APと次APが異なるBGに属するか
+            return currentAP.ParentBreathGroup != nextAP.ParentBreathGroup;
+        }
+
         // ====== フォーマットヘルパー ======
 
         /// <summary>B/C/D: 単語のPOS/CType/CFormフィールドを出力する。区切り文字はB/C/Dで異なる。</summary>
@@ -411,7 +443,7 @@ namespace DotNetG2P.JPCommon
         }
 
         /// <summary>E: 前アクセント句情報を出力する。形式: {e1}_{e2}!{e3}_{e4}-{e5}</summary>
-        private static void AppendAccentPhraseE(StringBuilder sb, JPAccentPhrase ap)
+        private static void AppendAccentPhraseE(StringBuilder sb, JPAccentPhrase ap, bool hasPauseBefore)
         {
             if (ap == null)
             {
@@ -420,22 +452,22 @@ namespace DotNetG2P.JPCommon
             }
 
             int moraCount = ap.MoraCount;
-            int accent = NormalizeAccent(ap.AccentType, moraCount);
+            int accent = ap.AccentType; // E: そのまま出力（0=平板のまま）
             int isInterr = ap.IsInterrogative ? 1 : 0;
 
             sb.Append(ClampUnsigned(moraCount, 49));
             sb.Append('_');
-            sb.Append(ClampUnsigned(accent, 49));
+            sb.Append(ClampAccent(accent, 49));
             sb.Append('!');
             sb.Append(isInterr);
             sb.Append('_');
-            sb.Append(XX); // e4: is_pause_insertion
+            sb.Append(hasPauseBefore ? 1 : 0); // e4: 前APとの間にポーズがあるか
             sb.Append('-');
             sb.Append(XX); // e5: 未使用
         }
 
         /// <summary>G: 次アクセント句情報を出力する。形式: {g1}_{g2}%{g3}_{g4}_{g5}</summary>
-        private static void AppendAccentPhraseG(StringBuilder sb, JPAccentPhrase ap)
+        private static void AppendAccentPhraseG(StringBuilder sb, JPAccentPhrase ap, bool hasPauseAfter)
         {
             if (ap == null)
             {
@@ -444,30 +476,30 @@ namespace DotNetG2P.JPCommon
             }
 
             int moraCount = ap.MoraCount;
-            int accent = NormalizeAccent(ap.AccentType, moraCount);
+            int accent = ap.AccentType; // G: そのまま出力（0=平板のまま）
             int isInterr = ap.IsInterrogative ? 1 : 0;
 
             sb.Append(ClampUnsigned(moraCount, 49));
             sb.Append('_');
-            sb.Append(ClampUnsigned(accent, 49));
+            sb.Append(ClampAccent(accent, 49));
             sb.Append('%');
             sb.Append(isInterr);
             sb.Append('_');
-            sb.Append(XX); // g4
+            sb.Append(hasPauseAfter ? 1 : 0); // g4: 次APとの間にポーズがあるか
             sb.Append('_');
-            sb.Append(XX); // g5
+            sb.Append(XX); // g5: 未使用
         }
 
         /// <summary>F: 現在アクセント句の詳細情報を出力する。</summary>
         private static void AppendCurrentAccentPhraseF(StringBuilder sb, JPAccentPhrase ap, JPUtterance utterance)
         {
             int moraCount = ap.MoraCount;
-            int accent = NormalizeAccent(ap.AccentType, moraCount);
+            int accent = ap.AccentType; // F: そのまま出力（0=平板のまま）
             int isInterr = ap.IsInterrogative ? 1 : 0;
 
             sb.Append(ClampUnsigned(moraCount, 49));
             sb.Append('_');
-            sb.Append(ClampUnsigned(accent, 49));
+            sb.Append(ClampAccent(accent, 49));
             sb.Append('#');
             sb.Append(isInterr);
             sb.Append('_');
@@ -557,10 +589,10 @@ namespace DotNetG2P.JPCommon
         // ====== アクセント正規化 ======
 
         /// <summary>
-        /// アクセント位置を正規化する。0（平板型）の場合はmora_countに変換する。
-        /// jpreprocess準拠。
+        /// Aフィールド用: アクセント位置を正規化する。0（平板型）の場合はmora_countに変換する。
+        /// jpreprocess準拠。Aフィールドのa1計算でのみ使用。
         /// </summary>
-        private static int NormalizeAccent(int accent, int moraCount)
+        private static int NormalizeAccentForA(int accent, int moraCount)
         {
             return accent == 0 ? moraCount : accent;
         }
@@ -571,6 +603,14 @@ namespace DotNetG2P.JPCommon
         private static int ClampUnsigned(int value, int max)
         {
             if (value < 1) return 1;
+            if (value > max) return max;
+            return value;
+        }
+
+        /// <summary>アクセント値をクランプする（0-max）。0を有効値として許容する。</summary>
+        private static int ClampAccent(int value, int max)
+        {
+            if (value < 0) return 0;
             if (value > max) return max;
             return value;
         }

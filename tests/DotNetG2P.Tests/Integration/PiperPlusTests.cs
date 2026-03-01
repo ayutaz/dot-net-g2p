@@ -21,10 +21,8 @@ namespace DotNetG2P.Tests.Integration
     /// </summary>
     public class PiperPlusTests : IDisposable
     {
-        private const string DictionaryPath = "C:/Users/yuta/Desktop/Private/piper-plus/src/wasm/openjtalk-web/assets/dict/";
-
-        private static readonly bool DictionaryExists =
-            Directory.Exists(DictionaryPath) && File.Exists(Path.Combine(DictionaryPath, "sys.dic"));
+        private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
+        private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
         private readonly NMeCabTokenizer? _tokenizer;
         private readonly G2PEngine? _engine;
@@ -33,7 +31,7 @@ namespace DotNetG2P.Tests.Integration
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DictionaryPath);
+                _tokenizer = new NMeCabTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
         }
@@ -45,7 +43,7 @@ namespace DotNetG2P.Tests.Integration
 
         private void SkipIfNoDictionary()
         {
-            Skip.If(!DictionaryExists, "naist-jdic辞書が見つかりません: " + DictionaryPath);
+            Skip.If(!DictionaryExists, "naist-jdic辞書が見つかりません（環境変数 NAIST_JDIC_PATH を設定してください）");
         }
 
         /// <summary>

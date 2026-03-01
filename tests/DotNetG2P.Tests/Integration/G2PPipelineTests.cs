@@ -14,10 +14,8 @@ namespace DotNetG2P.Tests.Integration
     /// </summary>
     public class G2PPipelineTests : IDisposable
     {
-        private const string DictionaryPath = "C:/Users/yuta/Desktop/Private/piper-plus/src/wasm/openjtalk-web/assets/dict/";
-
-        private static readonly bool DictionaryExists =
-            Directory.Exists(DictionaryPath) && File.Exists(Path.Combine(DictionaryPath, "sys.dic"));
+        private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
+        private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
         private readonly NMeCabTokenizer? _tokenizer;
         private readonly G2PEngine? _engine;
@@ -26,7 +24,7 @@ namespace DotNetG2P.Tests.Integration
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DictionaryPath);
+                _tokenizer = new NMeCabTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
         }
@@ -40,7 +38,7 @@ namespace DotNetG2P.Tests.Integration
 
         private void SkipIfNoDictionary()
         {
-            Skip.If(!DictionaryExists, "naist-jdic辞書が見つかりません: " + DictionaryPath);
+            Skip.If(!DictionaryExists, "naist-jdic辞書が見つかりません（環境変数 NAIST_JDIC_PATH を設定してください）");
         }
 
         // =====================================================================
@@ -105,9 +103,9 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToKana("１２３");
 
             Assert.NotEmpty(result);
-            // 既知バグ: 現在は「ニサン」と出力される（位取り読みで「百」が欠落）
-            // 期待値: 「ヒャクニジューサン」等
-            // Assert.Contains("ヒャク", result);  // TODO: 数字位取り読み修正後に有効化
+            // TODO(issue): 既知バグ: 現在は「ニサン」と出力される（位取り読みで「百」が欠落）
+            // TODO(issue): 期待値: 「ヒャクニジューサン」等
+            // Assert.Contains("ヒャク", result);  // TODO(issue): 数字位取り読み修正後に有効化
             Assert.NotEmpty(result);  // 暫定: 空でないことのみ確認
         }
 
@@ -119,9 +117,9 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToKana("２０２５年");
 
             Assert.NotEmpty(result);
-            // 既知バグ: 現在は「ニニゴネン」と出力される（各桁を個別に読んでいる）
-            // 期待値: 「ニセンニジューゴネン」等
-            // Assert.Contains("ニセン", result);  // TODO: 数字位取り読み修正後に有効化
+            // TODO(issue): 既知バグ: 現在は「ニニゴネン」と出力される（各桁を個別に読んでいる）
+            // TODO(issue): 期待値: 「ニセンニジューゴネン」等
+            // Assert.Contains("ニセン", result);  // TODO(issue): 数字位取り読み修正後に有効化
             Assert.Contains("ネン", result);  // 暫定: 「年」の読みは正しい
         }
 
@@ -132,9 +130,9 @@ namespace DotNetG2P.Tests.Integration
 
             var result = _engine!.ToKana("１００円");
 
-            // 既知バグ: 現在は「エン」のみ出力される（「100」部分の読みが欠落）
-            // 期待値: 「ヒャクエン」
-            // Assert.Contains("ヒャク", result);  // TODO: 数字位取り読み修正後に有効化
+            // TODO(issue): 既知バグ: 現在は「エン」のみ出力される（「100」部分の読みが欠落）
+            // TODO(issue): 期待値: 「ヒャクエン」
+            // Assert.Contains("ヒャク", result);  // TODO(issue): 数字位取り読み修正後に有効化
             Assert.NotNull(result);
             Assert.Contains("エン", result);  // 暫定: 「円」の読みは正しい
         }
@@ -187,8 +185,8 @@ namespace DotNetG2P.Tests.Integration
         {
             SkipIfNoDictionary();
 
-            using var tokenizer = new NMeCabTokenizer(DictionaryPath);
-            var options = new G2POptions { EnableUnvoicedVowel = false };
+            using var tokenizer = new NMeCabTokenizer(DicPath!);
+            var options = new G2POptions(enableUnvoicedVowel: false);
             using var engine = new G2PEngine(tokenizer, options);
 
             var result = engine.ToPhonemes("すき");
@@ -335,8 +333,8 @@ namespace DotNetG2P.Tests.Integration
         {
             SkipIfNoDictionary();
 
-            using var tokenizer = new NMeCabTokenizer(DictionaryPath);
-            var options = new G2POptions { EnableDigitProcessing = false };
+            using var tokenizer = new NMeCabTokenizer(DicPath!);
+            var options = new G2POptions(enableDigitProcessing: false);
             using var engine = new G2PEngine(tokenizer, options);
 
             var resultDefault = _engine.ToKana("１２３");
@@ -354,7 +352,7 @@ namespace DotNetG2P.Tests.Integration
 
         [SkippableTheory]
         [InlineData("おはようございます", true)]
-        [InlineData("ありがとうございます", false)]  // 既知バグ: 感動詞の発音生成で空になる
+        [InlineData("ありがとうございます", false)]  // TODO(issue): 既知バグ: 感動詞の発音生成で空になる
         [InlineData("東京スカイツリー", true)]
         [InlineData("人工知能", true)]
         [InlineData("音声合成", true)]
@@ -371,8 +369,8 @@ namespace DotNetG2P.Tests.Integration
             }
             else
             {
-                // 既知バグ: 一部の入力で空が返される
-                // TODO: 修正後に expectNonEmpty=true に変更
+                // TODO(issue): 既知バグ: 一部の入力で空が返される
+                // TODO(issue): 修正後に expectNonEmpty=true に変更
                 Assert.NotNull(result);
             }
         }

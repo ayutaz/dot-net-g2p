@@ -107,7 +107,7 @@ namespace DotNetG2P.Tests.NJD
             SetPronunciation.Process(nodes);
 
             // ひらがな各文字がToutenセグメントに変換され、ノードとして残る
-            Assert.True(nodes.Count >= 1);
+            Assert.NotEmpty(nodes);
             foreach (var n in nodes)
             {
                 Assert.True(n.Pronunciation.Moras.Count > 0);
@@ -314,9 +314,9 @@ namespace DotNetG2P.Tests.NJD
 
             SetPronunciation.Process(nodes);
 
-            // 解析不能なノードが除去されて2ノードのみ残る
-            // (ただし@はToutenセグメントに変換されるため、その挙動次第)
-            Assert.True(nodes.Count >= 2);
+            // 解析不能なノードが除去されるか、Toutenセグメントに変換される
+            // 少なくとも発音ありの2ノード（東京・駅）は残る
+            Assert.True(nodes.Count >= 2, $"ノード数が2未満: {nodes.Count}");
             Assert.Equal("東京", nodes[0].Surface);
         }
 
@@ -336,7 +336,7 @@ namespace DotNetG2P.Tests.NJD
 
             // 連続フィラーが統合されて1ノードになる可能性が高い
             // 表層形が結合されているはず
-            Assert.True(nodes.Count >= 1);
+            Assert.NotEmpty(nodes);
             if (nodes.Count == 1)
             {
                 Assert.Contains("バリー", nodes[0].Surface);
@@ -358,26 +358,43 @@ namespace DotNetG2P.Tests.NJD
 
             SetPronunciation.Process(nodes);
 
-            // 中黒（・）でセグメント分割され、Toutenは除去されるので
-            // 少なくとも1つ以上のノードが残る
-            Assert.True(nodes.Count >= 1);
+            // 中黒（・）でセグメント分割され、少なくとも2つのカナセグメントが残る
+            Assert.True(nodes.Count >= 2, $"セグメント分割後のノード数が2未満: {nodes.Count}");
         }
 
         // =====================================================================
-        // 後方互換性オーバーロードのテスト
+        // ConvertToKigou 演算子優先度テスト
         // =====================================================================
 
         [Fact]
-        public void Process_トークンリスト付きオーバーロードが同じ結果を返す()
+        public void Process_副詞一般の発音なしノードが記号一般に変換される()
         {
-            var node = ノード作成_発音あり("東京", "トーキョー");
+            // 副詞-一般の発音なしノードで表層形が記号のみ → 記号-一般に変換
+            var pos = new POS(POSType.Fukushi, "\u4E00\u822C"); // 副詞-一般
+            var details = new WordDetails(pos, "*", "*", "\u3001", "*", null); // 、
+            var node = new NjdNode("\u3001", details);
             var nodes = new List<NjdNode> { node };
 
-            // 空のトークンリストで呼び出し（後方互換性のためのオーバーロード）
-            SetPronunciation.Process(nodes, new List<IToken>());
+            SetPronunciation.Process(nodes);
+
+            // Toutenセグメントとして残り、品詞が記号系に変換される
+            Assert.Single(nodes);
+            Assert.True(nodes[0].PartOfSpeech.IsKigou);
+        }
+
+        [Fact]
+        public void Process_名詞一般の発音なしノードが記号一般に変換される()
+        {
+            // 名詞-一般の発音なしノードで表層形が記号のみ → 記号-一般に変換
+            var pos = new POS(POSType.Meishi, "\u4E00\u822C"); // 名詞-一般
+            var details = new WordDetails(pos, "*", "*", "\u3001", "*", null); // 、
+            var node = new NjdNode("\u3001", details);
+            var nodes = new List<NjdNode> { node };
+
+            SetPronunciation.Process(nodes);
 
             Assert.Single(nodes);
-            Assert.Equal("東京", nodes[0].Surface);
+            Assert.True(nodes[0].PartOfSpeech.IsKigou);
         }
 
         // =====================================================================
@@ -507,7 +524,7 @@ namespace DotNetG2P.Tests.NJD
             SetPronunciation.Process(nodes);
 
             // 両方のノードが残る（発音なしノードは表層形から発音生成）
-            Assert.True(nodes.Count >= 1);
+            Assert.Equal(2, nodes.Count);
             Assert.Equal("東京", nodes[0].Surface);
         }
 

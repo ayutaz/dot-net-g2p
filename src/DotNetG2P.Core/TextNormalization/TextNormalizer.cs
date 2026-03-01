@@ -33,6 +33,25 @@ namespace DotNetG2P.TextNormalization
             {
                 char c = text[i];
 
+                // サロゲートペア対応: ハイサロゲートの場合は2つのcharを1文字として扱う
+                if (char.IsHighSurrogate(c))
+                {
+                    // 前の文字をフラッシュ
+                    if (prev.HasValue)
+                    {
+                        sb.Append(prev.Value);
+                        prev = null;
+                    }
+                    // サロゲートペアをそのまま出力
+                    sb.Append(c);
+                    if (i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+                    {
+                        sb.Append(text[i + 1]);
+                        i++; // ローサロゲートをスキップ
+                    }
+                    continue;
+                }
+
                 // まず半角→全角マッピング適用
                 char mapped;
                 if (s_halfwidthMap.TryGetValue(c, out char hw))
@@ -60,12 +79,15 @@ namespace DotNetG2P.TextNormalization
                     {
                         sb.Append(combined);
                     }
-                    else if (prev.HasValue)
+                    else
                     {
-                        // 結合不可: 前の文字だけ出力（濁点は捨てる）
-                        sb.Append(prev.Value);
+                        // 結合不可: 前の文字と半濁点をそのまま出力
+                        if (prev.HasValue)
+                        {
+                            sb.Append(prev.Value);
+                        }
+                        sb.Append(mapped);
                     }
-                    // else: 先頭の濁点マークは捨てる
                     prev = null;
                 }
                 else if (isVoiced)
@@ -75,12 +97,15 @@ namespace DotNetG2P.TextNormalization
                     {
                         sb.Append(combined);
                     }
-                    else if (prev.HasValue)
+                    else
                     {
-                        // 結合不可: 前の文字だけ出力（濁点は捨てる）
-                        sb.Append(prev.Value);
+                        // 結合不可: 前の文字と濁点をそのまま出力
+                        if (prev.HasValue)
+                        {
+                            sb.Append(prev.Value);
+                        }
+                        sb.Append(mapped);
                     }
-                    // else: 先頭の濁点マークは捨てる
                     prev = null;
                 }
                 else

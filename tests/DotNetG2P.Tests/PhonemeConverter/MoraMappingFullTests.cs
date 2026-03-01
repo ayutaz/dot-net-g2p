@@ -450,7 +450,7 @@ namespace DotNetG2P.Tests.PhonemeConverter
         /// 確認するための補助テスト。全カタカナをリストアップし、すべて変換できることを検証する。
         /// </summary>
         [Fact]
-        public void カタカナ変換_全162種_すべて変換に成功する()
+        public void カタカナ変換_全165種_すべて変換に成功する()
         {
             // MoraMapping._mappingテーブルに含まれる全カタカナ（165種）
             var allKatakana = new[]

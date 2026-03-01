@@ -68,7 +68,7 @@ namespace DotNetG2P
             var nodes = NjdNode.FromTokens(tokens);
 
             // 4. 発音設定（NJD処理第1段階）
-            SetPronunciation.Process(nodes, tokens);
+            SetPronunciation.Process(nodes);
 
             // 5. 数字列処理（NJD処理第2段階a: 数字列の検出・変換）
             if (_options.EnableDigitProcessing)
@@ -113,8 +113,8 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
-                return "";
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (text.Length == 0) return "";
 
             var nodes = RunPipeline(text);
 
@@ -145,8 +145,8 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
-                return "";
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (text.Length == 0) return "";
 
             var nodes = RunPipeline(text);
 
@@ -172,8 +172,8 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
-                return "";
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (text.Length == 0) return "";
 
             var nodes = RunPipeline(text);
             return ProsodyExtractor.Extract(nodes);
@@ -188,8 +188,8 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
-                return Array.Empty<AccentPhrase>();
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (text.Length == 0) return Array.Empty<AccentPhrase>();
 
             var nodes = RunPipeline(text);
             return AccentPhraseConverter.Convert(nodes);
@@ -204,8 +204,8 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
-                return Array.Empty<string>();
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (text.Length == 0) return Array.Empty<string>();
 
             var nodes = RunPipeline(text);
             var utterance = JPCommonBuilder.Build(nodes);
@@ -222,8 +222,8 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
-                return Array.Empty<NjdNode>();
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (text.Length == 0) return Array.Empty<NjdNode>();
 
             return RunPipeline(text);
         }
@@ -235,6 +235,7 @@ namespace DotNetG2P
                 _tokenizer.Dispose();
                 _disposed = true;
             }
+            GC.SuppressFinalize(this);
         }
 
         private void ThrowIfDisposed()

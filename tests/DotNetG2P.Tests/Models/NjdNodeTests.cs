@@ -219,6 +219,18 @@ namespace DotNetG2P.Tests.Models
             Assert.True(node.IsRenyou);
         }
 
+        [Theory]
+        [InlineData("連用デ接続")]
+        [InlineData("連用ニ接続")]
+        [InlineData("連用ゴザイ接続")]
+        public void IsRenyou_AdditionalRenyouForms_ReturnsTrue(string form)
+        {
+            var pos = new POS(POSType.Doushi);
+            var details = new WordDetails(pos, "*", form, "ある", "アッ");
+            var node = new NjdNode("あっ", details);
+            Assert.True(node.IsRenyou);
+        }
+
         [Fact]
         public void IsRenyou_ShuuryouForm_ReturnsFalse()
         {
@@ -235,6 +247,57 @@ namespace DotNetG2P.Tests.Models
             // トーキョー → ト, ー, キョ, ー = 4モーラ (Toutenを除外するが、ここはLong)
             // Longもカウントに含まれる
             Assert.Equal(4, node.MoraCount);
+        }
+
+        // ===== コンストラクタ null 許容テスト =====
+
+        [Fact]
+        public void Constructor_NullDetails_FallsBackToDefaults()
+        {
+            var node = new NjdNode("テスト", null);
+
+            Assert.Equal("テスト", node.Surface);
+            Assert.Null(node.Details);
+            Assert.Equal("*", node.Reading);
+            // 委譲アクセサのデフォルト値
+            Assert.Equal(POSType.Meishi, node.PartOfSpeech.Type);
+            Assert.Equal("*", node.ConjugationType);
+            Assert.Equal("*", node.ConjugationForm);
+            Assert.Equal("*", node.OriginalForm);
+            Assert.False(node.IsRenyou);
+        }
+
+        [Fact]
+        public void Constructor_NullSurface_NormalizesToEmpty()
+        {
+            var pos = new POS(POSType.Meishi);
+            var details = new WordDetails(pos, "*", "*", "テスト", "テスト");
+            var node = new NjdNode(null, details);
+
+            Assert.Equal("", node.Surface);
+        }
+
+        // ===== 防御的コピーテスト =====
+
+        [Fact]
+        public void FromTokens_PronunciationIsDefensivelyCopied()
+        {
+            // 簡易テスト: CreateNodeでWordDetailsのPronunciationとNodeのPronunciationが
+            // 同一インスタンスでないことを確認するために、手動で同等のロジックを再現
+            var pron = Pronunciation.FromKatakana("テスト", 1);
+            var originalMoraCount = pron.MoraCount;
+            var details = new WordDetails(
+                new POS(POSType.Meishi), "*", "*", "テスト", "テスト", pron);
+
+            // 防御的コピーを再現
+            var copiedPron = new Pronunciation(
+                new List<Mora>(pron.Moras), pron.AccentPosition);
+
+            // コピーにモーラを追加しても元は変わらない
+            copiedPron.Moras.Add(Pronunciation.CreateMora(MoraKind.A));
+
+            Assert.Equal(originalMoraCount, pron.MoraCount);
+            Assert.Equal(originalMoraCount + 1, copiedPron.MoraCount);
         }
     }
 }

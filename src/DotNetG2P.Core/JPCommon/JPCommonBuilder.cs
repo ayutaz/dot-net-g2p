@@ -130,10 +130,10 @@ namespace DotNetG2P.JPCommon
         {
             var word = new JPWord();
 
-            // POS/CType/CForm IDを設定
-            word.PosId = GetPosId(node);
-            word.CTypeId = GetCTypeId(node.ConjugationType);
-            word.CFormId = GetCFormId(node.ConjugationForm);
+            // POS/CType/CForm IDを設定（WordAttrの変換テーブルに委譲）
+            word.PosId = WordAttr.PosToId(node.PartOfSpeech);
+            word.CTypeId = WordAttr.CTypeToId(node.ConjugationType);
+            word.CFormId = WordAttr.CFormToId(node.ConjugationForm);
 
             // Pronunciationの各Moraからモーラを構築
             if (node.Pronunciation != null)
@@ -269,145 +269,5 @@ namespace DotNetG2P.JPCommon
             }
         }
 
-        // ====== POS → ID マッピング (jpreprocess word_attr/pos.rs 準拠) ======
-
-        /// <summary>
-        /// NjdNodeの品詞情報からPOS IDを取得する。
-        /// </summary>
-        private static int? GetPosId(NjdNode node)
-        {
-            var pos = node.PartOfSpeech;
-            switch (pos.Type)
-            {
-                case POSType.Kandoushi:
-                    return 9;
-                case POSType.Keiyoushi:
-                    return 1;
-                case POSType.Joshi:
-                    return GetJoshiPosId(pos.SubCategory1);
-                case POSType.Jodoushi:
-                    return 10;
-                case POSType.Setsuzokushi:
-                    return 8;
-                case POSType.Settoushi:
-                    return 16;
-                case POSType.Doushi:
-                    return GetDoushiPosId(pos.SubCategory1);
-                case POSType.Fukushi:
-                    return 6;
-                case POSType.Meishi:
-                    return GetMeishiPosId(pos.SubCategory1);
-                case POSType.Rentaishi:
-                    return 7;
-                case POSType.Filler:
-                    return 25;
-                case POSType.Kigou:
-                    return null; // 記号 → "xx"
-                default:
-                    return null;
-            }
-        }
-
-        /// <summary>
-        /// 助詞のサブカテゴリからPOS IDを取得する。
-        /// </summary>
-        private static int GetJoshiPosId(string subCategory)
-        {
-            switch (subCategory)
-            {
-                case "格助詞": return 13;
-                case "係助詞": return 24;
-                case "終助詞": return 14;
-                case "接続助詞": return 12;
-                case "副助詞": return 11;
-                default: return 11; // デフォルトは副助詞
-            }
-        }
-
-        /// <summary>
-        /// 動詞のサブカテゴリからPOS IDを取得する。
-        /// </summary>
-        private static int GetDoushiPosId(string subCategory)
-        {
-            switch (subCategory)
-            {
-                case "自立": return 20;
-                case "非自立": return 17;
-                default: return 20; // デフォルトは自立
-            }
-        }
-
-        /// <summary>
-        /// 名詞のサブカテゴリからPOS IDを取得する。
-        /// </summary>
-        private static int GetMeishiPosId(string subCategory)
-        {
-            switch (subCategory)
-            {
-                case "サ変接続": return 3;
-                case "固有名詞": return 18;
-                case "数": return 5;
-                case "非自立": return 22;
-                case "代名詞": return 4;
-                case "接尾": return 15;
-                default: return 2; // 一般名詞
-            }
-        }
-
-        // ====== CType → ID マッピング (活用型) ======
-
-        /// <summary>
-        /// 活用型文字列からCType IDを取得する。
-        /// </summary>
-        private static int? GetCTypeId(string conjugationType)
-        {
-            if (string.IsNullOrEmpty(conjugationType) || conjugationType == "*")
-                return null;
-
-            // 前方一致で判定
-            if (conjugationType.StartsWith("五段"))
-                return 1;
-            if (conjugationType.StartsWith("一段"))
-                return 3;
-            if (conjugationType.StartsWith("サ変"))
-                return 4;
-            if (conjugationType.StartsWith("カ変"))
-                return 5;
-            if (conjugationType.StartsWith("形容詞"))
-                return 7;
-            if (conjugationType.StartsWith("特殊"))
-                return 7;
-
-            return 6; // その他
-        }
-
-        // ====== CForm → ID マッピング (活用形) ======
-
-        /// <summary>
-        /// 活用形文字列からCForm IDを取得する。
-        /// </summary>
-        private static int? GetCFormId(string conjugationForm)
-        {
-            if (string.IsNullOrEmpty(conjugationForm) || conjugationForm == "*")
-                return null;
-
-            // 前方一致で判定
-            if (conjugationForm.StartsWith("未然"))
-                return 0;
-            if (conjugationForm.StartsWith("連用"))
-                return 1;
-            if (conjugationForm == "基本形")
-                return 2;
-            if (conjugationForm == "体言接続")
-                return 3;
-            if (conjugationForm.StartsWith("仮定"))
-                return 4;
-            if (conjugationForm.StartsWith("命令"))
-                return 5;
-            if (conjugationForm == "ガル接続")
-                return 6;
-
-            return null;
-        }
     }
 }

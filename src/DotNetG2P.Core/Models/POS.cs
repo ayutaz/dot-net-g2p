@@ -42,7 +42,7 @@ namespace DotNetG2P.Models
     /// 品詞情報（大分類 + 細分類1-3）。
     /// naist-jdic 辞書フォーマットの品詞フィールドに対応。
     /// </summary>
-    public sealed class POS
+    public sealed class POS : IEquatable<POS>
     {
         /// <summary>品詞大分類</summary>
         public POSType Type { get; }
@@ -141,6 +141,39 @@ namespace DotNetG2P.Models
 
         /// <summary>名詞接尾辞（名詞-接尾）かどうか</summary>
         public bool IsMeishiSetsubi => Type == POSType.Meishi && SubCategory1 == "接尾";
+
+        /// <summary>
+        /// 指定した POS と等しいかどうかを判定する。
+        /// </summary>
+        public bool Equals(POS other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Type == other.Type
+                && SubCategory1 == other.SubCategory1
+                && SubCategory2 == other.SubCategory2
+                && SubCategory3 == other.SubCategory3;
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as POS);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + Type.GetHashCode();
+                hash = hash * 31 + (SubCategory1?.GetHashCode() ?? 0);
+                hash = hash * 31 + (SubCategory2?.GetHashCode() ?? 0);
+                hash = hash * 31 + (SubCategory3?.GetHashCode() ?? 0);
+                return hash;
+            }
+        }
 
         /// <summary>
         /// 品詞情報を文字列化する。

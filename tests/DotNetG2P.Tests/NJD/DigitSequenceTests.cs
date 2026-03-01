@@ -241,5 +241,50 @@ namespace DotNetG2P.Tests.NJD
 
             Assert.Equal("ゴー", nodes[1].Pronunciation.ToKatakana());
         }
+
+        // ===== NRE回避: Pronunciationがnullのノードでも例外が発生しない =====
+
+        [Fact]
+        public void Process_PronunciationがnullのノードでもNREが発生しない()
+        {
+            // Surfaceが空でPronunciationがnullのノード（無音ノード除去時のNRE回避テスト）
+            var pos = new POS(POSType.Meishi, "数");
+            var details = new WordDetails(pos, "*", "*", "", "*", null);
+            var nullPronNode = new NjdNode("", details);
+            nullPronNode.Pronunciation = null!;
+
+            var normalNode = CreateMeishiNode("東京", "トウキョウ");
+            var nodes = new List<NjdNode> { nullPronNode, normalNode };
+
+            // NullReferenceExceptionが発生しないことを確認
+            DigitSequenceProcessor.Process(nodes);
+
+            // nullPronノードは無音ノードとして除去されるはず
+            Assert.Single(nodes);
+            Assert.Equal("東京", nodes[0].Surface);
+        }
+
+        // ===== 境界チェック: コンマを含む数字列でも例外が発生しない =====
+
+        [Fact]
+        public void Process_コンマ区切り数字列_例外が発生しない()
+        {
+            // 1,234 のようなコンマ区切り数字列
+            var node1 = CreateKazuNode("一", "イチ", 2);
+            var comma = CreateKazuNode("，", "、", 0);
+            comma.Details = new WordDetails(new POS(POSType.Kigou), "*", "*", "，", "*", null);
+            var node2 = CreateKazuNode("二", "ニ", 1);
+            var node3 = CreateKazuNode("三", "サン", 1);
+            var node4 = CreateKazuNode("四", "ヨン", 1);
+            var josuushi = CreateMeishiNode("個", "コ", "接尾", "助数詞", 1);
+
+            var nodes = new List<NjdNode> { node1, comma, node2, node3, node4, josuushi };
+
+            // IndexOutOfRangeExceptionが発生しないことを確認
+            DigitSequenceProcessor.Process(nodes);
+
+            // 処理が正常に完了していればOK
+            Assert.True(nodes.Count > 0);
+        }
     }
 }

@@ -15,6 +15,9 @@ namespace DotNetG2P.PhonemeConverter
         /// <summary>カタカナ→(子音, 母音, MoraKind) の変換テーブル（キー長降順ソート済み）</summary>
         private static readonly (string Katakana, Consonant? Consonant, Vowel? Vowel, MoraKind Kind)[] _mapping;
 
+        /// <summary>先頭文字→候補リスト（キー長降順ソート済み）の索引テーブル</summary>
+        private static readonly Dictionary<char, List<(string Katakana, Consonant? Consonant, Vowel? Vowel, MoraKind Kind)>> _firstCharIndex;
+
         /// <summary>MoraKind → (子音, 母音) の音素マッピングテーブル</summary>
         private static readonly Dictionary<MoraKind, (Consonant?, Vowel?)> _moraToPhoneme;
 
@@ -264,6 +267,19 @@ namespace DotNetG2P.PhonemeConverter
             list.Sort((a, b) => b.Item1.Length.CompareTo(a.Item1.Length));
             _mapping = list.ToArray();
 
+            // 先頭文字→候補リストの索引テーブルを構築（キー長降順を維持）
+            _firstCharIndex = new Dictionary<char, List<(string, Consonant?, Vowel?, MoraKind)>>();
+            foreach (var entry in _mapping)
+            {
+                char firstChar = entry.Katakana[0];
+                if (!_firstCharIndex.TryGetValue(firstChar, out var candidates))
+                {
+                    candidates = new List<(string, Consonant?, Vowel?, MoraKind)>();
+                    _firstCharIndex[firstChar] = candidates;
+                }
+                candidates.Add((entry.Katakana, entry.Consonant, entry.Vowel, entry.Kind));
+            }
+
             // MoraKind → (Consonant?, Vowel?) テーブルの構築
             _moraToPhoneme = new Dictionary<MoraKind, (Consonant?, Vowel?)>();
             foreach (var entry in list)
@@ -323,16 +339,25 @@ namespace DotNetG2P.PhonemeConverter
 
             while (i < katakana.Length)
             {
+                char firstChar = katakana[i];
+
+                if (!_firstCharIndex.TryGetValue(firstChar, out var candidates))
+                {
+                    throw new ArgumentException(
+                        $"カタカナ文字列に未知の文字が含まれています（位置 {i}: '{katakana[i]}'）",
+                        nameof(katakana));
+                }
+
                 bool matched = false;
                 int remaining = katakana.Length - i;
 
-                foreach (var entry in _mapping)
+                foreach (var entry in candidates)
                 {
-                    // キー長が残り文字数より長ければスキップ
                     if (entry.Katakana.Length > remaining)
                         continue;
 
-                    if (string.Compare(katakana, i, entry.Katakana, 0, entry.Katakana.Length, StringComparison.Ordinal) == 0)
+                    if (entry.Katakana.Length == 1 ||
+                        string.Compare(katakana, i, entry.Katakana, 0, entry.Katakana.Length, StringComparison.Ordinal) == 0)
                     {
                         moras.Add(new Mora(entry.Consonant, entry.Vowel, entry.Kind));
                         i += entry.Katakana.Length;

@@ -12,10 +12,8 @@ namespace DotNetG2P.Tests
     /// </summary>
     public class G2PEngineApiTests : IDisposable
     {
-        private const string DictionaryPath = "C:/Users/yuta/Desktop/Private/piper-plus/src/wasm/openjtalk-web/assets/dict/";
-
-        private static readonly bool DictionaryExists =
-            Directory.Exists(DictionaryPath) && File.Exists(Path.Combine(DictionaryPath, "sys.dic"));
+        private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
+        private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
         private readonly NMeCabTokenizer? _tokenizer;
         private readonly G2PEngine? _engine;
@@ -24,7 +22,7 @@ namespace DotNetG2P.Tests
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DictionaryPath);
+                _tokenizer = new NMeCabTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
         }
@@ -36,18 +34,18 @@ namespace DotNetG2P.Tests
 
         // ===== ToProsody =====
 
-        [Fact]
+        [SkippableFact]
         public void ToProsody_EmptyString_ReturnsEmpty()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
             Assert.Equal("", _engine!.ToProsody(""));
         }
 
-        [Fact]
-        public void ToProsody_Null_ReturnsEmpty()
+        [SkippableFact]
+        public void ToProsody_Null_ThrowsArgumentNullException()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            Assert.Equal("", _engine!.ToProsody(null!));
+            Assert.Throws<ArgumentNullException>(() => _engine!.ToProsody(null!));
         }
 
         [SkippableFact]
@@ -62,7 +60,7 @@ namespace DotNetG2P.Tests
 
         // ===== ToAccentPhrases =====
 
-        [Fact]
+        [SkippableFact]
         public void ToAccentPhrases_EmptyString_ReturnsEmptyList()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
@@ -70,12 +68,11 @@ namespace DotNetG2P.Tests
             Assert.Empty(result);
         }
 
-        [Fact]
-        public void ToAccentPhrases_Null_ReturnsEmptyList()
+        [SkippableFact]
+        public void ToAccentPhrases_Null_ThrowsArgumentNullException()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            var result = _engine!.ToAccentPhrases(null!);
-            Assert.Empty(result);
+            Assert.Throws<ArgumentNullException>(() => _engine!.ToAccentPhrases(null!));
         }
 
         [SkippableFact]
@@ -89,7 +86,7 @@ namespace DotNetG2P.Tests
 
         // ===== ToFullContextLabels =====
 
-        [Fact]
+        [SkippableFact]
         public void ToFullContextLabels_EmptyString_ReturnsEmptyList()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
@@ -97,12 +94,11 @@ namespace DotNetG2P.Tests
             Assert.Empty(result);
         }
 
-        [Fact]
-        public void ToFullContextLabels_Null_ReturnsEmptyList()
+        [SkippableFact]
+        public void ToFullContextLabels_Null_ThrowsArgumentNullException()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            var result = _engine!.ToFullContextLabels(null!);
-            Assert.Empty(result);
+            Assert.Throws<ArgumentNullException>(() => _engine!.ToFullContextLabels(null!));
         }
 
         [SkippableFact]
@@ -122,7 +118,7 @@ namespace DotNetG2P.Tests
         public void ToProsody_AfterDispose_ThrowsObjectDisposedException()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            using var tokenizer = new NMeCabTokenizer(DictionaryPath);
+            using var tokenizer = new NMeCabTokenizer(DicPath!);
             var engine = new G2PEngine(tokenizer);
             engine.Dispose();
             Assert.Throws<ObjectDisposedException>(() => engine.ToProsody("テスト"));
@@ -132,7 +128,7 @@ namespace DotNetG2P.Tests
         public void ToAccentPhrases_AfterDispose_ThrowsObjectDisposedException()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            using var tokenizer = new NMeCabTokenizer(DictionaryPath);
+            using var tokenizer = new NMeCabTokenizer(DicPath!);
             var engine = new G2PEngine(tokenizer);
             engine.Dispose();
             Assert.Throws<ObjectDisposedException>(() => engine.ToAccentPhrases("テスト"));
@@ -142,7 +138,7 @@ namespace DotNetG2P.Tests
         public void ToFullContextLabels_AfterDispose_ThrowsObjectDisposedException()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            using var tokenizer = new NMeCabTokenizer(DictionaryPath);
+            using var tokenizer = new NMeCabTokenizer(DicPath!);
             var engine = new G2PEngine(tokenizer);
             engine.Dispose();
             Assert.Throws<ObjectDisposedException>(() => engine.ToFullContextLabels("テスト"));

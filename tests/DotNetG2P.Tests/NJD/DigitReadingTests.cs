@@ -13,10 +13,8 @@ namespace DotNetG2P.Tests.NJD
     /// </summary>
     public class DigitReadingTests : IDisposable
     {
-        private const string DictionaryPath = "C:/Users/yuta/Desktop/Private/piper-plus/src/wasm/openjtalk-web/assets/dict/";
-
-        private static readonly bool DictionaryExists =
-            Directory.Exists(DictionaryPath) && File.Exists(Path.Combine(DictionaryPath, "sys.dic"));
+        private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
+        private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
         private readonly NMeCabTokenizer? _tokenizer;
         private readonly G2PEngine? _engine;
@@ -25,7 +23,7 @@ namespace DotNetG2P.Tests.NJD
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DictionaryPath);
+                _tokenizer = new NMeCabTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
         }
@@ -37,7 +35,7 @@ namespace DotNetG2P.Tests.NJD
 
         private void SkipIfNoDictionary()
         {
-            Skip.If(!DictionaryExists, "naist-jdic辞書が見つかりません: " + DictionaryPath);
+            Skip.If(!DictionaryExists, "naist-jdic辞書が見つかりません（環境変数 NAIST_JDIC_PATH を設定してください）");
         }
 
         // =====================================================================
@@ -227,12 +225,10 @@ namespace DotNetG2P.Tests.NJD
             var result = _engine!.ToKana("２０日");
 
             Assert.NotEmpty(result);
-            // TODO: 複合日付パターンで「二十日」→「ハツカ」に変換されるべきだが、
+            // TODO(issue): 複合日付パターンで「二十日」→「ハツカ」に変換されるべきだが、
             // 形態素解析の結果によっては未対応の可能性がある。
-            // 現状の出力を確認し、対応状況に応じてアサーションを調整する。
-            Assert.True(
-                result.Contains("ハツカ") || result.Length > 0,
-                $"「２０日」の結果: {result}");
+            Assert.NotEmpty(result);
+            Assert.Contains("ニチ", result); // 暫定: 「日」の読みは含まれるはず
         }
 
         // =====================================================================

@@ -73,9 +73,9 @@ namespace DotNetG2P.Models
                 {
                     pronunciation = Pronunciation.FromKatakana(pronStr, accentPosition);
                 }
-                catch (ArgumentException)
+                catch (ArgumentException ex)
                 {
-                    // 解析できないカタカナの場合はnullのまま
+                    System.Diagnostics.Debug.WriteLine($"Pronunciation parse failed: {ex.Message}");
                 }
             }
 

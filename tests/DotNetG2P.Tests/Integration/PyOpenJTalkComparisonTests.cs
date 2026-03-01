@@ -16,10 +16,8 @@ namespace DotNetG2P.Tests.Integration
     /// </summary>
     public class PyOpenJTalkComparisonTests : IDisposable
     {
-        private const string DictionaryPath = "C:/Users/yuta/Desktop/Private/piper-plus/src/wasm/openjtalk-web/assets/dict/";
-
-        private static readonly bool DictionaryExists =
-            Directory.Exists(DictionaryPath) && File.Exists(Path.Combine(DictionaryPath, "sys.dic"));
+        private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
+        private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
         private readonly NMeCabTokenizer? _tokenizer;
         private readonly G2PEngine? _engine;
@@ -39,7 +37,7 @@ namespace DotNetG2P.Tests.Integration
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DictionaryPath);
+                _tokenizer = new NMeCabTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
 
@@ -53,7 +51,7 @@ namespace DotNetG2P.Tests.Integration
 
         private void SkipIfNoDictionary()
         {
-            Skip.If(!DictionaryExists, "naist-jdic辞書が見つかりません: " + DictionaryPath);
+            Skip.If(!DictionaryExists, "naist-jdic辞書が見つかりません（環境変数 NAIST_JDIC_PATH を設定してください）");
         }
 
         /// <summary>
@@ -302,9 +300,9 @@ namespace DotNetG2P.Tests.Integration
             }
 
             // 一致率は現時点で100%を要求しない（進捗把握のため報告のみ）
-            // 最低限、半数以上は正規化一致すること
-            Assert.True(normalizedMatch >= total / 2,
-                $"正規化一致率が50%未満です。{summary}");
+            // 最低限、75%以上は正規化一致すること
+            Assert.True(normalizedMatch >= (total * 3) / 4,
+                $"正規化一致率が75%未満です。{summary}");
         }
 
         // =====================================================================

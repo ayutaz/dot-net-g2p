@@ -1,3 +1,5 @@
+using System;
+
 namespace DotNetG2P.Models
 {
     /// <summary>
@@ -20,7 +22,7 @@ namespace DotNetG2P.Models
         public WordEntry(string surface, WordDetails details, string accentInfo, string chainRule)
         {
             Surface = surface ?? "";
-            Details = details;
+            Details = details ?? throw new ArgumentNullException(nameof(details));
             AccentInfo = accentInfo ?? "*";
             ChainRule = chainRule ?? "*";
         }

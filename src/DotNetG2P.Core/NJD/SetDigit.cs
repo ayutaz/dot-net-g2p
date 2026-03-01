@@ -60,7 +60,7 @@ namespace DotNetG2P.NJD
         /// </summary>
         private static bool IsKazu(POS pos)
         {
-            return pos.IsMeishiSuu;
+            return pos != null && pos.IsMeishiSuu;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace DotNetG2P.NJD
         /// </summary>
         private static bool IsFukushiKanou(POS pos)
         {
-            return pos.Type == POSType.Meishi && pos.SubCategory1 == "副詞可能";
+            return pos != null && pos.Type == POSType.Meishi && pos.SubCategory1 == "副詞可能";
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace DotNetG2P.NJD
         /// </summary>
         private static bool IsJosuushi(POS pos)
         {
-            return pos.Type == POSType.Meishi && pos.SubCategory1 == "接尾" && pos.SubCategory2 == "助数詞";
+            return pos != null && pos.Type == POSType.Meishi && pos.SubCategory1 == "接尾" && pos.SubCategory2 == "助数詞";
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace DotNetG2P.NJD
         /// </summary>
         private static bool IsKigou(POS pos)
         {
-            return pos.IsKigou;
+            return pos != null && pos.IsKigou;
         }
 
         /// <summary>
@@ -502,7 +502,7 @@ namespace DotNetG2P.NJD
                     node.Surface);
                 if (specialCsv != null)
                 {
-                    // 「月」の後の「一」+「日」→ ツイタチではなく通常の「一日（イチニチ）」
+                    // 「月」の後の「一」+「日」→ 通常の「イチニチ」ではなく「ツイタチ」に変換
                     if (i > 0
                         && nodes[i - 1].Surface.Contains(Gatsu)
                         && node.Surface == One

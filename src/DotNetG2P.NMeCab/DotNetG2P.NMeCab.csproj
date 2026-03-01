@@ -9,6 +9,8 @@
     <Description>NMeCab tokenizer adapter for DotNetG2P. Provides ITokenizer implementation using LibNMeCab for Japanese morphological analysis with naist-jdic dictionary.</Description>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageLicenseExpression>LGPL-2.1-or-later</PackageLicenseExpression>
+    <PackageLicenseFile />
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DotNetG2P.Core\DotNetG2P.Core.csproj" />

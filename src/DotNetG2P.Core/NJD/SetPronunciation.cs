@@ -41,15 +41,6 @@ namespace DotNetG2P.NJD
             ProcessJodoushiAndQuestion(nodes);
         }
 
-        /// <summary>
-        /// 後方互換性のためのオーバーロード。
-        /// トークンリストからNjdNodeを構築し直す場合はFromTokens後にProcess(nodes)を呼ぶこと。
-        /// </summary>
-        public static void Process(List<NjdNode> nodes, IReadOnlyList<IToken> tokens)
-        {
-            Process(nodes);
-        }
-
         // ========================================================================
         // 第1段階: 発音がないノードの処理
         // ========================================================================
@@ -288,8 +279,8 @@ namespace DotNetG2P.NJD
             {
                 newPos = new POS(POSType.Kigou, "\u6570"); // 記号-数
             }
-            else if (currentPos.Type == POSType.Fukushi && currentPos.SubCategory1 == "\u4E00\u822C" || // 副詞-一般
-                     currentPos.IsMeishi && currentPos.SubCategory1 == "\u4E00\u822C") // 名詞-一般
+            else if ((currentPos.Type == POSType.Fukushi && currentPos.SubCategory1 == "\u4E00\u822C") || // 副詞-一般
+                     (currentPos.IsMeishi && currentPos.SubCategory1 == "\u4E00\u822C")) // 名詞-一般
             {
                 newPos = new POS(POSType.Kigou, "\u4E00\u822C"); // 記号-一般
             }

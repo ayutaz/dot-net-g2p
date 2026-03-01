@@ -184,5 +184,68 @@ namespace DotNetG2P.Tests.TextNormalization
             var result = TextNormalizer.Normalize("\u306F\u309A");
             Assert.Equal("\u3071", result);
         }
+
+        // ===== 結合不可能な濁点・半濁点保持テスト =====
+
+        [Fact]
+        public void Normalize_NonCombinableDakuten_PreservesDakuten()
+        {
+            // ア + 濁点(U+3099) → アは濁音化不可なので「ア゙」としてそのまま保持
+            var result = TextNormalizer.Normalize("\u30A2\u3099");
+            Assert.Equal("\u30A2\u3099", result);
+        }
+
+        [Fact]
+        public void Normalize_NonCombinableHandakuten_PreservesHandakuten()
+        {
+            // ア + 半濁点(U+309A) → アは半濁音化不可なので「ア゚」としてそのまま保持
+            var result = TextNormalizer.Normalize("\u30A2\u309A");
+            Assert.Equal("\u30A2\u309A", result);
+        }
+
+        [Fact]
+        public void Normalize_LeadingDakuten_PreservesDakuten()
+        {
+            // 先頭の濁点(U+309B)もそのまま保持
+            var result = TextNormalizer.Normalize("\u309B\u30A2");
+            Assert.Equal("\u309B\u30A2", result);
+        }
+
+        [Fact]
+        public void Normalize_LeadingHandakuten_PreservesHandakuten()
+        {
+            // 先頭の半濁点(U+309C)もそのまま保持
+            var result = TextNormalizer.Normalize("\u309C\u30A2");
+            Assert.Equal("\u309C\u30A2", result);
+        }
+
+        // ===== サロゲートペア対応テスト =====
+
+        [Fact]
+        public void Normalize_SurrogatePairCharacter_PassesThrough()
+        {
+            // U+20BB7 (𠮷) = サロゲートペア \uD842\uDFB7
+            var input = "\uD842\uDFB7";
+            var result = TextNormalizer.Normalize(input);
+            Assert.Equal("\uD842\uDFB7", result);
+        }
+
+        [Fact]
+        public void Normalize_SurrogatePairInMixedText_PassesThrough()
+        {
+            // "あ𠮷い" → サロゲートペア文字を含む混合テキスト
+            var input = "\u3042\uD842\uDFB7\u3044";
+            var result = TextNormalizer.Normalize(input);
+            Assert.Equal("\u3042\uD842\uDFB7\u3044", result);
+        }
+
+        [Fact]
+        public void Normalize_MultipleSurrogatePairs_PassThrough()
+        {
+            // U+1F600 (😀) = \uD83D\uDE00, U+20BB7 (𠮷) = \uD842\uDFB7
+            var input = "\uD83D\uDE00\uD842\uDFB7";
+            var result = TextNormalizer.Normalize(input);
+            Assert.Equal("\uD83D\uDE00\uD842\uDFB7", result);
+        }
     }
 }

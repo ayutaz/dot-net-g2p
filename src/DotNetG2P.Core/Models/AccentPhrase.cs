@@ -9,7 +9,7 @@ namespace DotNetG2P.Models
     public sealed class AccentPhrase
     {
         /// <summary>モーラのリスト</summary>
-        public List<Mora> Moras { get; set; }
+        public IReadOnlyList<Mora> Moras { get; }
 
         /// <summary>アクセント核位置</summary>
         public int Accent { get; set; }

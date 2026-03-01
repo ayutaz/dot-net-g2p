@@ -69,6 +69,9 @@ namespace DotNetG2P.NJD
     /// </summary>
     internal sealed class ChainRules
     {
+        // キャッシュ: 同じChainRule文字列に対するChainRulesインスタンスを再利用する
+        private static readonly Dictionary<string, ChainRules> Cache = new Dictionary<string, ChainRules>();
+
         /// <summary>デフォルトルール（品詞指定なし）</summary>
         public AccentChainRule? Default { get; private set; }
 
@@ -85,19 +88,41 @@ namespace DotNetG2P.NJD
         public AccentChainRule? Meishi { get; private set; }
 
         // パース用正規表現（jpreprocessのPARSE_REGEXに準拠）
+        // RegexOptions.Compiled は IL2CPP/AOT 環境で実行時コード生成の問題があるため使用しない
         private static readonly Regex ParseRegex = new Regex(
-            @"^((?<pos>名詞|形容詞|助詞|特殊助動詞|動詞)%)?(?<accent>[FC][1-5]|P1|P2|P6|P14)?(@(?<add>[-0-9]+))?$",
-            RegexOptions.Compiled);
+            @"^((?<pos>名詞|形容詞|助詞|動詞)%)?(?<accent>[FC][1-5]|P1|P2|P6|P14)?(@(?<add>[-0-9]+))?$",
+            RegexOptions.None);
 
         /// <summary>
-        /// ChainRule文字列からChainRulesを構築する。
+        /// ChainRule文字列からChainRulesを取得する。
+        /// 同一文字列に対してはキャッシュからインスタンスを返す。
         /// </summary>
         /// <param name="ruleStr">ChainRule文字列（例: "C3", "動詞%F1/形容詞%F2@-1", "*"）</param>
-        public ChainRules(string ruleStr)
+        public static ChainRules GetOrCreate(string ruleStr)
         {
             if (ruleStr == null || ruleStr == "*")
-                return;
+                return Empty;
 
+            if (Cache.TryGetValue(ruleStr, out var cached))
+                return cached;
+
+            var rules = new ChainRules(ruleStr);
+            Cache[ruleStr] = rules;
+            return rules;
+        }
+
+        /// <summary>空のChainRules（ルールなし）</summary>
+        private static readonly ChainRules Empty = new ChainRules();
+
+        /// <summary>空のChainRulesを作成する（内部用）。</summary>
+        private ChainRules() { }
+
+        /// <summary>
+        /// ChainRule文字列からChainRulesを構築する（内部用）。
+        /// 外部からは <see cref="GetOrCreate"/> を使用すること。
+        /// </summary>
+        private ChainRules(string ruleStr)
+        {
             var parts = ruleStr.Split('/');
             foreach (var part in parts)
             {
@@ -174,7 +199,6 @@ namespace DotNetG2P.NJD
                     case "名詞":
                         Meishi = chainRule;
                         break;
-                    // "特殊助動詞"はjpreprocessでもパースエラーになる（UnknownPOS）
                 }
             }
             else
@@ -312,8 +336,8 @@ namespace DotNetG2P.NJD
             int nodeAcc = current.AccentType;
             int topNodeAcc = topNode.AccentType;
 
-            // ChainRuleをパースし、前ノードの品詞に対応するルールを取得
-            var rules = new ChainRules(current.ChainRule);
+            // ChainRuleをパースし、前ノードの品詞に対応するルールを取得（キャッシュ利用）
+            var rules = ChainRules.GetOrCreate(current.ChainRule);
             var rule = rules.GetRule(prev.Details.PartOfSpeech);
 
             if (rule == null)

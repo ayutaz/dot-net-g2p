@@ -175,7 +175,7 @@ namespace DotNetG2P.NJD
 
         /// <summary>
         /// ルール1: 「ます」「です」の「す」の無声化。
-        /// 動詞・助動詞・感動詞の語末で「マス」or「デス」パターンの「ス」が無声化する。
+        /// 動詞・助動詞の語末で「マス」or「デス」パターンの「ス」が無声化する。
         /// ただし次の語頭が長音(ー)や疑問符(？)の場合は有声のまま。
         /// </summary>
         private static void ApplyRule1_MasuDesu(MoraState curr, MoraState next, MoraState nextNext)
@@ -189,9 +189,8 @@ namespace DotNetG2P.NJD
             if (!indexOk)
                 return;
 
-            // 品詞チェック: 動詞、助動詞、感動詞
-            bool posOk = next.Pos.IsDoushi || next.Pos.IsJodoushi
-                      || next.Pos.Type == POSType.Kandoushi;
+            // 品詞チェック: 動詞、助動詞
+            bool posOk = next.Pos.IsDoushi || next.Pos.IsJodoushi;
             if (!posOk)
                 return;
 
@@ -216,11 +215,8 @@ namespace DotNetG2P.NJD
             if (next == null)
                 return;
 
-            // 前後の有声状態チェック: 前後が有声（または未確定）であること
-            bool isVoicedOk = (curr.IsVoicedFlag == null || curr.IsVoicedFlag == true)
-                           && next.IsVoicedFlag == null
-                           && (nextNext == null || nextNext.IsVoicedFlag == null || nextNext.IsVoicedFlag == true);
-            if (!isVoicedOk)
+            // 次のモーラが未確定であること
+            if (next.IsVoicedFlag != null)
                 return;
 
             // 品詞チェック: 動詞、助動詞、助詞

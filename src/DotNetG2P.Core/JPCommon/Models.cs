@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DotNetG2P.JPCommon
 {
@@ -57,7 +56,16 @@ namespace DotNetG2P.JPCommon
 
         public override string ToString()
         {
-            return string.Join(" ", Phonemes.Select(p => p.Phoneme));
+            if (Phonemes.Count == 0) return string.Empty;
+            if (Phonemes.Count == 1) return Phonemes[0].Phoneme;
+            var sb = new System.Text.StringBuilder();
+            sb.Append(Phonemes[0].Phoneme);
+            for (int i = 1; i < Phonemes.Count; i++)
+            {
+                sb.Append(' ');
+                sb.Append(Phonemes[i].Phoneme);
+            }
+            return sb.ToString();
         }
     }
 
@@ -119,7 +127,16 @@ namespace DotNetG2P.JPCommon
         public int IndexInBreathGroup { get; set; }
 
         /// <summary>総モーラ数（全Word横断）</summary>
-        public int MoraCount => Words.Sum(w => w.MoraCount);
+        public int MoraCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < Words.Count; i++)
+                    count += Words[i].MoraCount;
+                return count;
+            }
+        }
 
         /// <summary>単語数</summary>
         public int WordCount => Words.Count;
@@ -135,9 +152,16 @@ namespace DotNetG2P.JPCommon
         /// <summary>
         /// 全Word横断でモーラのフラットリストを取得する。
         /// </summary>
-        public IEnumerable<JPMora> AllMoras()
+        public List<JPMora> AllMoras()
         {
-            return Words.SelectMany(w => w.Moras);
+            var result = new List<JPMora>();
+            for (int i = 0; i < Words.Count; i++)
+            {
+                var moras = Words[i].Moras;
+                for (int j = 0; j < moras.Count; j++)
+                    result.Add(moras[j]);
+            }
+            return result;
         }
 
         public override string ToString()
@@ -165,7 +189,16 @@ namespace DotNetG2P.JPCommon
         public int AccentPhraseCount => AccentPhrases.Count;
 
         /// <summary>総モーラ数</summary>
-        public int MoraCount => AccentPhrases.Sum(ap => ap.MoraCount);
+        public int MoraCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < AccentPhrases.Count; i++)
+                    count += AccentPhrases[i].MoraCount;
+                return count;
+            }
+        }
 
         public JPBreathGroup()
         {
@@ -190,10 +223,28 @@ namespace DotNetG2P.JPCommon
         public int BreathGroupCount => BreathGroups.Count;
 
         /// <summary>総アクセント句数</summary>
-        public int AccentPhraseCount => BreathGroups.Sum(bg => bg.AccentPhraseCount);
+        public int AccentPhraseCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < BreathGroups.Count; i++)
+                    count += BreathGroups[i].AccentPhraseCount;
+                return count;
+            }
+        }
 
         /// <summary>総モーラ数</summary>
-        public int MoraCount => BreathGroups.Sum(bg => bg.MoraCount);
+        public int MoraCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < BreathGroups.Count; i++)
+                    count += BreathGroups[i].MoraCount;
+                return count;
+            }
+        }
 
         public JPUtterance()
         {

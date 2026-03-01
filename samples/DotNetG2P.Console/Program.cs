@@ -72,7 +72,7 @@ Console.WriteLine("--- 無声音化OFF ---");
 Console.WriteLine();
 
 using var tokenizer2 = new NMeCabTokenizer(dicPath);
-var optionsNoUnvoiced = new G2POptions { EnableUnvoicedVowel = false };
+var optionsNoUnvoiced = new G2POptions(enableUnvoicedVowel: false);
 using var engine2 = new G2PEngine(tokenizer2, optionsNoUnvoiced);
 
 var unvoicedSamples = new[] { "すきです", "東京タワー" };

@@ -598,5 +598,63 @@ namespace DotNetG2P.Tests.NJD
             // addResult = moraSize(2) + (-1) = 1
             Assert.Equal(1, node1.AccentType);
         }
+
+        // ===== ChainRulesキャッシュテスト =====
+
+        [Fact]
+        public void Process_同一ChainRule文字列_キャッシュにより同一結果()
+        {
+            // 同じChainRule "C3" を2回使用しても正しい結果が得られる
+            var node1 = CreateNode("猫", "ネコ", accentType: 1);
+            var node2 = CreateNode("さん", "サン", accentType: 1, chainFlag: true, chainRule: "C3");
+
+            var nodes1 = new List<NjdNode> { node1, node2 };
+            SetAccentType.Process(nodes1);
+            Assert.Equal(2, node1.AccentType); // moraSize(2)
+
+            // 2回目: 同じChainRule文字列 "C3" がキャッシュから取得される
+            var node3 = CreateNode("犬", "イヌ", accentType: 3);
+            var node4 = CreateNode("さん", "サン", accentType: 1, chainFlag: true, chainRule: "C3");
+
+            var nodes2 = new List<NjdNode> { node3, node4 };
+            SetAccentType.Process(nodes2);
+            Assert.Equal(2, node3.AccentType); // moraSize(2)
+        }
+
+        [Fact]
+        public void Process_複合ChainRule_キャッシュ経由でも品詞別ルールが正しく適用()
+        {
+            // 1回目: 動詞が前ノード
+            var node1 = CreateNode("走る", "ハシル", POSType.Doushi, accentType: 2);
+            var node2 = CreateNode("ため", "タメ", accentType: 1, chainFlag: true, chainRule: "動詞%F1/名詞%C3");
+
+            var nodes1 = new List<NjdNode> { node1, node2 };
+            SetAccentType.Process(nodes1);
+            Assert.Equal(2, node1.AccentType); // F1: 前部保持
+
+            // 2回目: 名詞が前ノード（同じChainRule文字列）
+            var node3 = CreateNode("猫", "ネコ", POSType.Meishi, accentType: 1);
+            var node4 = CreateNode("ため", "タメ", accentType: 1, chainFlag: true, chainRule: "動詞%F1/名詞%C3");
+
+            var nodes2 = new List<NjdNode> { node3, node4 };
+            SetAccentType.Process(nodes2);
+            Assert.Equal(2, node3.AccentType); // C3: moraSize(2)
+        }
+
+        // ===== 特殊助動詞がルールとしてパースされないことの確認 =====
+
+        [Fact]
+        public void Process_特殊助動詞ChainRule_無視されてデフォルト動作()
+        {
+            // "特殊助動詞%F1" は正規表現にマッチしない（品詞パターンから除去済み）
+            // → PushRuleでスキップされ、ルールなしとして扱われる → topNodeAccそのまま
+            var node1 = CreateNode("東京", "トーキョー", accentType: 3);
+            var node2 = CreateNode("です", "デス", accentType: 0, chainFlag: true, chainRule: "特殊助動詞%F1");
+
+            var nodes = new List<NjdNode> { node1, node2 };
+            SetAccentType.Process(nodes);
+
+            Assert.Equal(3, node1.AccentType); // ルールなし → 変更なし
+        }
     }
 }

@@ -61,6 +61,16 @@ namespace DotNetG2P.NJD
             if (prevPos.IsKigou || currPos.IsKigou)
                 return false;
 
+            // --- Rule 12: 動詞-非自立は、動詞-連用形 or 名詞-サ変接続 に接続する場合に前にくっつける ---
+            // ※ Rule 13（名詞+動詞→非結合）の例外として先にチェックする必要がある
+            if (IsDoushiHijiritsu(currPos))
+            {
+                if (prevPos.IsDoushi && IsRenyou(prev))
+                    return true;
+                if (IsMeishiSahenSetsuzoku(prevPos))
+                    return true;
+            }
+
             // --- Rule 13: 名詞の後に動詞/形容詞/形容動詞語幹がきたら別のアクセント句に ---
             if (prevPos.IsMeishi && currPos.IsDoushi)
                 return false;
@@ -68,10 +78,6 @@ namespace DotNetG2P.NJD
                 return false;
             if (prevPos.IsMeishi && IsMeishiKeiyoudoushiGokan(currPos))
                 return false;
-
-            // --- Rule 12: 動詞-非自立は、動詞-連用形 or 名詞-サ変接続 に接続する場合に前にくっつける ---
-            if (prevPos.IsDoushi && IsDoushiHijiritsu(currPos) && IsRenyou(prev))
-                return true;
 
             // --- Rule 11: 形容詞-非自立は特定パターンで前にくっつける ---
             // 動詞-連用形 + 形容詞-非自立
@@ -223,11 +229,8 @@ namespace DotNetG2P.NJD
 
         /// <summary>
         /// 名詞-サ変接続 かどうか。Rule 12 の追加条件。
-        /// jpreprocess では動詞-非自立が「動詞-連用形 or 名詞-サ変接続」に接続する場合に結合するが、
+        /// jpreprocess では動詞-非自立が「動詞-連用形 or 名詞-サ変接続」に接続する場合に結合する。
         /// 名詞-サ変接続の場合は活用形チェック不要（名詞は連用形を持たないため）。
-        /// ただし参考実装の accent_phrase.rs では名詞-サ変接続のケースは
-        /// Rule 12 の条件に含まれていない（is_renyou() のみ）ため、ここでは不使用。
-        /// 将来的に必要になった場合のために残す。
         /// </summary>
         private static bool IsMeishiSahenSetsuzoku(POS pos)
         {

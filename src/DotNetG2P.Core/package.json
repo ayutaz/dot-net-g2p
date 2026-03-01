@@ -15,5 +15,11 @@
   "dependencies": {},
   "author": {
     "name": "DotNetG2P Contributors"
+  },
+  "documentationUrl": "https://github.com/dotnetg2p/DotNetG2P#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dotnetg2p/DotNetG2P.git",
+    "directory": "src/DotNetG2P.Core"
   }
 }

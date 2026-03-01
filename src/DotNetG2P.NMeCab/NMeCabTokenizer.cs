@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using NMeCab;
 
 namespace DotNetG2P.NMeCab
@@ -21,6 +22,8 @@ namespace DotNetG2P.NMeCab
         {
             if (dictionaryPath == null)
                 throw new ArgumentNullException(nameof(dictionaryPath));
+            if (!Directory.Exists(dictionaryPath))
+                throw new DirectoryNotFoundException($"辞書ディレクトリが見つかりません: {dictionaryPath}");
 
             _tagger = MeCabTagger.Create(dictionaryPath);
         }
@@ -55,8 +58,15 @@ namespace DotNetG2P.NMeCab
         {
             if (!_disposed)
             {
-                _tagger.Dispose();
                 _disposed = true;
+                try
+                {
+                    _tagger.Dispose();
+                }
+                catch
+                {
+                    // Dispose中の例外は無視する
+                }
             }
         }
 
@@ -104,7 +114,7 @@ namespace DotNetG2P.NMeCab
             public string Surface { get; }
 
             /// <summary>素性配列</summary>
-            public string[] Features => _features;
+            public IReadOnlyList<string> Features => _features;
 
             /// <summary>フィールド0: 品詞</summary>
             public string POS => _features[0];

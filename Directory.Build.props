@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <Version>0.0.0-local</Version>
     <PackageVersion>$(Version)</PackageVersion>
     <Authors>DotNetG2P Contributors</Authors>
     <PackageTags>g2p;japanese;tts;phoneme;openjtalk;text-to-speech</PackageTags>
@@ -10,9 +11,18 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Copyright>Copyright (c) 2025 DotNetG2P Contributors</Copyright>
+
+    <!-- SourceLink -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <!-- Symbol packages -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup Condition="'$(IsPackable)' == 'true'">
     <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="\" />
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
   </ItemGroup>
 </Project>

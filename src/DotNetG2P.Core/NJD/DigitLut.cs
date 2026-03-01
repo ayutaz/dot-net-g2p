@@ -175,7 +175,8 @@ namespace DotNetG2P.NJD
                     { "九", Pronunciation.FromKatakana("ク", 0) },
                 }
             ),
-            // CLASS1F: （空セット、modified） → 六→ロッ, 八→ハッ, 十→ジュッ, 百→ヒャッ
+            // CLASS1F: 意図的に空セット（jpreprocess では「工」「つ」がコメントアウト /* modified */）
+            // キーセットが空のためマッチすることはないが、原典の構造を保持するため残している
             new ConvEntry<Pronunciation>(
                 new HashSet<string>(),
                 new Dictionary<string, Pronunciation>
@@ -337,7 +338,8 @@ namespace DotNetG2P.NJD
                     { "何", DigitType.Voiced },
                 }
             ),
-            // CLASS2D: （空セット、modified）
+            // CLASS2D: 意図的に空セット（jpreprocess では「工」「つ」がコメントアウト /* modified */）
+            // キーセットが空のためマッチすることはないが、原典の構造を保持するため残している
             new ConvEntry<DigitType>(
                 new HashSet<string>(),
                 new Dictionary<string, DigitType>

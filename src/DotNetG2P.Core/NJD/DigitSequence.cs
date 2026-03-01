@@ -91,8 +91,8 @@ namespace DotNetG2P.NJD
                 offset += sequences[i].Convert(nodes, offset);
             }
 
-            // 無音ノードの除去
-            nodes.RemoveAll(n => n.Surface == "" && n.MoraCount == 0 && n.Pronunciation.Moras.Count == 0);
+            // 無音ノードの除去（Pronunciationがnullの場合も安全に処理）
+            nodes.RemoveAll(n => n.Surface == "" && n.MoraCount == 0 && (n.Pronunciation?.Moras?.Count ?? 0) == 0);
         }
 
         /// <summary>
@@ -297,6 +297,10 @@ namespace DotNetG2P.NJD
                     int nodesIndex = Start + i + insertOffset;
                     int revIndex = Digits.Count - i - 1;
                     byte digit = Digits[i];
+
+                    // コンマ削除等でインデックスがずれた場合のガード
+                    if (nodesIndex >= nodes.Count)
+                        break;
 
                     if (digit == 0)
                     {

@@ -17,10 +17,12 @@ namespace DotNetG2P.Tests.JPCommon
             bool? chainFlag = null,
             POSType posType = POSType.Meishi,
             string sub1 = "*",
+            string sub2 = "*",
+            string sub3 = "*",
             string conjugationType = "*",
             string conjugationForm = "*")
         {
-            var pos = new POS(posType, sub1);
+            var pos = new POS(posType, sub1, sub2, sub3);
             var pron = Pronunciation.FromKatakana(katakana, accentType);
             var details = new WordDetails(pos, conjugationType, conjugationForm, surface, katakana, pron);
             var node = new NjdNode(surface, details)
@@ -220,12 +222,12 @@ namespace DotNetG2P.Tests.JPCommon
         [Fact]
         public void Build_PosIdMapping_Keiyoushi()
         {
-            var node = CreateNode("美しい", "ウツクシイ", posType: POSType.Keiyoushi);
+            var node = CreateNode("美しい", "ウツクシイ", posType: POSType.Keiyoushi, sub1: "自立");
             var nodes = new List<NjdNode> { node };
 
             var utt = JPCommonBuilder.Build(nodes);
             var word = utt.BreathGroups[0].AccentPhrases[0].Words[0];
-            Assert.Equal(1, word.PosId);
+            Assert.Equal(11, word.PosId);  // WordAttr: "形容詞,自立,*,*" → 11
         }
 
         [Fact]
@@ -251,9 +253,9 @@ namespace DotNetG2P.Tests.JPCommon
 
             var utt = JPCommonBuilder.Build(nodes);
             var word = utt.BreathGroups[0].AccentPhrases[0].Words[0];
-            Assert.Equal(1, word.CTypeId);  // 五段 → 1
-            Assert.Equal(2, word.CFormId);  // 基本形 → 2
-            Assert.Equal(20, word.PosId);   // 動詞自立 → 20
+            Assert.Equal(20, word.CTypeId);  // WordAttr: "五段・カ行イ音便" → 20
+            Assert.Equal(5, word.CFormId);   // WordAttr: "基本形" → 5
+            Assert.Equal(32, word.PosId);    // WordAttr: "動詞,自立,*,*" → 32
         }
 
         [Fact]
@@ -320,21 +322,21 @@ namespace DotNetG2P.Tests.JPCommon
         [Fact]
         public void Build_JoshiPosIdMapping()
         {
-            // 助詞-格助詞 → 13
-            var node = CreateNode("が", "ガ", posType: POSType.Joshi, sub1: "格助詞");
+            // 助詞-格助詞-一般 → WordAttr: "助詞,格助詞,一般,*" → 14
+            var node = CreateNode("が", "ガ", posType: POSType.Joshi, sub1: "格助詞", sub2: "一般");
             var nodes = new List<NjdNode> { node };
             var utt = JPCommonBuilder.Build(nodes);
-            Assert.Equal(13, utt.BreathGroups[0].AccentPhrases[0].Words[0].PosId);
+            Assert.Equal(14, utt.BreathGroups[0].AccentPhrases[0].Words[0].PosId);
         }
 
         [Fact]
         public void Build_MeishiSubcategoryMapping()
         {
-            // 名詞-固有名詞 → 18
-            var node = CreateNode("東京", "トウキョウ", posType: POSType.Meishi, sub1: "固有名詞");
+            // 名詞-固有名詞-一般 → WordAttr: "名詞,固有名詞,一般,*" → 42
+            var node = CreateNode("東京", "トウキョウ", posType: POSType.Meishi, sub1: "固有名詞", sub2: "一般");
             var nodes = new List<NjdNode> { node };
             var utt = JPCommonBuilder.Build(nodes);
-            Assert.Equal(18, utt.BreathGroups[0].AccentPhrases[0].Words[0].PosId);
+            Assert.Equal(42, utt.BreathGroups[0].AccentPhrases[0].Words[0].PosId);
         }
 
         [Fact]
