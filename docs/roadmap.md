@@ -14,7 +14,7 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 | **M1** | 最小動作プロトタイプ | `g2p("こんにちは")` → `"k o N n i ch i w a"` が動作 | - | **完了** |
 | **M2** | NJD処理パイプライン完成 | pyopenjtalk と同等のNJD処理6段階が動作 | M1 | **完了** |
 | **M3** | 出力形式の充実 | カタカナ/韻律記号/AccentPhrase/フルコンテキストラベル出力 | M2 | **完了** |
-| **M4** | テスト・品質保証 | jpreprocess/pyopenjtalkとの比較テスト合格 | M2 | 未着手 |
+| **M4** | テスト・品質保証 | jpreprocess/pyopenjtalkとの比較テスト合格 | M2 | **完了** |
 | **M5** | パッケージング | NuGet/UPMパッケージとして配布可能 | M3, M4 | 未着手 |
 | **M6** | 独自MeCabエンジン | NMeCab (LGPL) 依存排除、完全BSD化 | M5 | 未着手 |
 
@@ -180,34 +180,41 @@ engine.ToFullContextLabels("盆栽")
 
 ---
 
-## M4: テスト・品質保証
+## M4: テスト・品質保証 **[完了]**
 
 **ゴール**: jpreprocess/pyopenjtalkとの比較テストに合格し、エッジケースを網羅
 
 ### タスク
 
-| # | タスク | 難易度 | 参考 | 依存 |
-|---|--------|--------|------|------|
-| 4.1 | pyopenjtalkテストデータ生成（Pythonスクリプト） | 低 | research/02 | - |
-| 4.2 | NJD各処理の単体テスト | 中 | jpreprocess テスト (~30件) | M2 |
-| 4.3 | MoraMapping全パターンテスト | 低 | 247マッピングの全数検証 | M1 |
-| 4.4 | piper-plusテストケース移植 | 中 | `test_phonemize.py` (~52件) | M2 |
-| 4.5 | pyopenjtalk出力との統合比較テスト | 中 | 4.1で生成したデータ | M3 |
-| 4.6 | エッジケーステスト | 中 | 記号/英字/空文字/長文/混在スクリプト | M2 |
-| 4.7 | 数字読みテスト（網羅的） | 中 | 日付/電話番号/金額/小数 | M2 |
+| # | タスク | 難易度 | テスト数 | ファイル | 状態 |
+|---|--------|--------|---------|---------|------|
+| 4.1 | pyopenjtalkテストデータ生成 | 低 | - | tests/TestData/generate_expected.py, expected_phonemes.json | **完了** |
+| 4.2 | NJD各処理の単体テスト | 中 | 172件 | NJD/SetPronunciationTests.cs (25), SetAccentPhraseTests.cs (37), SetAccentTypeTests.cs (39), DigitSequenceTests.cs (14), SetDigitTests.cs (32), DigitReadingTests.cs (25) | **完了** |
+| 4.3 | MoraMapping全パターンテスト | 低 | 166件 | PhonemeConverter/MoraMappingFullTests.cs | **完了** |
+| 4.4 | piper-plusテストケース移植 | 中 | 87件 | Integration/PiperPlusTests.cs | **完了** |
+| 4.5 | pyopenjtalk出力との統合比較テスト | 中 | 20件 | Integration/PyOpenJTalkComparisonTests.cs | **完了** |
+| 4.6 | エッジケーステスト | 中 | ~57件 | Integration/EdgeCaseTests.cs | **完了** |
+| 4.7 | 数字読みテスト（網羅的） | 中 | 25件 | NJD/DigitReadingTests.cs（辞書依存、SkippableFact） | **完了** |
+
+### 実装統計
+
+- **M4新規テスト**: 502件（合計812件）
+- **新規ファイル**: 12ファイル（テスト10 + テストデータ2）
+- **コード行数**: +4,855行
 
 ### テストデータカテゴリ
 
-| カテゴリ | テストケース例 | 検証対象 |
-|---------|-------------|---------|
-| 基本 | こんにちは、おはようございます | SetPronunciation |
-| 数字 | 100円、2024年3月15日、3.14 | SetDigit |
-| 漢字 | 東京都港区、日本語 | 辞書読み |
-| カタカナ | コンピュータ、プログラミング | MoraMapping |
-| 混在 | 今日はDocker入門 | テキスト正規化 + 辞書 |
-| 記号 | こんにちは！、えっ？ | 記号処理 |
-| 長文 | 50文字以上のテキスト | パイプライン安定性 |
-| エッジ | 空文字列、数字のみ、記号のみ | エラーハンドリング |
+| カテゴリ | テストケース例 | 検証対象 | テスト数 |
+|---------|-------------|---------|---------|
+| 基本 | こんにちは、おはようございます | SetPronunciation | 25件 |
+| 数字 | 100円、2024年3月15日、3.14 | SetDigit/DigitSequence | 71件 |
+| 漢字 | 東京都港区、日本語 | 辞書読み | 20件 |
+| カタカナ | コンピュータ、プログラミング | MoraMapping | 166件 |
+| アクセント | 動詞+助詞、名詞+接尾辞 | SetAccentPhrase/SetAccentType | 76件 |
+| 混在 | 今日はDocker入門 | テキスト正規化 + 辞書 | 87件 |
+| 記号 | こんにちは！、えっ？ | 記号処理 | ~57件 |
+| 長文 | 100文字以上のテキスト | パイプライン安定性 | ~57件 |
+| エッジ | 空文字列、数字のみ、記号のみ | エラーハンドリング | ~57件 |
 
 ---
 
@@ -316,11 +323,13 @@ M2 NJD処理パイプライン [完了]
     │
     ├──────────────────┐
     ▼                  ▼
-M3 出力形式 [完了]   M4 テスト
-├─ AccentPhrase     ├─ 単体テスト
-├─ ToProsody        ├─ pyopenjtalk比較
-├─ JPCommon階層     └─ エッジケース
-└─ FullContext ──────────→ ✅ 全5出力形式
+M3 出力形式 [完了]   M4 テスト [完了]
+├─ AccentPhrase     ├─ NJD単体テスト (172件)
+├─ ToProsody        ├─ MoraMapping全数 (166件)
+├─ JPCommon階層     ├─ piper-plus移植 (87件)
+└─ FullContext      ├─ pyopenjtalk比較 (20件)
+                    └─ エッジケース (~57件)
+                       → ✅ 全812テスト成功
     │                   │
     └────────┬──────────┘
              ▼

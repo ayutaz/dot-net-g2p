@@ -20,8 +20,12 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - ToProsody()（ESPnet韻律記号付き出力）、ToAccentPhrases()（VOICEVOX互換）、ToFullContextLabels()（HTSフルコンテキストラベル）を追加
   - JPCommon階層モデル（JPUtterance→JPBreathGroup→JPAccentPhrase→JPWord→JPMora→JPPhoneme）を実装
   - WordAttr（POS/CType/CForm→ID変換テーブル、jpreprocess word_attr.rs準拠）を実装
-  - 全310テスト成功
-- **M4〜M6**: 未着手（docs/roadmap.md 参照）
+- **M4（テスト・品質保証）**: 完了
+  - 502件の新規テストを追加（合計812件）
+  - NJD各処理の単体テスト（SetPronunciation/SetAccentPhrase/SetAccentType/DigitSequence/SetDigit）
+  - MoraMapping全165パターン検証、piper-plusテスト移植（87件）、pyopenjtalk比較テスト（20件）
+  - エッジケーステスト（記号/英字/空文字列/長文/混在スクリプト）
+- **M5〜M6**: 未着手（docs/roadmap.md 参照）
 
 ## ビルド・実行
 
@@ -85,18 +89,28 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       └── NMeCabTokenizer.cs           # ITokenizer実装
 │
 ├── tests/
-│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0)
+│   ├── TestData/                        # テストデータ
+│   │   ├── expected_phonemes.json       # pyopenjtalk期待値データ（18件）
+│   │   └── generate_expected.py         # テストデータ生成スクリプト
+│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 812テスト)
 │       ├── DotNetG2P.Tests.csproj
 │       ├── G2PEngineApiTests.cs         # G2PEngine API統合テスト
 │       ├── Models/                      # モデルテスト
 │       │   ├── NjdNodeTests.cs
 │       │   └── PronunciationTests.cs
 │       ├── NJD/                         # NJD処理テスト
+│       │   ├── SetPronunciationTests.cs # 発音設定テスト（25件）
+│       │   ├── SetAccentPhraseTests.cs  # アクセント句結合テスト（37件）
+│       │   ├── SetAccentTypeTests.cs    # アクセント結合型テスト（39件）
+│       │   ├── DigitSequenceTests.cs    # 数字列検出テスト（14件）
+│       │   ├── SetDigitTests.cs         # 数字読み変換テスト（32件）
+│       │   ├── DigitReadingTests.cs     # 数字読み網羅テスト（25件、辞書依存）
 │       │   └── SetUnvoicedVowelTests.cs
 │       ├── TextNormalization/           # テキスト正規化テスト
 │       │   └── TextNormalizerTests.cs
 │       ├── PhonemeConverter/            # 音素変換テスト
 │       │   ├── MoraMappingTests.cs
+│       │   ├── MoraMappingFullTests.cs  # 全165パターン検証（166件）
 │       │   ├── AccentPhraseConverterTests.cs
 │       │   └── ProsodyExtractorTests.cs
 │       ├── JPCommon/                    # JPCommonテスト
@@ -104,7 +118,10 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── WordAttrTests.cs
 │       │   └── FullContextLabelTests.cs
 │       └── Integration/                # 統合テスト
-│           └── G2PPipelineTests.cs
+│           ├── G2PPipelineTests.cs
+│           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）
+│           ├── PiperPlusTests.cs        # piper-plus移植テスト（87件）
+│           └── PyOpenJTalkComparisonTests.cs  # pyopenjtalk比較テスト（20件）
 │
 └── samples/
     └── DotNetG2P.Console/               # コンソールサンプル (net8.0)

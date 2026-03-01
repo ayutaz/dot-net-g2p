@@ -32,9 +32,9 @@ UniTaskは非同期ライブラリ（コード中心、データなし）であ�
 
 ---
 
-## 2. 現在の実装状況（M3完了時点）
+## 2. 現在の実装状況（M4完了時点）
 
-M1（最小動作プロトタイプ）、M2（NJD処理パイプライン完成）、M3（出力形式の充実）が完了し、以下の構成で動作している:
+M1（最小動作プロトタイプ）、M2（NJD処理パイプライン完成）、M3（出力形式の充実）、M4（テスト・品質保証）が完了し、以下の構成で動作している:
 
 ```
 dot-net-g2p/
@@ -84,16 +84,26 @@ dot-net-g2p/
 │   └── DotNetG2P.NMeCab/             # NMeCabアダプター（LGPL）
 │       └── NMeCabTokenizer.cs        # LibNMeCab 0.10.2ベースのITokenizer実装
 ├── tests/
-│   └── DotNetG2P.Tests/              # xUnitテスト（310件）
+│   ├── TestData/                      # テストデータ
+│   │   ├── expected_phonemes.json     # pyopenjtalk期待値（18件）
+│   │   └── generate_expected.py       # テストデータ生成スクリプト
+│   └── DotNetG2P.Tests/              # xUnitテスト（812件）
 │       ├── Models/
 │       │   ├── NjdNodeTests.cs
 │       │   └── PronunciationTests.cs
 │       ├── NJD/
+│       │   ├── SetPronunciationTests.cs    # 発音設定（25件）
+│       │   ├── SetAccentPhraseTests.cs     # アクセント句結合（37件）
+│       │   ├── SetAccentTypeTests.cs       # アクセント結合型（39件）
+│       │   ├── DigitSequenceTests.cs       # 数字列検出（14件）
+│       │   ├── SetDigitTests.cs            # 数字読み変換（32件）
+│       │   ├── DigitReadingTests.cs        # 数字読み網羅（25件、辞書依存）
 │       │   └── SetUnvoicedVowelTests.cs
 │       ├── TextNormalization/
 │       │   └── TextNormalizerTests.cs
 │       ├── PhonemeConverter/
 │       │   ├── MoraMappingTests.cs
+│       │   ├── MoraMappingFullTests.cs     # 全165パターン検証（166件）
 │       │   ├── AccentPhraseConverterTests.cs
 │       │   └── ProsodyExtractorTests.cs
 │       ├── JPCommon/
@@ -101,7 +111,10 @@ dot-net-g2p/
 │       │   ├── FullContextLabelTests.cs
 │       │   └── WordAttrTests.cs
 │       ├── Integration/
-│       │   └── G2PPipelineTests.cs
+│       │   ├── G2PPipelineTests.cs
+│       │   ├── EdgeCaseTests.cs            # エッジケース（~57件）
+│       │   ├── PiperPlusTests.cs           # piper-plus移植（87件）
+│       │   └── PyOpenJTalkComparisonTests.cs  # pyopenjtalk比較（20件）
 │       └── G2PEngineApiTests.cs
 └── samples/
     └── DotNetG2P.Console/            # コンソールサンプル（M3対応）

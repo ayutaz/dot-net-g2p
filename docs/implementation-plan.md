@@ -22,7 +22,7 @@ NuGet/UPMパッケージとして商用配布する。
 | Phase 1: 基盤構築 | **完了** | 22ファイル、約2,758行。naist-jdic辞書での動作確認済み |
 | Phase 2: NJD処理パイプライン | **完了** | NJD 7モジュール+TextNormalizer+G2POptions。約3,900行追加、全体約6,620行 |
 | Phase 3: 出力形式・JPCommon | **完了** | 6ファイル新規、約1,465行追加。全310テスト成功 |
-| Phase 4: テスト・品質保証 | 未着手 | - |
+| Phase 4: テスト・品質保証 | **完了** | 502件の新規テスト追加（合計812件）。12ファイル、+4,855行 |
 | Phase 5: パッケージング | 未着手 | - |
 | Phase 6: 独自MeCabエンジン | 未着手 | - |
 
@@ -112,11 +112,12 @@ DotNetG2P.slnx
 17. ~~JPCommon実装（Models.cs ~208行, JPCommonBuilder.cs ~413行, WordAttr.cs）~~ **完了**
 18. ~~ToFullContextLabels() - HTSフルコンテキストラベル出力（FullContextLabel.cs ~552行）~~ **完了**
 
-### Phase 4: テスト・品質保証
+### Phase 4: テスト・品質保証 **[完了]**
 
-19. jpreprocessのテストケース移植
-20. pyopenjtalk出力との比較テスト
-21. エッジケース対応（記号、英字、長文、空文字列）
+19. ~~NJD各処理の単体テスト（SetPronunciation 25件、SetAccentPhrase 37件、SetAccentType 39件、DigitSequence 14件、SetDigit 32件、DigitReading 25件）~~ **完了**
+20. ~~MoraMapping全165パターン検証（166件）、piper-plusテスト移植（87件）~~ **完了**
+21. ~~pyopenjtalk出力との比較テスト（20件、テストデータ生成スクリプト付き）~~ **完了**
+22. ~~エッジケース対応（記号、英字、長文、空文字列、混在スクリプト、~57件）~~ **完了**
 
 ### Phase 5: パッケージング
 
