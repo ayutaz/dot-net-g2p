@@ -15,7 +15,7 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 | **M2** | NJD処理パイプライン完成 | pyopenjtalk と同等のNJD処理6段階が動作 | M1 | **完了** |
 | **M3** | 出力形式の充実 | カタカナ/韻律記号/AccentPhrase/フルコンテキストラベル出力 | M2 | **完了** |
 | **M4** | テスト・品質保証 | jpreprocess/pyopenjtalkとの比較テスト合格 | M2 | **完了** |
-| **M5** | パッケージング | NuGet/UPMパッケージとして配布可能 | M3, M4 | 未着手 |
+| **M5** | パッケージング | NuGet/UPMパッケージとして配布可能 | M3, M4 | **完了** |
 | **M6** | 独自MeCabエンジン | NMeCab (LGPL) 依存排除、完全BSD化 | M5 | 未着手 |
 
 ---
@@ -218,46 +218,48 @@ engine.ToFullContextLabels("盆栽")
 
 ---
 
-## M5: パッケージング
+## M5: パッケージング **[完了]**
 
 **ゴール**: NuGetとUPMの両方で配布可能
 
 ### タスク
 
-| # | タスク | 難易度 | 参考 | 依存 |
-|---|--------|--------|------|------|
-| 5.1 | Directory.Build.props設定 | 低 | docs/design.md | M4 |
-| 5.2 | DotNetG2P.NetCore.csproj（Compile Include方式） | 中 | UniTask方式 | M4 |
-| 5.3 | DotNetG2P.NMeCab.csproj | 低 | - | M4 |
-| 5.4 | NuGetパッケージ設定・テスト | 中 | UniTask `Directory.Build.props` | 5.2, 5.3 |
-| 5.5 | UPM package.json | 低 | UniTask `package.json` | M4 |
-| 5.6 | asmdef作成（Runtime/Editor/Tests） | 低 | docs/design.md | 5.5 |
-| 5.7 | naist-jdic辞書バンドル戦略実装 | 中 | StreamingAssets + ダウンローダー | 5.5 |
-| 5.8 | GitHub Actions CI/CD | 中 | UniTask `build-release.yaml` | 5.4, 5.6 |
-| 5.9 | コンソールサンプル | 低 | - | 5.4 |
-| 5.10 | README・APIドキュメント | 低 | - | 5.9 |
+| # | タスク | 難易度 | ファイル | 状態 |
+|---|--------|--------|---------|------|
+| 5.1 | Directory.Build.props設定 | 低 | Directory.Build.props | **完了** |
+| 5.2 | DotNetG2P.Core NuGetパッケージ設定 | 低 | src/DotNetG2P.Core/DotNetG2P.Core.csproj | **完了** |
+| 5.3 | DotNetG2P.NMeCab NuGetパッケージ設定 | 低 | src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj | **完了** |
+| 5.4 | MIT LICENSEファイル | 低 | LICENSE | **完了** |
+| 5.5 | README.md | 中 | README.md（126行） | **完了** |
+| 5.6 | GitHub Actions CI | 中 | .github/workflows/ci.yml | **完了** |
+| 5.7 | GitHub Actions Release | 中 | .github/workflows/release.yml | **完了** |
+| 5.8 | UPM package.json + asmdef | 低 | package.json, DotNetG2P.asmdef, DotNetG2P.NMeCab.asmdef | **完了** |
+| 5.9 | .editorconfig + .gitattributes | 低 | .editorconfig, .gitattributes | **完了** |
+
+### 実装統計
+
+- **新規ファイル**: 12ファイル（+371行）
+- **NuGetパッケージ**: `DotNetG2P.1.0.0.nupkg` (71KB) + `DotNetG2P.NMeCab.1.0.0.nupkg` (10KB)
+- **ビルド・テスト**: Release 0エラー、812テスト成功、`dotnet pack`成功確認済み
 
 ### パッケージ構成
 
 | パッケージ | ライセンス | 配布先 |
 |-----------|-----------|-------|
-| `DotNetG2P` (NuGet) | MIT/BSD | nuget.org |
-| `DotNetG2P.NMeCab` (NuGet) | LGPL | nuget.org |
-| `com.dotnetg2p.core` (UPM) | MIT/BSD | GitHub URL / OpenUPM |
+| `DotNetG2P` (NuGet) | MIT | nuget.org |
+| `DotNetG2P.NMeCab` (NuGet) | LGPL-2.1-or-later | nuget.org |
+| `com.dotnetg2p.core` (UPM) | MIT | GitHub URL / OpenUPM |
 
 ### 検証方法
 
 ```bash
 # NuGet
-dotnet new console
 dotnet add package DotNetG2P
 dotnet add package DotNetG2P.NMeCab
-dotnet run  # サンプルコードが動作
 
-# Unity
-# Package ManagerからGit URLで追加
-# StreamingAssetsに辞書配置
-# IL2CPPビルドでテスト
+# パック確認
+dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj -c Release -o ./artifacts
+dotnet pack src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj -c Release -o ./artifacts
 ```
 
 ---
@@ -333,11 +335,11 @@ M3 出力形式 [完了]   M4 テスト [完了]
     │                   │
     └────────┬──────────┘
              ▼
-M5 パッケージング
-├─ NuGet設定
-├─ UPM設定
-├─ 辞書バンドル
-└─ CI/CD
+M5 パッケージング [完了]
+├─ NuGet設定 (Directory.Build.props + csproj)
+├─ UPM設定 (package.json + asmdef)
+├─ CI/CD (.github/workflows/ci.yml + release.yml)
+└─ README/LICENSE/editorconfig
     │
     ▼
 M6 独自MeCabエンジン

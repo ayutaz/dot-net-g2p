@@ -32,13 +32,21 @@ UniTaskは非同期ライブラリ（コード中心、データなし）であ�
 
 ---
 
-## 2. 現在の実装状況（M4完了時点）
+## 2. 現在の実装状況（M5完了時点）
 
-M1（最小動作プロトタイプ）、M2（NJD処理パイプライン完成）、M3（出力形式の充実）、M4（テスト・品質保証）が完了し、以下の構成で動作している:
+M1（最小動作プロトタイプ）、M2（NJD処理パイプライン完成）、M3（出力形式の充実）、M4（テスト・品質保証）、M5（パッケージング）が完了し、以下の構成で動作している:
 
 ```
 dot-net-g2p/
 ├── DotNetG2P.slnx                    # ソリューション（.NET 10 .slnx形式）
+├── Directory.Build.props             # NuGet共通メタデータ
+├── LICENSE                           # MIT License
+├── README.md                         # プロジェクトREADME（126行）
+├── .editorconfig                     # コーディング規約
+├── .gitattributes                    # Git属性設定
+├── .github/workflows/
+│   ├── ci.yml                        # CI（push/PR: ビルド・テスト・パック）
+│   └── release.yml                   # リリース（NuGet push + GitHub Release）
 ├── CLAUDE.md                          # プロジェクトガイダンス
 ├── docs/                              # ドキュメント
 │   ├── design.md                      # 本ドキュメント
@@ -80,9 +88,12 @@ dot-net-g2p/
 │   │   │   ├── FullContextLabel.cs   # HTSフルコンテキストラベル生成
 │   │   │   └── WordAttr.cs           # POS/CType/CForm→ID変換テーブル
 │   │   ├── G2PEngine.cs              # メインAPI (ToPhonemes, ToKana, ToProsody, ToAccentPhrases, ToFullContextLabels, Analyze)
-│   │   └── G2POptions.cs             # 処理オプション（各段階ON/OFF）
+│   │   ├── G2POptions.cs             # 処理オプション（各段階ON/OFF）
+│   │   ├── package.json              # UPMパッケージ定義 (com.dotnetg2p.core)
+│   │   └── DotNetG2P.asmdef          # Unity Assembly Definition
 │   └── DotNetG2P.NMeCab/             # NMeCabアダプター（LGPL）
-│       └── NMeCabTokenizer.cs        # LibNMeCab 0.10.2ベースのITokenizer実装
+│       ├── NMeCabTokenizer.cs        # LibNMeCab 0.10.2ベースのITokenizer実装
+│       └── DotNetG2P.NMeCab.asmdef   # Unity Assembly Definition
 ├── tests/
 │   ├── TestData/                      # テストデータ
 │   │   ├── expected_phonemes.json     # pyopenjtalk期待値（18件）

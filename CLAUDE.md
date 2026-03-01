@@ -25,7 +25,12 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - NJD各処理の単体テスト（SetPronunciation/SetAccentPhrase/SetAccentType/DigitSequence/SetDigit）
   - MoraMapping全165パターン検証、piper-plusテスト移植（87件）、pyopenjtalk比較テスト（20件）
   - エッジケーステスト（記号/英字/空文字列/長文/混在スクリプト）
-- **M5〜M6**: 未着手（docs/roadmap.md 参照）
+- **M5（パッケージング）**: 完了
+  - NuGetパッケージ設定（Directory.Build.props、Core/NMeCab csproj更新、`dotnet pack`で.nupkg生成確認済み）
+  - GitHub Actions CI/CD（ci.yml: push/PR時ビルド・テスト・パック、release.yml: NuGet push + GitHub Release）
+  - UPMパッケージ構造（package.json、DotNetG2P.asmdef、DotNetG2P.NMeCab.asmdef）
+  - LICENSE（MIT）、README.md（126行）、.editorconfig、.gitattributes
+- **M6**: 未着手（docs/roadmap.md 参照）
 
 ## ビルド・実行
 
@@ -47,6 +52,14 @@ dotnet run --project samples/DotNetG2P.Console/DotNetG2P.Console.csproj -- <nais
 
 ```
 DotNetG2P.slnx                          # ソリューションファイル（.NET 10 .slnx形式）
+├── Directory.Build.props                # NuGet共通メタデータ
+├── LICENSE                              # MIT License
+├── README.md                            # プロジェクトREADME（126行）
+├── .editorconfig                        # コーディング規約
+├── .gitattributes                       # Git属性設定
+├── .github/workflows/                   # GitHub Actions
+│   ├── ci.yml                           # CI（push/PR: ビルド・テスト・パック）
+│   └── release.yml                      # リリース（NuGet push + GitHub Release）
 ├── src/
 │   ├── DotNetG2P.Core/                  # コアライブラリ（.NET Standard 2.1）
 │   │   ├── Models/                      # データ構造
@@ -82,11 +95,14 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── FullContextLabel.cs      # HTSフルコンテキストラベル生成
 │   │   │   └── WordAttr.cs             # POS/CType/CForm→ID変換テーブル (jpreprocess準拠)
 │   │   ├── G2PEngine.cs                # メインAPI (ToPhonemes, ToKana, ToProsody, ToAccentPhrases, ToFullContextLabels, Analyze)
-│   │   └── G2POptions.cs               # 処理オプション（各段階ON/OFF）
+│   │   ├── G2POptions.cs               # 処理オプション（各段階ON/OFF）
+│   │   ├── package.json                # UPM パッケージ定義 (com.dotnetg2p.core)
+│   │   └── DotNetG2P.asmdef            # Unity Assembly Definition
 │   │
 │   └── DotNetG2P.NMeCab/               # NMeCabアダプター（LGPL依存）
 │       ├── DotNetG2P.NMeCab.csproj      # LibNMeCab 0.10.2 参照
-│       └── NMeCabTokenizer.cs           # ITokenizer実装
+│       ├── NMeCabTokenizer.cs           # ITokenizer実装
+│       └── DotNetG2P.NMeCab.asmdef      # Unity Assembly Definition
 │
 ├── tests/
 │   ├── TestData/                        # テストデータ
@@ -166,6 +182,8 @@ OpenJTalk用のnaist-jdic辞書フォーマット（IPADIC + アクセント情�
 - **形態素解析**: LibNMeCab 0.10.2（LGPL、将来自前実装で置換予定）
 - **辞書**: naist-jdic（BSD License）
 - **テスト**: xUnit 2.5.3 (net8.0)
+- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.NMeCab`) + UPM (`com.dotnetg2p.core`)
+- **CI/CD**: GitHub Actions (ci.yml, release.yml)
 - **ソリューション形式**: .slnx（.NET 10）
 
 ## 開発言語

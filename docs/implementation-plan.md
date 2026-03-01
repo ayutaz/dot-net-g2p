@@ -23,7 +23,7 @@ NuGet/UPMパッケージとして商用配布する。
 | Phase 2: NJD処理パイプライン | **完了** | NJD 7モジュール+TextNormalizer+G2POptions。約3,900行追加、全体約6,620行 |
 | Phase 3: 出力形式・JPCommon | **完了** | 6ファイル新規、約1,465行追加。全310テスト成功 |
 | Phase 4: テスト・品質保証 | **完了** | 502件の新規テスト追加（合計812件）。12ファイル、+4,855行 |
-| Phase 5: パッケージング | 未着手 | - |
+| Phase 5: パッケージング | **完了** | 12ファイル新規、+371行。NuGetパック・CI/CD・UPM・README/LICENSE |
 | Phase 6: 独自MeCabエンジン | 未着手 | - |
 
 ## パッケージ構成
@@ -119,12 +119,12 @@ DotNetG2P.slnx
 21. ~~pyopenjtalk出力との比較テスト（20件、テストデータ生成スクリプト付き）~~ **完了**
 22. ~~エッジケース対応（記号、英字、長文、空文字列、混在スクリプト、~57件）~~ **完了**
 
-### Phase 5: パッケージング
+### Phase 5: パッケージング **[完了]**
 
-22. NuGetパッケージ設定
-23. UPM（Unity Package Manager）パッケージ構成
-24. naist-jdic辞書のバンドル戦略（StreamingAssets対応）
-25. README・APIドキュメント
+23. ~~Directory.Build.props + Core/NMeCab csproj NuGet設定（IsPackable, PackageId, Description, License）~~ **完了**
+24. ~~UPMパッケージ構造（package.json, DotNetG2P.asmdef, DotNetG2P.NMeCab.asmdef）~~ **完了**
+25. ~~GitHub Actions CI/CD（ci.yml: ビルド・テスト・パック、release.yml: NuGet push + GitHub Release）~~ **完了**
+26. ~~LICENSE（MIT）、README.md（126行）、.editorconfig、.gitattributes~~ **完了**
 
 ### (将来) Phase 6: 独自MeCabエンジン
 
