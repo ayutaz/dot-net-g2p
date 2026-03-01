@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: ['8.0.x']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Restore dependencies
+        run: dotnet restore DotNetG2P.slnx
+
+      - name: Build
+        run: dotnet build DotNetG2P.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test DotNetG2P.slnx --configuration Release --no-build --verbosity normal
+
+      - name: Pack DotNetG2P
+        run: dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj --configuration Release --no-build --output ./artifacts
+
+      - name: Pack DotNetG2P.NMeCab
+        run: dotnet pack src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj --configuration Release --no-build --output ./artifacts
+
+      - name: Upload NuGet packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/*.nupkg

@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <PackageVersion>$(Version)</PackageVersion>
+    <Authors>DotNetG2P Contributors</Authors>
+    <PackageTags>g2p;japanese;tts;phoneme;openjtalk;text-to-speech</PackageTags>
+    <PackageProjectUrl>https://github.com/dotnetg2p/DotNetG2P</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dotnetg2p/DotNetG2P</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Copyright>Copyright (c) 2025 DotNetG2P Contributors</Copyright>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

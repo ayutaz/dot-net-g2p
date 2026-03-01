@@ -1,0 +1,25 @@
+* text=auto
+
+# Source files
+*.cs text diff=csharp
+*.csproj text
+*.slnx text
+*.json text
+*.md text
+*.yml text
+*.yaml text
+*.py text
+*.xml text
+*.props text
+
+# Binary files
+*.dic binary
+*.bin binary
+*.nupkg binary
+*.dll binary
+
+# Unity
+*.asmdef text
+*.meta text
+*.unity binary
+*.asset binary

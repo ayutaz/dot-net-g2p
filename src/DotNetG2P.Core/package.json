@@ -1,0 +1,19 @@
+{
+  "name": "com.dotnetg2p.core",
+  "displayName": "DotNetG2P",
+  "version": "0.1.0",
+  "unity": "2021.2",
+  "description": "Japanese Grapheme-to-Phoneme (G2P) library for Unity. OpenJTalk-compatible rule-based G2P pipeline with NJD processing, phoneme conversion, and HTS full-context label generation.",
+  "keywords": [
+    "g2p",
+    "japanese",
+    "tts",
+    "phoneme",
+    "openjtalk"
+  ],
+  "license": "MIT",
+  "dependencies": {},
+  "author": {
+    "name": "DotNetG2P Contributors"
+  }
+}
