@@ -2,28 +2,59 @@
 
 [![CI](https://github.com/ayutaz/dot-net-g2p/actions/workflows/ci.yml/badge.svg)](https://github.com/ayutaz/dot-net-g2p/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 C#/.NET向け日本語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換のルールベースG2Pパイプラインをc#でネイティブに再実装。
-Pythonやネイティブバイナリへの依存なしに、.NETおよびUnityから日本語テキストを音素列に変換できます。
+OpenJTalk互換のルールベースG2Pパイプラインを C# でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに日本語テキストを音素列に変換します。
+
+```csharp
+using var engine = new G2PEngine(new NMeCabTokenizer("/path/to/naist-jdic"));
+
+engine.ToPhonemes("こんにちは");  // => "k o N n i ch i w a"
+engine.ToKana("音声合成");        // => "オンセーゴーセー"
+```
+
+## 目次
+
+- [特徴](#特徴)
+- [インストール](#インストール)
+- [クイックスタート](#クイックスタート)
+- [API リファレンス](#api-リファレンス)
+- [処理パイプライン](#処理パイプライン)
+- [辞書の準備](#辞書の準備)
+- [オプション設定](#オプション設定)
+- [ビルド](#ビルド)
+- [ロードマップ](#ロードマップ)
+- [ライセンス](#ライセンス)
+- [謝辞・関連プロジェクト](#謝辞関連プロジェクト)
+- [Contributing](#contributing)
 
 ## 特徴
 
-- **OpenJTalk互換**: NJD処理6段階（発音生成→数字読み→アクセント句結合→アクセント結合→無声音化）を完全実装
-- **5種類の出力形式**: 音素列、カタカナ、韻律記号付き、VOICEVOX互換AccentPhrase、HTSフルコンテキストラベル
-- **Unity対応**: .NET Standard 2.1（Unity 2021.2+）、IL2CPP/AOT安全設計
-- **812テスト**: pyopenjtalk比較テスト、piper-plus移植テスト、NJD単体テストで品質保証
-- **ITokenizer抽象化**: 形態素解析エンジンを差し替え可能
+- **OpenJTalk互換** — NJD処理6段階（発音生成→数字読み→アクセント句結合→アクセント結合→無声音化）を完全実装
+- **5種類の出力形式** — 音素列 / カタカナ / 韻律記号付き / VOICEVOX互換AccentPhrase / HTSフルコンテキストラベル
+- **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、IL2CPP/AOT安全設計
+- **ITokenizer抽象化** — 形態素解析エンジンを差し替え可能（初期実装はNMeCab）
+- **842テストで品質保証** — pyopenjtalk比較テスト、piper-plus移植テスト、NJD単体テスト
 
 ## インストール
+
+### NuGet
 
 ```bash
 dotnet add package DotNetG2P
 dotnet add package DotNetG2P.NMeCab
 ```
 
-別途naist-jdic辞書が必要です（下記「辞書セットアップ」参照）。
+### Unity (UPM)
+
+Unity Package Managerの **Add package from git URL** で以下を追加:
+
+```
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
+```
+
+> **Note:** 別途 naist-jdic 辞書が必要です。詳細は[辞書の準備](#辞書の準備)を参照してください。
 
 ## クイックスタート
 
@@ -31,99 +62,175 @@ dotnet add package DotNetG2P.NMeCab
 using DotNetG2P;
 using DotNetG2P.NMeCab;
 
+// 1. エンジン初期化（辞書パスを指定）
 using var tokenizer = new NMeCabTokenizer("/path/to/naist-jdic");
 using var engine = new G2PEngine(tokenizer);
 
-// 音素列
-string phonemes = engine.ToPhonemes("こんにちは");
-// => "k o N n i ch i w a"
+// 2. テキストから音素列を取得
+string phonemes = engine.ToPhonemes("今日は良い天気です");
+// => "ky o o w a i i t e N k i d e s U"
 
-// カタカナ
-string kana = engine.ToKana("今日は天気がいいですね");
-// => "キョーワテンキガイーデスネ"
+// 3. カタカナ読みを取得
+string kana = engine.ToKana("今日は良い天気です");
+// => "キョーワイーテンキデス"
 
-// 韻律記号付き（ESPnet方式）
+// 4. 韻律記号付き出力（ESPnet方式）
 string prosody = engine.ToProsody("こんにちは");
 // => "^ k o [ N n i ch i w a $"
 
-// VOICEVOX互換アクセント句
+// 5. VOICEVOX互換アクセント句
 var phrases = engine.ToAccentPhrases("こんにちは");
 
-// HTSフルコンテキストラベル
+// 6. HTSフルコンテキストラベル（HMM/DNN音声合成用）
 var labels = engine.ToFullContextLabels("こんにちは");
 ```
 
-## API一覧
+## API リファレンス
 
-| メソッド | 戻り値型 | 出力例 | 用途 |
-|---------|---------|--------|------|
-| `ToPhonemes(text)` | `string` | `"k o N n i ch i w a"` | 基本音素列 |
-| `ToKana(text)` | `string` | `"コンニチワ"` | カタカナ読み |
-| `ToProsody(text)` | `string` | `"^ k o [ N n i ch i w a $"` | ESPnet韻律記号付き |
-| `ToAccentPhrases(text)` | `IReadOnlyList<AccentPhrase>` | VOICEVOX互換構造体 | 音声合成前処理 |
-| `ToFullContextLabels(text)` | `IReadOnlyList<string>` | HTSラベル | HMM/DNN音声合成 |
-| `Analyze(text)` | `IReadOnlyList<NjdNode>` | NJDノード列 | デバッグ・拡張 |
+### G2PEngine
 
-## 辞書セットアップ
+| メソッド | 戻り値型 | 説明 |
+|---------|---------|------|
+| `ToPhonemes(text)` | `string` | 空白区切り音素列 (`"k o N n i ch i w a"`) |
+| `ToKana(text)` | `string` | カタカナ読み (`"コンニチワ"`) |
+| `ToProsody(text)` | `string` | ESPnet韻律記号付き (`"^ k o [ N n i ch i w a $"`) |
+| `ToAccentPhrases(text)` | `IReadOnlyList<AccentPhrase>` | VOICEVOX互換アクセント句構造体 |
+| `ToFullContextLabels(text)` | `IReadOnlyList<string>` | HTSフルコンテキストラベル |
+| `Analyze(text)` | `IReadOnlyList<NjdNode>` | NJD処理後のノード列（デバッグ・拡張用） |
 
-DotNetG2Pはnaist-jdic辞書（OpenJTalk用MeCab辞書）を使用します。
+### 日本語音素体系
 
-### 辞書の入手方法
-
-1. [Open JTalk](https://open-jtalk.sourceforge.net/)のダウンロードページからnaist-jdic辞書をダウンロード
-2. または、pyopenjtalkやOpenJTalkに同梱の辞書ディレクトリを使用
-
-辞書ディレクトリには以下のファイルが必要です:
-- `sys.dic` - システム辞書
-- `matrix.bin` - 遷移コスト行列
-- `char.bin` - 文字カテゴリ定義
-- `unk.dic` - 未知語テンプレート
-
-## G2POptions
-
-```csharp
-var options = new G2POptions(
-    enableTextNormalization: true,  // テキスト正規化（デフォルト: true）
-    enableDigitProcessing: true,    // 数字読み変換（デフォルト: true）
-    enableAccentPhrase: true,       // アクセント句結合（デフォルト: true）
-    enableAccentType: true,         // アクセント結合型（デフォルト: true）
-    enableUnvoicedVowel: true       // 無声音化（デフォルト: true）
-);
-using var engine = new G2PEngine(tokenizer, options);
-```
+| 種別 | 音素 |
+|------|------|
+| 母音 | `a` `i` `u` `e` `o` （無声: `A` `I` `U` `E` `O`） |
+| 子音 | `k` `g` `s` `z` `t` `d` `n` `h` `b` `p` `m` `r` `f` `v` |
+| 拗音子音 | `ky` `gy` `sh` `j` `ch` `ts` `ny` `hy` `by` `py` `my` `ry` `dy` `ty` `kw` `gw` |
+| 半母音 | `y` `w` |
+| 特殊 | `N`（撥音） `cl`（促音） `-`（長音） `pau`（ポーズ） |
 
 ## 処理パイプライン
 
+DotNetG2Pは[OpenJTalk](https://open-jtalk.sourceforge.net/)と同等の6段階NJD処理パイプラインを実装しています。
+
 ```
 テキスト入力
-  → TextNormalizer（全角/半角変換、濁点結合）
-  → ITokenizer.Tokenize()（形態素解析）
-  → NjdNode.FromTokens()
-  → SetPronunciation（発音生成）
-  → DigitSequence + SetDigit（数字読み変換）
-  → SetAccentPhrase（アクセント句結合）
-  → SetAccentType（アクセント結合型）
-  → SetUnvoicedVowel（無声音化）
-  → 出力形式変換
+  │
+  ├─ TextNormalizer        全角/半角正規化、濁点結合
+  ├─ ITokenizer.Tokenize   形態素解析（NMeCab + naist-jdic）
+  ├─ SetPronunciation      辞書読み・フォールバック発音生成
+  ├─ SetDigit              数字列検出・助数詞読み変換
+  ├─ SetAccentPhrase       品詞パターンによるアクセント句結合（18ルール）
+  ├─ SetAccentType         チェインルールによるアクセント結合型決定
+  └─ SetUnvoicedVowel      無声母音化（6ルール）
+  │
+  ▼
+  出力（音素列 / カタカナ / 韻律記号 / AccentPhrase / HTSラベル）
 ```
+
+## 辞書の準備
+
+DotNetG2Pは形態素解析にnaist-jdic辞書（OpenJTalk用MeCab辞書）を使用します。
+
+### 入手方法
+
+1. [Open JTalk公式サイト](https://open-jtalk.sourceforge.net/)からダウンロード
+2. pyopenjtalkやOpenJTalkに同梱の辞書ディレクトリをそのまま使用
+
+### 必要なファイル
+
+辞書ディレクトリに以下の4ファイルが含まれている必要があります:
+
+| ファイル | 内容 |
+|---------|------|
+| `sys.dic` | システム辞書 |
+| `matrix.bin` | 遷移コスト行列 |
+| `char.bin` | 文字カテゴリ定義 |
+| `unk.dic` | 未知語テンプレート |
+
+### Unity での配置
+
+Unityでは `StreamingAssets` フォルダに辞書ファイルを配置し、`Application.streamingAssetsPath` を使用してパスを指定します。
+
+```csharp
+var dicPath = Path.Combine(Application.streamingAssetsPath, "naist-jdic");
+using var tokenizer = new NMeCabTokenizer(dicPath);
+```
+
+## オプション設定
+
+`G2POptions` で各処理段階を個別にON/OFFできます（イミュータブル設計）。
+
+```csharp
+// 無声音化のみ無効にする例
+var options = new G2POptions(enableUnvoicedVowel: false);
+using var engine = new G2PEngine(tokenizer, options);
+```
+
+| パラメータ | デフォルト | 説明 |
+|-----------|-----------|------|
+| `enableTextNormalization` | `true` | テキスト正規化（全角/半角変換） |
+| `enableDigitProcessing` | `true` | 数字読み変換・助数詞処理 |
+| `enableAccentPhrase` | `true` | アクセント句結合（18ルール） |
+| `enableAccentType` | `true` | アクセント結合型決定 |
+| `enableUnvoicedVowel` | `true` | 無声母音化（6ルール） |
 
 ## ビルド
 
+### 要件
+
+- .NET SDK 9.0 以上
+
+### コマンド
+
 ```bash
+# ビルド
 dotnet build DotNetG2P.slnx
+
+# テスト実行
 dotnet test DotNetG2P.slnx
+
+# コンソールサンプル（辞書なし: MoraMappingのみ確認）
+dotnet run --project samples/DotNetG2P.Console
+
+# コンソールサンプル（辞書あり: フルG2P）
+dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
+
+## ロードマップ
+
+| フェーズ | 状態 | 内容 |
+|---------|------|------|
+| Phase 1: 基盤構築 | 完了 | データモデル、ITokenizer、NMeCabアダプター、MoraMapping |
+| Phase 2: NJDパイプライン | 完了 | 6段階NJD処理、TextNormalizer、G2POptions |
+| Phase 3: 出力形式 | 完了 | ToProsody、AccentPhrase、JPCommon、HTSラベル |
+| Phase 4: テスト | 完了 | 842テスト（NJD単体・pyopenjtalk比較・エッジケース） |
+| Phase 5: パッケージング | 完了 | NuGet/UPM設定、CI/CD、ドキュメント |
+| Phase 6: 独自MeCabエンジン | 未着手 | ダブル配列Trie、ビタビ、NMeCab依存排除→完全MIT化 |
 
 ## ライセンス
 
-- **DotNetG2P** (コアライブラリ): MIT License
-- **DotNetG2P.NMeCab** (NMeCabアダプター): LGPL-2.1-or-later（LibNMeCab依存のため）
+| パッケージ | ライセンス | 備考 |
+|-----------|-----------|------|
+| **DotNetG2P** | [MIT](LICENSE) | コアライブラリ |
+| **DotNetG2P.NMeCab** | LGPL-2.1-or-later | [LibNMeCab](https://github.com/komutan/NMeCab)依存のため |
 
-将来的にPhase 6で独自MeCab実装に置き換え、全コンポーネントをMITライセンスにする予定です。
+Phase 6で独自MeCab実装に置き換え、全コンポーネントをMITライセンスにする予定です。
 
-## 関連プロジェクト
+## 謝辞・関連プロジェクト
 
-- [OpenJTalk](https://open-jtalk.sourceforge.net/) - 日本語TTS（C/C++）
-- [pyopenjtalk](https://github.com/r9y9/pyopenjtalk) - OpenJTalkのPythonラッパー
-- [jpreprocess](https://github.com/jpreprocess/jpreprocess) - OpenJTalkのRust再実装（本プロジェクトの設計参考）
-- [VOICEVOX](https://voicevox.hiroshiba.jp/) - 日本語音声合成ソフトウェア
+DotNetG2Pは以下のプロジェクトの成果物・知見に基づいています。
+
+| プロジェクト | 関連 |
+|-------------|------|
+| [OpenJTalk](https://open-jtalk.sourceforge.net/) | NJD処理パイプラインのオリジナル実装（C/C++） |
+| [jpreprocess](https://github.com/jpreprocess/jpreprocess) | 本プロジェクトの主要設計参考（Rust再実装） |
+| [pyopenjtalk](https://github.com/r9y9/pyopenjtalk) | テストデータ生成・比較検証に使用 |
+| [VOICEVOX](https://voicevox.hiroshiba.jp/) | AccentPhrase出力形式・MoraMapping参考 |
+| [LibNMeCab](https://github.com/komutan/NMeCab) | 形態素解析エンジン（C# MeCab実装） |
+| [ESPnet](https://github.com/espnet/espnet) | 韻律記号抽出アルゴリズム参考 |
+
+## Contributing
+
+Issue・Pull Requestを歓迎します。バグ報告や機能提案は [Issues](https://github.com/ayutaz/dot-net-g2p/issues) からお気軽にどうぞ。
+
+コード内コメント・コミットメッセージ・Issue・PRはすべて**日本語**で記述してください。
