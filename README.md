@@ -1,6 +1,6 @@
 # DotNetG2P
 
-[![CI](https://github.com/dotnetg2p/DotNetG2P/actions/workflows/ci.yml/badge.svg)](https://github.com/dotnetg2p/DotNetG2P/actions/workflows/ci.yml)
+[![CI](https://github.com/ayutaz/dot-net-g2p/actions/workflows/ci.yml/badge.svg)](https://github.com/ayutaz/dot-net-g2p/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -82,14 +82,13 @@ DotNetG2Pはnaist-jdic辞書（OpenJTalk用MeCab辞書）を使用します。
 ## G2POptions
 
 ```csharp
-var options = new G2POptions
-{
-    EnableTextNormalization = true,  // テキスト正規化（デフォルト: true）
-    EnableDigitProcessing = true,    // 数字読み変換（デフォルト: true）
-    EnableAccentPhrase = true,       // アクセント句結合（デフォルト: true）
-    EnableAccentType = true,         // アクセント結合型（デフォルト: true）
-    EnableUnvoicedVowel = true,      // 無声音化（デフォルト: true）
-};
+var options = new G2POptions(
+    enableTextNormalization: true,  // テキスト正規化（デフォルト: true）
+    enableDigitProcessing: true,    // 数字読み変換（デフォルト: true）
+    enableAccentPhrase: true,       // アクセント句結合（デフォルト: true）
+    enableAccentType: true,         // アクセント結合型（デフォルト: true）
+    enableUnvoicedVowel: true       // 無声音化（デフォルト: true）
+);
 using var engine = new G2PEngine(tokenizer, options);
 ```
 
