@@ -1,0 +1,110 @@
+[
+  {
+    "input": "こんにちは",
+    "phonemes": "k o N n i ch i w a",
+    "labels": [],
+    "notes": ""
+  },
+  {
+    "input": "おはようございます",
+    "phonemes": "o h a y o o g o z a i m a s U",
+    "labels": [],
+    "notes": "pyopenjtalkでは長音を母音繰り返しで表記（'o o'）。DotNetG2Pでは'-'を使う可能性あり。"
+  },
+  {
+    "input": "ありがとう",
+    "phonemes": "a r i g a t o o",
+    "labels": [],
+    "notes": "長音: 'とう' → 't o o'（母音繰り返し）"
+  },
+  {
+    "input": "東京",
+    "phonemes": "t o o ky o o",
+    "labels": [],
+    "notes": "長音: 'とう' → 't o o', 'きょう' → 'ky o o'"
+  },
+  {
+    "input": "東京都",
+    "phonemes": "t o o ky o o t o",
+    "labels": [],
+    "notes": "長音: 'とう' → 't o o', 'きょう' → 'ky o o'"
+  },
+  {
+    "input": "日本語",
+    "phonemes": "n i h o N g o",
+    "labels": [],
+    "notes": ""
+  },
+  {
+    "input": "人工知能",
+    "phonemes": "j i N k o o ch i n o o",
+    "labels": [],
+    "notes": "長音: 'こう' → 'k o o', 'のう' → 'n o o'"
+  },
+  {
+    "input": "音声合成",
+    "phonemes": "o N s e e g o o s e e",
+    "labels": [],
+    "notes": "長音: 'せい' → 's e e', 'ごう' → 'g o o'"
+  },
+  {
+    "input": "コンピュータ",
+    "phonemes": "k o N py u u t a",
+    "labels": [],
+    "notes": "長音: 'ュー' → 'py u u'"
+  },
+  {
+    "input": "プログラミング",
+    "phonemes": "p u r o g u r a m i N g u",
+    "labels": [],
+    "notes": ""
+  },
+  {
+    "input": "100円",
+    "phonemes": "hy a k u e N",
+    "labels": [],
+    "notes": "数字読み変換: '100' → 'ひゃく', '円' → 'えん'"
+  },
+  {
+    "input": "2024年",
+    "phonemes": "n i s e N n i j u u y o n e N",
+    "labels": [],
+    "notes": "数字読み変換: '2024' → 'にせんにじゅうよん', '年' → 'ねん'。長音: 'じゅう' → 'j u u'"
+  },
+  {
+    "input": "3本",
+    "phonemes": "s a N b o N",
+    "labels": [],
+    "notes": "数字読み変換+助数詞連濁: '3本' → 'さんぼん'"
+  },
+  {
+    "input": "12月25日",
+    "phonemes": "j u u n i g a ts U n i j u u g o n i ch i",
+    "labels": [],
+    "notes": "数字読み変換: '12月' → 'じゅうにがつ', '25日' → 'にじゅうごにち'。無声化: 'つ' → 'ts U'"
+  },
+  {
+    "input": "今日はいい天気ですね",
+    "phonemes": "ky o o w a i i t e N k i d e s U n e",
+    "labels": [],
+    "notes": "長音: 'きょう' → 'ky o o'。無声化: 'す' → 's U'"
+  },
+  {
+    "input": "私は東京に住んでいます",
+    "phonemes": "w a t a sh i w a t o o ky o o n i s U N d e i m a s U",
+    "labels": [],
+    "notes": "長音: 'とう' → 't o o', 'きょう' → 'ky o o'。無声化: 'す' → 's U'"
+  },
+  {
+    "input": "すき",
+    "phonemes": "s U k i",
+    "labels": [],
+    "notes": "無声化: 'す' → 's U'"
+  },
+  {
+    "input": "です",
+    "phonemes": "d e s U",
+    "labels": [],
+    "notes": "無声化: 'す' → 's U'"
+  }
+]

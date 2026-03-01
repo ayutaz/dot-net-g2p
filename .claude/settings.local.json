@@ -60,7 +60,8 @@
       "Bash(do echo \"=== $file ===\")",
       "Bash(for file in \"feature/mod.rs\" \"feature/builder.rs\" \"feature/limit.rs\")",
       "Bash(for file in \"word_attr/mod.rs\" \"word_attr/pos.rs\" \"word_attr/ctype.rs\" \"word_attr/cform.rs\")",
-      "Bash(gh search:*)"
+      "Bash(gh search:*)",
+      "Bash(Select-String -Pattern \"Failed|FAILED|失敗\")"
     ]
   }
 }
