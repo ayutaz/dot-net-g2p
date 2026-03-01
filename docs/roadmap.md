@@ -13,7 +13,7 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 |----|------|---------|------|------|
 | **M1** | 最小動作プロトタイプ | `g2p("こんにちは")` → `"k o N n i ch i w a"` が動作 | - | **完了** |
 | **M2** | NJD処理パイプライン完成 | pyopenjtalk と同等のNJD処理6段階が動作 | M1 | **完了** |
-| **M3** | 出力形式の充実 | カタカナ/韻律記号/AccentPhrase/フルコンテキストラベル出力 | M2 | 未着手 |
+| **M3** | 出力形式の充実 | カタカナ/韻律記号/AccentPhrase/フルコンテキストラベル出力 | M2 | **完了** |
 | **M4** | テスト・品質保証 | jpreprocess/pyopenjtalkとの比較テスト合格 | M2 | 未着手 |
 | **M5** | パッケージング | NuGet/UPMパッケージとして配布可能 | M3, M4 | 未着手 |
 | **M6** | 独自MeCabエンジン | NMeCab (LGPL) 依存排除、完全BSD化 | M5 | 未着手 |
@@ -130,20 +130,43 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 
 ---
 
-## M3: 出力形式の充実
+## M3: 出力形式の充実 **[完了]**
 
 **ゴール**: 5種類の出力形式を提供
 
 ### タスク
 
-| # | タスク | 難易度 | 推定規模 | 参考実装 | 依存 |
+| # | タスク | 難易度 | 実装行数 | ファイル | 状態 |
 |---|--------|--------|---------|---------|------|
-| 3.1 | ToKana()（カタカナ出力） | 低 | ~50行 | NjdNodeのpronunciation連結 | M2 |
-| 3.2 | AccentPhrase構造体出力（VOICEVOX互換） | 中 | ~200行 | VOICEVOX AccentPhrase/Moraモデル | M2 |
-| 3.3 | ProsodyExtractor（韻律記号付き出力） | 中 | ~300行 | piper-plus `japanese.py` (382行), uPiper `OpenJTalkPhonemizer.cs` | M2 |
-| 3.4 | JPCommon: Utterance/BreathGroup階層構築 | **高** | ~800行 | jpreprocess `jpcommon/label/` (9KB) | M2 |
-| 3.5 | JPCommon: フルコンテキストラベル生成 | **高** | ~1200行 | jpreprocess `jpcommon/feature/mod.rs` (31KB) ※最大ファイル | 3.4 |
-| 3.6 | G2PEngineに全出力メソッド追加 | 低 | ~100行 | - | 3.1〜3.5 |
+| 3.1 | ToKana()（カタカナ出力） | 低 | M1実装済 | G2PEngine.cs | **完了** |
+| 3.2 | AccentPhrase構造体出力（VOICEVOX互換） | 中 | ~160行 | PhonemeConverter/AccentPhraseConverter.cs | **完了** |
+| 3.3 | ProsodyExtractor（韻律記号付き出力） | 中 | ~132行 | PhonemeConverter/ProsodyExtractor.cs | **完了** |
+| 3.4 | JPCommon: Utterance/BreathGroup階層構築 | **高** | ~621行 | JPCommon/Models.cs, JPCommon/JPCommonBuilder.cs | **完了** |
+| 3.5 | JPCommon: フルコンテキストラベル生成 | **高** | ~552行 | JPCommon/FullContextLabel.cs, JPCommon/WordAttr.cs | **完了** |
+| 3.6 | G2PEngineに全出力メソッド追加 | 低 | +51行 | G2PEngine.cs | **完了** |
+
+### 実装統計
+
+- **M3新規コード**: 約1,465行（JPCommon 4ファイル + PhonemeConverter 2ファイル + G2PEngine変更）
+- **M1からの累計変更**: NjdNode.cs拡張、G2PEngine.csに3メソッド追加
+- **テスト**: 310件成功（M3で約120件のテストを追加）
+- **プロジェクト全体**: 約10,100行
+
+### 検証結果（naist-jdic辞書使用）
+
+```csharp
+// ToProsody()
+engine.ToProsody("こんにちは")
+// => "^ k o [ N _ n i _ ch i _ w a $"
+
+// ToAccentPhrases()
+engine.ToAccentPhrases("今日は天気がいいですね")
+// => [AccentPhrase{Moras=[...], Accent=1}, ...]
+
+// ToFullContextLabels()
+engine.ToFullContextLabels("盆栽")
+// => ["xx^xx-sil+b=o/A:xx+xx+xx/B:xx-xx_xx/C:xx_xx+xx/D:...", ...]
+```
 
 ### 出力形式一覧
 
@@ -154,23 +177,6 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 | `ToProsody()` | `"^ k o [ N n i ch i w a $"` | ESPnet韻律記号付き |
 | `ToAccentPhrases()` | `[AccentPhrase{...}]` | VOICEVOX互換構造体 |
 | `ToFullContextLabels()` | `["xx^xx-k+o=N/A:..."]` | HTSフルコンテキストラベル |
-
-### 検証方法
-
-```csharp
-// 韻律記号
-var prosody = engine.ToProsody("こんにちは");
-Debug.Assert(prosody.StartsWith("^") && prosody.EndsWith("$"));
-
-// VOICEVOX互換
-var phrases = engine.ToAccentPhrases("今日は天気がいいですね");
-Debug.Assert(phrases[0].Moras.Count > 0);
-Debug.Assert(phrases[0].Accent > 0);
-
-// フルコンテキストラベル
-var labels = engine.ToFullContextLabels("こんにちは");
-Debug.Assert(labels[0].Contains("/A:"));
-```
 
 ---
 
@@ -310,11 +316,11 @@ M2 NJD処理パイプライン [完了]
     │
     ├──────────────────┐
     ▼                  ▼
-M3 出力形式         M4 テスト
-├─ ToKana           ├─ 単体テスト
+M3 出力形式 [完了]   M4 テスト
+├─ AccentPhrase     ├─ 単体テスト
 ├─ ToProsody        ├─ pyopenjtalk比較
-├─ AccentPhrase     └─ エッジケース
-└─ FullContext          │
+├─ JPCommon階層     └─ エッジケース
+└─ FullContext ──────────→ ✅ 全5出力形式
     │                   │
     └────────┬──────────┘
              ▼

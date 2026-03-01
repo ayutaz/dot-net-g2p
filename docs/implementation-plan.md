@@ -21,7 +21,7 @@ NuGet/UPMパッケージとして商用配布する。
 |---------|------|------|
 | Phase 1: 基盤構築 | **完了** | 22ファイル、約2,758行。naist-jdic辞書での動作確認済み |
 | Phase 2: NJD処理パイプライン | **完了** | NJD 7モジュール+TextNormalizer+G2POptions。約3,900行追加、全体約6,620行 |
-| Phase 3: 出力形式・JPCommon | 未着手 | - |
+| Phase 3: 出力形式・JPCommon | **完了** | 6ファイル新規、約1,465行追加。全310テスト成功 |
 | Phase 4: テスト・品質保証 | 未着手 | - |
 | Phase 5: パッケージング | 未着手 | - |
 | Phase 6: 独自MeCabエンジン | 未着手 | - |
@@ -29,7 +29,7 @@ NuGet/UPMパッケージとして商用配布する。
 ## パッケージ構成
 
 ```
-DotNetG2P.slnxx
+DotNetG2P.slnx
 ├── src/
 │   ├── DotNetG2P.Core/           # コアライブラリ（.NET Standard 2.1）
 │   │   ├── Models/               # データ構造
@@ -53,15 +53,17 @@ DotNetG2P.slnxx
 │   │   │   ├── SetAccentType.cs     # C1-C5, F1-F5, P系列
 │   │   │   └── SetUnvoicedVowel.cs  # 6ルール
 │   │   ├── JPCommon/             # フルコンテキストラベル生成
-│   │   │   ├── Utterance.cs
-│   │   │   ├── BreathGroup.cs
-│   │   │   └── FullContextLabel.cs
+│   │   │   ├── Models.cs             # 6階層モデル（JPUtterance→...→JPPhoneme）
+│   │   │   ├── JPCommonBuilder.cs    # NjdNode→JPUtterance階層構築
+│   │   │   ├── FullContextLabel.cs   # HTSフルコンテキストラベル生成
+│   │   │   └── WordAttr.cs           # POS/CType/CForm→ID変換テーブル
 │   │   ├── TextNormalization/    # テキスト正規化
 │   │   │   ├── TextNormalizer.cs
 │   │   │   └── DigitRules.cs
 │   │   ├── PhonemeConverter/     # 音素変換
-│   │   │   ├── MoraMapping.cs    # カタカナ⇔音素（247種）
-│   │   │   └── ProsodyExtractor.cs
+│   │   │   ├── MoraMapping.cs           # カタカナ⇔音素（162種）
+│   │   │   ├── AccentPhraseConverter.cs  # VOICEVOX互換AccentPhrase出力
+│   │   │   └── ProsodyExtractor.cs      # ESPnet韻律記号付き出力
 │   │   └── G2PEngine.cs          # メインAPI
 │   │
 │   └── DotNetG2P.NMeCab/         # NMeCabアダプター（LGPL依存、将来差し替え）
@@ -101,14 +103,14 @@ DotNetG2P.slnxx
 13. ~~NjdNode拡張（MergeFrom/Reset/ChainFlag 3値化、183行）~~ **完了**
 14. ~~G2PEngine パイプライン統合 + G2POptions（222行）~~ **完了**
 
-### Phase 3: 出力形式・JPCommon
+### Phase 3: 出力形式・JPCommon **[完了]**
 
-13. ToPhonemes() - 音素列出力
-14. ToKana() - カタカナ出力
-15. ToProsody() - 韻律記号付き出力（ESPnet prosody方式）
-16. AccentPhrase/Mora構造体出力（VOICEVOX互換）
-17. JPCommon実装（Utterance→BreathGroup→AccentPhrase階層）
-18. ToFullContextLabels() - HTSフルコンテキストラベル出力
+13. ~~ToPhonemes() - 音素列出力（M1実装済み）~~ **完了**
+14. ~~ToKana() - カタカナ出力（M1実装済み）~~ **完了**
+15. ~~ToProsody() - 韻律記号付き出力（ProsodyExtractor.cs ~132行）~~ **完了**
+16. ~~AccentPhrase/Mora構造体出力（AccentPhraseConverter.cs ~160行）~~ **完了**
+17. ~~JPCommon実装（Models.cs ~208行, JPCommonBuilder.cs ~413行, WordAttr.cs）~~ **完了**
+18. ~~ToFullContextLabels() - HTSフルコンテキストラベル出力（FullContextLabel.cs ~552行）~~ **完了**
 
 ### Phase 4: テスト・品質保証
 

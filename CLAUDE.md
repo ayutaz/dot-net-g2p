@@ -16,7 +16,12 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - NJDパイプライン6段階すべて実装（TextNormalizer→SetPronunciation→DigitSequence/SetDigit→SetAccentPhrase→SetAccentType→SetUnvoicedVowel）
   - 無声音化（`s U k i`）、アクセント句結合、数字読み変換が動作
   - G2POptionsによる各処理段階のON/OFF制御、Analyze APIを追加
-- **M3〜M6**: 未着手（docs/roadmap.md 参照）
+- **M3（出力形式の充実）**: 完了
+  - ToProsody()（ESPnet韻律記号付き出力）、ToAccentPhrases()（VOICEVOX互換）、ToFullContextLabels()（HTSフルコンテキストラベル）を追加
+  - JPCommon階層モデル（JPUtterance→JPBreathGroup→JPAccentPhrase→JPWord→JPMora→JPPhoneme）を実装
+  - WordAttr（POS/CType/CForm→ID変換テーブル、jpreprocess word_attr.rs準拠）を実装
+  - 全310テスト成功
+- **M4〜M6**: 未着手（docs/roadmap.md 参照）
 
 ## ビルド・実行
 
@@ -64,8 +69,15 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── TextNormalization/           # テキスト正規化
 │   │   │   └── TextNormalizer.cs        # 全角/半角変換、濁点結合
 │   │   ├── PhonemeConverter/            # 音素変換
-│   │   │   └── MoraMapping.cs           # カタカナ⇔音素マッピング (162種)
-│   │   ├── G2PEngine.cs                # メインAPI (ToPhonemes, ToKana, Analyze)
+│   │   │   ├── MoraMapping.cs           # カタカナ⇔音素マッピング (162種)
+│   │   │   ├── AccentPhraseConverter.cs # VOICEVOX互換アクセント句変換
+│   │   │   └── ProsodyExtractor.cs      # ESPnet韻律記号付き出力
+│   │   ├── JPCommon/                    # HTSフルコンテキストラベル生成
+│   │   │   ├── Models.cs               # 階層モデル (JPUtterance/JPBreathGroup/JPAccentPhrase/JPWord/JPMora/JPPhoneme)
+│   │   │   ├── JPCommonBuilder.cs       # NjdNode列→JPCommon階層構築
+│   │   │   ├── FullContextLabel.cs      # HTSフルコンテキストラベル生成
+│   │   │   └── WordAttr.cs             # POS/CType/CForm→ID変換テーブル (jpreprocess準拠)
+│   │   ├── G2PEngine.cs                # メインAPI (ToPhonemes, ToKana, ToProsody, ToAccentPhrases, ToFullContextLabels, Analyze)
 │   │   └── G2POptions.cs               # 処理オプション（各段階ON/OFF）
 │   │
 │   └── DotNetG2P.NMeCab/               # NMeCabアダプター（LGPL依存）
@@ -74,7 +86,25 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │
 ├── tests/
 │   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0)
-│       └── DotNetG2P.Tests.csproj
+│       ├── DotNetG2P.Tests.csproj
+│       ├── G2PEngineApiTests.cs         # G2PEngine API統合テスト
+│       ├── Models/                      # モデルテスト
+│       │   ├── NjdNodeTests.cs
+│       │   └── PronunciationTests.cs
+│       ├── NJD/                         # NJD処理テスト
+│       │   └── SetUnvoicedVowelTests.cs
+│       ├── TextNormalization/           # テキスト正規化テスト
+│       │   └── TextNormalizerTests.cs
+│       ├── PhonemeConverter/            # 音素変換テスト
+│       │   ├── MoraMappingTests.cs
+│       │   ├── AccentPhraseConverterTests.cs
+│       │   └── ProsodyExtractorTests.cs
+│       ├── JPCommon/                    # JPCommonテスト
+│       │   ├── JPCommonBuilderTests.cs
+│       │   ├── WordAttrTests.cs
+│       │   └── FullContextLabelTests.cs
+│       └── Integration/                # 統合テスト
+│           └── G2PPipelineTests.cs
 │
 └── samples/
     └── DotNetG2P.Console/               # コンソールサンプル (net8.0)
