@@ -1,0 +1,16 @@
+{
+  "name": "DotNetG2P.MeCab",
+  "rootNamespace": "DotNetG2P.MeCab",
+  "references": [
+    "DotNetG2P"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

@@ -4,6 +4,7 @@ using System.Linq;
 using DotNetG2P;
 using DotNetG2P.Models;
 using DotNetG2P.NMeCab;
+using DotNetG2P.MeCab;
 using Xunit;
 
 namespace DotNetG2P.Tests.Integration
@@ -13,19 +14,21 @@ namespace DotNetG2P.Tests.Integration
     /// 主目的は「クラッシュしないこと」の検証（堅牢性テスト）。
     /// 辞書が存在しない環境ではスキップされる。
     /// </summary>
-    public class EdgeCaseTests : IDisposable
+    public abstract class EdgeCaseTestsBase : IDisposable
     {
         private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
         private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
-        private readonly NMeCabTokenizer? _tokenizer;
-        private readonly G2PEngine? _engine;
+        private readonly ITokenizer? _tokenizer;
+        protected readonly G2PEngine? _engine;
 
-        public EdgeCaseTests()
+        protected abstract ITokenizer CreateTokenizer(string dicPath);
+
+        protected EdgeCaseTestsBase()
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DicPath!);
+                _tokenizer = CreateTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
         }
@@ -364,5 +367,17 @@ namespace DotNetG2P.Tests.Integration
             var nodes = _engine.Analyze(input);
             Assert.NotNull(nodes);
         }
+    }
+
+    /// <summary>NMeCabTokenizerによるエッジケーステスト。</summary>
+    public class EdgeCaseTests_NMeCab : EdgeCaseTestsBase
+    {
+        protected override ITokenizer CreateTokenizer(string dicPath) => new NMeCabTokenizer(dicPath);
+    }
+
+    /// <summary>MeCabTokenizerによるエッジケーステスト。</summary>
+    public class EdgeCaseTests_MeCab : EdgeCaseTestsBase
+    {
+        protected override ITokenizer CreateTokenizer(string dicPath) => new MeCabTokenizer(dicPath);
     }
 }

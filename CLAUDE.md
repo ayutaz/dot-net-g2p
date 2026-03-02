@@ -30,7 +30,12 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - GitHub Actions CI/CD（ci.yml: push/PR時ビルド・テスト・パック、release.yml: NuGet push + GitHub Release）
   - UPMパッケージ構造（package.json、DotNetG2P.asmdef、DotNetG2P.NMeCab.asmdef）
   - LICENSE（MIT）、README.md（126行）、.editorconfig、.gitattributes
-- **M6**: 未着手（docs/roadmap.md 参照）
+- **M6（独自MeCabエンジン）**: 完了
+  - 純C#でMeCab互換形態素解析エンジンを実装（`DotNetG2P.MeCab`パッケージ）
+  - LibNMeCab（LGPL-2.1）依存を排除し完全MIT化を達成
+  - DoubleArrayTrie + Viterbiデコーダ + 未知語処理の完全実装
+  - NMeCabTokenizerと100+文で全15フィールド出力一致を検証済み
+  - NuGet (`DotNetG2P.MeCab`) + UPM (`com.dotnetg2p.mecab`) パッケージ対応
 
 ## ビルド・実行
 
@@ -99,16 +104,37 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── package.json                # UPM パッケージ定義 (com.dotnetg2p.core)
 │   │   └── DotNetG2P.asmdef            # Unity Assembly Definition
 │   │
-│   └── DotNetG2P.NMeCab/               # NMeCabアダプター（LGPL依存）
-│       ├── DotNetG2P.NMeCab.csproj      # LibNMeCab 0.10.2 参照
-│       ├── NMeCabTokenizer.cs           # ITokenizer実装
-│       └── DotNetG2P.NMeCab.asmdef      # Unity Assembly Definition
+│   ├── DotNetG2P.NMeCab/               # NMeCabアダプター（LGPL依存）
+│   │   ├── DotNetG2P.NMeCab.csproj      # LibNMeCab 0.10.2 参照
+│   │   ├── NMeCabTokenizer.cs           # ITokenizer実装
+│   │   └── DotNetG2P.NMeCab.asmdef      # Unity Assembly Definition
+│   │
+│   └── DotNetG2P.MeCab/                # 独自MeCabエンジン（MIT、外部依存なし）
+│       ├── DotNetG2P.MeCab.csproj       # .NET Standard 2.1、DotNetG2P.Core参照のみ
+│       ├── MeCabTokenizer.cs            # ITokenizer実装（公開API）
+│       ├── Dictionary/                  # 辞書読み込み層
+│       │   ├── DictionaryHeader.cs      # 72バイトヘッダパーサ
+│       │   ├── DicToken.cs              # トークン構造体（16バイト）
+│       │   ├── SystemDictionary.cs      # sys.dic読み込み
+│       │   ├── ConnectionMatrix.cs      # matrix.bin読み込み（連接コスト行列）
+│       │   ├── CharProperty.cs          # char.bin読み込み（文字カテゴリ）
+│       │   ├── UnknownDictionary.cs     # unk.dic読み込み（未知語テンプレート）
+│       │   └── DictionaryBundle.cs      # 全辞書ファイル集約管理
+│       ├── Trie/                        # DoubleArray Trie
+│       │   ├── DoubleArrayTrie.cs       # NMeCab互換 共通接頭辞検索
+│       │   └── Utf8CharMap.cs           # UTF-8バイト⇔char オフセット変換
+│       ├── Lattice/                     # ラティス＋Viterbi
+│       │   ├── LatticeNode.cs           # ラティスノード
+│       │   ├── LatticeBuilder.cs        # Trie検索+未知語生成→ラティス構築
+│       │   └── ViterbiDecoder.cs        # 前向きパス+後ろ向きトレース
+│       ├── DotNetG2P.MeCab.asmdef       # Unity Assembly Definition
+│       └── package.json                 # UPM パッケージ定義 (com.dotnetg2p.mecab)
 │
 ├── tests/
 │   ├── TestData/                        # テストデータ
 │   │   ├── expected_phonemes.json       # pyopenjtalk期待値データ（18件）
 │   │   └── generate_expected.py         # テストデータ生成スクリプト
-│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 812テスト)
+│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 1404テスト)
 │       ├── DotNetG2P.Tests.csproj
 │       ├── G2PEngineApiTests.cs         # G2PEngine API統合テスト
 │       ├── Models/                      # モデルテスト
@@ -133,6 +159,12 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── JPCommonBuilderTests.cs
 │       │   ├── WordAttrTests.cs
 │       │   └── FullContextLabelTests.cs
+│       ├── MeCab/                       # MeCabエンジンテスト
+│       │   ├── MeCabTokenizerTests.cs   # 基本動作テスト（~30件）
+│       │   ├── TokenizerComparisonTests.cs # NMeCab出力一致テスト（100+文×3）
+│       │   ├── G2PComparisonTests.cs    # G2Pパイプライン比較テスト（20件×6）
+│       │   ├── Utf8CharMapTests.cs      # UTF-8オフセット変換テスト
+│       │   └── DictionaryErrorTests.cs  # エラーハンドリングテスト
 │       └── Integration/                # 統合テスト
 │           ├── G2PPipelineTests.cs
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）
@@ -155,7 +187,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 
 OpenJTalkの処理パイプラインに準拠した4段階処理:
 
-1. **形態素解析**: LibNMeCab 0.10.2 によるMeCab互換解析（ITokenizer抽象化で将来差し替え可能）
+1. **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、MIT）をデフォルト使用。互換性維持のためLibNMeCab版（`DotNetG2P.NMeCab`、LGPL）も利用可能（ITokenizer抽象化）
 2. **NJD処理（日本語ルール処理）**: 読み生成、数字読み変換、アクセント句結合、アクセント結合、無声音化、長音化
 3. **音素変換**: カタカナ読み → 音素列（例: `コンニチワ` → `k o N n i ch i w a`）
 4. **アクセント情報付与**（オプション）: モーラ数・アクセント核位置の出力
@@ -179,10 +211,10 @@ OpenJTalk用のnaist-jdic辞書フォーマット（IPADIC + アクセント情�
 
 - **言語**: C#
 - **ターゲット**: .NET Standard 2.1（Unity 2021.2+互換）
-- **形態素解析**: LibNMeCab 0.10.2（LGPL、将来自前実装で置換予定）
+- **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、MIT、外部依存なし）。互換オプションとしてLibNMeCab 0.10.2（`DotNetG2P.NMeCab`、LGPL）
 - **辞書**: naist-jdic（BSD License）
 - **テスト**: xUnit 2.5.3 (net8.0)
-- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.NMeCab`) + UPM (`com.dotnetg2p.core`)
+- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.NMeCab`, `DotNetG2P.MeCab`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`)
 - **CI/CD**: GitHub Actions (ci.yml, release.yml)
 - **ソリューション形式**: .slnx（.NET 10）
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using DotNetG2P;
 using DotNetG2P.NMeCab;
+using DotNetG2P.MeCab;
 using Xunit;
 
 namespace DotNetG2P.Tests.Integration
@@ -14,13 +15,15 @@ namespace DotNetG2P.Tests.Integration
     /// 事前生成済みのJSON期待値データを使用。
     /// 辞書が存在しない環境ではスキップされる。
     /// </summary>
-    public class PyOpenJTalkComparisonTests : IDisposable
+    public abstract class PyOpenJTalkComparisonTestsBase : IDisposable
     {
         private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
         private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
-        private readonly NMeCabTokenizer? _tokenizer;
-        private readonly G2PEngine? _engine;
+        private readonly ITokenizer? _tokenizer;
+        protected readonly G2PEngine? _engine;
+
+        protected abstract ITokenizer CreateTokenizer(string dicPath);
 
         /// <summary>テストデータ格納用</summary>
         private class TestCase
@@ -33,11 +36,11 @@ namespace DotNetG2P.Tests.Integration
 
         private readonly List<TestCase>? _testCases;
 
-        public PyOpenJTalkComparisonTests()
+        protected PyOpenJTalkComparisonTestsBase()
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DicPath!);
+                _tokenizer = CreateTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
 
@@ -434,5 +437,17 @@ namespace DotNetG2P.Tests.Integration
                 new TestCase { input = "です", phonemes = "d e s U" },
             };
         }
+    }
+
+    /// <summary>NMeCabTokenizerによるpyopenjtalk比較テスト。</summary>
+    public class PyOpenJTalkComparisonTests_NMeCab : PyOpenJTalkComparisonTestsBase
+    {
+        protected override ITokenizer CreateTokenizer(string dicPath) => new NMeCabTokenizer(dicPath);
+    }
+
+    /// <summary>MeCabTokenizerによるpyopenjtalk比較テスト。</summary>
+    public class PyOpenJTalkComparisonTests_MeCab : PyOpenJTalkComparisonTestsBase
+    {
+        protected override ITokenizer CreateTokenizer(string dicPath) => new MeCabTokenizer(dicPath);
     }
 }

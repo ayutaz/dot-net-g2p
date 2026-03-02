@@ -4,6 +4,7 @@ using System.Linq;
 using DotNetG2P;
 using DotNetG2P.Models;
 using DotNetG2P.NMeCab;
+using DotNetG2P.MeCab;
 using Xunit;
 
 namespace DotNetG2P.Tests.Integration
@@ -12,19 +13,21 @@ namespace DotNetG2P.Tests.Integration
     /// naist-jdic辞書を使ったG2Pパイプライン全体の統合テスト。
     /// 辞書が存在しない環境ではスキップされる。
     /// </summary>
-    public class G2PPipelineTests : IDisposable
+    public abstract class G2PPipelineTestsBase : IDisposable
     {
         private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
         private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
-        private readonly NMeCabTokenizer? _tokenizer;
-        private readonly G2PEngine? _engine;
+        private readonly ITokenizer? _tokenizer;
+        protected readonly G2PEngine? _engine;
 
-        public G2PPipelineTests()
+        protected abstract ITokenizer CreateTokenizer(string dicPath);
+
+        protected G2PPipelineTestsBase()
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DicPath!);
+                _tokenizer = CreateTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
         }
@@ -32,7 +35,7 @@ namespace DotNetG2P.Tests.Integration
         public void Dispose()
         {
             _engine?.Dispose();
-            // NMeCabTokenizer は G2PEngine.Dispose() 内で Dispose されるため、
+            // トークナイザーは G2PEngine.Dispose() 内で Dispose されるため、
             // ここでは別途 Dispose しない
         }
 
@@ -185,7 +188,7 @@ namespace DotNetG2P.Tests.Integration
         {
             SkipIfNoDictionary();
 
-            using var tokenizer = new NMeCabTokenizer(DicPath!);
+            using var tokenizer = CreateTokenizer(DicPath!);
             var options = new G2POptions(enableUnvoicedVowel: false);
             using var engine = new G2PEngine(tokenizer, options);
 
@@ -333,7 +336,7 @@ namespace DotNetG2P.Tests.Integration
         {
             SkipIfNoDictionary();
 
-            using var tokenizer = new NMeCabTokenizer(DicPath!);
+            using var tokenizer = CreateTokenizer(DicPath!);
             var options = new G2POptions(enableDigitProcessing: false);
             using var engine = new G2PEngine(tokenizer, options);
 
@@ -389,5 +392,17 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine.ToPhonemes(input);
             Assert.NotNull(result);
         }
+    }
+
+    /// <summary>NMeCabTokenizerによるG2Pパイプライン統合テスト。</summary>
+    public class G2PPipelineTests_NMeCab : G2PPipelineTestsBase
+    {
+        protected override ITokenizer CreateTokenizer(string dicPath) => new NMeCabTokenizer(dicPath);
+    }
+
+    /// <summary>MeCabTokenizerによるG2Pパイプライン統合テスト。</summary>
+    public class G2PPipelineTests_MeCab : G2PPipelineTestsBase
+    {
+        protected override ITokenizer CreateTokenizer(string dicPath) => new MeCabTokenizer(dicPath);
     }
 }

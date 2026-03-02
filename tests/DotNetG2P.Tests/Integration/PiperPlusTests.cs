@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using DotNetG2P;
 using DotNetG2P.Models;
 using DotNetG2P.NMeCab;
+using DotNetG2P.MeCab;
 using Xunit;
 
 namespace DotNetG2P.Tests.Integration
@@ -19,19 +20,21 @@ namespace DotNetG2P.Tests.Integration
     ///   - 促音: pyopenjtalk "q" vs DotNetG2P "cl"
     /// これらの差異を正規化して比較する。
     /// </summary>
-    public class PiperPlusTests : IDisposable
+    public abstract class PiperPlusTestsBase : IDisposable
     {
         private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
         private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
-        private readonly NMeCabTokenizer? _tokenizer;
-        private readonly G2PEngine? _engine;
+        private readonly ITokenizer? _tokenizer;
+        protected readonly G2PEngine? _engine;
 
-        public PiperPlusTests()
+        protected abstract ITokenizer CreateTokenizer(string dicPath);
+
+        protected PiperPlusTestsBase()
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DicPath!);
+                _tokenizer = CreateTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
         }
@@ -534,5 +537,17 @@ namespace DotNetG2P.Tests.Integration
             // 複数のアクセント句に分かれるはず
             Assert.True(phrases.Count >= 2, $"アクセント句数が少なすぎます: {phrases.Count}");
         }
+    }
+
+    /// <summary>NMeCabTokenizerによるpiper-plus互換テスト。</summary>
+    public class PiperPlusTests_NMeCab : PiperPlusTestsBase
+    {
+        protected override ITokenizer CreateTokenizer(string dicPath) => new NMeCabTokenizer(dicPath);
+    }
+
+    /// <summary>MeCabTokenizerによるpiper-plus互換テスト。</summary>
+    public class PiperPlusTests_MeCab : PiperPlusTestsBase
+    {
+        protected override ITokenizer CreateTokenizer(string dicPath) => new MeCabTokenizer(dicPath);
     }
 }

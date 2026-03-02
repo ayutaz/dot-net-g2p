@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DotNetG2P.Core\DotNetG2P.Core.csproj" />
+    <ProjectReference Include="..\..\src\DotNetG2P.MeCab\DotNetG2P.MeCab.csproj" />
     <ProjectReference Include="..\..\src\DotNetG2P.NMeCab\DotNetG2P.NMeCab.csproj" />
   </ItemGroup>
 

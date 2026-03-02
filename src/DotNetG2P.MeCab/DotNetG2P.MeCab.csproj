@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>DotNetG2P.MeCab</PackageId>
+    <AssemblyName>DotNetG2P.MeCab</AssemblyName>
+    <RootNamespace>DotNetG2P.MeCab</RootNamespace>
+    <Description>Pure C# MeCab-compatible morphological analyzer for DotNetG2P. MIT licensed, no native dependencies. Provides ITokenizer implementation using Darts-clone double-array trie and Viterbi decoder for Japanese text analysis with naist-jdic dictionary.</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseFile />
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DotNetG2P.Core\DotNetG2P.Core.csproj" />
+  </ItemGroup>
+</Project>
