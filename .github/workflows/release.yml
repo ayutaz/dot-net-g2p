@@ -64,11 +64,6 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
 
-      - name: Pack DotNetG2P.NMeCab
-        run: dotnet pack src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
-        env:
-          VERSION: ${{ inputs.version }}
-
       - name: Pack DotNetG2P.MeCab
         run: dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
         env:

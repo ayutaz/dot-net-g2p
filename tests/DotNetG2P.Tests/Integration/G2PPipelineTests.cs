@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using DotNetG2P;
 using DotNetG2P.Models;
-using DotNetG2P.NMeCab;
 using DotNetG2P.MeCab;
 using Xunit;
 
@@ -392,12 +391,6 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine.ToPhonemes(input);
             Assert.NotNull(result);
         }
-    }
-
-    /// <summary>NMeCabTokenizerによるG2Pパイプライン統合テスト。</summary>
-    public class G2PPipelineTests_NMeCab : G2PPipelineTestsBase
-    {
-        protected override ITokenizer CreateTokenizer(string dicPath) => new NMeCabTokenizer(dicPath);
     }
 
     /// <summary>MeCabTokenizerによるG2Pパイプライン統合テスト。</summary>

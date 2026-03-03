@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using DotNetG2P;
 using DotNetG2P.Models;
-using DotNetG2P.NMeCab;
 using DotNetG2P.MeCab;
 using Xunit;
 
@@ -537,12 +536,6 @@ namespace DotNetG2P.Tests.Integration
             // 複数のアクセント句に分かれるはず
             Assert.True(phrases.Count >= 2, $"アクセント句数が少なすぎます: {phrases.Count}");
         }
-    }
-
-    /// <summary>NMeCabTokenizerによるpiper-plus互換テスト。</summary>
-    public class PiperPlusTests_NMeCab : PiperPlusTestsBase
-    {
-        protected override ITokenizer CreateTokenizer(string dicPath) => new NMeCabTokenizer(dicPath);
     }
 
     /// <summary>MeCabTokenizerによるpiper-plus互換テスト。</summary>

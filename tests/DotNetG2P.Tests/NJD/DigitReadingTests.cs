@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using DotNetG2P;
-using DotNetG2P.NMeCab;
+using DotNetG2P.MeCab;
 using Xunit;
 
 namespace DotNetG2P.Tests.NJD
@@ -16,14 +16,14 @@ namespace DotNetG2P.Tests.NJD
         private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
         private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
-        private readonly NMeCabTokenizer? _tokenizer;
+        private readonly MeCabTokenizer? _tokenizer;
         private readonly G2PEngine? _engine;
 
         public DigitReadingTests()
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DicPath!);
+                _tokenizer = new MeCabTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
         }

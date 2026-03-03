@@ -1,0 +1,13 @@
+THIRD-PARTY SOFTWARE NOTICES
+
+This project uses the following third-party software:
+
+1. naist-jdic (OpenJTalk Dictionary)
+   License: BSD License
+   URL: https://open-jtalk.sourceforge.net/
+   Note: Dictionary files are not included in this package. Users must obtain them separately.
+
+2. MeCab Dictionary Format
+   License: BSD/LGPL/GPL (tri-license)
+   URL: https://taku910.github.io/mecab/
+   Note: This project implements a compatible parser but does not use MeCab source code.

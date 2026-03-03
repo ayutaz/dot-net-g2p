@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using DotNetG2P.MeCab;
-using DotNetG2P.NMeCab;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -17,7 +16,6 @@ namespace DotNetG2P.Tests.MeCab
     public class PerformanceTests : IDisposable
     {
         private readonly MeCabTokenizer? _mecabTokenizer;
-        private readonly NMeCabTokenizer? _nmecabTokenizer;
         private readonly ITestOutputHelper _output;
         private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
         private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
@@ -28,14 +26,12 @@ namespace DotNetG2P.Tests.MeCab
             if (DictionaryExists)
             {
                 _mecabTokenizer = new MeCabTokenizer(DicPath!);
-                _nmecabTokenizer = new NMeCabTokenizer(DicPath!);
             }
         }
 
         public void Dispose()
         {
             _mecabTokenizer?.Dispose();
-            _nmecabTokenizer?.Dispose();
         }
 
         private void SkipIfNoDictionary()
@@ -107,35 +103,5 @@ namespace DotNetG2P.Tests.MeCab
             }
         }
 
-        [SkippableFact]
-        public void Tokenize_MeCabNotSlowerThan5xNMeCab()
-        {
-            SkipIfNoDictionary();
-            var texts = new[] { "こんにちは", "東京タワーに行きたい", "今日は天気がいいですね", "音声合成の研究" };
-
-            // ウォームアップ
-            foreach (var t in texts)
-            {
-                _mecabTokenizer!.Tokenize(t);
-                _nmecabTokenizer!.Tokenize(t);
-            }
-
-            var swMeCab = Stopwatch.StartNew();
-            for (int i = 0; i < 200; i++)
-                foreach (var t in texts)
-                    _mecabTokenizer!.Tokenize(t);
-            swMeCab.Stop();
-
-            var swNMeCab = Stopwatch.StartNew();
-            for (int i = 0; i < 200; i++)
-                foreach (var t in texts)
-                    _nmecabTokenizer!.Tokenize(t);
-            swNMeCab.Stop();
-
-            var ratio = (double)swMeCab.ElapsedMilliseconds / Math.Max(1, swNMeCab.ElapsedMilliseconds);
-            _output.WriteLine($"MeCab: {swMeCab.ElapsedMilliseconds}ms, NMeCab: {swNMeCab.ElapsedMilliseconds}ms, Ratio: {ratio:F2}x");
-
-            Assert.True(ratio < 5.0, $"MeCabがNMeCabの5倍以上遅い: {ratio:F2}x");
-        }
     }
 }

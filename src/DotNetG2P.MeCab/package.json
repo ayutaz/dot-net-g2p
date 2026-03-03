@@ -11,7 +11,7 @@
     "nlp",
     "g2p"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "com.dotnetg2p.core": "0.1.0"
   },

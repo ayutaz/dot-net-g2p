@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using DotNetG2P;
 using DotNetG2P.Models;
-using DotNetG2P.NMeCab;
+using DotNetG2P.MeCab;
 using Xunit;
 
 namespace DotNetG2P.Tests
@@ -15,14 +15,14 @@ namespace DotNetG2P.Tests
         private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
         private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
-        private readonly NMeCabTokenizer? _tokenizer;
+        private readonly MeCabTokenizer? _tokenizer;
         private readonly G2PEngine? _engine;
 
         public G2PEngineApiTests()
         {
             if (DictionaryExists)
             {
-                _tokenizer = new NMeCabTokenizer(DicPath!);
+                _tokenizer = new MeCabTokenizer(DicPath!);
                 _engine = new G2PEngine(_tokenizer);
             }
         }
@@ -118,7 +118,7 @@ namespace DotNetG2P.Tests
         public void ToProsody_AfterDispose_ThrowsObjectDisposedException()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            using var tokenizer = new NMeCabTokenizer(DicPath!);
+            using var tokenizer = new MeCabTokenizer(DicPath!);
             var engine = new G2PEngine(tokenizer);
             engine.Dispose();
             Assert.Throws<ObjectDisposedException>(() => engine.ToProsody("テスト"));
@@ -128,7 +128,7 @@ namespace DotNetG2P.Tests
         public void ToAccentPhrases_AfterDispose_ThrowsObjectDisposedException()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            using var tokenizer = new NMeCabTokenizer(DicPath!);
+            using var tokenizer = new MeCabTokenizer(DicPath!);
             var engine = new G2PEngine(tokenizer);
             engine.Dispose();
             Assert.Throws<ObjectDisposedException>(() => engine.ToAccentPhrases("テスト"));
@@ -138,7 +138,7 @@ namespace DotNetG2P.Tests
         public void ToFullContextLabels_AfterDispose_ThrowsObjectDisposedException()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            using var tokenizer = new NMeCabTokenizer(DicPath!);
+            using var tokenizer = new MeCabTokenizer(DicPath!);
             var engine = new G2PEngine(tokenizer);
             engine.Dispose();
             Assert.Throws<ObjectDisposedException>(() => engine.ToFullContextLabels("テスト"));

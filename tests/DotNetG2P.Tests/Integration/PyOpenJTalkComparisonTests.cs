@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using DotNetG2P;
-using DotNetG2P.NMeCab;
 using DotNetG2P.MeCab;
 using Xunit;
 
@@ -437,12 +436,6 @@ namespace DotNetG2P.Tests.Integration
                 new TestCase { input = "です", phonemes = "d e s U" },
             };
         }
-    }
-
-    /// <summary>NMeCabTokenizerによるpyopenjtalk比較テスト。</summary>
-    public class PyOpenJTalkComparisonTests_NMeCab : PyOpenJTalkComparisonTestsBase
-    {
-        protected override ITokenizer CreateTokenizer(string dicPath) => new NMeCabTokenizer(dicPath);
     }
 
     /// <summary>MeCabTokenizerによるpyopenjtalk比較テスト。</summary>

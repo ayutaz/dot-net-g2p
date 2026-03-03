@@ -10,6 +10,8 @@
     <Description>Japanese Grapheme-to-Phoneme (G2P) library for .NET and Unity. OpenJTalk-compatible rule-based G2P pipeline with NJD processing, phoneme conversion, and HTS full-context label generation.</Description>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseFile />
   </PropertyGroup>
 
 </Project>

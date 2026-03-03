@@ -26,15 +26,15 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - MoraMapping全165パターン検証、piper-plusテスト移植（87件）、pyopenjtalk比較テスト（20件）
   - エッジケーステスト（記号/英字/空文字列/長文/混在スクリプト）
 - **M5（パッケージング）**: 完了
-  - NuGetパッケージ設定（Directory.Build.props、Core/NMeCab csproj更新、`dotnet pack`で.nupkg生成確認済み）
+  - NuGetパッケージ設定（Directory.Build.props、Core csproj更新、`dotnet pack`で.nupkg生成確認済み）
   - GitHub Actions CI/CD（ci.yml: push/PR時ビルド・テスト・パック、release.yml: NuGet push + GitHub Release）
-  - UPMパッケージ構造（package.json、DotNetG2P.asmdef、DotNetG2P.NMeCab.asmdef）
-  - LICENSE（MIT）、README.md（126行）、.editorconfig、.gitattributes
+  - UPMパッケージ構造（package.json、DotNetG2P.asmdef）
+  - LICENSE（Apache-2.0）、README.md、.editorconfig、.gitattributes
 - **M6（独自MeCabエンジン）**: 完了
   - 純C#でMeCab互換形態素解析エンジンを実装（`DotNetG2P.MeCab`パッケージ）
-  - LibNMeCab（LGPL-2.1）依存を排除し完全MIT化を達成
+  - 外部依存を排除しApache-2.0ライセンスで統一
   - DoubleArrayTrie + Viterbiデコーダ + 未知語処理の完全実装
-  - NMeCabTokenizerと100+文で全15フィールド出力一致を検証済み
+  - 100+文で全15フィールド出力一致を検証済み
   - NuGet (`DotNetG2P.MeCab`) + UPM (`com.dotnetg2p.mecab`) パッケージ対応
 
 ## ビルド・実行
@@ -58,7 +58,7 @@ dotnet run --project samples/DotNetG2P.Console/DotNetG2P.Console.csproj -- <nais
 ```
 DotNetG2P.slnx                          # ソリューションファイル（.NET 10 .slnx形式）
 ├── Directory.Build.props                # NuGet共通メタデータ
-├── LICENSE                              # MIT License
+├── LICENSE                              # Apache-2.0 License
 ├── README.md                            # プロジェクトREADME（126行）
 ├── .editorconfig                        # コーディング規約
 ├── .gitattributes                       # Git属性設定
@@ -104,12 +104,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── package.json                # UPM パッケージ定義 (com.dotnetg2p.core)
 │   │   └── DotNetG2P.asmdef            # Unity Assembly Definition
 │   │
-│   ├── DotNetG2P.NMeCab/               # NMeCabアダプター（LGPL依存）
-│   │   ├── DotNetG2P.NMeCab.csproj      # LibNMeCab 0.10.2 参照
-│   │   ├── NMeCabTokenizer.cs           # ITokenizer実装
-│   │   └── DotNetG2P.NMeCab.asmdef      # Unity Assembly Definition
-│   │
-│   └── DotNetG2P.MeCab/                # 独自MeCabエンジン（MIT、外部依存なし）
+│   └── DotNetG2P.MeCab/                # 独自MeCabエンジン（Apache-2.0、外部依存なし）
 │       ├── DotNetG2P.MeCab.csproj       # .NET Standard 2.1、DotNetG2P.Core参照のみ
 │       ├── MeCabTokenizer.cs            # ITokenizer実装（公開API）
 │       ├── Dictionary/                  # 辞書読み込み層
@@ -121,7 +116,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── UnknownDictionary.cs     # unk.dic読み込み（未知語テンプレート）
 │       │   └── DictionaryBundle.cs      # 全辞書ファイル集約管理
 │       ├── Trie/                        # DoubleArray Trie
-│       │   ├── DoubleArrayTrie.cs       # NMeCab互換 共通接頭辞検索
+│       │   ├── DoubleArrayTrie.cs       # 共通接頭辞検索
 │       │   └── Utf8CharMap.cs           # UTF-8バイト⇔char オフセット変換
 │       ├── Lattice/                     # ラティス＋Viterbi
 │       │   ├── LatticeNode.cs           # ラティスノード
@@ -161,7 +156,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   └── FullContextLabelTests.cs
 │       ├── MeCab/                       # MeCabエンジンテスト
 │       │   ├── MeCabTokenizerTests.cs   # 基本動作テスト（~30件）
-│       │   ├── TokenizerComparisonTests.cs # NMeCab出力一致テスト（100+文×3）
+│       │   ├── TokenizerComparisonTests.cs # 出力一致テスト（100+文×3）
 │       │   ├── G2PComparisonTests.cs    # G2Pパイプライン比較テスト（20件×6）
 │       │   ├── Utf8CharMapTests.cs      # UTF-8オフセット変換テスト
 │       │   ├── DictionaryErrorTests.cs  # エラーハンドリングテスト
@@ -189,7 +184,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 
 OpenJTalkの処理パイプラインに準拠した4段階処理:
 
-1. **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、MIT）をデフォルト使用。互換性維持のためLibNMeCab版（`DotNetG2P.NMeCab`、LGPL）も利用可能（ITokenizer抽象化）
+1. **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、Apache-2.0）を使用（ITokenizer抽象化により差し替え可能）
 2. **NJD処理（日本語ルール処理）**: 読み生成、数字読み変換、アクセント句結合、アクセント結合、無声音化、長音化
 3. **音素変換**: カタカナ読み → 音素列（例: `コンニチワ` → `k o N n i ch i w a`）
 4. **アクセント情報付与**（オプション）: モーラ数・アクセント核位置の出力
@@ -213,10 +208,10 @@ OpenJTalk用のnaist-jdic辞書フォーマット（IPADIC + アクセント情�
 
 - **言語**: C#
 - **ターゲット**: .NET Standard 2.1（Unity 2021.2+互換）
-- **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、MIT、外部依存なし）。互換オプションとしてLibNMeCab 0.10.2（`DotNetG2P.NMeCab`、LGPL）
+- **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、Apache-2.0、外部依存なし）
 - **辞書**: naist-jdic（BSD License）
 - **テスト**: xUnit 2.5.3 (net8.0)
-- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.NMeCab`, `DotNetG2P.MeCab`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`)
+- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`)
 - **CI/CD**: GitHub Actions (ci.yml, release.yml)
 - **ソリューション形式**: .slnx（.NET 10）
 

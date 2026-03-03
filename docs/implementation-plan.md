@@ -11,7 +11,7 @@ NuGet/UPMパッケージとして商用配布する。
 - **コア**: ルールベース（OpenJTalk互換）
 - **辞書**: naist-jdic（BSD、15フィールド拡張）
 - **設計参考**: jpreprocess（Rust）の型安全設計パターン
-- **形態素解析**: ITokenizer抽象化 → 初期はNMeCab依存、将来BSD自前実装に差し替え
+- **形態素解析**: ITokenizer抽象化、独自MeCabエンジン（Apache-2.0）を使用
 - **NJD処理**: jpreprocessのRustコードをベースにC#移植
 - **出力形式**: 音素列、カタカナ、韻律記号付き、AccentPhrase構造体、フルコンテキストラベル
 
@@ -24,7 +24,7 @@ NuGet/UPMパッケージとして商用配布する。
 | Phase 3: 出力形式・JPCommon | **完了** | 6ファイル新規、約1,465行追加。全310テスト成功 |
 | Phase 4: テスト・品質保証 | **完了** | 502件の新規テスト追加（合計812件）。12ファイル、+4,855行 |
 | Phase 5: パッケージング | **完了** | 12ファイル新規、+371行。NuGetパック・CI/CD・UPM・README/LICENSE |
-| Phase 6: 独自MeCabエンジン | **完了** | 純C# MeCab互換エンジン実装。LibNMeCab(LGPL)依存排除、完全MIT化達成 |
+| Phase 6: 独自MeCabエンジン | **完了** | 純C# MeCab互換エンジン実装。外部依存排除、Apache-2.0ライセンスで統一 |
 
 ## パッケージ構成
 
@@ -65,9 +65,6 @@ DotNetG2P.slnx
 │   │   │   ├── AccentPhraseConverter.cs  # VOICEVOX互換AccentPhrase出力
 │   │   │   └── ProsodyExtractor.cs      # ESPnet韻律記号付き出力
 │   │   └── G2PEngine.cs          # メインAPI
-│   │
-│   └── DotNetG2P.NMeCab/         # NMeCabアダプター（LGPL依存、将来差し替え）
-│       └── NMeCabTokenizer.cs    # ITokenizer実装
 │
 ├── tests/
 │   └── DotNetG2P.Tests/
@@ -86,7 +83,7 @@ DotNetG2P.slnx
 1. ~~ソリューション・プロジェクト作成（.NET Standard 2.1、.slnx形式）~~ **完了**
 2. ~~コアデータ構造の実装（POS, MoraKind, Mora, Pronunciation, WordDetails, WordEntry, NjdNode, AccentPhrase, Phoneme）~~ **完了**
 3. ~~ITokenizer/ITokenインターフェース定義（15フィールド対応）~~ **完了**
-4. ~~NMeCabアダプター実装（LibNMeCab 0.10.2、naist-jdicの15フィールドパース）~~ **完了**
+4. ~~ITokenizer実装（naist-jdicの15フィールドパース）~~ **完了**
 5. ~~MoraMapping（162種カタカナ⇔音素マッピング）~~ **完了**
 6. ~~基本G2P: テキスト→形態素→カタカナ→音素列（ToPhonemes + ToKana）~~ **完了**
 7. ~~SetPronunciation（最小版: 発音フォールバック処理）~~ **完了**
@@ -121,14 +118,14 @@ DotNetG2P.slnx
 
 ### Phase 5: パッケージング **[完了]**
 
-23. ~~Directory.Build.props + Core/NMeCab csproj NuGet設定（IsPackable, PackageId, Description, License）~~ **完了**
-24. ~~UPMパッケージ構造（package.json, DotNetG2P.asmdef, DotNetG2P.NMeCab.asmdef）~~ **完了**
+23. ~~Directory.Build.props + Core csproj NuGet設定（IsPackable, PackageId, Description, License）~~ **完了**
+24. ~~UPMパッケージ構造（package.json, DotNetG2P.asmdef）~~ **完了**
 25. ~~GitHub Actions CI/CD（ci.yml: ビルド・テスト・パック、release.yml: NuGet push + GitHub Release）~~ **完了**
-26. ~~LICENSE（MIT）、README.md（126行）、.editorconfig、.gitattributes~~ **完了**
+26. ~~LICENSE（Apache-2.0）、README.md、.editorconfig、.gitattributes~~ **完了**
 
 ### Phase 6: 独自MeCabエンジン **[完了]**
 
-26. ~~DotNetG2P.MeCab.csproj 作成（netstandard2.1、MIT）~~ **完了**
+26. ~~DotNetG2P.MeCab.csproj 作成（netstandard2.1、Apache-2.0）~~ **完了**
 27. ~~辞書読み込み層（DictionaryHeader, DicToken, SystemDictionary, ConnectionMatrix, CharProperty, UnknownDictionary, DictionaryBundle）~~ **完了**
 28. ~~DoubleArrayTrie（Darts-clone互換）+ Utf8CharMap~~ **完了**
 29. ~~LatticeBuilder + ViterbiDecoder~~ **完了**

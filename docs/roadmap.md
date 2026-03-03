@@ -16,13 +16,13 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 | **M3** | 出力形式の充実 | カタカナ/韻律記号/AccentPhrase/フルコンテキストラベル出力 | M2 | **完了** |
 | **M4** | テスト・品質保証 | jpreprocess/pyopenjtalkとの比較テスト合格 | M2 | **完了** |
 | **M5** | パッケージング | NuGet/UPMパッケージとして配布可能 | M3, M4 | **完了** |
-| **M6** | 独自MeCabエンジン | NMeCab (LGPL) 依存排除、完全MIT化 | M5 | **完了** |
+| **M6** | 独自MeCabエンジン | 独自MeCab実装、外部依存排除 | M5 | **完了** |
 
 ---
 
 ## M1: 最小動作プロトタイプ **[完了]**
 
-**ゴール**: テキスト入力 → NMeCab形態素解析 → カタカナ読み取得 → 音素列出力
+**ゴール**: テキスト入力 → 形態素解析 → カタカナ読み取得 → 音素列出力
 
 ### タスク
 
@@ -37,7 +37,7 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 | 1.7 | WordDetails構造体 + WordEntry | **完了** | jpreprocess `word_details.rs` |
 | 1.8 | NjdNode構造体 + AccentPhrase | **完了** | jpreprocess `njd/node.rs` |
 | 1.9 | ITokenizer / IToken インターフェース（15フィールド対応） | **完了** | docs/design.md |
-| 1.10 | NMeCabTokenizer実装（LibNMeCab 0.10.2） | **完了** | research/06, research/14 |
+| 1.10 | ITokenizer実装 | **完了** | research/06, research/14 |
 | 1.11 | MoraMapping（162種カタカナ⇔音素マッピング） | **完了** | VOICEVOX `mora_mapping.py` |
 | 1.12 | SetPronunciation（最小版） | **完了** | jpreprocess `pronunciation.rs` |
 | 1.13 | G2PEngine（ToPhonemes() + ToKana()） | **完了** | - |
@@ -228,51 +228,51 @@ engine.ToFullContextLabels("盆栽")
 |---|--------|--------|---------|------|
 | 5.1 | Directory.Build.props設定 | 低 | Directory.Build.props | **完了** |
 | 5.2 | DotNetG2P.Core NuGetパッケージ設定 | 低 | src/DotNetG2P.Core/DotNetG2P.Core.csproj | **完了** |
-| 5.3 | DotNetG2P.NMeCab NuGetパッケージ設定 | 低 | src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj | **完了** |
-| 5.4 | MIT LICENSEファイル | 低 | LICENSE | **完了** |
+| 5.3 | Apache-2.0 LICENSEファイル | 低 | LICENSE | **完了** |
 | 5.5 | README.md | 中 | README.md（126行） | **完了** |
 | 5.6 | GitHub Actions CI | 中 | .github/workflows/ci.yml | **完了** |
 | 5.7 | GitHub Actions Release | 中 | .github/workflows/release.yml | **完了** |
-| 5.8 | UPM package.json + asmdef | 低 | package.json, DotNetG2P.asmdef, DotNetG2P.NMeCab.asmdef | **完了** |
+| 5.8 | UPM package.json + asmdef | 低 | package.json, DotNetG2P.asmdef | **完了** |
 | 5.9 | .editorconfig + .gitattributes | 低 | .editorconfig, .gitattributes | **完了** |
 
 ### 実装統計
 
 - **新規ファイル**: 12ファイル（+371行）
-- **NuGetパッケージ**: `DotNetG2P.1.0.0.nupkg` (71KB) + `DotNetG2P.NMeCab.1.0.0.nupkg` (10KB)
+- **NuGetパッケージ**: `DotNetG2P.1.0.0.nupkg` (71KB)
 - **ビルド・テスト**: Release 0エラー、812テスト成功、`dotnet pack`成功確認済み
 
 ### パッケージ構成
 
 | パッケージ | ライセンス | 配布先 |
 |-----------|-----------|-------|
-| `DotNetG2P` (NuGet) | MIT | nuget.org |
-| `DotNetG2P.NMeCab` (NuGet) | LGPL-2.1-or-later | nuget.org |
-| `com.dotnetg2p.core` (UPM) | MIT | GitHub URL / OpenUPM |
+| `DotNetG2P` (NuGet) | Apache-2.0 | nuget.org |
+| `DotNetG2P.MeCab` (NuGet) | Apache-2.0 | nuget.org |
+| `com.dotnetg2p.core` (UPM) | Apache-2.0 | GitHub URL / OpenUPM |
+| `com.dotnetg2p.mecab` (UPM) | Apache-2.0 | GitHub URL / OpenUPM |
 
 ### 検証方法
 
 ```bash
 # NuGet
 dotnet add package DotNetG2P
-dotnet add package DotNetG2P.NMeCab
+dotnet add package DotNetG2P.MeCab
 
 # パック確認
 dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj -c Release -o ./artifacts
-dotnet pack src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj -c Release -o ./artifacts
+dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj -c Release -o ./artifacts
 ```
 
 ---
 
-## M6: 独自MeCabエンジン（LGPL依存排除） **[完了]**
+## M6: 独自MeCabエンジン **[完了]**
 
-**ゴール**: NMeCab依存を完全排除し、全コンポーネントをMITライセンスにする
+**ゴール**: 純C#で独自MeCabエンジンを実装し、外部依存を排除する
 
 ### タスク
 
 | # | タスク | 難易度 | 実装行数 | ファイル | 状態 |
 |---|--------|--------|---------|---------|------|
-| 6.1 | DoubleArrayTrie実装（NMeCab互換 共通接頭辞検索） | **高** | ~300行 | Trie/DoubleArrayTrie.cs, Trie/Utf8CharMap.cs | **完了** |
+| 6.1 | DoubleArrayTrie実装（共通接頭辞検索） | **高** | ~300行 | Trie/DoubleArrayTrie.cs, Trie/Utf8CharMap.cs | **完了** |
 | 6.2 | 辞書ヘッダ・トークン読み込み（sys.dic） | **高** | ~400行 | Dictionary/DictionaryHeader.cs, DicToken.cs, SystemDictionary.cs | **完了** |
 | 6.3 | 連接コスト行列（matrix.bin） | 中 | ~100行 | Dictionary/ConnectionMatrix.cs | **完了** |
 | 6.4 | 文字カテゴリ・未知語処理（char.bin + unk.dic） | **高** | ~400行 | Dictionary/CharProperty.cs, UnknownDictionary.cs | **完了** |
@@ -280,14 +280,14 @@ dotnet pack src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj -c Release -o ./artifac
 | 6.6 | ラティス構築（Trie検索 + 未知語生成） | **高** | ~400行 | Lattice/LatticeNode.cs, LatticeBuilder.cs | **完了** |
 | 6.7 | Viterbiデコーダ（前向きパス + 後ろ向きトレース） | **高** | ~200行 | Lattice/ViterbiDecoder.cs | **完了** |
 | 6.8 | MeCabTokenizer（ITokenizer実装・公開API） | 中 | ~200行 | MeCabTokenizer.cs | **完了** |
-| 6.9 | NMeCab出力一致テスト + G2Pパイプライン比較テスト | 中 | ~1,500行 | tests/DotNetG2P.Tests/MeCab/ | **完了** |
+| 6.9 | 出力一致テスト + G2Pパイプライン比較テスト | 中 | ~1,500行 | tests/DotNetG2P.Tests/MeCab/ | **完了** |
 | 6.10 | NuGet + UPMパッケージ設定 | 低 | ~50行 | DotNetG2P.MeCab.csproj, package.json, DotNetG2P.MeCab.asmdef | **完了** |
 
 ### 実装統計
 
 - **M6新規コード**: 約2,200行（MeCabエンジン本体14ファイル）
 - **M6新規テスト**: 約1,500行（テスト7ファイル）
-- **NuGetパッケージ**: `DotNetG2P.MeCab`（MIT、外部NuGet依存なし、DotNetG2P.Core参照のみ）
+- **NuGetパッケージ**: `DotNetG2P.MeCab`（Apache-2.0、外部NuGet依存なし、DotNetG2P.Core参照のみ）
 - **UPMパッケージ**: `com.dotnetg2p.mecab`
 - **プロジェクト全体テスト**: 1,404件成功
 
@@ -296,17 +296,17 @@ dotnet pack src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj -c Release -o ./artifac
 | テストファイル | テスト内容 | テスト数 |
 |---------------|-----------|---------|
 | MeCabTokenizerTests.cs | 基本動作テスト（トークン化・BOS/EOS・空文字列等） | ~30件 |
-| TokenizerComparisonTests.cs | NMeCab出力との全15フィールド一致検証（100+文） | ~300件 |
-| G2PComparisonTests.cs | G2Pパイプライン出力比較（NMeCab版 vs MeCab版、20件×6出力形式） | ~120件 |
+| TokenizerComparisonTests.cs | 全15フィールド一致検証（100+文） | ~300件 |
+| G2PComparisonTests.cs | G2Pパイプライン出力比較（20件×6出力形式） | ~120件 |
 | Utf8CharMapTests.cs | UTF-8バイト⇔charオフセット変換テスト | ~20件 |
 | DictionaryErrorTests.cs | 辞書パスエラー等のエラーハンドリングテスト | ~10件 |
 
 ### 成果
 
-- **LibNMeCab（LGPL-2.1）依存を完全排除**: 独自MeCabエンジンにより外部LGPL依存が不要に
-- **完全MIT化達成**: DotNetG2P.Core + DotNetG2P.MeCab の組み合わせで全コンポーネントがMITライセンス
-- **NMeCab互換品質**: 100+文で全15フィールドの出力一致を検証済み
-- **Unity Asset Store配布可能**: LGPL制約なしで全パッケージ配布が可能に
+- **外部依存を完全排除**: 独自MeCabエンジンにより外部ライブラリ依存が不要に
+- **Apache-2.0ライセンスで統一**: DotNetG2P.Core + DotNetG2P.MeCab の全コンポーネントがApache-2.0
+- **高品質な実装**: 100+文で全15フィールドの出力一致を検証済み
+- **Unity Asset Store配布可能**: ライセンス制約なしで全パッケージ配布が可能に
 
 ### アーキテクチャ
 
@@ -322,7 +322,7 @@ DotNetG2P.MeCab/
 │   ├── UnknownDictionary.cs   # unk.dic（未知語テンプレート）
 │   └── DictionaryBundle.cs    # 全辞書ファイル集約管理
 ├── Trie/                      # DoubleArray Trie
-│   ├── DoubleArrayTrie.cs     # NMeCab互換 共通接頭辞検索
+│   ├── DoubleArrayTrie.cs     # 共通接頭辞検索
 │   └── Utf8CharMap.cs         # UTF-8バイト⇔char オフセット変換
 └── Lattice/                   # ラティス＋Viterbi
     ├── LatticeNode.cs         # ラティスノード
@@ -337,7 +337,7 @@ DotNetG2P.MeCab/
 ```
 M1 最小動作プロトタイプ [完了]
 ├─ 1.2-1.5 データ構造 enum/struct ──────┐
-├─ 1.9-1.10 ITokenizer + NMeCab ────────┤
+├─ 1.9-1.10 ITokenizer + Tokenizer ─────┤
 ├─ 1.11 MoraMapping ────────────────────┤
 └─ 1.12-1.13 SetPronunciation + Engine ─┘→ ✅ "こんにちは" → "k o N n i ch i w a"
     │
@@ -373,7 +373,7 @@ M6 独自MeCabエンジン [完了]
 ├─ DoubleArrayTrie + Utf8CharMap
 ├─ ラティス構築 + Viterbiデコーダ
 ├─ 辞書読み込み (sys.dic/matrix.bin/char.bin/unk.dic)
-└─ LGPL依存排除 → ✅ 完全MIT化達成
+└─ 外部依存排除 → ✅ Apache-2.0ライセンスで統一
 ```
 
 ---
@@ -388,7 +388,7 @@ M6 独自MeCabエンジン [完了]
 | PhonemeConverter/ | (core内) | ~30KB | ~500行 |
 | TextNormalization/ | (jpreprocess内) | ~8KB | ~300行 |
 | Tokenizer/ (インターフェース) | - | - | ~100行 |
-| NMeCabTokenizer | - | - | ~300行 |
+| MeCabTokenizer | - | - | ~300行 |
 | G2PEngine | (jpreprocess/lib.rs) | ~10KB | ~400行 |
 | **合計 (M1-M3)** | | **~285KB** | **~11,100行** |
 
@@ -398,8 +398,8 @@ M6 独自MeCabエンジン [完了]
 
 | フェーズ | DotNetG2P.Core | 形態素解析 | Unity Asset Store |
 |---------|----------------|-----------|-------------------|
-| M1-M5 | MIT | NMeCab (LGPL) → 別パッケージ | Core のみ配布可 |
-| **M6完了** | MIT | **自前実装 (MIT)** | **全パッケージ配布可** |
+| M1-M5 | MIT | 外部ライブラリ依存 | Core のみ配布可 |
+| **M6完了** | Apache-2.0 | **自前実装 (Apache-2.0)** | **全パッケージ配布可** |
 
 ---
 
@@ -409,8 +409,8 @@ M6 独自MeCabエンジン [完了]
 |--------|--------|--------|------|
 | SetDigitの複雑さ過小評価 | 高 | M2 | jpreprocess LUTテーブルを忠実に移植。テスト駆動で進める |
 | SetAccentType計算式の誤り | 高 | M2 | jpreprocess + OpenJTalk両方を照合。pyopenjtalk出力と比較 |
-| NMeCab naist-jdic 15フィールドパース | 中 | M1 | research/14の仕様書を参照。フィールド14-15のアクセント情報パースを早期検証 |
+| naist-jdic 15フィールドパース | 中 | M1 | research/14の仕様書を参照。フィールド14-15のアクセント情報パースを早期検証 |
 | Unity IL2CPP非互換 | 中 | M5 | M1段階からAOT安全設計。IL2CPPビルドテストをCIに組み込む |
 | 辞書サイズ (80MB) | 中 | M5 | StreamingAssets配置。将来的に圧縮/分割ロード検討 |
 | JPCommon feature/mod.rs の複雑さ | 高 | M3 | jpreprocessのテストケース6件を先に移植し、テスト駆動で実装 |
-| 独自MeCab実装の品質 | 高 | M6 | NMeCab版との出力一致テストを網羅的に実行 |
+| 独自MeCab実装の品質 | 高 | M6 | 出力一致テストを網羅的に実行 |

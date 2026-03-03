@@ -50,10 +50,6 @@ jobs:
         if: github.event_name == 'push'
         run: dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj --configuration Release --no-build --output ./artifacts
 
-      - name: Pack DotNetG2P.NMeCab
-        if: github.event_name == 'push'
-        run: dotnet pack src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj --configuration Release --no-build --output ./artifacts
-
       - name: Pack DotNetG2P.MeCab
         if: github.event_name == 'push'
         run: dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj --configuration Release --no-build --output ./artifacts

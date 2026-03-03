@@ -12,7 +12,7 @@ UniTask（Cysharp/UniTask）の設計パターンを参考に、DotNetG2Pの設�
 |----------|------------------|-------------------|
 | **Single Source of Truth** | Unity側Runtime/にソース実体、NuGet用csprojはCompile Includeで参照 | 同一戦略を採用。Unity側Runtime/が正 |
 | **Directory.Build.props** | NuGetメタデータ・署名設定を共通化 | 同一戦略を採用 |
-| **asmdefモジュール分離** | コア/Editor/外部連携を独立asmdef化 | Core/NMeCab/Editorをasmdef分離 |
+| **asmdefモジュール分離** | コア/Editor/外部連携を独立asmdef化 | Core/MeCab/Editorをasmdef分離 |
 | **条件付きコンパイル** | `UNITASK_NETCORE` defineでプラットフォーム分岐 | `DOTNETG2P_NETCORE` defineを使用 |
 | **バージョン外部注入** | コードにバージョン埋め込まず、CIの`-p:Version`で注入 | 同一戦略を採用 |
 | **デュアルテスト** | .NET Core (xUnit) + Unity Test Runner (NUnit) 並行 | 同一戦略を採用 |
@@ -25,9 +25,9 @@ UniTaskは非同期ライブラリ（コード中心、データなし）であ�
 | 観点 | UniTask | DotNetG2P |
 |------|---------|-----------|
 | 外部データ | なし | naist-jdic辞書 (~80MB) |
-| 外部ライブラリ依存 | なし | デフォルト: 独自MeCabエンジン（MIT）、互換オプション: NMeCab（LGPL） |
+| 外部ライブラリ依存 | なし | 独自MeCabエンジン（Apache-2.0、外部依存なし） |
 | API特性 | 非同期・軽量struct | 同期中心・テキスト処理 |
-| ライセンス制約 | MIT一本 | Core+MeCab=MIT、NMeCab=LGPL（互換オプション） |
+| ライセンス制約 | MIT一本 | Apache-2.0（全コンポーネント） |
 | プラットフォーム差異 | async/awaitの差異 | ファイルI/O・辞書ロードの差異 |
 
 ---
@@ -40,7 +40,7 @@ M1（最小動作プロトタイプ）、M2（NJD処理パイプライン完成�
 dot-net-g2p/
 ├── DotNetG2P.slnx                    # ソリューション（.NET 10 .slnx形式）
 ├── Directory.Build.props             # NuGet共通メタデータ
-├── LICENSE                           # MIT License
+├── LICENSE                           # Apache-2.0 License
 ├── README.md                         # プロジェクトREADME（126行）
 ├── .editorconfig                     # コーディング規約
 ├── .gitattributes                    # Git属性設定
@@ -91,10 +91,7 @@ dot-net-g2p/
 │   │   ├── G2POptions.cs             # 処理オプション（各段階ON/OFF）
 │   │   ├── package.json              # UPMパッケージ定義 (com.dotnetg2p.core)
 │   │   └── DotNetG2P.asmdef          # Unity Assembly Definition
-│   ├── DotNetG2P.NMeCab/             # NMeCabアダプター（LGPL、互換オプション）
-│   │   ├── NMeCabTokenizer.cs        # LibNMeCab 0.10.2ベースのITokenizer実装
-│   │   └── DotNetG2P.NMeCab.asmdef   # Unity Assembly Definition
-│   └── DotNetG2P.MeCab/              # 独自MeCabエンジン（MIT、外部依存なし）
+│   └── DotNetG2P.MeCab/              # 独自MeCabエンジン（Apache-2.0、外部依存なし）
 │       ├── DotNetG2P.MeCab.csproj    # .NET Standard 2.1、DotNetG2P.Core参照のみ
 │       ├── MeCabTokenizer.cs         # ITokenizer実装（公開API）
 │       ├── Dictionary/              # 辞書読み込み層
@@ -106,7 +103,7 @@ dot-net-g2p/
 │       │   ├── UnknownDictionary.cs # unk.dic読み込み（未知語テンプレート）
 │       │   └── DictionaryBundle.cs  # 全辞書ファイル集約管理
 │       ├── Trie/                    # DoubleArray Trie
-│       │   ├── DoubleArrayTrie.cs   # NMeCab互換 共通接頭辞検索
+│       │   ├── DoubleArrayTrie.cs   # 共通接頭辞検索
 │       │   └── Utf8CharMap.cs       # UTF-8バイト⇔char オフセット変換
 │       └── Lattice/                 # ラティス＋Viterbi
 │           ├── LatticeNode.cs       # ラティスノード
@@ -141,7 +138,7 @@ dot-net-g2p/
 │       │   └── WordAttrTests.cs
 │       ├── MeCab/                          # MeCabエンジンテスト
 │       │   ├── MeCabTokenizerTests.cs      # 基本動作テスト（~30件）
-│       │   ├── TokenizerComparisonTests.cs # NMeCab出力一致テスト（100+文×3）
+│       │   ├── TokenizerComparisonTests.cs # 出力一致テスト（100+文×3）
 │       │   ├── G2PComparisonTests.cs       # G2Pパイプライン比較テスト（20件×6）
 │       │   ├── MeCabIndependentTests.cs    # 辞書非依存テスト
 │       │   ├── PerformanceTests.cs         # パフォーマンステスト
@@ -181,7 +178,7 @@ DotNetG2P/
 │
 ├── Directory.Build.props             # NuGet共通設定（メタデータ、署名等）
 ├── DotNetG2P.slnx                     # .NETソリューション
-├── LICENSE                           # BSD/MITライセンス
+├── LICENSE                           # Apache-2.0ライセンス
 ├── README.md
 │
 ├── docs/
@@ -247,10 +244,6 @@ DotNetG2P/
 │   │   │       ├── Editor/                        # Editor専用コード
 │   │   │       │   ├── DotNetG2P.Editor.asmdef
 │   │   │       │   └── DotNetG2PSettingsProvider.cs  # Project Settings UI（辞書パス設定等）
-│   │   │       │
-│   │   │       └── NMeCab~/                       # NMeCabアダプター（UPMから除外）
-│   │   │           ├── DotNetG2P.NMeCab.asmdef
-│   │   │           └── NMeCabTokenizer.cs
 │   │   │
 │   │   ├── Packages/
 │   │   │   └── manifest.json
@@ -260,10 +253,6 @@ DotNetG2P/
 │   │   ├── DotNetG2P.NetCore.csproj  # Compile IncludeでRuntime/**/*.csを参照
 │   │   └── NetCore/                  # .NET Core専用の差し替えファイル（辞書ロード等）
 │   │       └── DictionaryLoader.cs   # System.IO.File直接利用版
-│   │
-│   └── DotNetG2P.NMeCab/             # NMeCabアダプター NuGetパッケージ（LGPL）
-│       ├── DotNetG2P.NMeCab.csproj
-│       └── NMeCabTokenizer.cs        # ITokenizer実装（Unity側NMeCab~/と共有またはシンボリックリンク）
 │
 ├── tests/
 │   └── DotNetG2P.Tests/              # .NET Core用xUnitテスト
@@ -308,8 +297,7 @@ DotNetG2P/
 ```
 DotNetG2P.slnx
 ├── DotNetG2P.NetCore          # NuGetパッケージ用メインライブラリ
-├── DotNetG2P.MeCab            # 独自MeCabエンジン（MIT、デフォルト推奨）
-├── DotNetG2P.NMeCab           # NMeCabアダプター（LGPL、互換オプション）
+├── DotNetG2P.MeCab            # 独自MeCabエンジン（Apache-2.0）
 ├── DotNetG2P.Tests            # xUnitテスト
 └── DotNetG2P.Console          # コンソールサンプル
 ```
@@ -338,27 +326,6 @@ DotNetG2P.slnx
 </Project>
 ```
 
-### DotNetG2P.NMeCab.csproj
-
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net6.0;net8.0</TargetFrameworks>
-    <AssemblyName>DotNetG2P.NMeCab</AssemblyName>
-    <RootNamespace>DotNetG2P.NMeCab</RootNamespace>
-    <IsPackable>true</IsPackable>
-    <Id>DotNetG2P.NMeCab</Id>
-    <Description>NMeCab tokenizer adapter for DotNetG2P. Requires naist-jdic dictionary.</Description>
-    <PackageLicenseExpression>LGPL-2.1-or-later</PackageLicenseExpression>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\DotNetG2P.NetCore\DotNetG2P.NetCore.csproj" />
-    <PackageReference Include="LibNMeCab" Version="0.10.*" />
-  </ItemGroup>
-</Project>
-```
-
 ### Directory.Build.props
 
 ```xml
@@ -373,7 +340,7 @@ DotNetG2P.slnx
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" />
@@ -397,15 +364,14 @@ DotNetG2P.JPCommon                   # フルコンテキストラベル（Utter
 DotNetG2P.PhonemeConverter           # 音素変換（MoraMapping, ProsodyExtractor）
 DotNetG2P.Internal                   # 内部ユーティリティ（InternalsVisibleToで限定公開）
 
-DotNetG2P.MeCab                      # 独自MeCabエンジン（MIT、デフォルト）
-DotNetG2P.NMeCab                     # NMeCabアダプター（LGPL、互換オプション）
+DotNetG2P.MeCab                      # 独自MeCabエンジン（Apache-2.0）
 ```
 
 ### 設計ポイント
 
 - ルート名前空間 `DotNetG2P` にメインAPI（G2PEngine）と抽象化インターフェース（ITokenizer/IToken）を配置
 - ユーザーが通常触るのは `DotNetG2P` と `DotNetG2P.Models` のみ
-- `DotNetG2P.Internal` は `[assembly: InternalsVisibleTo("DotNetG2P.NMeCab")]` と `[assembly: InternalsVisibleTo("DotNetG2P.Tests")]` で限定公開
+- `DotNetG2P.Internal` は `[assembly: InternalsVisibleTo("DotNetG2P.Tests")]` で限定公開
 
 ---
 
@@ -495,13 +461,9 @@ namespace DotNetG2P
 ### 使用例
 
 ```csharp
-// 独自MeCabエンジンを使用（デフォルト、MIT）
+// 独自MeCabエンジンを使用
 using var tokenizer = new MeCabTokenizer("/path/to/naist-jdic");
 using var engine = new G2PEngine(tokenizer);
-
-// または NMeCabアダプター（互換オプション、LGPL）
-// using var tokenizer = new NMeCabTokenizer("/path/to/naist-jdic");
-// using var engine = new G2PEngine(tokenizer);
 
 // 基本的な使い方
 string phonemes = engine.ToPhonemes("こんにちは");
@@ -531,9 +493,8 @@ UniTaskのパターンに従い、**ソースの正本をUnity側に置き、NuG
 
 | パッケージ | ライセンス | 依存関係 | 説明 |
 |-----------|-----------|---------|------|
-| `DotNetG2P` | MIT | なし | コアG2Pエンジン |
-| `DotNetG2P.MeCab` | MIT | DotNetG2P | 独自MeCabエンジン（デフォルト推奨） |
-| `DotNetG2P.NMeCab` | LGPL | DotNetG2P, LibNMeCab | NMeCabアダプター（互換オプション） |
+| `DotNetG2P` | Apache-2.0 | なし | コアG2Pエンジン |
+| `DotNetG2P.MeCab` | Apache-2.0 | DotNetG2P | 独自MeCabエンジン |
 | `DotNetG2P.Dictionary.NaistJdic` | BSD | なし | naist-jdic辞書データ（将来検討） |
 
 ### UPMパッケージ
@@ -548,21 +509,20 @@ UniTaskのパターンに従い、**ソースの正本をUnity側に置き、NuG
   "unity": "2021.2",
   "description": "Japanese Grapheme-to-Phoneme library. OpenJTalk-compatible rule-based G2P pipeline for Unity.",
   "keywords": ["g2p", "japanese", "tts", "phoneme"],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {}
 }
 ```
 
-**注意**: UPMパッケージではMIT準拠の独自MeCabエンジン（`com.dotnetg2p.mecab`）をデフォルトで使用する。NMeCabアダプターはLGPL制約のためUPMパッケージに含めない。
+**注意**: UPMパッケージでは独自MeCabエンジン（`com.dotnetg2p.mecab`）を使用する。
 
 ### Assembly Definition構成
 
 | asmdef | パス | 依存 | 用途 |
 |--------|------|------|------|
 | `DotNetG2P` | Runtime/ | なし | コアライブラリ |
-| `DotNetG2P.MeCab` | MeCab/ | DotNetG2P | 独自MeCabエンジン（MIT、デフォルト） |
+| `DotNetG2P.MeCab` | MeCab/ | DotNetG2P | 独自MeCabエンジン（Apache-2.0） |
 | `DotNetG2P.Editor` | Editor/ | DotNetG2P | Editor専用ツール |
-| `DotNetG2P.NMeCab` | NMeCab~/ | DotNetG2P | NMeCabアダプター（~で除外） |
 | `DotNetG2P.Tests` | Tests/ | DotNetG2P | Unity Test Runner用 |
 
 #### DotNetG2P.asmdef
@@ -639,7 +599,7 @@ DotNetG2P.Dictionary.NaistJdic (NuGetパッケージ)
 **または**: NuGetパッケージには辞書を同梱せず、初回起動時にダウンロードするヘルパーを提供:
 ```csharp
 // 辞書パスを明示的に指定（推奨）
-var tokenizer = new NMeCabTokenizer("/path/to/naist-jdic");
+var tokenizer = new MeCabTokenizer("/path/to/naist-jdic");
 
 // ヘルパーで辞書ダウンロード（オプション）
 await DictionaryManager.EnsureDownloadedAsync("~/.dotnetg2p/naist-jdic");
@@ -693,7 +653,7 @@ tests/DotNetG2P.Tests/
 ├── JPCommon/                  # JPCommonテスト
 ├── MeCab/                     # MeCabエンジンテスト
 │   ├── MeCabTokenizerTests.cs      # 基本動作テスト
-│   ├── TokenizerComparisonTests.cs # NMeCab出力一致テスト
+│   ├── TokenizerComparisonTests.cs # 出力一致テスト
 │   ├── G2PComparisonTests.cs       # G2Pパイプライン比較テスト
 │   ├── MeCabIndependentTests.cs    # 辞書非依存テスト
 │   ├── PerformanceTests.cs         # パフォーマンステスト
@@ -712,7 +672,6 @@ tests/DotNetG2P.Tests/
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\DotNetG2P.NetCore\DotNetG2P.NetCore.csproj" />
-    <ProjectReference Include="..\..\src\DotNetG2P.NMeCab\DotNetG2P.NMeCab.csproj" />
     <PackageReference Include="xunit" Version="2.*" />
     <PackageReference Include="FluentAssertions" Version="6.*" />
   </ItemGroup>
@@ -816,7 +775,7 @@ jobs:
 
   create-release:
     - GitHubリリース作成
-    - NuGet push（DotNetG2P + DotNetG2P.MeCab + DotNetG2P.NMeCab）
+    - NuGet push（DotNetG2P + DotNetG2P.MeCab）
     - .unitypackageをリリースアセットに添付
 ```
 

@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using DotNetG2P;
 using DotNetG2P.Models;
-using DotNetG2P.NMeCab;
 using DotNetG2P.MeCab;
 using Xunit;
 
@@ -367,12 +366,6 @@ namespace DotNetG2P.Tests.Integration
             var nodes = _engine.Analyze(input);
             Assert.NotNull(nodes);
         }
-    }
-
-    /// <summary>NMeCabTokenizerによるエッジケーステスト。</summary>
-    public class EdgeCaseTests_NMeCab : EdgeCaseTestsBase
-    {
-        protected override ITokenizer CreateTokenizer(string dicPath) => new NMeCabTokenizer(dicPath);
     }
 
     /// <summary>MeCabTokenizerによるエッジケーステスト。</summary>

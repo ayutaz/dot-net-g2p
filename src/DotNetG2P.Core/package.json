@@ -11,7 +11,7 @@
     "phoneme",
     "openjtalk"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {},
   "author": {
     "name": "DotNetG2P Contributors"

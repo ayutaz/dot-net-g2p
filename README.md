@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/ayutaz/dot-net-g2p/actions/workflows/ci.yml/badge.svg)](https://github.com/ayutaz/dot-net-g2p/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
 C#/.NET向け日本語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
 OpenJTalk互換のルールベースG2Pパイプラインを C# でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに日本語テキストを音素列に変換します。
@@ -31,11 +31,11 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 
 ## 特徴
 
-- **完全MIT** — 独自MeCabエンジン（`DotNetG2P.MeCab`）により外部LGPL依存を排除し、全コンポーネントMITライセンスで利用可能
+- **Apache-2.0ライセンス** — 独自MeCabエンジン（`DotNetG2P.MeCab`）により外部依存なし、全コンポーネントApache-2.0で利用可能
 - **OpenJTalk互換** — NJD処理6段階（発音生成→数字読み→アクセント句結合→アクセント結合→無声音化）を完全実装
 - **5種類の出力形式** — 音素列 / カタカナ / 韻律記号付き / VOICEVOX互換AccentPhrase / HTSフルコンテキストラベル
 - **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、IL2CPP/AOT安全設計
-- **ITokenizer抽象化** — 形態素解析エンジンを差し替え可能。デフォルトは独自MeCabTokenizer（MIT）、互換オプションとしてNMeCab（LGPL）も利用可能
+- **ITokenizer抽象化** — 形態素解析エンジンを差し替え可能（デフォルトは独自MeCabTokenizer）
 - **1,600超テストで品質保証** — pyopenjtalk比較テスト、piper-plus移植テスト、NJD単体テスト、MeCabエンジン一致検証
 
 ## インストール
@@ -43,21 +43,17 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 ### NuGet
 
 ```bash
-# コアライブラリ + 独自MeCabエンジン（推奨・完全MIT）
+# コアライブラリ + 独自MeCabエンジン
 dotnet add package DotNetG2P
 dotnet add package DotNetG2P.MeCab
-
-# 互換オプション: LibNMeCab版（LGPL-2.1）
-# dotnet add package DotNetG2P.NMeCab
 ```
 
 ### パッケージ構成
 
 | パッケージ | ライセンス | 説明 |
 |-----------|-----------|------|
-| `DotNetG2P` | MIT | コアライブラリ（G2Pエンジン、NJD処理、音素変換） |
-| `DotNetG2P.MeCab` | MIT | 独自MeCabエンジン（**推奨**、外部依存なし） |
-| `DotNetG2P.NMeCab` | LGPL-2.1 | LibNMeCab版アダプター（互換オプション） |
+| `DotNetG2P` | Apache-2.0 | コアライブラリ（G2Pエンジン、NJD処理、音素変換） |
+| `DotNetG2P.MeCab` | Apache-2.0 | 独自MeCabエンジン（外部依存なし） |
 
 ### Unity (UPM)
 
@@ -74,7 +70,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 
 ```csharp
 using DotNetG2P;
-using DotNetG2P.MeCab;  // 独自MeCabエンジン（推奨・MIT）
+using DotNetG2P.MeCab;
 
 // 1. エンジン初期化（辞書パスを指定）
 using var tokenizer = new MeCabTokenizer("/path/to/naist-jdic");
@@ -98,8 +94,6 @@ var phrases = engine.ToAccentPhrases("こんにちは");
 // 6. HTSフルコンテキストラベル（HMM/DNN音声合成用）
 var labels = engine.ToFullContextLabels("こんにちは");
 ```
-
-> **互換オプション:** LibNMeCab版を使用する場合は `using DotNetG2P.NMeCab;` + `new NMeCabTokenizer(...)` に置き換えてください（LGPL-2.1が適用されます）。
 
 ## API リファレンス
 
@@ -216,22 +210,21 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 
 | フェーズ | 状態 | 内容 |
 |---------|------|------|
-| Phase 1: 基盤構築 | 完了 | データモデル、ITokenizer、NMeCabアダプター、MoraMapping |
+| Phase 1: 基盤構築 | 完了 | データモデル、ITokenizer、MoraMapping |
 | Phase 2: NJDパイプライン | 完了 | 6段階NJD処理、TextNormalizer、G2POptions |
 | Phase 3: 出力形式 | 完了 | ToProsody、AccentPhrase、JPCommon、HTSラベル |
 | Phase 4: テスト | 完了 | 1,600超テスト（NJD単体・pyopenjtalk比較・エッジケース・MeCab一致検証） |
 | Phase 5: パッケージング | 完了 | NuGet/UPM設定、CI/CD、ドキュメント |
-| Phase 6: 独自MeCabエンジン | **完了** | DoubleArrayTrie、Viterbiデコーダ、未知語処理、NMeCab依存排除→完全MIT化 |
+| Phase 6: 独自MeCabエンジン | **完了** | DoubleArrayTrie、Viterbiデコーダ、未知語処理 |
 
 ## ライセンス
 
 | パッケージ | ライセンス | 備考 |
 |-----------|-----------|------|
-| **DotNetG2P** | [MIT](LICENSE) | コアライブラリ |
-| **DotNetG2P.MeCab** | [MIT](LICENSE) | 独自MeCabエンジン（**推奨**） |
-| **DotNetG2P.NMeCab** | LGPL-2.1-or-later | [LibNMeCab](https://github.com/komutan/NMeCab)依存のため（互換オプション） |
+| **DotNetG2P** | [Apache-2.0](LICENSE) | コアライブラリ |
+| **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 独自MeCabエンジン |
 
-`DotNetG2P` + `DotNetG2P.MeCab` の組み合わせで**完全MITライセンス**で利用可能です。`DotNetG2P.NMeCab` を使用する場合のみLGPL-2.1が適用されます。
+全コンポーネントが**Apache-2.0ライセンス**で利用可能です。
 
 ## 謝辞・関連プロジェクト
 
@@ -243,7 +236,7 @@ DotNetG2Pは以下のプロジェクトの成果物・知見に基づいてい�
 | [jpreprocess](https://github.com/jpreprocess/jpreprocess) | 本プロジェクトの主要設計参考（Rust再実装） |
 | [pyopenjtalk](https://github.com/r9y9/pyopenjtalk) | テストデータ生成・比較検証に使用 |
 | [VOICEVOX](https://voicevox.hiroshiba.jp/) | AccentPhrase出力形式・MoraMapping参考 |
-| [LibNMeCab](https://github.com/komutan/NMeCab) | 形態素解析エンジン（C# MeCab実装） |
+| [LibNMeCab](https://github.com/komutan/NMeCab) | 形態素解析エンジン参考実装（C# MeCab実装） |
 | [ESPnet](https://github.com/espnet/espnet) | 韻律記号抽出アルゴリズム参考 |
 
 ## Contributing

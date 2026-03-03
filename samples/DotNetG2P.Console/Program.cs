@@ -1,20 +1,12 @@
 using System;
 using DotNetG2P;
 using DotNetG2P.MeCab;
-using DotNetG2P.NMeCab;
 
 // naist-jdic辞書のパスを指定
 // 環境変数 NAIST_JDIC_PATH または第1引数で辞書パスを指定可能
 var dicPath = args.Length > 0
     ? args[0]
     : Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
-
-// --nmecab フラグでNMeCabTokenizerを使用（デフォルトはMeCabTokenizer）
-var useNMeCab = Array.Exists(args, a => a == "--nmecab");
-if (useNMeCab && args.Length > 0 && args[0] == "--nmecab")
-{
-    dicPath = args.Length > 1 ? args[1] : Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
-}
 
 if (string.IsNullOrEmpty(dicPath))
 {
@@ -39,13 +31,10 @@ if (string.IsNullOrEmpty(dicPath))
 // === M2 NJDパイプライン統合動作確認 ===
 
 Console.WriteLine("=== DotNetG2P NJDパイプライン動作確認 ===");
-Console.WriteLine($"Tokenizer: {(useNMeCab ? "NMeCabTokenizer (LibNMeCab)" : "MeCabTokenizer (純C#)")}");
 Console.WriteLine();
 
 // デフォルトオプション（全処理有効）で動作確認
-using ITokenizer tokenizer = useNMeCab
-    ? new NMeCabTokenizer(dicPath)
-    : new MeCabTokenizer(dicPath);
+using var tokenizer = new MeCabTokenizer(dicPath);
 using var engine = new G2PEngine(tokenizer);
 
 var samples = new[]
@@ -82,9 +71,7 @@ foreach (var text in samples)
 Console.WriteLine("--- 無声音化OFF ---");
 Console.WriteLine();
 
-using ITokenizer tokenizer2 = useNMeCab
-    ? new NMeCabTokenizer(dicPath)
-    : new MeCabTokenizer(dicPath);
+using var tokenizer2 = new MeCabTokenizer(dicPath);
 var optionsNoUnvoiced = new G2POptions(enableUnvoicedVowel: false);
 using var engine2 = new G2PEngine(tokenizer2, optionsNoUnvoiced);
 
