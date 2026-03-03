@@ -24,7 +24,7 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 - [辞書の準備](#辞書の準備)
 - [オプション設定](#オプション設定)
 - [ビルド](#ビルド)
-- [ロードマップ](#ロードマップ)
+- [開発履歴](#開発履歴)
 - [ライセンス](#ライセンス)
 - [謝辞・関連プロジェクト](#謝辞関連プロジェクト)
 - [Contributing](#contributing)
@@ -211,17 +211,17 @@ dotnet run --project samples/DotNetG2P.Console
 dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
 
-## ロードマップ
+## 開発履歴
 
-| フェーズ | 状態 | 内容 |
-|---------|------|------|
-| Phase 1: 基盤構築 | 完了 | データモデル、ITokenizer、MoraMapping |
-| Phase 2: NJDパイプライン | 完了 | 6段階NJD処理、TextNormalizer、G2POptions |
-| Phase 3: 出力形式 | 完了 | ToProsody、AccentPhrase、JPCommon、HTSラベル |
-| Phase 4: テスト | 完了 | 1,600超テスト（NJD単体・pyopenjtalk比較・エッジケース・MeCab一致検証） |
-| Phase 5: パッケージング | 完了 | NuGet/UPM設定、CI/CD、ドキュメント |
-| Phase 6: 独自MeCabエンジン | **完了** | DoubleArrayTrie、Viterbiデコーダ、未知語処理 |
-| Phase 7: パフォーマンス最適化 | **完了** | ValueStringBuilder、辞書一括読み込み、バッファ再利用、バッチAPI |
+| フェーズ | 内容 |
+|---------|------|
+| 基盤構築 | データモデル、ITokenizer、MoraMapping |
+| NJDパイプライン | 6段階NJD処理、TextNormalizer、G2POptions |
+| 出力形式 | ToProsody、AccentPhrase、JPCommon、HTSラベル |
+| テスト | 1,600超テスト（NJD単体・pyopenjtalk比較・エッジケース・MeCab一致検証） |
+| パッケージング | NuGet/UPM設定、CI/CD、ドキュメント |
+| 独自MeCabエンジン | DoubleArrayTrie、Viterbiデコーダ、未知語処理 |
+| パフォーマンス最適化 | ValueStringBuilder、辞書一括読み込み、バッファ再利用、バッチAPI |
 
 ## ライセンス
 

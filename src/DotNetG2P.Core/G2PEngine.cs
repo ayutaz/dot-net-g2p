@@ -210,7 +210,7 @@ namespace DotNetG2P
 
         /// <summary>
         /// テキストをNJDパイプライン処理後のNjdNodeリストとして返す。
-        /// デバッグ・検証用途。
+        /// NJD処理の中間結果を取得するための高度なAPI。
         /// </summary>
         /// <param name="text">入力テキスト</param>
         /// <returns>NJD処理済みのNjdNodeリスト</returns>

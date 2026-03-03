@@ -105,10 +105,10 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToKana("１２３");
 
             Assert.NotEmpty(result);
-            // TODO(issue): 既知バグ: 現在は「ニサン」と出力される（位取り読みで「百」が欠落）
-            // TODO(issue): 期待値: 「ヒャクニジューサン」等
-            // Assert.Contains("ヒャク", result);  // TODO(issue): 数字位取り読み修正後に有効化
-            Assert.NotEmpty(result);  // 暫定: 空でないことのみ確認
+            // 既知の制限: 現在は「ニサン」と出力される（位取り読みで「百」が欠落）
+            // 期待値: 「ヒャクニジューサン」等
+            // Assert.Contains("ヒャク", result);  // 数字位取り読み実装後に有効化
+            Assert.NotEmpty(result);  // 現状: 空でないことのみ確認
         }
 
         [SkippableFact]
@@ -119,10 +119,10 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToKana("２０２５年");
 
             Assert.NotEmpty(result);
-            // TODO(issue): 既知バグ: 現在は「ニニゴネン」と出力される（各桁を個別に読んでいる）
-            // TODO(issue): 期待値: 「ニセンニジューゴネン」等
-            // Assert.Contains("ニセン", result);  // TODO(issue): 数字位取り読み修正後に有効化
-            Assert.Contains("ネン", result);  // 暫定: 「年」の読みは正しい
+            // 既知の制限: 現在は「ニニゴネン」と出力される（各桁を個別に読んでいる）
+            // 期待値: 「ニセンニジューゴネン」等
+            // Assert.Contains("ニセン", result);  // 数字位取り読み実装後に有効化
+            Assert.Contains("ネン", result);  // 現状: 「年」の読みは正しい
         }
 
         [SkippableFact]
@@ -132,11 +132,11 @@ namespace DotNetG2P.Tests.Integration
 
             var result = _engine!.ToKana("１００円");
 
-            // TODO(issue): 既知バグ: 現在は「エン」のみ出力される（「100」部分の読みが欠落）
-            // TODO(issue): 期待値: 「ヒャクエン」
-            // Assert.Contains("ヒャク", result);  // TODO(issue): 数字位取り読み修正後に有効化
+            // 既知の制限: 現在は「エン」のみ出力される（「100」部分の読みが欠落）
+            // 期待値: 「ヒャクエン」
+            // Assert.Contains("ヒャク", result);  // 数字位取り読み実装後に有効化
             Assert.NotNull(result);
-            Assert.Contains("エン", result);  // 暫定: 「円」の読みは正しい
+            Assert.Contains("エン", result);  // 現状: 「円」の読みは正しい
         }
 
         [SkippableFact]
@@ -354,7 +354,7 @@ namespace DotNetG2P.Tests.Integration
 
         [SkippableTheory]
         [InlineData("おはようございます", true)]
-        [InlineData("ありがとうございます", false)]  // TODO(issue): 既知バグ: 感動詞の発音生成で空になる
+        [InlineData("ありがとうございます", false)]  // 既知の制限: 感動詞の発音生成で空になる
         [InlineData("東京スカイツリー", true)]
         [InlineData("人工知能", true)]
         [InlineData("音声合成", true)]
@@ -371,8 +371,8 @@ namespace DotNetG2P.Tests.Integration
             }
             else
             {
-                // TODO(issue): 既知バグ: 一部の入力で空が返される
-                // TODO(issue): 修正後に expectNonEmpty=true に変更
+                // 既知の制限: 一部の入力で空が返される
+                // 改善後に expectNonEmpty=true に変更
                 Assert.NotNull(result);
             }
         }

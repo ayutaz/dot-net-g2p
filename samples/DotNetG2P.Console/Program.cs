@@ -28,7 +28,7 @@ if (string.IsNullOrEmpty(dicPath))
     return;
 }
 
-// === M2 NJDパイプライン統合動作確認 ===
+// === NJDパイプライン統合動作確認 ===
 
 Console.WriteLine("=== DotNetG2P NJDパイプライン動作確認 ===");
 Console.WriteLine();
@@ -101,10 +101,10 @@ for (int i = 0; i < nodes.Count; i++)
     Console.WriteLine($"       Chain: {node.ChainFlag}");
 }
 
-// === M3 新API動作確認 ===
+// === 出力形式API動作確認 ===
 
 Console.WriteLine();
-Console.WriteLine("=== DotNetG2P M3 新API動作確認 ===");
+Console.WriteLine("=== DotNetG2P 出力形式API動作確認 ===");
 Console.WriteLine();
 
 var m3Samples = new[] { "こんにちは", "今日は良い天気です", "東京タワーに行きたい" };
