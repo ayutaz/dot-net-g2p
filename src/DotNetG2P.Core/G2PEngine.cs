@@ -113,8 +113,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (text == null) throw new ArgumentNullException(nameof(text));
-            if (text.Length == 0) return "";
+            if (string.IsNullOrEmpty(text)) return "";
 
             var nodes = RunPipeline(text);
 
@@ -145,8 +144,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (text == null) throw new ArgumentNullException(nameof(text));
-            if (text.Length == 0) return "";
+            if (string.IsNullOrEmpty(text)) return "";
 
             var nodes = RunPipeline(text);
 
@@ -172,8 +170,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (text == null) throw new ArgumentNullException(nameof(text));
-            if (text.Length == 0) return "";
+            if (string.IsNullOrEmpty(text)) return "";
 
             var nodes = RunPipeline(text);
             return ProsodyExtractor.Extract(nodes);
@@ -188,8 +185,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (text == null) throw new ArgumentNullException(nameof(text));
-            if (text.Length == 0) return Array.Empty<AccentPhrase>();
+            if (string.IsNullOrEmpty(text)) return Array.Empty<AccentPhrase>();
 
             var nodes = RunPipeline(text);
             return AccentPhraseConverter.Convert(nodes);
@@ -204,8 +200,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (text == null) throw new ArgumentNullException(nameof(text));
-            if (text.Length == 0) return Array.Empty<string>();
+            if (string.IsNullOrEmpty(text)) return Array.Empty<string>();
 
             var nodes = RunPipeline(text);
             var utterance = JPCommonBuilder.Build(nodes);
@@ -222,8 +217,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (text == null) throw new ArgumentNullException(nameof(text));
-            if (text.Length == 0) return Array.Empty<NjdNode>();
+            if (string.IsNullOrEmpty(text)) return Array.Empty<NjdNode>();
 
             return RunPipeline(text);
         }
