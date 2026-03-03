@@ -13,13 +13,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DOTNET_VERSION: '9.0.x'
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        dotnet-version: ['9.0.x']
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,7 +26,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ matrix.dotnet-version }}
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
         run: dotnet restore DotNetG2P.slnx
@@ -35,27 +34,51 @@ jobs:
       - name: Build
         run: dotnet build DotNetG2P.slnx --configuration Release --no-restore
 
-      - name: Download naist-jdic dictionary for MeCab tests
-        continue-on-error: true
-        run: |
-          curl -L --retry 3 --max-time 120 -o open_jtalk_dic.tar.gz \
-            "https://sourceforge.net/projects/open-jtalk/files/Dictionary/open_jtalk_dic-1.11/open_jtalk_dic_utf_8-1.11.tar.gz/download"
-          tar xzf open_jtalk_dic.tar.gz
-          echo "NAIST_JDIC_PATH=${{ github.workspace }}/open_jtalk_dic_utf_8-1.11" >> $GITHUB_ENV
+      - name: Setup dictionary
+        uses: ./.github/actions/setup-dictionary
 
       - name: Test
-        run: dotnet test DotNetG2P.slnx --configuration Release --no-build --verbosity normal
+        run: >
+          dotnet test DotNetG2P.slnx
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --logger "trx;LogFileName=results.trx"
+          --results-directory ./test-results
 
-      - name: Pack DotNetG2P
-        if: github.event_name == 'push'
-        run: dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj --configuration Release --no-build --output ./artifacts
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./test-results/
+          retention-days: 30
 
-      - name: Pack DotNetG2P.MeCab
-        if: github.event_name == 'push'
-        run: dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj --configuration Release --no-build --output ./artifacts
+  pack:
+    needs: build-and-test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore DotNetG2P.slnx
+
+      - name: Build
+        run: dotnet build DotNetG2P.slnx --configuration Release --no-restore
+
+      - name: Pack
+        run: |
+          dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj --configuration Release --no-build --output ./artifacts
+          dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj --configuration Release --no-build --output ./artifacts
 
       - name: Upload NuGet packages
-        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: nuget-packages

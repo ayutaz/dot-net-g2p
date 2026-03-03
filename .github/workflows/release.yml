@@ -11,69 +11,97 @@ on:
 permissions:
   contents: write
 
-jobs:
-  release:
-    runs-on: ubuntu-latest
+env:
+  DOTNET_VERSION: '9.0.x'
+  VERSION: ${{ inputs.version }}
 
+jobs:
+  validate:
+    runs-on: ubuntu-latest
     steps:
-      - name: Validate version
+      - name: Validate version format
         run: |
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
-            echo "Invalid version format: $VERSION" && exit 1
+            echo "::error::Invalid version format: $VERSION"
+            exit 1
           fi
-        env:
-          VERSION: ${{ inputs.version }}
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
 
       - name: Check tag does not exist
         run: |
           if git rev-parse "v$VERSION" >/dev/null 2>&1; then
-            echo "Tag v$VERSION already exists" && exit 1
+            echo "::error::Tag v$VERSION already exists"
+            exit 1
           fi
-        env:
-          VERSION: ${{ inputs.version }}
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+  build-and-test:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies
-        run: dotnet restore DotNetG2P.slnx
+      - run: dotnet restore DotNetG2P.slnx
 
-      - name: Build
-        run: dotnet build DotNetG2P.slnx --configuration Release -p:Version="$VERSION"
-        env:
-          VERSION: ${{ inputs.version }}
+      - run: dotnet build DotNetG2P.slnx --configuration Release -p:Version="$VERSION"
 
-      - name: Download naist-jdic dictionary for MeCab tests
-        continue-on-error: true
-        run: |
-          curl -L --retry 3 --max-time 120 -o open_jtalk_dic.tar.gz \
-            "https://sourceforge.net/projects/open-jtalk/files/Dictionary/open_jtalk_dic-1.11/open_jtalk_dic_utf_8-1.11.tar.gz/download"
-          tar xzf open_jtalk_dic.tar.gz
-          echo "NAIST_JDIC_PATH=${{ github.workspace }}/open_jtalk_dic_utf_8-1.11" >> $GITHUB_ENV
+      - name: Setup dictionary
+        uses: ./.github/actions/setup-dictionary
 
       - name: Test
-        run: dotnet test DotNetG2P.slnx --configuration Release --no-build --verbosity normal
+        run: >
+          dotnet test DotNetG2P.slnx
+          --configuration Release --no-build --verbosity normal
+          --logger "trx;LogFileName=results.trx"
+          --results-directory ./test-results
 
-      - name: Pack DotNetG2P
-        run: dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
-        env:
-          VERSION: ${{ inputs.version }}
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-test-results
+          path: ./test-results/
+          retention-days: 30
 
-      - name: Pack DotNetG2P.MeCab
-        run: dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
-        env:
-          VERSION: ${{ inputs.version }}
+      - name: Pack
+        run: |
+          dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
+          dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/*.nupkg
+
+  publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuget-packages
+          path: ./artifacts
 
       - name: Push to NuGet
-        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: >
+          dotnet nuget push ./artifacts/*.nupkg
+          --api-key ${{ secrets.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ inputs.version }}
         run: gh release create "v$VERSION" ./artifacts/*.nupkg --title "v$VERSION" --generate-notes

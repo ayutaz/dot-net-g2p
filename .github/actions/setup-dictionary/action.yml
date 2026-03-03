@@ -1,0 +1,33 @@
+name: 'Setup naist-jdic Dictionary'
+description: 'naist-jdic辞書をキャッシュ付きでダウンロードし、環境変数NAIST_JDIC_PATHを設定する'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Cache dictionary
+      id: cache-dict
+      uses: actions/cache@v4
+      with:
+        path: open_jtalk_dic_utf_8-1.11
+        key: naist-jdic-utf8-1.11
+
+    - name: Download dictionary
+      if: steps.cache-dict.outputs.cache-hit != 'true'
+      continue-on-error: true
+      shell: bash
+      run: |
+        curl -L --retry 3 --max-time 120 -o open_jtalk_dic.tar.gz \
+          "https://sourceforge.net/projects/open-jtalk/files/Dictionary/open_jtalk_dic-1.11/open_jtalk_dic_utf_8-1.11.tar.gz/download"
+        tar xzf open_jtalk_dic.tar.gz
+        rm -f open_jtalk_dic.tar.gz
+
+    - name: Set dictionary path
+      shell: bash
+      run: |
+        DICT_DIR="${{ github.workspace }}/open_jtalk_dic_utf_8-1.11"
+        if [ -d "$DICT_DIR" ]; then
+          echo "NAIST_JDIC_PATH=$DICT_DIR" >> "$GITHUB_ENV"
+          echo "辞書パス設定完了: $DICT_DIR"
+        else
+          echo "辞書ディレクトリが見つかりません（辞書依存テストはスキップされます）"
+        fi
