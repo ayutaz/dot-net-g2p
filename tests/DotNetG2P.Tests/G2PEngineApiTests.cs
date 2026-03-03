@@ -42,10 +42,10 @@ namespace DotNetG2P.Tests
         }
 
         [SkippableFact]
-        public void ToProsody_Null_ThrowsArgumentNullException()
+        public void ToProsody_Null_ReturnsEmpty()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            Assert.Throws<ArgumentNullException>(() => _engine!.ToProsody(null!));
+            Assert.Equal("", _engine!.ToProsody(null!));
         }
 
         [SkippableFact]
@@ -69,10 +69,10 @@ namespace DotNetG2P.Tests
         }
 
         [SkippableFact]
-        public void ToAccentPhrases_Null_ThrowsArgumentNullException()
+        public void ToAccentPhrases_Null_ReturnsEmpty()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            Assert.Throws<ArgumentNullException>(() => _engine!.ToAccentPhrases(null!));
+            Assert.Empty(_engine!.ToAccentPhrases(null!));
         }
 
         [SkippableFact]
@@ -95,10 +95,10 @@ namespace DotNetG2P.Tests
         }
 
         [SkippableFact]
-        public void ToFullContextLabels_Null_ThrowsArgumentNullException()
+        public void ToFullContextLabels_Null_ReturnsEmpty()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");
-            Assert.Throws<ArgumentNullException>(() => _engine!.ToFullContextLabels(null!));
+            Assert.Empty(_engine!.ToFullContextLabels(null!));
         }
 
         [SkippableFact]
