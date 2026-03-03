@@ -24,10 +24,7 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 - [辞書の準備](#辞書の準備)
 - [オプション設定](#オプション設定)
 - [ビルド](#ビルド)
-- [開発履歴](#開発履歴)
 - [ライセンス](#ライセンス)
-- [謝辞・関連プロジェクト](#謝辞関連プロジェクト)
-- [Contributing](#contributing)
 
 ## 特徴
 
@@ -211,18 +208,6 @@ dotnet run --project samples/DotNetG2P.Console
 dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
 
-## 開発履歴
-
-| フェーズ | 内容 |
-|---------|------|
-| 基盤構築 | データモデル、ITokenizer、MoraMapping |
-| NJDパイプライン | 6段階NJD処理、TextNormalizer、G2POptions |
-| 出力形式 | ToProsody、AccentPhrase、JPCommon、HTSラベル |
-| テスト | 1,600超テスト（NJD単体・pyopenjtalk比較・エッジケース・MeCab一致検証） |
-| パッケージング | NuGet/UPM設定、CI/CD、ドキュメント |
-| 独自MeCabエンジン | DoubleArrayTrie、Viterbiデコーダ、未知語処理 |
-| パフォーマンス最適化 | ValueStringBuilder、辞書一括読み込み、バッファ再利用、バッチAPI |
-
 ## ライセンス
 
 | パッケージ | ライセンス | 備考 |
@@ -231,22 +216,3 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 独自MeCabエンジン |
 
 全コンポーネントが**Apache-2.0ライセンス**で利用可能です。
-
-## 謝辞・関連プロジェクト
-
-DotNetG2Pは以下のプロジェクトの成果物・知見に基づいています。
-
-| プロジェクト | 関連 |
-|-------------|------|
-| [OpenJTalk](https://open-jtalk.sourceforge.net/) | NJD処理パイプラインのオリジナル実装（C/C++） |
-| [jpreprocess](https://github.com/jpreprocess/jpreprocess) | 本プロジェクトの主要設計参考（Rust再実装） |
-| [pyopenjtalk](https://github.com/r9y9/pyopenjtalk) | テストデータ生成・比較検証に使用 |
-| [VOICEVOX](https://voicevox.hiroshiba.jp/) | AccentPhrase出力形式・MoraMapping参考 |
-| [LibNMeCab](https://github.com/komutan/NMeCab) | 形態素解析エンジン参考実装（C# MeCab実装） |
-| [ESPnet](https://github.com/espnet/espnet) | 韻律記号抽出アルゴリズム参考 |
-
-## Contributing
-
-Issue・Pull Requestを歓迎します。バグ報告や機能提案は [Issues](https://github.com/ayutaz/dot-net-g2p/issues) からお気軽にどうぞ。
-
-コード内コメント・コミットメッセージ・Issue・PRはすべて**日本語**で記述してください。
