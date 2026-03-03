@@ -121,8 +121,11 @@ namespace DotNetG2P.MeCab.Dictionary
             if (!BitConverter.IsLittleEndian)
                 throw new PlatformNotSupportedException("ビッグエンディアン環境はサポートされていません。");
 
-            // CharInfo は uint 1つだけの readonly struct なのでメモリレイアウトが同一
-            Buffer.BlockCopy(charInfoBytes, 0, charInfoTable, 0, charInfoByteCount);
+            // Buffer.BlockCopyはプリミティブ型配列のみ対応のため、uint[]経由で変換
+            var uintBuffer = new uint[CharInfoTableSize];
+            Buffer.BlockCopy(charInfoBytes, 0, uintBuffer, 0, charInfoByteCount);
+            for (int i = 0; i < CharInfoTableSize; i++)
+                charInfoTable[i] = new CharInfo(uintBuffer[i]);
 
             return new CharProperty(categoryNames, charInfoTable);
         }
