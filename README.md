@@ -31,13 +31,13 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 
 ## 特徴
 
-- **Apache-2.0ライセンス** — 独自MeCabエンジン（`DotNetG2P.MeCab`）により外部依存なし、全コンポーネントApache-2.0で利用可能
-- **OpenJTalk互換** — NJD処理6段階（発音生成→数字読み→アクセント句結合→アクセント結合→無声音化）を完全実装
-- **5種類の出力形式** — 音素列 / カタカナ / 韻律記号付き / VOICEVOX互換AccentPhrase / HTSフルコンテキストラベル
-- **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、IL2CPP/AOT安全設計
-- **ITokenizer抽象化** — 形態素解析エンジンを差し替え可能（デフォルトは独自MeCabTokenizer）
-- **高性能** — ValueStringBuilderによるゼロアロケーション出力、辞書一括読み込み、バッファ再利用等の最適化によりGCプレッシャーを最小化
-- **1,600超テストで品質保証** — pyopenjtalk比較テスト、piper-plus移植テスト、NJD単体テスト、MeCabエンジン一致検証
+- **純C#実装** — ネイティブバイナリ不要、独自MeCabエンジン（`DotNetG2P.MeCab`）によりNuGetパッケージ依存なし（実行時に[naist-jdic辞書](#辞書の準備)が必要）
+- **Apache-2.0ライセンス** — 全コードApache-2.0で商用利用可能
+- **OpenJTalk互換パイプライン** — 発音生成・数字読み・アクセント句結合・アクセント結合型・無声音化の6段階NJD処理
+- **複数の出力形式** — 音素列 / カタカナ / ESPnet韻律記号 / VOICEVOX互換AccentPhrase / HTSフルコンテキストラベル
+- **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、UPMパッケージ提供
+- **拡張可能な設計** — ITokenizerインターフェースにより形態素解析エンジンを差し替え可能
+- **包括的なテストスイート** — pyopenjtalk互換性テスト、piper-plus移植テスト、NJD単体テスト、MeCabエンジン一致検証
 
 ## インストール
 
@@ -107,7 +107,7 @@ var labels = engine.ToFullContextLabels("こんにちは");
 | `ToProsody(text)` | `string` | ESPnet韻律記号付き (`"^ k o [ N n i ch i w a $"`) |
 | `ToAccentPhrases(text)` | `IReadOnlyList<AccentPhrase>` | VOICEVOX互換アクセント句構造体 |
 | `ToFullContextLabels(text)` | `IReadOnlyList<string>` | HTSフルコンテキストラベル |
-| `Analyze(text)` | `IReadOnlyList<NjdNode>` | NJD処理後のノード列（デバッグ・拡張用） |
+| `Analyze(text)` | `IReadOnlyList<NjdNode>` | NJD処理後のノード列 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 複数テキストを一括で音素列に変換 |
 | `ToKanaBatch(texts)` | `IReadOnlyList<string>` | 複数テキストを一括でカタカナ読みに変換 |
 | `ToProsodyBatch(texts)` | `IReadOnlyList<string>` | 複数テキストを一括で韻律記号付きに変換 |

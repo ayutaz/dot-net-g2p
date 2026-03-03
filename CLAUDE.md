@@ -21,7 +21,7 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - JPCommon階層モデル（JPUtterance→JPBreathGroup→JPAccentPhrase→JPWord→JPMora→JPPhoneme）を実装
   - WordAttr（POS/CType/CForm→ID変換テーブル、jpreprocess word_attr.rs準拠）を実装
 - **M4（テスト・品質保証）**: 完了
-  - 502件の新規テストを追加（合計1,600超テスト）
+  - 502件の新規テストを追加（合計900超テスト）
   - NJD各処理の単体テスト（SetPronunciation/SetAccentPhrase/SetAccentType/DigitSequence/SetDigit）
   - MoraMapping全165パターン検証、piper-plusテスト移植（87件）、pyopenjtalk比較テスト（20件）
   - エッジケーステスト（記号/英字/空文字列/長文/混在スクリプト）
@@ -143,7 +143,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   ├── TestData/                        # テストデータ
 │   │   ├── expected_phonemes.json       # pyopenjtalk期待値データ（18件）
 │   │   └── generate_expected.py         # テストデータ生成スクリプト
-│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 1,600超テスト)
+│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 900超テスト)
 │       ├── DotNetG2P.Tests.csproj
 │       ├── G2PEngineApiTests.cs         # G2PEngine API統合テスト
 │       ├── Models/                      # モデルテスト
