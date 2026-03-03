@@ -3,14 +3,14 @@
     <IsPackable>false</IsPackable>
     <Version>0.0.0-local</Version>
     <PackageVersion>$(Version)</PackageVersion>
-    <Authors>DotNetG2P Contributors</Authors>
+    <Authors>ayutaz</Authors>
     <PackageTags>g2p;japanese;tts;phoneme;openjtalk;text-to-speech</PackageTags>
     <PackageProjectUrl>https://github.com/dotnetg2p/DotNetG2P</PackageProjectUrl>
     <RepositoryUrl>https://github.com/dotnetg2p/DotNetG2P</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Copyright>Copyright (c) 2025 DotNetG2P Contributors</Copyright>
+    <Copyright>Copyright (c) 2025 ayutaz</Copyright>
 
     <!-- SourceLink -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

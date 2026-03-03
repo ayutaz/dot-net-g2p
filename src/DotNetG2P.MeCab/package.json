@@ -3,7 +3,7 @@
   "displayName": "DotNetG2P.MeCab",
   "version": "0.1.0",
   "unity": "2021.2",
-  "description": "Pure C# MeCab-compatible morphological analyzer for DotNetG2P. No external native dependencies. MIT licensed.",
+  "description": "Pure C# MeCab-compatible morphological analyzer for DotNetG2P. No external native dependencies. Apache-2.0 licensed.",
   "keywords": [
     "mecab",
     "morphological-analysis",
@@ -16,7 +16,7 @@
     "com.dotnetg2p.core": "0.1.0"
   },
   "author": {
-    "name": "DotNetG2P Contributors"
+    "name": "ayutaz"
   },
   "documentationUrl": "https://github.com/ayutaz/dot-net-g2p#readme",
   "repository": {
