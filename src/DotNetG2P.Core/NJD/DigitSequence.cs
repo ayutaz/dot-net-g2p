@@ -186,12 +186,30 @@ namespace DotNetG2P.NJD
 
             /// <summary>
             /// 数値読みかどうかを推定する。
+            /// 2桁以上の数字列は文脈スコアに加えて桁数バイアスを付与し、
+            /// 助数詞がなくても数値読み（位取り読み）を選択しやすくする。
             /// </summary>
             public void EstimateNumericalReading(List<NjdNode> nodes)
             {
                 if (IsNumericalReading == null)
                 {
-                    IsNumericalReading = DigitSequenceScore.Score(nodes, Start, End) >= 0;
+                    int score = DigitSequenceScore.Score(nodes, Start, End);
+
+                    // 桁数による数値読みバイアス:
+                    // 日本語では2桁以上の裸の数字列は通常、位取り読みされる
+                    // （例: 12→じゅうに、123→ひゃくにじゅうさん）
+                    // 電話番号等の順序読みパターンは先行・後続トークンで負のスコアが付くため、
+                    // バイアスを加えても正しく順序読みに判定される
+                    if (Digits.Count >= 2)
+                    {
+                        score += 2; // 2桁以上は数値読み寄り
+                    }
+                    if (Digits.Count >= 3)
+                    {
+                        score += 2; // 3桁以上はさらに強い数値読みバイアス
+                    }
+
+                    IsNumericalReading = score >= 0;
                 }
             }
 

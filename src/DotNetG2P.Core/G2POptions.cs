@@ -21,6 +21,9 @@ namespace DotNetG2P
         /// <summary>アクセント結合型処理を有効にするか</summary>
         public bool EnableAccentType { get; }
 
+        /// <summary>長音を母音繰り返しで出力するか（false="-"記号を使用）</summary>
+        public bool ExpandLongVowels { get; }
+
         /// <summary>デフォルトの全処理有効オプション</summary>
         public static readonly G2POptions Default = new G2POptions();
 
@@ -29,13 +32,15 @@ namespace DotNetG2P
             bool enableUnvoicedVowel = true,
             bool enableDigitProcessing = true,
             bool enableAccentPhrase = true,
-            bool enableAccentType = true)
+            bool enableAccentType = true,
+            bool expandLongVowels = true)
         {
             EnableTextNormalization = enableTextNormalization;
             EnableUnvoicedVowel = enableUnvoicedVowel;
             EnableDigitProcessing = enableDigitProcessing;
             EnableAccentPhrase = enableAccentPhrase;
             EnableAccentType = enableAccentType;
+            ExpandLongVowels = expandLongVowels;
         }
     }
 }

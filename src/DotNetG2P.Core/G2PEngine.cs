@@ -124,7 +124,7 @@ namespace DotNetG2P
             {
                 if (node.Pronunciation != null && node.Pronunciation.MoraCount > 0)
                 {
-                    var phonemes = MoraMapping.MorasToPhonemeString(node.Pronunciation.Moras);
+                    var phonemes = MoraMapping.MorasToPhonemeString(node.Pronunciation.Moras, _options.ExpandLongVowels);
                     if (!string.IsNullOrEmpty(phonemes))
                     {
                         parts.Add(phonemes);
@@ -174,7 +174,7 @@ namespace DotNetG2P
             if (string.IsNullOrEmpty(text)) return "";
 
             var nodes = RunPipeline(text);
-            return ProsodyExtractor.Extract(nodes);
+            return ProsodyExtractor.Extract(nodes, _options.ExpandLongVowels);
         }
 
         /// <summary>

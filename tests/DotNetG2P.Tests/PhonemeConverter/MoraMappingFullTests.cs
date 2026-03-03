@@ -419,7 +419,7 @@ namespace DotNetG2P.Tests.PhonemeConverter
         [Theory]
         [InlineData("ン", "N")]
         [InlineData("ッ", "cl")]
-        [InlineData("ー", "-")]
+        [InlineData("ー", "-")]  // 単独の長音は直前の母音がないため "-" のまま
         public void カタカナ変換_特殊モーラ_音素が正しい(string katakana, string expected)
         {
             Assert.Equal(expected, MoraMapping.KatakanaToPhonemeString(katakana));

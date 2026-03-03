@@ -65,6 +65,43 @@ namespace DotNetG2P.NJD
                     continue;
                 }
 
+                // Readingフィールド（カタカナ）からのフォールバック
+                // 表層形がひらがな等でモーラ辞書にマッチしない場合に有効
+                if (!string.IsNullOrEmpty(node.Reading) && node.Reading != "*")
+                {
+                    var readingSegments = Pronunciation.ParseMoraSegments(node.Reading);
+                    if (readingSegments.Count > 0 && readingSegments[0].moras.Count > 0)
+                    {
+                        // Readingからモーラが取得できた場合、最初のセグメントのモーラ数を確認
+                        bool hasRealMora = false;
+                        foreach (var (text, moras) in readingSegments)
+                        {
+                            foreach (var m in moras)
+                            {
+                                if (m.Kind != MoraKind.Touten && m.Kind != MoraKind.Question)
+                                {
+                                    hasRealMora = true;
+                                    break;
+                                }
+                            }
+                            if (hasRealMora) break;
+                        }
+
+                        if (hasRealMora)
+                        {
+                            // 全セグメントのモーラを結合してPronunciationを構築
+                            var allMoras = new List<Mora>();
+                            foreach (var (text, moras) in readingSegments)
+                            {
+                                allMoras.AddRange(moras);
+                            }
+                            node.Pronunciation = new Pronunciation(allMoras, node.AccentType);
+                            nodes.Add(node);
+                            continue;
+                        }
+                    }
+                }
+
                 // 表層形からモーラセグメントを取得
                 var segments = Pronunciation.ParseMoraSegments(node.Surface);
                 if (segments.Count == 0)

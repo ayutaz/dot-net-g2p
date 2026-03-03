@@ -89,7 +89,8 @@ namespace DotNetG2P.Tests.Integration
 
         /// <summary>
         /// 長音記号 "-" を前の母音の繰り返しに正規化する。
-        /// pyopenjtalkは "o o" と出力し、DotNetG2Pは "o -" と出力する可能性がある。
+        /// デフォルトではDotNetG2PもpyopenjtalkもO母音繰り返しで出力するが、
+        /// ExpandLongVowels=false の場合に "-" が出力される可能性がある。
         /// 例: "t o -" → "t o o", "ky o - ky o -" → "ky o o ky o o"
         /// </summary>
         private static string NormalizeLongVowels(string phonemes)

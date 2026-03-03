@@ -105,10 +105,8 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToKana("１２３");
 
             Assert.NotEmpty(result);
-            // 既知の制限: 現在は「ニサン」と出力される（位取り読みで「百」が欠落）
-            // 期待値: 「ヒャクニジューサン」等
-            // Assert.Contains("ヒャク", result);  // 数字位取り読み実装後に有効化
-            Assert.NotEmpty(result);  // 現状: 空でないことのみ確認
+            // 数値読み（位取り読み）: 123 → ヒャクニジューサン
+            Assert.Contains("ヒャク", result);
         }
 
         [SkippableFact]
@@ -119,10 +117,9 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToKana("２０２５年");
 
             Assert.NotEmpty(result);
-            // 既知の制限: 現在は「ニニゴネン」と出力される（各桁を個別に読んでいる）
-            // 期待値: 「ニセンニジューゴネン」等
-            // Assert.Contains("ニセン", result);  // 数字位取り読み実装後に有効化
-            Assert.Contains("ネン", result);  // 現状: 「年」の読みは正しい
+            // 数値読み（位取り読み）: 2025年 → ニセンニジューゴネン
+            Assert.Contains("ニセン", result);
+            Assert.Contains("ネン", result);
         }
 
         [SkippableFact]
@@ -132,11 +129,9 @@ namespace DotNetG2P.Tests.Integration
 
             var result = _engine!.ToKana("１００円");
 
-            // 既知の制限: 現在は「エン」のみ出力される（「100」部分の読みが欠落）
-            // 期待値: 「ヒャクエン」
-            // Assert.Contains("ヒャク", result);  // 数字位取り読み実装後に有効化
-            Assert.NotNull(result);
-            Assert.Contains("エン", result);  // 現状: 「円」の読みは正しい
+            // 数値読み（位取り読み）: 100円 → ヒャクエン
+            Assert.Contains("ヒャク", result);
+            Assert.Contains("エン", result);
         }
 
         [SkippableFact]
@@ -354,7 +349,7 @@ namespace DotNetG2P.Tests.Integration
 
         [SkippableTheory]
         [InlineData("おはようございます", true)]
-        [InlineData("ありがとうございます", false)]  // 既知の制限: 感動詞の発音生成で空になる
+        [InlineData("ありがとうございます", true)]  // Readingフォールバックにより感動詞でも発音生成可能
         [InlineData("東京スカイツリー", true)]
         [InlineData("人工知能", true)]
         [InlineData("音声合成", true)]

@@ -544,5 +544,54 @@ namespace DotNetG2P.Tests.NJD
             Assert.Single(nodes);
             Assert.True(nodes[0].PartOfSpeech.IsFiller);
         }
+
+        // =====================================================================
+        // Readingフィールドからのフォールバックテスト
+        // =====================================================================
+
+        [Fact]
+        public void Process_ひらがな表層形でReadingがカタカナなら発音が生成される()
+        {
+            // ひらがな表層形「ありがとう」はモーラ辞書にマッチしないが、
+            // Reading「アリガトー」（カタカナ）からフォールバックで発音を生成できる
+            var node = ノード作成_発音なし("ありがとう", POSType.Kandoushi, reading: "アリガトー");
+            var nodes = new List<NjdNode> { node };
+
+            SetPronunciation.Process(nodes);
+
+            Assert.Single(nodes);
+            Assert.True(nodes[0].Pronunciation.MoraCount > 0, "Readingフォールバックにより発音が生成されるべき");
+            Assert.Equal("a r i g a t o -", nodes[0].Pronunciation.ToPhonemeString());
+        }
+
+        [Fact]
+        public void Process_感動詞ノードでReadingフォールバックが動作する()
+        {
+            // 感動詞「ありがとうございます」のようなケースで、
+            // 表層形がひらがなでもReadingからカタカナ読みが取れれば発音を生成
+            var node = ノード作成_発音なし("ございます", POSType.Jodoushi, reading: "ゴザイマス");
+            var nodes = new List<NjdNode> { node };
+
+            SetPronunciation.Process(nodes);
+
+            Assert.Single(nodes);
+            Assert.True(nodes[0].Pronunciation.MoraCount > 0, "Readingフォールバックにより発音が生成されるべき");
+            Assert.Contains("g o", nodes[0].Pronunciation.ToPhonemeString());
+        }
+
+        [Fact]
+        public void Process_ReadingもアスタリスクならReadingフォールバックは使われない()
+        {
+            // Readingが「*」の場合はフォールバックが使われず、表層形から解析される
+            var node = ノード作成_発音なし("テスト", reading: "*");
+            var nodes = new List<NjdNode> { node };
+
+            SetPronunciation.Process(nodes);
+
+            // 表層形「テスト」はカタカナなのでモーラ解析される
+            Assert.Single(nodes);
+            Assert.True(nodes[0].Pronunciation.MoraCount > 0);
+            Assert.Equal("t e s u t o", nodes[0].Pronunciation.ToPhonemeString());
+        }
     }
 }

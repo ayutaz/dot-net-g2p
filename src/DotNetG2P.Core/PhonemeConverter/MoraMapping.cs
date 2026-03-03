@@ -382,9 +382,10 @@ namespace DotNetG2P.PhonemeConverter
         /// 例: [K+A, Nn+null, N+I, Ch+I, W+A] → "k a N n i ch i w a"
         /// </summary>
         /// <param name="moras">Moraのリスト</param>
+        /// <param name="expandLongVowels">長音を母音繰り返しで出力するか（true=母音繰り返し、false="-"記号）</param>
         /// <returns>スペース区切りの音素文字列</returns>
         /// <exception cref="ArgumentNullException">morasがnullの場合</exception>
-        public static string MorasToPhonemeString(IReadOnlyList<Mora> moras)
+        public static string MorasToPhonemeString(IReadOnlyList<Mora> moras, bool expandLongVowels = true)
         {
             if (moras == null)
                 throw new ArgumentNullException(nameof(moras));
@@ -393,10 +394,22 @@ namespace DotNetG2P.PhonemeConverter
                 return string.Empty;
 
             var sb = new ValueStringBuilder(moras.Count * 4);
+            Vowel? lastVowel = null;
 
             for (int i = 0; i < moras.Count; i++)
             {
-                var phoneme = moras[i].ToPhonemeString();
+                var mora = moras[i];
+
+                // 長音展開: 長音モーラを直前の母音の繰り返しに置換
+                if (expandLongVowels && mora.Kind == MoraKind.Long && lastVowel.HasValue)
+                {
+                    if (sb.Length > 0)
+                        sb.Append(' ');
+                    sb.Append(lastVowel.Value.ToVoiced().ToSymbol());
+                    continue;
+                }
+
+                var phoneme = mora.ToPhonemeString();
 
                 // 空文字列のモーラ（句読点等）はスキップ
                 if (phoneme.Length == 0)
@@ -406,6 +419,12 @@ namespace DotNetG2P.PhonemeConverter
                     sb.Append(' ');
 
                 sb.Append(phoneme);
+
+                // 母音を記録（長音展開用）
+                if (mora.Vowel.HasValue)
+                {
+                    lastVowel = mora.Vowel.Value;
+                }
             }
 
             return sb.ToStringAndDispose();

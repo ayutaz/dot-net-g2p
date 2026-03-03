@@ -262,11 +262,33 @@ namespace DotNetG2P.JPCommon
             // 前後リンクを設定
             for (int i = 0; i < allPhonemes.Count; i++)
             {
+                var current = allPhonemes[i];
                 if (i > 0)
-                    allPhonemes[i].Prev = allPhonemes[i - 1];
+                    current.Prev = allPhonemes[i - 1];
                 if (i < allPhonemes.Count - 1)
-                    allPhonemes[i].Next = allPhonemes[i + 1];
+                    current.Next = allPhonemes[i + 1];
+
+                // 長音「-」の場合、前の音素が母音なら複製
+                if (current.Phoneme == "-" && i > 0)
+                {
+                    var prevPhoneme = allPhonemes[i - 1];
+                    if (IsVowelPhoneme(prevPhoneme.Phoneme))
+                        current.Phoneme = prevPhoneme.Phoneme;
+                    else
+                        current.Phoneme = "a"; // フォールバック
+                }
             }
+        }
+
+        /// <summary>
+        /// 指定された音素文字列が母音（無声母音含む）かどうかを判定する。
+        /// </summary>
+        private static bool IsVowelPhoneme(string phoneme)
+        {
+            return phoneme == "a" || phoneme == "i" || phoneme == "u" ||
+                   phoneme == "e" || phoneme == "o" ||
+                   phoneme == "A" || phoneme == "I" || phoneme == "U" ||
+                   phoneme == "E" || phoneme == "O";
         }
 
     }

@@ -16,8 +16,9 @@ namespace DotNetG2P.PhonemeConverter
         /// NjdNodeリストからESPnet韻律記号付き文字列を生成する。
         /// </summary>
         /// <param name="nodes">NJD処理済みのノードリスト</param>
+        /// <param name="expandLongVowels">長音を母音繰り返しで出力するか（true=母音繰り返し、false="-"記号）</param>
         /// <returns>韻律記号付き音素文字列</returns>
-        public static string Extract(IReadOnlyList<NjdNode> nodes)
+        public static string Extract(IReadOnlyList<NjdNode> nodes, bool expandLongVowels = true)
         {
             if (nodes == null || nodes.Count == 0)
                 return "^ $";
@@ -29,6 +30,8 @@ namespace DotNetG2P.PhonemeConverter
             bool hasPrevMora = false;
             // ] が直前に出力されたフラグ（] はモーラ間区切りを兼ねるため次の _ をスキップ）
             bool afterFall = false;
+            // 直前の母音（長音展開用）
+            Vowel? lastVowel = null;
 
             for (int nodeIdx = 0; nodeIdx < nodes.Count; nodeIdx++)
             {
@@ -73,7 +76,17 @@ namespace DotNetG2P.PhonemeConverter
                     if (mora.Kind == MoraKind.Touten || mora.Kind == MoraKind.Question)
                         continue;
 
-                    var phoneme = mora.ToPhonemeString();
+                    // 長音展開: 長音モーラを直前の母音の繰り返しに置換
+                    string phoneme;
+                    if (expandLongVowels && mora.Kind == MoraKind.Long && lastVowel.HasValue)
+                    {
+                        phoneme = lastVowel.Value.ToVoiced().ToSymbol();
+                    }
+                    else
+                    {
+                        phoneme = mora.ToPhonemeString();
+                    }
+
                     if (string.IsNullOrEmpty(phoneme))
                         continue;
 
@@ -99,6 +112,12 @@ namespace DotNetG2P.PhonemeConverter
                     sb.Append(phoneme);
                     hasPrevMora = true;
                     afterFall = false;
+
+                    // 母音を記録（長音展開用）
+                    if (mora.Vowel.HasValue)
+                    {
+                        lastVowel = mora.Vowel.Value;
+                    }
 
                     // アクセント下降記号 ] の挿入
                     if (accentType > 0 && moraIndex == accentType)

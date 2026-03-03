@@ -14,7 +14,7 @@ namespace DotNetG2P.Tests.Integration
     /// 辞書依存のため、辞書が存在しない環境ではスキップされる。
     ///
     /// DotNetG2PとpyopenjtalkではG2P出力に以下の差異がある:
-    ///   - 長音: pyopenjtalk "o o" vs DotNetG2P "o -"
+    ///   - 長音: pyopenjtalk/DotNetG2P共に "o o"（母音繰り返し、デフォルト）
     ///   - 無声母音: DotNetG2Pでは大文字（A,I,U,E,O）で表現
     ///   - 促音: pyopenjtalk "q" vs DotNetG2P "cl"
     /// これらの差異を正規化して比較する。
@@ -49,10 +49,9 @@ namespace DotNetG2P.Tests.Integration
         }
 
         /// <summary>
-        /// 音素文字列を正規化する（長音・無声母音・促音の差異を吸収）。
-        /// pyopenjtalk: "o o" (長音を母音繰り返しで表現)
-        /// DotNetG2P:   "o -" (長音を "-" で表現)
-        /// → 正規化後: 両方とも小文字化し、"-" を直前の母音に展開する。
+        /// 音素文字列を正規化する（無声母音・促音の差異を吸収）。
+        /// pyopenjtalk/DotNetG2P共に長音は母音繰り返しで表現（デフォルト）。
+        /// 互換性のため、"-" が残っている場合も直前の母音に展開する。
         /// </summary>
         private static string NormalizePhonemes(string phonemes)
         {

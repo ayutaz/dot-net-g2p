@@ -121,6 +121,8 @@ namespace DotNetG2P.Tests.PhonemeConverter
         [Fact]
         public void KatakanaToPhonemeString_Long_ReturnsDash()
         {
+            // KatakanaToPhonemeString はデフォルト（expandLongVowels=true）で呼ぶが、
+            // 単独の長音は直前の母音がないため "-" のまま出力される
             Assert.Equal("-", MoraMapping.KatakanaToPhonemeString("ー"));
         }
 
@@ -152,14 +154,31 @@ namespace DotNetG2P.Tests.PhonemeConverter
         [Fact]
         public void KatakanaToPhonemeString_Arigatou_ReturnsCorrectPhonemes()
         {
-            Assert.Equal("a r i g a t o -", MoraMapping.KatakanaToPhonemeString("アリガトー"));
+            // デフォルト（expandLongVowels=true）: 長音 → 母音繰り返し
+            Assert.Equal("a r i g a t o o", MoraMapping.KatakanaToPhonemeString("アリガトー"));
         }
 
         [Fact]
         public void KatakanaToPhonemeString_Gakkou_ReturnsCorrectPhonemes()
         {
-            // ガッコー → g a cl k o -
-            Assert.Equal("g a cl k o -", MoraMapping.KatakanaToPhonemeString("ガッコー"));
+            // ガッコー → g a cl k o o（デフォルト: 長音展開）
+            Assert.Equal("g a cl k o o", MoraMapping.KatakanaToPhonemeString("ガッコー"));
+        }
+
+        [Fact]
+        public void MorasToPhonemeString_ExpandLongVowelsFalse_ReturnsDash()
+        {
+            // expandLongVowels=false の場合、長音は "-" のまま
+            var moras = MoraMapping.KatakanaToMoras("アリガトー");
+            Assert.Equal("a r i g a t o -", MoraMapping.MorasToPhonemeString(moras, expandLongVowels: false));
+        }
+
+        [Fact]
+        public void MorasToPhonemeString_ExpandLongVowelsTrue_ReturnsVowelRepeat()
+        {
+            // expandLongVowels=true の場合、長音は母音繰り返し
+            var moras = MoraMapping.KatakanaToMoras("ガッコー");
+            Assert.Equal("g a cl k o o", MoraMapping.MorasToPhonemeString(moras, expandLongVowels: true));
         }
 
         // ===== MorasToPhonemeString テスト =====

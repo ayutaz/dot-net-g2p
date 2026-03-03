@@ -287,9 +287,9 @@ namespace DotNetG2P.Tests.JPCommon
         }
 
         [Fact]
-        public void Build_SpecialMora_Long_ProducesDash()
+        public void Build_SpecialMora_Long_ResolvesToPreviousVowel()
         {
-            // "カー" → k a -
+            // "カー" → k a a （長音は前の母音に解決される）
             var node = CreateNode("カー", "カー", accentType: 0);
             var nodes = new List<NjdNode> { node };
 
@@ -297,7 +297,7 @@ namespace DotNetG2P.Tests.JPCommon
             var word = utt.BreathGroups[0].AccentPhrases[0].Words[0];
 
             Assert.Equal(2, word.MoraCount);
-            Assert.Equal("-", word.Moras[1].Phonemes[0].Phoneme);
+            Assert.Equal("a", word.Moras[1].Phonemes[0].Phoneme);
         }
 
         [Fact]

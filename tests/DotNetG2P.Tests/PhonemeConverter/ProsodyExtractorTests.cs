@@ -141,10 +141,10 @@ namespace DotNetG2P.Tests.PhonemeConverter
         [Fact]
         public void Extract_Nakadaka_Accent3_FourMoras()
         {
-            // オトウト (accent=3) → "^ o [ t o _ u ] t o $"
+            // オトート (accent=3) → "^ o [ t o _ o ] t o $"（長音展開）
             var nodes = new List<NjdNode> { CreateNode("オトート", 3) };
             var result = ProsodyExtractor.Extract(nodes);
-            Assert.Equal("^ o [ t o _ - ] t o $", result);
+            Assert.Equal("^ o [ t o _ o ] t o $", result);
         }
 
         [Fact]
@@ -217,19 +217,30 @@ namespace DotNetG2P.Tests.PhonemeConverter
         [Fact]
         public void Extract_WithSokuon()
         {
-            // ガッコー (accent=0) → "^ g a [ cl _ k o _ - $"
+            // ガッコー (accent=0) → "^ g a [ cl _ k o _ o $"（長音展開）
             var nodes = new List<NjdNode> { CreateNode("ガッコー", 0) };
             var result = ProsodyExtractor.Extract(nodes);
-            Assert.Equal("^ g a [ cl _ k o _ - $", result);
+            Assert.Equal("^ g a [ cl _ k o _ o $", result);
         }
 
         [Fact]
         public void Extract_WithHatsuon()
         {
-            // センセー (accent=3) → "^ s e [ N _ s e _ - ] $"
+            // センセー (accent=3) → "^ s e [ N _ s e ] e $"（長音展開）
             var nodes = new List<NjdNode> { CreateNode("センセー", 3) };
             var result = ProsodyExtractor.Extract(nodes);
-            Assert.Equal("^ s e [ N _ s e ] - $", result);
+            Assert.Equal("^ s e [ N _ s e ] e $", result);
+        }
+
+        // ===== ExpandLongVowels=false テスト =====
+
+        [Fact]
+        public void Extract_ExpandLongVowelsFalse_ReturnsDash()
+        {
+            // expandLongVowels=false の場合、長音は "-" のまま出力される
+            var nodes = new List<NjdNode> { CreateNode("ガッコー", 0) };
+            var result = ProsodyExtractor.Extract(nodes, expandLongVowels: false);
+            Assert.Equal("^ g a [ cl _ k o _ - $", result);
         }
     }
 }
