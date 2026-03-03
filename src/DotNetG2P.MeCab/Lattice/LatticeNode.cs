@@ -6,8 +6,18 @@ namespace DotNetG2P.MeCab.Lattice
     /// </summary>
     public sealed class LatticeNode
     {
-        /// <summary>表層形</summary>
-        public string Surface { get; set; } = "";
+        // 遅延Surface計算用: LatticeBuilder がセットする
+        internal string? _sourceText;
+        private string? _surface;
+
+        /// <summary>表層形（遅延計算: ベストパス選択後に初めて文字列化）</summary>
+        public string Surface
+        {
+            get => _surface ??= (_sourceText != null
+                ? _sourceText.Substring(StartPos, EndPos - StartPos)
+                : "");
+            set => _surface = value;
+        }
 
         /// <summary>開始位置 (文字インデックス、C# char単位)</summary>
         public int StartPos { get; set; }

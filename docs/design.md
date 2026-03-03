@@ -32,9 +32,9 @@ UniTaskは非同期ライブラリ（コード中心、データなし）であ�
 
 ---
 
-## 2. 現在の実装状況（M6完了時点）
+## 2. 現在の実装状況（M7完了時点）
 
-M1（最小動作プロトタイプ）、M2（NJD処理パイプライン完成）、M3（出力形式の充実）、M4（テスト・品質保証）、M5（パッケージング）、M6（独自MeCabエンジン）が完了し、以下の構成で動作している:
+M1（最小動作プロトタイプ）、M2（NJD処理パイプライン完成）、M3（出力形式の充実）、M4（テスト・品質保証）、M5（パッケージング）、M6（独自MeCabエンジン）、M7（パフォーマンス最適化）が完了し、以下の構成で動作している:
 
 ```
 dot-net-g2p/
@@ -78,6 +78,9 @@ dot-net-g2p/
 │   │   │   └── SetUnvoicedVowel.cs   # 5. 無声音化（6ルール）
 │   │   ├── TextNormalization/
 │   │   │   └── TextNormalizer.cs     # テキスト正規化（全角/半角変換、濁点結合）
+│   │   ├── Internal/                # 内部ユーティリティ
+│   │   │   ├── ValueStringBuilder.cs # ゼロアロケーション文字列構築（ref struct, ArrayPool）
+│   │   │   └── ThrowHelper.cs       # 例外スローヘルパー（[NoInlining]）
 │   │   ├── PhonemeConverter/
 │   │   │   ├── MoraMapping.cs        # 162種カタカナ⇔音素マッピング
 │   │   │   ├── AccentPhraseConverter.cs  # VOICEVOX互換AccentPhrase出力
@@ -87,7 +90,7 @@ dot-net-g2p/
 │   │   │   ├── JPCommonBuilder.cs    # NjdNode→JPUtterance階層構築
 │   │   │   ├── FullContextLabel.cs   # HTSフルコンテキストラベル生成
 │   │   │   └── WordAttr.cs           # POS/CType/CForm→ID変換テーブル
-│   │   ├── G2PEngine.cs              # メインAPI (ToPhonemes, ToKana, ToProsody, ToAccentPhrases, ToFullContextLabels, Analyze)
+│   │   ├── G2PEngine.cs              # メインAPI (ToPhonemes, ToKana, ToProsody, ToAccentPhrases, ToFullContextLabels, Analyze, +Batch API)
 │   │   ├── G2POptions.cs             # 処理オプション（各段階ON/OFF）
 │   │   ├── package.json              # UPMパッケージ定義 (com.dotnetg2p.core)
 │   │   └── DotNetG2P.asmdef          # Unity Assembly Definition
@@ -409,6 +412,12 @@ namespace DotNetG2P
         /// <summary>HTSフルコンテキストラベルを返す</summary>
         public IReadOnlyList<string> ToFullContextLabels(string text);
 
+        // --- バッチ処理 ---
+        public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts);
+        public IReadOnlyList<string> ToKanaBatch(IReadOnlyList<string> texts);
+        public IReadOnlyList<string> ToProsodyBatch(IReadOnlyList<string> texts);
+        public IReadOnlyList<IReadOnlyList<string>> ToFullContextLabelsBatch(IReadOnlyList<string> texts);
+
         // --- 中間表現 ---
         /// <summary>NJDノード列を返す（デバッグ・拡張用）</summary>
         public IReadOnlyList<NjdNode> ToNjdNodes(string text);
@@ -534,7 +543,7 @@ UniTaskのパターンに従い、**ソースの正本をUnity側に置き、NuG
   "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],
-  "allowUnsafeCode": false,
+  "allowUnsafeCode": true,
   "autoReferenced": true,
   "noEngineReferences": true,
   "versionDefines": []
@@ -799,6 +808,8 @@ Unity IL2CPP/AOT環境での動作を保証するため、以下を遵守:
 | `Expression.Compile()` | AOT非対応 | 直接メソッド呼び出し |
 | `Activator.CreateInstance`（ジェネリック） | ストリップ対象 | ファクトリメソッド |
 | `Type.MakeGenericType` | AOTジェネリック制限 | 具体型を事前定義 |
+
+**注記**: DoubleArrayTrieの初期化でunsafeポインタ操作を使用（AllowUnsafeBlocks=true）。パフォーマンスクリティカルパスのみに限定し、IL2CPP環境でも動作確認済み。
 
 ### 推奨プラクティス
 

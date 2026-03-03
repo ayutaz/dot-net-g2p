@@ -62,6 +62,8 @@ namespace DotNetG2P.MeCab.Dictionary
         /// 文字に対応するCharInfoを取得する。
         /// </summary>
         /// <remarks>BMP外の文字（サロゲートペア）はデフォルトカテゴリ（DEFAULT: invoke=false, group=false）として扱われます。</remarks>
+        [System.Runtime.CompilerServices.MethodImpl(
+            System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
         public CharInfo GetCharInfo(char c)
         {
             int index = c;
@@ -108,13 +110,19 @@ namespace DotNetG2P.MeCab.Dictionary
                 categoryNames[i] = reader.ReadBytes(32);
             }
 
-            // CharInfo配列 (0xFFFF個, 各4バイト)
+            // CharInfo配列 (0xFFFF個, 各4バイト) - 一括読み込みで高速化
             var charInfoTable = new CharInfo[CharInfoTableSize];
-            for (int i = 0; i < CharInfoTableSize; i++)
-            {
-                uint bits = reader.ReadUInt32();
-                charInfoTable[i] = new CharInfo(bits);
-            }
+            int charInfoByteCount = CharInfoTableSize * sizeof(uint);
+            byte[] charInfoBytes = reader.ReadBytes(charInfoByteCount);
+            if (charInfoBytes.Length != charInfoByteCount)
+                throw new InvalidDataException(
+                    $"文字種定義データが不足しています: 期待={charInfoByteCount}バイト, 実際={charInfoBytes.Length}バイト");
+
+            if (!BitConverter.IsLittleEndian)
+                throw new PlatformNotSupportedException("ビッグエンディアン環境はサポートされていません。");
+
+            // CharInfo は uint 1つだけの readonly struct なのでメモリレイアウトが同一
+            Buffer.BlockCopy(charInfoBytes, 0, charInfoTable, 0, charInfoByteCount);
 
             return new CharProperty(categoryNames, charInfoTable);
         }

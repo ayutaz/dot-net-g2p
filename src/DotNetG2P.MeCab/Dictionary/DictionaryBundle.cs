@@ -1,14 +1,24 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace DotNetG2P.MeCab.Dictionary
 {
     /// <summary>
     /// MeCab辞書ファイル一式 (sys.dic, matrix.bin, char.bin, unk.dic) を集約管理する。
+    /// 同一パスの辞書はWeakReferenceキャッシュにより複数インスタンス間で共有される。
     /// </summary>
     public sealed class DictionaryBundle : IDisposable
     {
-        private bool _disposed;
+        // 静的キャッシュ: 正規化パス → WeakReference<DictionaryBundle>
+        private static readonly Dictionary<string, WeakReference<DictionaryBundle>> _cache
+            = new Dictionary<string, WeakReference<DictionaryBundle>>(StringComparer.OrdinalIgnoreCase);
+        private static readonly object _cacheLock = new object();
+
+        private int _refCount;
+        private readonly string _path;
+        private int _disposed; // Interlocked.CompareExchangeでスレッドセーフなDispose制御
 
         /// <summary>システム辞書</summary>
         public SystemDictionary SystemDic { get; }
@@ -23,11 +33,14 @@ namespace DotNetG2P.MeCab.Dictionary
         public UnknownDictionary UnknownDic { get; }
 
         private DictionaryBundle(
+            string path,
             SystemDictionary systemDic,
             ConnectionMatrix matrix,
             CharProperty charProperty,
             UnknownDictionary unknownDic)
         {
+            _path = path;
+            _refCount = 1;
             SystemDic = systemDic;
             Matrix = matrix;
             CharProperty = charProperty;
@@ -36,6 +49,7 @@ namespace DotNetG2P.MeCab.Dictionary
 
         /// <summary>
         /// 辞書ディレクトリから全辞書ファイルを一括読み込みする。
+        /// 同一パスの辞書が既にキャッシュに存在する場合は共有インスタンスを返す。
         /// </summary>
         /// <param name="dictionaryDirectoryPath">辞書ディレクトリパス (sys.dic, matrix.bin, char.bin, unk.dic が格納されたディレクトリ)</param>
         public static DictionaryBundle Load(string dictionaryDirectoryPath)
@@ -46,10 +60,38 @@ namespace DotNetG2P.MeCab.Dictionary
                 throw new DirectoryNotFoundException(
                     $"辞書ディレクトリが見つかりません: {dictionaryDirectoryPath}");
 
-            string sysDicPath = Path.Combine(dictionaryDirectoryPath, "sys.dic");
-            string matrixPath = Path.Combine(dictionaryDirectoryPath, "matrix.bin");
-            string charBinPath = Path.Combine(dictionaryDirectoryPath, "char.bin");
-            string unkDicPath = Path.Combine(dictionaryDirectoryPath, "unk.dic");
+            string fullPath = Path.GetFullPath(dictionaryDirectoryPath);
+
+            lock (_cacheLock)
+            {
+                if (_cache.TryGetValue(fullPath, out var weakRef))
+                {
+                    if (weakRef.TryGetTarget(out var cached))
+                    {
+                        // キャッシュヒット: 参照カウント増加
+                        Interlocked.Increment(ref cached._refCount);
+                        return cached;
+                    }
+                    else
+                    {
+                        // GCによりターゲットがクリアされたゾンビエントリを除去
+                        _cache.Remove(fullPath);
+                    }
+                }
+
+                // キャッシュミス: 新規読み込み
+                var bundle = LoadInternal(fullPath);
+                _cache[fullPath] = new WeakReference<DictionaryBundle>(bundle);
+                return bundle;
+            }
+        }
+
+        private static DictionaryBundle LoadInternal(string fullPath)
+        {
+            string sysDicPath = Path.Combine(fullPath, "sys.dic");
+            string matrixPath = Path.Combine(fullPath, "matrix.bin");
+            string charBinPath = Path.Combine(fullPath, "char.bin");
+            string unkDicPath = Path.Combine(fullPath, "unk.dic");
 
             // 読み込み順序: CharPropertyはUnknownDictionaryの前に必要
             var systemDic = SystemDictionary.Load(sysDicPath);
@@ -57,15 +99,24 @@ namespace DotNetG2P.MeCab.Dictionary
             var charProperty = CharProperty.Load(charBinPath);
             var unknownDic = UnknownDictionary.Load(unkDicPath, charProperty);
 
-            return new DictionaryBundle(systemDic, matrix, charProperty, unknownDic);
+            return new DictionaryBundle(fullPath, systemDic, matrix, charProperty, unknownDic);
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
-            // 現在はすべてマネージドメモリ (byte[]) なのでDisposeで特別な処理は不要。
-            // 将来Memory-Mapped Fileを使う場合にDispose処理を追加する。
-            _disposed = true;
+            // Interlocked.CompareExchangeで二重Disposeをスレッドセーフに防止
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0) return;
+
+            int remaining = Interlocked.Decrement(ref _refCount);
+            if (remaining <= 0)
+            {
+                // 最後の参照が解放された → キャッシュから除去
+                lock (_cacheLock)
+                {
+                    _cache.Remove(_path);
+                }
+            }
         }
     }
 }

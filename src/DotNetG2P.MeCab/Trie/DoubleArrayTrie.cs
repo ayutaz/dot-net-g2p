@@ -2,7 +2,7 @@
 // NMeCabのDoubleArray.csを参考に、byte[]ベースの安全な実装とする
 
 using System;
-using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
 
 namespace DotNetG2P.MeCab.Trie
 {
@@ -48,11 +48,25 @@ namespace DotNetG2P.MeCab.Trie
             _bases = new int[unitCount];
             _checks = new uint[unitCount];
 
-            for (int i = 0; i < unitCount; i++)
+            if (!BitConverter.IsLittleEndian)
+                throw new PlatformNotSupportedException("ビッグエンディアン環境はサポートされていません。");
+
+            // リトルエンディアン環境ではインターリーブされた int+uint ペアを直接コピー
+            // data: [base0(4B)][check0(4B)][base1(4B)][check1(4B)]...
+            // unsafe ポインタで直接読み取り高速化
+            unsafe
             {
-                int offset = i * 8;
-                _bases[i] = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(offset));
-                _checks[i] = BinaryPrimitives.ReadUInt32LittleEndian(data.AsSpan(offset + 4));
+                fixed (byte* pData = data)
+                fixed (int* pBases = _bases)
+                fixed (uint* pChecks = _checks)
+                {
+                    int* pSrc = (int*)pData;
+                    for (int i = 0; i < unitCount; i++)
+                    {
+                        pBases[i] = pSrc[i * 2];
+                        pChecks[i] = (uint)pSrc[i * 2 + 1];
+                    }
+                }
             }
         }
 
@@ -65,6 +79,7 @@ namespace DotNetG2P.MeCab.Trie
         /// <param name="keyLength">検索対象バイト数</param>
         /// <param name="results">結果を格納するバッファ</param>
         /// <returns>マッチ数</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int CommonPrefixSearch(byte[] key, int offset, int keyLength, TrieResult[] results)
         {
             int count = 0;

@@ -7,7 +7,7 @@ namespace DotNetG2P.Models
     /// 日本語の子音を表す列挙型。
     /// jpreprocess の Consonant enum に準拠。
     /// </summary>
-    public enum Consonant
+    public enum Consonant : byte
     {
         /// <summary>有声摩擦音 (ヴ行)</summary>
         V,
@@ -86,7 +86,7 @@ namespace DotNetG2P.Models
     /// jpreprocess の Vowel enum に準拠。
     /// 無声母音はアクセント・韻律処理で区別される。
     /// </summary>
-    public enum Vowel
+    public enum Vowel : byte
     {
         /// <summary>有声母音 ア</summary>
         A,

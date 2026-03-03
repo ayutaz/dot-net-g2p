@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace DotNetG2P.MeCab.Dictionary
@@ -35,33 +36,42 @@ namespace DotNetG2P.MeCab.Dictionary
         /// </summary>
         /// <param name="position">トークン開始位置 (value >> 8)</param>
         /// <param name="index">トークンインデックス (0 .. count-1)</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DicToken GetToken(int position, int index)
         {
             long byteOffset = ((long)position + index) * DicToken.ByteSize;
             if (byteOffset < 0 || byteOffset > TokenData.Length - DicToken.ByteSize)
-                throw new ArgumentOutOfRangeException(
-                    $"トークンオフセットが範囲外です: position={position}, index={index}");
+                ThrowTokenOutOfRange(position, index);
             return DicToken.Read(TokenData, (int)byteOffset);
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowTokenOutOfRange(int position, int index)
+            => throw new ArgumentOutOfRangeException(
+                $"トークンオフセットが範囲外です: position={position}, index={index}");
 
         /// <summary>
         /// 素性バッファから指定オフセットのUTF-8 null終端文字列を読み取る。
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetFeature(uint offset)
         {
             if (offset >= FeatureData.Length)
-                throw new ArgumentOutOfRangeException(nameof(offset),
-                    $"素性オフセットが範囲外です: offset={offset}, バッファ長={FeatureData.Length}");
+                ThrowFeatureOutOfRange(offset);
 
             int start = (int)offset;
-            int end = start;
-            while (end < FeatureData.Length && FeatureData[end] != 0)
-            {
-                end++;
-            }
+            // Span.IndexOf で null終端を高速検索
+            var span = FeatureData.AsSpan(start);
+            int nullPos = span.IndexOf((byte)0);
+            int length = nullPos >= 0 ? nullPos : span.Length;
 
-            return Encoding.UTF8.GetString(FeatureData, start, end - start);
+            return Encoding.UTF8.GetString(FeatureData, start, length);
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowFeatureOutOfRange(uint offset)
+            => throw new ArgumentOutOfRangeException(nameof(offset),
+                $"素性オフセットが範囲外です: offset={offset}");
 
         /// <summary>
         /// 辞書ファイルを読み込む。

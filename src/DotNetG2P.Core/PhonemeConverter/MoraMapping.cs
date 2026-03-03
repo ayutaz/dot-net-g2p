@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
+using DotNetG2P.Internal;
 using DotNetG2P.Models;
 
 namespace DotNetG2P.PhonemeConverter
@@ -392,7 +392,7 @@ namespace DotNetG2P.PhonemeConverter
             if (moras.Count == 0)
                 return string.Empty;
 
-            var sb = new StringBuilder();
+            var sb = new ValueStringBuilder(moras.Count * 4);
 
             for (int i = 0; i < moras.Count; i++)
             {
@@ -408,7 +408,7 @@ namespace DotNetG2P.PhonemeConverter
                 sb.Append(phoneme);
             }
 
-            return sb.ToString();
+            return sb.ToStringAndDispose();
         }
 
         /// <summary>

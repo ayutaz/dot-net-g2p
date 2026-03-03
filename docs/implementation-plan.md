@@ -25,6 +25,7 @@ NuGet/UPMパッケージとして商用配布する。
 | Phase 4: テスト・品質保証 | **完了** | 502件の新規テスト追加（合計812件）。12ファイル、+4,855行 |
 | Phase 5: パッケージング | **完了** | 12ファイル新規、+371行。NuGetパック・CI/CD・UPM・README/LICENSE |
 | Phase 6: 独自MeCabエンジン | **完了** | 純C# MeCab互換エンジン実装。外部依存排除、Apache-2.0ライセンスで統一 |
+| Phase 7: パフォーマンス最適化 | **完了** | 27ファイル変更。ValueStringBuilder, 辞書一括読み込み, バッファ再利用, バッチAPI等 |
 
 ## パッケージ構成
 
@@ -133,6 +134,17 @@ DotNetG2P.slnx
 31. ~~テスト作成・検証（MeCabTokenizerTests, TokenizerComparisonTests, G2PComparisonTests, MeCabIndependentTests, PerformanceTests, Utf8CharMapTests, DictionaryErrorTests）~~ **完了**
 32. ~~UPM/NuGetパッケージング、CI/CD更新~~ **完了**
 33. ~~10専門家レビュー + 16件の修正（エンディアン、ViterbiDecoder自己参照バグ等）~~ **完了**
+
+### Phase 7: パフォーマンス最適化 **[完了]**
+
+34. ~~基盤整備: ValueStringBuilder (ref struct), ThrowHelper, AllowUnsafeBlocks~~ **完了**
+35. ~~MeCab辞書高速化: Buffer.BlockCopy/MemoryMarshal.Read/AggressiveInlining~~ **完了**
+36. ~~LatticeBuilder/Utf8CharMap最適化: バッファ再利用, ArrayPool, stackalloc~~ **完了**
+37. ~~ViterbiDecoder/MeCabTokenizer最適化: foreach→for, Lazy<T>, 遅延パーサ~~ **完了**
+38. ~~Core出力系: StringBuilder→ValueStringBuilder (5ファイル)~~ **完了**
+39. ~~NJD/enum/TextNormalizer: enum:byte/ushort, Regex→手動パーサ, Dictionary→配列~~ **完了**
+40. ~~追加最適化: LatticeNode lazy Surface, List初期容量, WeakReference, バッチAPI, string.Intern~~ **完了**
+41. ~~10エージェントレビュー + ポストレビュー修正3件~~ **完了**
 
 ## 主要参考資料
 

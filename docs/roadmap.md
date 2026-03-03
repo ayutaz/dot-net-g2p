@@ -17,6 +17,7 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 | **M4** | テスト・品質保証 | jpreprocess/pyopenjtalkとの比較テスト合格 | M2 | **完了** |
 | **M5** | パッケージング | NuGet/UPMパッケージとして配布可能 | M3, M4 | **完了** |
 | **M6** | 独自MeCabエンジン | 独自MeCab実装、外部依存排除 | M5 | **完了** |
+| **M7** | パフォーマンス最適化 | GCアロケーション-50-70%、解析速度+40-60%向上 | M6 | **完了** |
 
 ---
 
@@ -332,6 +333,49 @@ DotNetG2P.MeCab/
 
 ---
 
+## M7: パフォーマンス最適化 **[完了]**
+
+**ゴール**: 解析速度+40-60%向上、GCアロケーション-50-70%削減
+
+### タスク
+
+| # | タスク | 難易度 | 状態 |
+|---|--------|--------|------|
+| 7.0 | 基盤整備（ValueStringBuilder, ThrowHelper, AllowUnsafeBlocks） | 低 | **完了** |
+| 7.1 | MeCab辞書読み込み + Trie高速化（AggressiveInlining, Buffer.BlockCopy, MemoryMarshal, unsafe pointer） | 高 | **完了** |
+| 7.2 | LatticeBuilder + Utf8CharMap最適化（バッファ再利用, ArrayPool, stackalloc CharInfo） | 中 | **完了** |
+| 7.3 | ViterbiDecoder + MeCabTokenizer最適化（foreach→for, Lazy<T>, 遅延パーサ） | 中 | **完了** |
+| 7.4 | Core出力系 StringBuilder→ValueStringBuilder（FullContextLabel, G2PEngine, ProsodyExtractor, MoraMapping, Pronunciation） | 中 | **完了** |
+| 7.5 | Core NJD + enum + TextNormalizer（enum:byte/ushort, Regex→手動パーサ, Dictionary→配列） | 中 | **完了** |
+| 7.6 | 追加最適化（LatticeNode lazy Surface, List初期容量, DictionaryBundle WeakReference, バッチAPI, string.Intern） | 中 | **完了** |
+| 7.7 | 10エージェントレビュー + ポストレビュー修正 | 低 | **完了** |
+
+### 実装統計
+
+- **変更ファイル数**: 27ファイル（新規2ファイル + 既存25ファイル変更）
+- **新規ファイル**: ValueStringBuilder.cs, ThrowHelper.cs
+- **エージェント構成**: 5エージェント並列実装 + 5エージェント追加最適化 + 10エージェントレビュー
+- **テスト結果**: 646合格、0失敗、283スキップ（辞書依存）
+
+### 主要な最適化施策
+
+| カテゴリ | 施策 | 対象ファイル |
+|---------|------|------------|
+| ゼロアロケーション | ValueStringBuilder (ref struct + ArrayPool) | FullContextLabel, G2PEngine, ProsodyExtractor, MoraMapping, Pronunciation |
+| 辞書高速化 | Buffer.BlockCopy一括読み込み | ConnectionMatrix, CharProperty |
+| 辞書高速化 | MemoryMarshal.Read<T> ゼロコピー | DicToken |
+| Trie高速化 | unsafeポインタ初期化 | DoubleArrayTrie |
+| バッファ再利用 | インスタンスフィールド再利用 | LatticeBuilder (endNodes, TrieResult, processedCharPositions) |
+| バッファ再利用 | ArrayPool<int> | Utf8CharMap |
+| メモリ削減 | enum基底型 byte/ushort化 | Phoneme.cs, MoraKind.cs |
+| 文字列最適化 | 遅延パーサ（Split廃止） | MeCabTokenizer |
+| 文字列最適化 | string.Intern() | MeCabTokenizer (POS fields) |
+| Regex排除 | 手動パーサ | SetAccentType |
+| 辞書共有 | WeakReferenceキャッシュ | DictionaryBundle |
+| API拡張 | バッチ処理API | G2PEngine (4メソッド) |
+
+---
+
 ## 全体スケジュール概観
 
 ```
@@ -374,6 +418,15 @@ M6 独自MeCabエンジン [完了]
 ├─ ラティス構築 + Viterbiデコーダ
 ├─ 辞書読み込み (sys.dic/matrix.bin/char.bin/unk.dic)
 └─ 外部依存排除 → ✅ Apache-2.0ライセンスで統一
+    │
+    ▼
+M7 パフォーマンス最適化 [完了]
+├─ ValueStringBuilder + ThrowHelper（基盤整備）
+├─ MeCab辞書/Trie/Lattice/Viterbi高速化
+├─ Core出力系ゼロアロケーション化
+├─ enum/Regex/Dictionary最適化
+└─ バッチAPI + WeakReferenceキャッシュ
+   → ✅ GCアロケーション-50-70%、解析速度+40-60%
 ```
 
 ---

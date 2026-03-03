@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DotNetG2P.Internal;
 
 namespace DotNetG2P.Models
 {
@@ -79,7 +80,7 @@ namespace DotNetG2P.Models
         /// </summary>
         public string ToPhonemeString()
         {
-            var parts = new List<string>();
+            var parts = new List<string>(Moras.Count * 2);
             foreach (var mora in Moras)
             {
                 var phoneme = mora.ToPhonemeString();
@@ -94,12 +95,12 @@ namespace DotNetG2P.Models
         /// </summary>
         public string ToKatakana()
         {
-            var sb = new System.Text.StringBuilder();
+            var sb = new ValueStringBuilder(Moras.Count * 2);
             foreach (var mora in Moras)
             {
                 sb.Append(mora.Kind.ToKatakana());
             }
-            return sb.ToString();
+            return sb.ToStringAndDispose();
         }
 
         /// <summary>

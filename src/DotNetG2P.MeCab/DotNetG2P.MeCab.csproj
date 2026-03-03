@@ -8,6 +8,7 @@
     <RootNamespace>DotNetG2P.MeCab</RootNamespace>
     <Description>Pure C# MeCab-compatible morphological analyzer for DotNetG2P. MIT licensed, no native dependencies. Provides ITokenizer implementation using Darts-clone double-array trie and Viterbi decoder for Japanese text analysis with naist-jdic dictionary.</Description>
 
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageLicenseFile />

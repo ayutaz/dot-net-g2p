@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace DotNetG2P.MeCab.Dictionary
 {
@@ -31,14 +32,19 @@ namespace DotNetG2P.MeCab.Dictionary
         /// <param name="rightContextId">右ノードの右文脈ID (RcAttr)</param>
         /// <param name="leftContextId">左ノードの左文脈ID (LcAttr)</param>
         /// <returns>連接コスト (rNode.WCostは含まない)</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short GetCost(ushort rightContextId, ushort leftContextId)
         {
             int index = rightContextId + _lSize * leftContextId;
             if ((uint)index >= (uint)_matrix.Length)
-                throw new ArgumentOutOfRangeException(
-                    $"連接コスト行列のインデックスが範囲外です: rightCtxId={rightContextId}, leftCtxId={leftContextId}");
+                ThrowCostOutOfRange(rightContextId, leftContextId);
             return _matrix[index];
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowCostOutOfRange(ushort rightContextId, ushort leftContextId)
+            => throw new ArgumentOutOfRangeException(
+                $"連接コスト行列のインデックスが範囲外です: rightCtxId={rightContextId}, leftCtxId={leftContextId}");
 
         /// <summary>
         /// matrix.binファイルを読み込む。
@@ -59,10 +65,17 @@ namespace DotNetG2P.MeCab.Dictionary
             int totalEntries = lSize * rSize;
             var matrix = new short[totalEntries];
 
-            for (int i = 0; i < totalEntries; i++)
-            {
-                matrix[i] = reader.ReadInt16();
-            }
+            // byte[] 一括読み込み + Buffer.BlockCopy で高速化
+            int byteCount = totalEntries * sizeof(short);
+            byte[] buf = reader.ReadBytes(byteCount);
+            if (buf.Length != byteCount)
+                throw new InvalidDataException(
+                    $"連接コスト行列データが不足しています: 期待={byteCount}バイト, 実際={buf.Length}バイト");
+
+            if (!BitConverter.IsLittleEndian)
+                throw new PlatformNotSupportedException("ビッグエンディアン環境はサポートされていません。");
+
+            Buffer.BlockCopy(buf, 0, matrix, 0, byteCount);
 
             return new ConnectionMatrix(matrix, lSize, rSize);
         }

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using DotNetG2P.Internal;
 
 namespace DotNetG2P.JPCommon
 {
@@ -29,7 +29,7 @@ namespace DotNetG2P.JPCommon
             var withPauses = InsertSilAndPau(phonemeEntries, utterance);
 
             // 3. 各音素に対してラベル文字列を生成
-            var labels = new List<string>();
+            var labels = new List<string>(withPauses.Count);
             for (int i = 0; i < withPauses.Count; i++)
             {
                 var entry = withPauses[i];
@@ -60,7 +60,7 @@ namespace DotNetG2P.JPCommon
 
         private static List<PhonemeEntry> FlattenPhonemes(JPUtterance utterance)
         {
-            var result = new List<PhonemeEntry>();
+            var result = new List<PhonemeEntry>(utterance.MoraCount * 2);
 
             foreach (var bg in utterance.BreathGroups)
             {
@@ -97,7 +97,7 @@ namespace DotNetG2P.JPCommon
 
         private static List<PhonemeEntry> InsertSilAndPau(List<PhonemeEntry> phonemes, JPUtterance utterance)
         {
-            var result = new List<PhonemeEntry>();
+            var result = new List<PhonemeEntry>(phonemes.Count + utterance.BreathGroupCount + 1);
 
             // 先頭sil
             result.Add(new PhonemeEntry { Phoneme = "sil", IsPause = true });
@@ -124,7 +124,7 @@ namespace DotNetG2P.JPCommon
 
         private static string BuildLabel(PhonemeEntry current, int index, List<PhonemeEntry> all, JPUtterance utterance)
         {
-            var sb = new StringBuilder(256);
+            var sb = new ValueStringBuilder(256);
 
             // --- 音素コンテキスト (p2^p1-c+n1=n2) ---
             string p2 = GetPhonemeAt(all, index - 2);
@@ -133,7 +133,7 @@ namespace DotNetG2P.JPCommon
             string n1 = GetPhonemeAt(all, index + 1);
             string n2 = GetPhonemeAt(all, index + 2);
 
-            sb.Append(p2).Append('^').Append(p1).Append('-').Append(c).Append('+').Append(n1).Append('=').Append(n2);
+            sb.Append(p2); sb.Append('^'); sb.Append(p1); sb.Append('-'); sb.Append(c); sb.Append('+'); sb.Append(n1); sb.Append('='); sb.Append(n2);
 
             // --- A: モーラ位置情報 ---
             sb.Append("/A:");
@@ -150,7 +150,7 @@ namespace DotNetG2P.JPCommon
                 int a1 = moraPos - accent + 1; // signed
                 int a2 = moraPos + 1; // 1始まり、前方から
                 int a3 = moraCount - moraPos; // 後方から
-                sb.Append(ClampSigned(a1, 49)).Append('+').Append(ClampUnsigned(a2, 49)).Append('+').Append(ClampUnsigned(a3, 49));
+                sb.Append(ClampSigned(a1, 49)); sb.Append('+'); sb.Append(ClampUnsigned(a2, 49)); sb.Append('+'); sb.Append(ClampUnsigned(a3, 49));
             }
 
             // --- B: 前単語 ---
@@ -162,7 +162,7 @@ namespace DotNetG2P.JPCommon
             else
             {
                 var prevWord = FindPrevWord(current, index, all);
-                AppendWordField(sb, prevWord, '-', '_');
+                AppendWordField(ref sb, prevWord, '-', '_');
             }
 
             // --- C: 現在単語 ---
@@ -173,7 +173,7 @@ namespace DotNetG2P.JPCommon
             }
             else
             {
-                AppendWordField(sb, current.Word, '_', '+');
+                AppendWordField(ref sb, current.Word, '_', '+');
             }
 
             // --- D: 次単語 ---
@@ -185,14 +185,14 @@ namespace DotNetG2P.JPCommon
             else
             {
                 var nextWord = FindNextWord(current, index, all);
-                AppendWordField(sb, nextWord, '+', '_');
+                AppendWordField(ref sb, nextWord, '+', '_');
             }
 
             // --- E: 前アクセント句 ---
             sb.Append("/E:");
             var prevAP = FindPrevAccentPhrase(current, index, all);
             bool ePause = HasPauseBetweenPrevAP(current, prevAP, index, all);
-            AppendAccentPhraseE(sb, prevAP, ePause);
+            AppendAccentPhraseE(ref sb, prevAP, ePause);
 
             // --- F: 現在アクセント句 ---
             sb.Append("/F:");
@@ -202,19 +202,19 @@ namespace DotNetG2P.JPCommon
             }
             else
             {
-                AppendCurrentAccentPhraseF(sb, current.AccentPhrase, utterance);
+                AppendCurrentAccentPhraseF(ref sb, current.AccentPhrase, utterance);
             }
 
             // --- G: 次アクセント句 ---
             sb.Append("/G:");
             var nextAP = FindNextAccentPhrase(current, index, all);
             bool gPause = HasPauseBetweenNextAP(current, nextAP, index, all);
-            AppendAccentPhraseG(sb, nextAP, gPause);
+            AppendAccentPhraseG(ref sb, nextAP, gPause);
 
             // --- H: 前呼気グループ ---
             sb.Append("/H:");
             var prevBG = FindPrevBreathGroup(current, index, all);
-            AppendBreathGroupHJ(sb, prevBG);
+            AppendBreathGroupHJ(ref sb, prevBG);
 
             // --- I: 現在呼気グループ ---
             sb.Append("/I:");
@@ -224,13 +224,13 @@ namespace DotNetG2P.JPCommon
             }
             else
             {
-                AppendCurrentBreathGroupI(sb, current.BreathGroup, utterance);
+                AppendCurrentBreathGroupI(ref sb, current.BreathGroup, utterance);
             }
 
             // --- J: 次呼気グループ ---
             sb.Append("/J:");
             var nextBG = FindNextBreathGroup(current, index, all);
-            AppendBreathGroupHJ(sb, nextBG);
+            AppendBreathGroupHJ(ref sb, nextBG);
 
             // --- K: 発話全体 ---
             sb.Append("/K:");
@@ -240,7 +240,7 @@ namespace DotNetG2P.JPCommon
             sb.Append('-');
             sb.Append(ClampUnsigned(utterance.MoraCount, 199));
 
-            return sb.ToString();
+            return sb.ToStringAndDispose();
         }
 
         // ====== 音素取得 ======
@@ -429,21 +429,21 @@ namespace DotNetG2P.JPCommon
         // ====== フォーマットヘルパー ======
 
         /// <summary>B/C/D: 単語のPOS/CType/CFormフィールドを出力する。区切り文字はB/C/Dで異なる。</summary>
-        private static void AppendWordField(StringBuilder sb, JPWord word, char sep1, char sep2)
+        private static void AppendWordField(ref ValueStringBuilder sb, JPWord word, char sep1, char sep2)
         {
             if (word == null)
             {
-                sb.Append(XX).Append(sep1).Append(XX).Append(sep2).Append(XX);
+                sb.Append(XX); sb.Append(sep1); sb.Append(XX); sb.Append(sep2); sb.Append(XX);
                 return;
             }
             string posStr = word.PosId.HasValue ? word.PosId.Value.ToString("D2") : XX;
             string ctypeStr = word.CTypeId.HasValue ? word.CTypeId.Value.ToString() : XX;
             string cformStr = word.CFormId.HasValue ? word.CFormId.Value.ToString() : XX;
-            sb.Append(posStr).Append(sep1).Append(ctypeStr).Append(sep2).Append(cformStr);
+            sb.Append(posStr); sb.Append(sep1); sb.Append(ctypeStr); sb.Append(sep2); sb.Append(cformStr);
         }
 
         /// <summary>E: 前アクセント句情報を出力する。形式: {e1}_{e2}!{e3}_{e4}-{e5}</summary>
-        private static void AppendAccentPhraseE(StringBuilder sb, JPAccentPhrase ap, bool hasPauseBefore)
+        private static void AppendAccentPhraseE(ref ValueStringBuilder sb, JPAccentPhrase ap, bool hasPauseBefore)
         {
             if (ap == null)
             {
@@ -467,7 +467,7 @@ namespace DotNetG2P.JPCommon
         }
 
         /// <summary>G: 次アクセント句情報を出力する。形式: {g1}_{g2}%{g3}_{g4}_{g5}</summary>
-        private static void AppendAccentPhraseG(StringBuilder sb, JPAccentPhrase ap, bool hasPauseAfter)
+        private static void AppendAccentPhraseG(ref ValueStringBuilder sb, JPAccentPhrase ap, bool hasPauseAfter)
         {
             if (ap == null)
             {
@@ -491,7 +491,7 @@ namespace DotNetG2P.JPCommon
         }
 
         /// <summary>F: 現在アクセント句の詳細情報を出力する。</summary>
-        private static void AppendCurrentAccentPhraseF(StringBuilder sb, JPAccentPhrase ap, JPUtterance utterance)
+        private static void AppendCurrentAccentPhraseF(ref ValueStringBuilder sb, JPAccentPhrase ap, JPUtterance utterance)
         {
             int moraCount = ap.MoraCount;
             int accent = ap.AccentType; // F: そのまま出力（0=平板のまま）
@@ -528,7 +528,7 @@ namespace DotNetG2P.JPCommon
         }
 
         /// <summary>H/J: 呼気グループ情報を出力する。</summary>
-        private static void AppendBreathGroupHJ(StringBuilder sb, JPBreathGroup bg)
+        private static void AppendBreathGroupHJ(ref ValueStringBuilder sb, JPBreathGroup bg)
         {
             if (bg == null)
             {
@@ -541,7 +541,7 @@ namespace DotNetG2P.JPCommon
         }
 
         /// <summary>I: 現在呼気グループの詳細情報を出力する。</summary>
-        private static void AppendCurrentBreathGroupI(StringBuilder sb, JPBreathGroup bg, JPUtterance utterance)
+        private static void AppendCurrentBreathGroupI(ref ValueStringBuilder sb, JPBreathGroup bg, JPUtterance utterance)
         {
             // i1: アクセント句数
             sb.Append(ClampUnsigned(bg.AccentPhraseCount, 49));

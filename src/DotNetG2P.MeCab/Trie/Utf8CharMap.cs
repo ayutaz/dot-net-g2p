@@ -2,6 +2,7 @@
 // サロゲートペア（4バイトUTF-8文字）にも対応
 
 using System;
+using System.Buffers;
 using System.Text;
 
 namespace DotNetG2P.MeCab.Trie
@@ -10,8 +11,9 @@ namespace DotNetG2P.MeCab.Trie
     /// テキストをUTF-8にエンコードし、バイトオフセットと文字インデックスの双方向変換を提供する。
     /// MeCab辞書のTrieはUTF-8バイト列で検索するため、
     /// 結果のバイトオフセットをC#のstring charインデックスに変換する必要がある。
+    /// 内部バッファにArrayPoolを使用するため、使用後はDisposeすること。
     /// </summary>
-    public sealed class Utf8CharMap
+    public sealed class Utf8CharMap : IDisposable
     {
         /// <summary>事前エンコード済みUTF-8バイト列</summary>
         public byte[] Utf8Bytes { get; }
@@ -21,19 +23,45 @@ namespace DotNetG2P.MeCab.Trie
 
         // バイトオフセット→文字インデックス
         // _byteToChar[byteIndex] = そのバイトが属する文字のcharIndex
-        private readonly int[] _byteToChar;
+        private int[] _byteToChar;
 
         // 文字インデックス→バイトオフセット
         // _charToByte[charIndex] = その文字の先頭バイトのオフセット
-        private readonly int[] _charToByte;
+        private int[] _charToByte;
+
+        // ArrayPoolからレンタルした実際のサイズ（Return時に必要）
+        private readonly int _byteToCharRentedLength;
+        private readonly int _charToByteRentedLength;
 
         public Utf8CharMap(string text)
         {
             Text = text ?? throw new ArgumentNullException(nameof(text));
             Utf8Bytes = Encoding.UTF8.GetBytes(text);
 
-            _byteToChar = new int[Utf8Bytes.Length];
-            _charToByte = new int[text.Length];
+            int byteLen = Utf8Bytes.Length;
+            int charLen = text.Length;
+
+            if (byteLen > 0)
+            {
+                _byteToChar = ArrayPool<int>.Shared.Rent(byteLen);
+                _byteToCharRentedLength = _byteToChar.Length;
+            }
+            else
+            {
+                _byteToChar = Array.Empty<int>();
+                _byteToCharRentedLength = 0;
+            }
+
+            if (charLen > 0)
+            {
+                _charToByte = ArrayPool<int>.Shared.Rent(charLen);
+                _charToByteRentedLength = _charToByte.Length;
+            }
+            else
+            {
+                _charToByte = Array.Empty<int>();
+                _charToByteRentedLength = 0;
+            }
 
             BuildMapping(text);
         }
@@ -118,5 +146,22 @@ namespace DotNetG2P.MeCab.Trie
 
         /// <summary>UTF-8バイト長</summary>
         public int ByteLength => Utf8Bytes.Length;
+
+        /// <summary>
+        /// ArrayPoolにレンタルしたバッファを返却する。
+        /// </summary>
+        public void Dispose()
+        {
+            if (_byteToChar != null && _byteToCharRentedLength > 0)
+            {
+                ArrayPool<int>.Shared.Return(_byteToChar, clearArray: false);
+                _byteToChar = null;
+            }
+            if (_charToByte != null && _charToByteRentedLength > 0)
+            {
+                ArrayPool<int>.Shared.Return(_charToByte, clearArray: false);
+                _charToByte = null;
+            }
+        }
     }
 }

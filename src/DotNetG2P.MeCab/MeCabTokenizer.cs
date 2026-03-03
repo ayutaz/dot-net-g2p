@@ -13,8 +13,8 @@ namespace DotNetG2P.MeCab
     public sealed class MeCabTokenizer : ITokenizer
     {
         private readonly DictionaryBundle _dic;
-        private readonly LatticeBuilder _builder;
-        private readonly ViterbiDecoder _decoder;
+        private readonly Lazy<LatticeBuilder> _lazyBuilder;
+        private readonly Lazy<ViterbiDecoder> _lazyDecoder;
         private volatile bool _disposed;
 
         /// <param name="dictionaryPath">naist-jdic辞書ディレクトリのパス</param>
@@ -26,8 +26,8 @@ namespace DotNetG2P.MeCab
                 throw new DirectoryNotFoundException($"辞書ディレクトリが見つかりません: {dictionaryPath}");
 
             _dic = DictionaryBundle.Load(dictionaryPath);
-            _builder = new LatticeBuilder(_dic);
-            _decoder = new ViterbiDecoder(_dic.Matrix);
+            _lazyBuilder = new Lazy<LatticeBuilder>(() => new LatticeBuilder(_dic));
+            _lazyDecoder = new Lazy<ViterbiDecoder>(() => new ViterbiDecoder(_dic.Matrix));
         }
 
         /// <inheritdoc/>
@@ -37,12 +37,13 @@ namespace DotNetG2P.MeCab
             if (text == null) throw new ArgumentNullException(nameof(text));
             if (text.Length == 0) return Array.Empty<IToken>();
 
-            var endNodes = _builder.Build(text);
-            var bestPath = _decoder.Decode(endNodes, text.Length);
+            var endNodes = _lazyBuilder.Value.Build(text);
+            var bestPath = _lazyDecoder.Value.Decode(endNodes, text.Length);
 
             var tokens = new List<IToken>(bestPath.Count);
-            foreach (var node in bestPath)
+            for (int i = 0; i < bestPath.Count; i++)
             {
+                var node = bestPath[i];
                 tokens.Add(new MeCabToken(node.Surface, node.Feature));
             }
             return tokens;
@@ -65,44 +66,89 @@ namespace DotNetG2P.MeCab
         }
 
         /// <summary>
-        /// IToken実装。NMeCabTokenと同一のカンマ分割、15フィールド"*"パディング。
+        /// IToken実装。遅延パーサによりカンマ分割を必要時まで遅延させる。
+        /// 個別フィールドアクセスでは Substring のみ、Features プロパティは初回アクセス時に string[] を構築してキャッシュ。
         /// </summary>
         private sealed class MeCabToken : IToken
         {
             private const int ExpectedFieldCount = 15;
             private const string DefaultValue = "*";
 
-            private readonly string[] _features;
+            private readonly string _rawFeature;
+            private readonly int[] _commaPositions;
+            private readonly int _fieldCount;
+            private string[]? _cachedFeatures;
 
             public MeCabToken(string surface, string feature)
             {
                 Surface = surface;
-                var raw = feature?.Split(',') ?? Array.Empty<string>();
-                if (raw.Length >= ExpectedFieldCount)
-                {
-                    _features = raw;
-                }
-                else
-                {
-                    _features = new string[ExpectedFieldCount];
-                    for (int i = 0; i < ExpectedFieldCount; i++)
-                        _features[i] = i < raw.Length ? raw[i] : DefaultValue;
-                }
+                _rawFeature = feature ?? string.Empty;
+                _commaPositions = FindCommaPositions(_rawFeature);
+                _fieldCount = _commaPositions.Length + 1;
             }
 
             public string Surface { get; }
-            public IReadOnlyList<string> Features => _features;
-            public string POS => _features[0];
-            public string POSGroup1 => _features[1];
-            public string POSGroup2 => _features[2];
-            public string POSGroup3 => _features[3];
-            public string ConjugationType => _features[4];
-            public string ConjugationForm => _features[5];
-            public string OriginalForm => _features[6];
-            public string Reading => _features[7];
-            public string Pronunciation => _features[8];
-            public string AccentInfo => _features[9];
-            public string ChainRule => _features[10];
+
+            public IReadOnlyList<string> Features => _cachedFeatures ??= BuildFeatures();
+
+            public string POS => GetField(0);
+            public string POSGroup1 => GetField(1);
+            public string POSGroup2 => GetField(2);
+            public string POSGroup3 => GetField(3);
+            public string ConjugationType => GetField(4);
+            public string ConjugationForm => GetField(5);
+            public string OriginalForm => GetField(6);
+            public string Reading => GetField(7);
+            public string Pronunciation => GetField(8);
+            public string AccentInfo => GetField(9);
+            public string ChainRule => GetField(10);
+
+            private string GetField(int index)
+            {
+                if (index >= _fieldCount)
+                    return DefaultValue;
+
+                int start = index == 0 ? 0 : _commaPositions[index - 1] + 1;
+                int end = index < _commaPositions.Length ? _commaPositions[index] : _rawFeature.Length;
+                string value = _rawFeature.Substring(start, end - start);
+
+                // 品詞（0-3）、活用型（4）、活用形（5）は頻出文字列なのでintern
+                if (index <= 5)
+                    return string.Intern(value);
+
+                return value;
+            }
+
+            private string[] BuildFeatures()
+            {
+                var features = new string[ExpectedFieldCount];
+                for (int i = 0; i < ExpectedFieldCount; i++)
+                    features[i] = GetField(i);
+                return features;
+            }
+
+            private static int[] FindCommaPositions(string s)
+            {
+                // カンマの数をまず数える
+                int count = 0;
+                for (int i = 0; i < s.Length; i++)
+                {
+                    if (s[i] == ',')
+                        count++;
+                }
+
+                if (count == 0)
+                    return Array.Empty<int>();
+
+                var positions = new int[count];
+                int idx = 0;
+                for (int i = 0; i < s.Length; i++)
+                {
+                    if (s[i] == ',')
+                        positions[idx++] = i;
+                }
+                return positions;
+            }
         }
     }
 }

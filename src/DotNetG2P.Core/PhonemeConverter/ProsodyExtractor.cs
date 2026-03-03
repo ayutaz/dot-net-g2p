@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Text;
+using DotNetG2P.Internal;
 using DotNetG2P.Models;
 
 namespace DotNetG2P.PhonemeConverter
@@ -22,8 +22,8 @@ namespace DotNetG2P.PhonemeConverter
             if (nodes == null || nodes.Count == 0)
                 return "^ $";
 
-            var sb = new StringBuilder();
-            sb.Append("^");
+            var sb = new ValueStringBuilder(nodes.Count * 8);
+            sb.Append('^');
 
             // 発話全体でのモーラ出力済みフラグ（先頭モーラの前に _ を出さないため）
             bool hasPrevMora = false;
@@ -110,7 +110,7 @@ namespace DotNetG2P.PhonemeConverter
             }
 
             sb.Append(" $");
-            return sb.ToString();
+            return sb.ToStringAndDispose();
         }
 
         /// <summary>

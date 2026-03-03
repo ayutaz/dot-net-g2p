@@ -36,6 +36,17 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - DoubleArrayTrie + Viterbiデコーダ + 未知語処理の完全実装
   - 100+文で全15フィールド出力一致を検証済み
   - NuGet (`DotNetG2P.MeCab`) + UPM (`com.dotnetg2p.mecab`) パッケージ対応
+- **M7（パフォーマンス最適化）**: 完了
+  - ValueStringBuilder/ThrowHelper基盤整備、AllowUnsafeBlocks有効化
+  - MeCab辞書一括読み込み（Buffer.BlockCopy/MemoryMarshal.Read）、AggressiveInlining
+  - DoubleArrayTrie unsafeポインタ高速化、LatticeBuilderバッファ再利用
+  - MeCabToken遅延パーサ（Split廃止）、string.Intern()頻出文字列共有
+  - StringBuilder→ValueStringBuilder（FullContextLabel/G2PEngine/ProsodyExtractor/MoraMapping/Pronunciation）
+  - enum基底型最適化（Consonant:byte, Vowel:byte, MoraKind:ushort）
+  - Regex→手動パーサ（SetAccentType）、Dictionary→配列インデックス（TextNormalizer）
+  - DictionaryBundle WeakReferenceキャッシュ + スレッドセーフDispose
+  - バッチ処理API追加（ToPhonemesBatch等4メソッド）
+  - 10エージェントレビュー + ポストレビュー修正完了
 
 ## ビルド・実行
 
@@ -88,6 +99,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── SetAccentPhrase.cs       # 3. アクセント句結合（18ルール）
 │   │   │   ├── SetAccentType.cs         # 4. アクセント結合型（C1-C5, F1-F5, P系列）
 │   │   │   └── SetUnvoicedVowel.cs      # 5. 無声音化（6ルール）
+│   │   ├── Internal/                   # 内部ユーティリティ
+│   │   │   ├── ValueStringBuilder.cs   # ゼロアロケーション文字列構築（ref struct）
+│   │   │   └── ThrowHelper.cs          # 例外スローヘルパー（JITインライン化促進）
 │   │   ├── TextNormalization/           # テキスト正規化
 │   │   │   └── TextNormalizer.cs        # 全角/半角変換、濁点結合
 │   │   ├── PhonemeConverter/            # 音素変換
@@ -99,7 +113,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── JPCommonBuilder.cs       # NjdNode列→JPCommon階層構築
 │   │   │   ├── FullContextLabel.cs      # HTSフルコンテキストラベル生成
 │   │   │   └── WordAttr.cs             # POS/CType/CForm→ID変換テーブル (jpreprocess準拠)
-│   │   ├── G2PEngine.cs                # メインAPI (ToPhonemes, ToKana, ToProsody, ToAccentPhrases, ToFullContextLabels, Analyze)
+│   │   ├── G2PEngine.cs                # メインAPI (ToPhonemes, ToKana, ToProsody, ToAccentPhrases, ToFullContextLabels, Analyze, +Batch API)
 │   │   ├── G2POptions.cs               # 処理オプション（各段階ON/OFF）
 │   │   ├── package.json                # UPM パッケージ定義 (com.dotnetg2p.core)
 │   │   └── DotNetG2P.asmdef            # Unity Assembly Definition

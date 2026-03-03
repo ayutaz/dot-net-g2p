@@ -17,9 +17,9 @@ namespace DotNetG2P.PhonemeConverter
         /// <returns>VOICEVOX互換のAccentPhraseリスト</returns>
         public static List<AccentPhrase> Convert(IReadOnlyList<NjdNode> nodes)
         {
-            var result = new List<AccentPhrase>();
             if (nodes == null || nodes.Count == 0)
-                return result;
+                return new List<AccentPhrase>();
+            var result = new List<AccentPhrase>(nodes.Count / 3 + 1);
 
             // ChainFlagに基づいてノードをアクセント句ごとにグループ化する。
             // ChainFlag=true のノードは前のノードと同じアクセント句に属する。
@@ -45,7 +45,7 @@ namespace DotNetG2P.PhonemeConverter
         /// </summary>
         private static List<List<NjdNode>> GroupByAccentPhrase(IReadOnlyList<NjdNode> nodes)
         {
-            var groups = new List<List<NjdNode>>();
+            var groups = new List<List<NjdNode>>(nodes.Count / 3 + 1);
             List<NjdNode> currentGroup = null;
 
             for (int i = 0; i < nodes.Count; i++)
@@ -79,7 +79,7 @@ namespace DotNetG2P.PhonemeConverter
             if (group == null || group.Count == 0)
                 return null;
 
-            var moras = new List<Mora>();
+            var moras = new List<Mora>(8);
             bool isInterrogative = false;
             bool isPauseOnly = true;
 

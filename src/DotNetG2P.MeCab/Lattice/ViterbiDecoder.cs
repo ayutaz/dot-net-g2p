@@ -29,13 +29,18 @@ namespace DotNetG2P.MeCab.Lattice
             // endNodes[textLength+1] にEOS
             for (int endPos = 1; endPos < endNodes.Length; endPos++)
             {
-                foreach (var node in endNodes[endPos])
+                var nodesAtEnd = endNodes[endPos];
+                for (int ni = 0; ni < nodesAtEnd.Count; ni++)
                 {
+                    var node = nodesAtEnd[ni];
                     int startPos = node.StartPos;
 
                     // startPosで終わるノード群から最小コスト遷移を探す
-                    foreach (var prev in endNodes[startPos])
+                    var prevNodes = endNodes[startPos];
+                    for (int pi = 0; pi < prevNodes.Count; pi++)
                     {
+                        var prev = prevNodes[pi];
+
                         if (prev == node)
                             continue; // 自己参照防止（スペーススキップでBOSが複数位置に存在する場合）
 
@@ -57,8 +62,10 @@ namespace DotNetG2P.MeCab.Lattice
 
             // 後ろ向きトレース: EOSから逆順にBestPrevを辿る
             LatticeNode? eosNode = null;
-            foreach (var n in endNodes[textLength + 1])
+            var eosNodes = endNodes[textLength + 1];
+            for (int ei = 0; ei < eosNodes.Count; ei++)
             {
+                var n = eosNodes[ei];
                 if (eosNode == null || n.BestCost < eosNode.BestCost)
                     eosNode = n;
             }
@@ -66,7 +73,7 @@ namespace DotNetG2P.MeCab.Lattice
             if (eosNode == null || eosNode.BestCost == long.MaxValue)
                 return new List<LatticeNode>();
 
-            var path = new List<LatticeNode>();
+            var path = new List<LatticeNode>(16);
             var current = eosNode.BestPrev; // EOS自体は除外
             while (current != null && current.BestPrev != null) // BOS（BestPrev==null）も除外
             {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DotNetG2P.Internal;
 using DotNetG2P.JPCommon;
 using DotNetG2P.Models;
 using DotNetG2P.NJD;
@@ -118,7 +119,7 @@ namespace DotNetG2P
             var nodes = RunPipeline(text);
 
             // 各ノードの発音を音素文字列に変換して結合
-            var parts = new List<string>();
+            var parts = new List<string>(nodes.Count);
             foreach (var node in nodes)
             {
                 if (node.Pronunciation != null && node.Pronunciation.MoraCount > 0)
@@ -148,7 +149,7 @@ namespace DotNetG2P
 
             var nodes = RunPipeline(text);
 
-            var sb = new System.Text.StringBuilder();
+            var sb = new ValueStringBuilder(nodes.Count * 4);
             foreach (var node in nodes)
             {
                 if (node.Pronunciation != null)
@@ -157,7 +158,7 @@ namespace DotNetG2P
                 }
             }
 
-            return sb.ToString();
+            return sb.ToStringAndDispose();
         }
 
         /// <summary>
@@ -220,6 +221,82 @@ namespace DotNetG2P
             if (string.IsNullOrEmpty(text)) return Array.Empty<NjdNode>();
 
             return RunPipeline(text);
+        }
+
+        /// <summary>
+        /// 複数テキストをバッチ処理で音素列に変換する。
+        /// 形態素解析器の内部バッファ（ラティス等）が文間で再利用されるため、個別呼び出しよりGC効率が良い。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>スペース区切りの音素文字列のリスト</returns>
+        public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>(texts.Count);
+            for (int i = 0; i < texts.Count; i++)
+            {
+                results.Add(ToPhonemes(texts[i]));
+            }
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストをバッチ処理でカタカナ読みに変換する。
+        /// 形態素解析器の内部バッファ（ラティス等）が文間で再利用されるため、個別呼び出しよりGC効率が良い。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>カタカナ文字列のリスト</returns>
+        public IReadOnlyList<string> ToKanaBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>(texts.Count);
+            for (int i = 0; i < texts.Count; i++)
+            {
+                results.Add(ToKana(texts[i]));
+            }
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストをバッチ処理でESPnet韻律記号付き文字列に変換する。
+        /// 形態素解析器の内部バッファ（ラティス等）が文間で再利用されるため、個別呼び出しよりGC効率が良い。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>ESPnet韻律記号付き音素文字列のリスト</returns>
+        public IReadOnlyList<string> ToProsodyBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>(texts.Count);
+            for (int i = 0; i < texts.Count; i++)
+            {
+                results.Add(ToProsody(texts[i]));
+            }
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストをバッチ処理でHTSフルコンテキストラベル列に変換する。
+        /// 形態素解析器の内部バッファ（ラティス等）が文間で再利用されるため、個別呼び出しよりGC効率が良い。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>フルコンテキストラベル文字列のリストのリスト</returns>
+        public IReadOnlyList<IReadOnlyList<string>> ToFullContextLabelsBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<IReadOnlyList<string>>(texts.Count);
+            for (int i = 0; i < texts.Count; i++)
+            {
+                results.Add(ToFullContextLabels(texts[i]));
+            }
+            return results;
         }
 
         public void Dispose()

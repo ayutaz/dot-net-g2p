@@ -20,9 +20,9 @@ namespace DotNetG2P.JPCommon
             if (nodes == null || nodes.Count == 0)
                 return utterance;
 
-            var breathGroups = new List<JPBreathGroup>();
+            var breathGroups = new List<JPBreathGroup>(4);
             // 現在の呼気グループに溜めるアクセント句リスト
-            var accentPhrases = new List<JPAccentPhrase>();
+            var accentPhrases = new List<JPAccentPhrase>(4);
 
             for (int i = 0; i < nodes.Count; i++)
             {
@@ -45,7 +45,7 @@ namespace DotNetG2P.JPCommon
                     {
                         breathGroups.Add(CreateBreathGroup(accentPhrases));
                     }
-                    accentPhrases = new List<JPAccentPhrase>();
+                    accentPhrases = new List<JPAccentPhrase>(4);
                     continue;
                 }
 
@@ -241,7 +241,7 @@ namespace DotNetG2P.JPCommon
         private static void LinkPhonemes(JPUtterance utterance)
         {
             // 全音素をフラットリストに展開
-            var allPhonemes = new List<JPPhoneme>();
+            var allPhonemes = new List<JPPhoneme>(utterance.MoraCount * 2);
             foreach (var bg in utterance.BreathGroups)
             {
                 foreach (var ap in bg.AccentPhrases)

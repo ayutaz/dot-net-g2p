@@ -7,7 +7,7 @@ namespace DotNetG2P.Models
     /// 日本語のモーラ（音節単位）を表す列挙型。
     /// jpreprocess の MoraEnum に準拠した約220種のバリアントを定義する。
     /// </summary>
-    public enum MoraKind
+    public enum MoraKind : ushort
     {
         // ===== ア行 =====
         /// <summary>ア</summary>

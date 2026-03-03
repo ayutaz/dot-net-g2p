@@ -36,6 +36,7 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 - **5種類の出力形式** — 音素列 / カタカナ / 韻律記号付き / VOICEVOX互換AccentPhrase / HTSフルコンテキストラベル
 - **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、IL2CPP/AOT安全設計
 - **ITokenizer抽象化** — 形態素解析エンジンを差し替え可能（デフォルトは独自MeCabTokenizer）
+- **高性能** — ValueStringBuilderによるゼロアロケーション出力、辞書一括読み込み、バッファ再利用等の最適化によりGCプレッシャーを最小化
 - **1,600超テストで品質保証** — pyopenjtalk比較テスト、piper-plus移植テスト、NJD単体テスト、MeCabエンジン一致検証
 
 ## インストール
@@ -107,6 +108,10 @@ var labels = engine.ToFullContextLabels("こんにちは");
 | `ToAccentPhrases(text)` | `IReadOnlyList<AccentPhrase>` | VOICEVOX互換アクセント句構造体 |
 | `ToFullContextLabels(text)` | `IReadOnlyList<string>` | HTSフルコンテキストラベル |
 | `Analyze(text)` | `IReadOnlyList<NjdNode>` | NJD処理後のノード列（デバッグ・拡張用） |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 複数テキストを一括で音素列に変換 |
+| `ToKanaBatch(texts)` | `IReadOnlyList<string>` | 複数テキストを一括でカタカナ読みに変換 |
+| `ToProsodyBatch(texts)` | `IReadOnlyList<string>` | 複数テキストを一括で韻律記号付きに変換 |
+| `ToFullContextLabelsBatch(texts)` | `IReadOnlyList<IReadOnlyList<string>>` | 複数テキストを一括でHTSラベルに変換 |
 
 ### 日本語音素体系
 
@@ -216,6 +221,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | Phase 4: テスト | 完了 | 1,600超テスト（NJD単体・pyopenjtalk比較・エッジケース・MeCab一致検証） |
 | Phase 5: パッケージング | 完了 | NuGet/UPM設定、CI/CD、ドキュメント |
 | Phase 6: 独自MeCabエンジン | **完了** | DoubleArrayTrie、Viterbiデコーダ、未知語処理 |
+| Phase 7: パフォーマンス最適化 | **完了** | ValueStringBuilder、辞書一括読み込み、バッファ再利用、バッチAPI |
 
 ## ライセンス
 

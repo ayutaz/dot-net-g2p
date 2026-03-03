@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using DotNetG2P.Models;
 
 namespace DotNetG2P.NJD
@@ -87,12 +86,6 @@ namespace DotNetG2P.NJD
         /// <summary>名詞用ルール</summary>
         public AccentChainRule? Meishi { get; private set; }
 
-        // パース用正規表現（jpreprocessのPARSE_REGEXに準拠）
-        // RegexOptions.Compiled は IL2CPP/AOT 環境で実行時コード生成の問題があるため使用しない
-        private static readonly Regex ParseRegex = new Regex(
-            @"^((?<pos>名詞|形容詞|助詞|動詞)%)?(?<accent>[FC][1-5]|P1|P2|P6|P14)?(@(?<add>[-0-9]+))?$",
-            RegexOptions.None);
-
         /// <summary>
         /// ChainRule文字列からChainRulesを取得する。
         /// 同一文字列に対してはキャッシュからインスタンスを返す。
@@ -159,33 +152,59 @@ namespace DotNetG2P.NJD
 
         /// <summary>
         /// 個別ルール文字列をパースして格納する。
+        /// パターン: (品詞%)?アクセントタイプ(@加算値)?
+        /// 例: "C3", "動詞%F1", "形容詞%F2@-1"
         /// </summary>
         private void PushRule(string rule)
         {
-            var match = ParseRegex.Match(rule);
-            if (!match.Success)
+            if (string.IsNullOrEmpty(rule))
                 return;
 
-            // アクセント結合タイプのパース
-            var accentType = AccentRuleType.None;
-            if (match.Groups["accent"].Success)
+            int pos = 0;
+
+            // 1. 品詞接頭辞の検出（"動詞%", "名詞%", "形容詞%", "助詞%"）
+            string? posStr = null;
+            int percentIdx = rule.IndexOf('%');
+            if (percentIdx > 0)
             {
-                accentType = ParseAccentType(match.Groups["accent"].Value);
+                posStr = rule.Substring(0, percentIdx);
+                pos = percentIdx + 1;
             }
 
-            // 加算値のパース
-            int addType = 0;
-            if (match.Groups["add"].Success)
+            // 2. アクセントタイプのパース（C1-C5, F1-F5, P1, P2, P6, P14）
+            var accentType = AccentRuleType.None;
+            if (pos < rule.Length)
             {
-                int.TryParse(match.Groups["add"].Value, out addType);
+                char first = rule[pos];
+                if (first == 'C' || first == 'F' || first == 'P')
+                {
+                    // @の位置、またはルール末尾までをアクセントタイプ文字列とする
+                    int atIdx = rule.IndexOf('@', pos);
+                    int end = atIdx >= 0 ? atIdx : rule.Length;
+                    string accentStr = rule.Substring(pos, end - pos);
+                    accentType = ParseAccentType(accentStr);
+                    pos = end;
+                }
+            }
+
+            // アクセントタイプも品詞も検出できなかった場合は無効
+            if (accentType == AccentRuleType.None && posStr == null)
+                return;
+
+            // 3. 加算値のパース（@の後の数値）
+            int addType = 0;
+            if (pos < rule.Length && rule[pos] == '@')
+            {
+                pos++;
+                int.TryParse(rule.AsSpan(pos), out addType);
             }
 
             var chainRule = new AccentChainRule(accentType, addType);
 
             // 品詞による振り分け
-            if (match.Groups["pos"].Success)
+            if (posStr != null)
             {
-                switch (match.Groups["pos"].Value)
+                switch (posStr)
                 {
                     case "動詞":
                         Doushi = chainRule;

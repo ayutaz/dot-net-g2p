@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace DotNetG2P.Models
@@ -148,7 +149,7 @@ namespace DotNetG2P.Models
         /// </summary>
         public static List<NjdNode> FromTokens(IReadOnlyList<DotNetG2P.IToken> tokens)
         {
-            var nodes = new List<NjdNode>();
+            var nodes = new List<NjdNode>(tokens.Count);
             foreach (var token in tokens)
             {
                 var entry = WordEntry.FromToken(token);
@@ -168,8 +169,10 @@ namespace DotNetG2P.Models
                 // アクセント情報のパース（"核位置/モーラ数" → AccentType）
                 if (entry.AccentInfo != null && entry.AccentInfo != "*")
                 {
-                    var parts = entry.AccentInfo.Split('/');
-                    if (parts.Length >= 1 && int.TryParse(parts[0], out var accentType))
+                    var span = entry.AccentInfo.AsSpan();
+                    int slashIdx = span.IndexOf('/');
+                    var accentSpan = slashIdx >= 0 ? span.Slice(0, slashIdx) : span;
+                    if (int.TryParse(accentSpan, out var accentType))
                     {
                         node.AccentType = accentType;
                     }

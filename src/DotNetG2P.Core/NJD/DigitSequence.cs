@@ -425,8 +425,8 @@ namespace DotNetG2P.NJD
         /// </summary>
         public static List<DigitSequenceProcessor.DigitSequenceInfo> FromNodes(List<NjdNode> nodes)
         {
-            var result = new List<DigitSequenceProcessor.DigitSequenceInfo>();
-            var digits = new List<ParsedDigit>();
+            var result = new List<DigitSequenceProcessor.DigitSequenceInfo>(4);
+            var digits = new List<ParsedDigit>(8);
             int start = 0;
             bool isInSeq = false;
 
@@ -498,7 +498,7 @@ namespace DotNetG2P.NJD
         private static List<DigitSequenceProcessor.DigitSequenceInfo> FromParsedDigits(
             int start, List<ParsedDigit> digits, List<NjdNode> nodes)
         {
-            var result = new List<DigitSequenceProcessor.DigitSequenceInfo>();
+            var result = new List<DigitSequenceProcessor.DigitSequenceInfo>(2);
             bool isZeroStart = CheckZeroStart(digits);
 
             if (!isZeroStart && CheckCommaSequence(digits))
@@ -514,7 +514,7 @@ namespace DotNetG2P.NJD
             {
                 // コンマで分割して個別処理
                 int chunkStart = start;
-                var chunk = new List<ParsedDigit>();
+                var chunk = new List<ParsedDigit>(digits.Count);
 
                 for (int i = 0; i < digits.Count; i++)
                 {
@@ -561,7 +561,7 @@ namespace DotNetG2P.NJD
                 return null;
             }
 
-            var digitValues = new List<byte>();
+            var digitValues = new List<byte>(digits.Count);
             foreach (var d in digits)
             {
                 if (d.Type == DigitToken.Digit)

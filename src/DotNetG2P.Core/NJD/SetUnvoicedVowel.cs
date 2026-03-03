@@ -126,7 +126,7 @@ namespace DotNetG2P.NJD
         /// </summary>
         private static List<MoraState> BuildMoraStates(List<NjdNode> nodes)
         {
-            var states = new List<MoraState>();
+            var states = new List<MoraState>(16);
             int moraIndexInPhrase = 0;
             int accentType = 0;
 
