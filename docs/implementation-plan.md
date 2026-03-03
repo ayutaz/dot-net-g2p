@@ -24,7 +24,7 @@ NuGet/UPMパッケージとして商用配布する。
 | Phase 3: 出力形式・JPCommon | **完了** | 6ファイル新規、約1,465行追加。全310テスト成功 |
 | Phase 4: テスト・品質保証 | **完了** | 502件の新規テスト追加（合計812件）。12ファイル、+4,855行 |
 | Phase 5: パッケージング | **完了** | 12ファイル新規、+371行。NuGetパック・CI/CD・UPM・README/LICENSE |
-| Phase 6: 独自MeCabエンジン | 未着手 | - |
+| Phase 6: 独自MeCabエンジン | **完了** | 純C# MeCab互換エンジン実装。LibNMeCab(LGPL)依存排除、完全MIT化達成 |
 
 ## パッケージ構成
 
@@ -126,13 +126,16 @@ DotNetG2P.slnx
 25. ~~GitHub Actions CI/CD（ci.yml: ビルド・テスト・パック、release.yml: NuGet push + GitHub Release）~~ **完了**
 26. ~~LICENSE（MIT）、README.md（126行）、.editorconfig、.gitattributes~~ **完了**
 
-### (将来) Phase 6: 独自MeCabエンジン
+### Phase 6: 独自MeCabエンジン **[完了]**
 
-26. ダブル配列Trie実装
-27. ラティス構築 + ビタビデコーディング
-28. MeCabバイナリ辞書読み込み
-29. 未知語処理
-30. NMeCab依存の完全排除 → 完全BSDライセンス化
+26. ~~DotNetG2P.MeCab.csproj 作成（netstandard2.1、MIT）~~ **完了**
+27. ~~辞書読み込み層（DictionaryHeader, DicToken, SystemDictionary, ConnectionMatrix, CharProperty, UnknownDictionary, DictionaryBundle）~~ **完了**
+28. ~~DoubleArrayTrie（Darts-clone互換）+ Utf8CharMap~~ **完了**
+29. ~~LatticeBuilder + ViterbiDecoder~~ **完了**
+30. ~~MeCabTokenizer（ITokenizer実装）~~ **完了**
+31. ~~テスト作成・検証（MeCabTokenizerTests, TokenizerComparisonTests, G2PComparisonTests, MeCabIndependentTests, PerformanceTests, Utf8CharMapTests, DictionaryErrorTests）~~ **完了**
+32. ~~UPM/NuGetパッケージング、CI/CD更新~~ **完了**
+33. ~~10専門家レビュー + 16件の修正（エンディアン、ViterbiDecoder自己参照バグ等）~~ **完了**
 
 ## 主要参考資料
 

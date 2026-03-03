@@ -16,7 +16,7 @@ jpreprocess (Rust) の設計をベースに、6つのマイルストーンで段
 | **M3** | 出力形式の充実 | カタカナ/韻律記号/AccentPhrase/フルコンテキストラベル出力 | M2 | **完了** |
 | **M4** | テスト・品質保証 | jpreprocess/pyopenjtalkとの比較テスト合格 | M2 | **完了** |
 | **M5** | パッケージング | NuGet/UPMパッケージとして配布可能 | M3, M4 | **完了** |
-| **M6** | 独自MeCabエンジン | NMeCab (LGPL) 依存排除、完全BSD化 | M5 | 未着手 |
+| **M6** | 独自MeCabエンジン | NMeCab (LGPL) 依存排除、完全MIT化 | M5 | **完了** |
 
 ---
 
@@ -264,43 +264,70 @@ dotnet pack src/DotNetG2P.NMeCab/DotNetG2P.NMeCab.csproj -c Release -o ./artifac
 
 ---
 
-## M6: 独自MeCabエンジン（LGPL依存排除）
+## M6: 独自MeCabエンジン（LGPL依存排除） **[完了]**
 
-**ゴール**: NMeCab依存を完全排除し、全コンポーネントをBSD/MITライセンスにする
+**ゴール**: NMeCab依存を完全排除し、全コンポーネントをMITライセンスにする
 
 ### タスク
 
-| # | タスク | 難易度 | 推定規模 | 参考 | 依存 |
-|---|--------|--------|---------|------|------|
-| 6.1 | ダブル配列Trie（DARTS）実装 | **高** | ~1500行 | MeCab DARTS実装, lindera (Rust) | M5 |
-| 6.2 | MeCabバイナリ辞書読み込み | **高** | ~800行 | research/14 (sys.dic仕様), jpreprocess-dictionary | 6.1 |
-| 6.3 | ラティス構築 | **高** | ~600行 | MeCab lattice.cpp | 6.2 |
-| 6.4 | ビタビデコーディング | **高** | ~400行 | MeCab viterbi.cpp | 6.3 |
-| 6.5 | matrix.bin読み込み（遷移コスト行列） | 中 | ~200行 | research/14 | 6.2 |
-| 6.6 | char.bin + unk.dic（未知語処理） | **高** | ~500行 | MeCab char_property.cpp | 6.2 |
-| 6.7 | ITokenizer実装（MeCabTokenizer） | 中 | ~300行 | M1のNMeCabTokenizerを参考 | 6.4, 6.5, 6.6 |
-| 6.8 | NMeCab完全排除・テスト | 中 | ~200行 | - | 6.7 |
+| # | タスク | 難易度 | 実装行数 | ファイル | 状態 |
+|---|--------|--------|---------|---------|------|
+| 6.1 | DoubleArrayTrie実装（NMeCab互換 共通接頭辞検索） | **高** | ~300行 | Trie/DoubleArrayTrie.cs, Trie/Utf8CharMap.cs | **完了** |
+| 6.2 | 辞書ヘッダ・トークン読み込み（sys.dic） | **高** | ~400行 | Dictionary/DictionaryHeader.cs, DicToken.cs, SystemDictionary.cs | **完了** |
+| 6.3 | 連接コスト行列（matrix.bin） | 中 | ~100行 | Dictionary/ConnectionMatrix.cs | **完了** |
+| 6.4 | 文字カテゴリ・未知語処理（char.bin + unk.dic） | **高** | ~400行 | Dictionary/CharProperty.cs, UnknownDictionary.cs | **完了** |
+| 6.5 | 辞書バンドル（全辞書ファイル集約管理） | 中 | ~150行 | Dictionary/DictionaryBundle.cs | **完了** |
+| 6.6 | ラティス構築（Trie検索 + 未知語生成） | **高** | ~400行 | Lattice/LatticeNode.cs, LatticeBuilder.cs | **完了** |
+| 6.7 | Viterbiデコーダ（前向きパス + 後ろ向きトレース） | **高** | ~200行 | Lattice/ViterbiDecoder.cs | **完了** |
+| 6.8 | MeCabTokenizer（ITokenizer実装・公開API） | 中 | ~200行 | MeCabTokenizer.cs | **完了** |
+| 6.9 | NMeCab出力一致テスト + G2Pパイプライン比較テスト | 中 | ~1,500行 | tests/DotNetG2P.Tests/MeCab/ | **完了** |
+| 6.10 | NuGet + UPMパッケージ設定 | 低 | ~50行 | DotNetG2P.MeCab.csproj, package.json, DotNetG2P.MeCab.asmdef | **完了** |
 
-### リスク
+### 実装統計
 
-| リスク | 影響 | 対策 |
-|--------|------|------|
-| 実装工数が大きい（数人月規模） | スケジュール遅延 | M5までをまず完成させ、M6は独立フェーズ |
-| MeCab完全互換の品質担保が困難 | 精度低下 | NMeCab版との比較テストを継続実行 |
-| 辞書バイナリ仕様の理解不足 | 実装ブロック | research/14の仕様書 + NMeCabソースコード参照 |
+- **M6新規コード**: 約2,200行（MeCabエンジン本体14ファイル）
+- **M6新規テスト**: 約1,500行（テスト7ファイル）
+- **NuGetパッケージ**: `DotNetG2P.MeCab`（MIT、外部NuGet依存なし、DotNetG2P.Core参照のみ）
+- **UPMパッケージ**: `com.dotnetg2p.mecab`
+- **プロジェクト全体テスト**: 1,404件成功
 
-### 検証方法
+### テスト一覧
 
-```csharp
-// NMeCab版と独自実装版の出力一致を検証
-var nmecab = new NMeCabTokenizer("path/to/dict");
-var custom = new MeCabTokenizer("path/to/dict");
+| テストファイル | テスト内容 | テスト数 |
+|---------------|-----------|---------|
+| MeCabTokenizerTests.cs | 基本動作テスト（トークン化・BOS/EOS・空文字列等） | ~30件 |
+| TokenizerComparisonTests.cs | NMeCab出力との全15フィールド一致検証（100+文） | ~300件 |
+| G2PComparisonTests.cs | G2Pパイプライン出力比較（NMeCab版 vs MeCab版、20件×6出力形式） | ~120件 |
+| Utf8CharMapTests.cs | UTF-8バイト⇔charオフセット変換テスト | ~20件 |
+| DictionaryErrorTests.cs | 辞書パスエラー等のエラーハンドリングテスト | ~10件 |
 
-foreach (var text in testTexts) {
-    var expected = nmecab.Tokenize(text);
-    var actual = custom.Tokenize(text);
-    Assert.Equal(expected, actual);
-}
+### 成果
+
+- **LibNMeCab（LGPL-2.1）依存を完全排除**: 独自MeCabエンジンにより外部LGPL依存が不要に
+- **完全MIT化達成**: DotNetG2P.Core + DotNetG2P.MeCab の組み合わせで全コンポーネントがMITライセンス
+- **NMeCab互換品質**: 100+文で全15フィールドの出力一致を検証済み
+- **Unity Asset Store配布可能**: LGPL制約なしで全パッケージ配布が可能に
+
+### アーキテクチャ
+
+```
+DotNetG2P.MeCab/
+├── MeCabTokenizer.cs          # ITokenizer実装（公開API）
+├── Dictionary/                # 辞書読み込み層
+│   ├── DictionaryHeader.cs    # 72バイトヘッダパーサ
+│   ├── DicToken.cs            # トークン構造体（16バイト）
+│   ├── SystemDictionary.cs    # sys.dic読み込み
+│   ├── ConnectionMatrix.cs    # matrix.bin（連接コスト行列）
+│   ├── CharProperty.cs        # char.bin（文字カテゴリ）
+│   ├── UnknownDictionary.cs   # unk.dic（未知語テンプレート）
+│   └── DictionaryBundle.cs    # 全辞書ファイル集約管理
+├── Trie/                      # DoubleArray Trie
+│   ├── DoubleArrayTrie.cs     # NMeCab互換 共通接頭辞検索
+│   └── Utf8CharMap.cs         # UTF-8バイト⇔char オフセット変換
+└── Lattice/                   # ラティス＋Viterbi
+    ├── LatticeNode.cs         # ラティスノード
+    ├── LatticeBuilder.cs      # Trie検索+未知語生成→ラティス構築
+    └── ViterbiDecoder.cs      # 前向きパス+後ろ向きトレース
 ```
 
 ---
@@ -342,11 +369,11 @@ M5 パッケージング [完了]
 └─ README/LICENSE/editorconfig
     │
     ▼
-M6 独自MeCabエンジン
-├─ ダブル配列Trie
-├─ ラティス+ビタビ
-├─ 辞書読み込み
-└─ LGPL依存排除 → ✅ 完全BSD/MIT
+M6 独自MeCabエンジン [完了]
+├─ DoubleArrayTrie + Utf8CharMap
+├─ ラティス構築 + Viterbiデコーダ
+├─ 辞書読み込み (sys.dic/matrix.bin/char.bin/unk.dic)
+└─ LGPL依存排除 → ✅ 完全MIT化達成
 ```
 
 ---
@@ -371,8 +398,8 @@ M6 独自MeCabエンジン
 
 | フェーズ | DotNetG2P.Core | 形態素解析 | Unity Asset Store |
 |---------|----------------|-----------|-------------------|
-| M1-M5 | BSD/MIT | NMeCab (LGPL) → 別パッケージ | Core のみ配布可 |
-| M6完了 | BSD/MIT | 自前実装 (BSD) | **全パッケージ配布可** |
+| M1-M5 | MIT | NMeCab (LGPL) → 別パッケージ | Core のみ配布可 |
+| **M6完了** | MIT | **自前実装 (MIT)** | **全パッケージ配布可** |
 
 ---
 

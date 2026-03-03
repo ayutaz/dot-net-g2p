@@ -25,16 +25,16 @@ UniTaskは非同期ライブラリ（コード中心、データなし）であ�
 | 観点 | UniTask | DotNetG2P |
 |------|---------|-----------|
 | 外部データ | なし | naist-jdic辞書 (~80MB) |
-| 外部ライブラリ依存 | なし | NMeCab (LGPL) → 将来排除 |
+| 外部ライブラリ依存 | なし | デフォルト: 独自MeCabエンジン（MIT）、互換オプション: NMeCab（LGPL） |
 | API特性 | 非同期・軽量struct | 同期中心・テキスト処理 |
-| ライセンス制約 | MIT一本 | Core=BSD/MIT, NMeCab=LGPL分離 |
+| ライセンス制約 | MIT一本 | Core+MeCab=MIT、NMeCab=LGPL（互換オプション） |
 | プラットフォーム差異 | async/awaitの差異 | ファイルI/O・辞書ロードの差異 |
 
 ---
 
-## 2. 現在の実装状況（M5完了時点）
+## 2. 現在の実装状況（M6完了時点）
 
-M1（最小動作プロトタイプ）、M2（NJD処理パイプライン完成）、M3（出力形式の充実）、M4（テスト・品質保証）、M5（パッケージング）が完了し、以下の構成で動作している:
+M1（最小動作プロトタイプ）、M2（NJD処理パイプライン完成）、M3（出力形式の充実）、M4（テスト・品質保証）、M5（パッケージング）、M6（独自MeCabエンジン）が完了し、以下の構成で動作している:
 
 ```
 dot-net-g2p/
@@ -91,14 +91,32 @@ dot-net-g2p/
 │   │   ├── G2POptions.cs             # 処理オプション（各段階ON/OFF）
 │   │   ├── package.json              # UPMパッケージ定義 (com.dotnetg2p.core)
 │   │   └── DotNetG2P.asmdef          # Unity Assembly Definition
-│   └── DotNetG2P.NMeCab/             # NMeCabアダプター（LGPL）
-│       ├── NMeCabTokenizer.cs        # LibNMeCab 0.10.2ベースのITokenizer実装
-│       └── DotNetG2P.NMeCab.asmdef   # Unity Assembly Definition
+│   ├── DotNetG2P.NMeCab/             # NMeCabアダプター（LGPL、互換オプション）
+│   │   ├── NMeCabTokenizer.cs        # LibNMeCab 0.10.2ベースのITokenizer実装
+│   │   └── DotNetG2P.NMeCab.asmdef   # Unity Assembly Definition
+│   └── DotNetG2P.MeCab/              # 独自MeCabエンジン（MIT、外部依存なし）
+│       ├── DotNetG2P.MeCab.csproj    # .NET Standard 2.1、DotNetG2P.Core参照のみ
+│       ├── MeCabTokenizer.cs         # ITokenizer実装（公開API）
+│       ├── Dictionary/              # 辞書読み込み層
+│       │   ├── DictionaryHeader.cs  # 72バイトヘッダパーサ
+│       │   ├── DicToken.cs          # トークン構造体（16バイト）
+│       │   ├── SystemDictionary.cs  # sys.dic読み込み
+│       │   ├── ConnectionMatrix.cs  # matrix.bin読み込み（連接コスト行列）
+│       │   ├── CharProperty.cs      # char.bin読み込み（文字カテゴリ）
+│       │   ├── UnknownDictionary.cs # unk.dic読み込み（未知語テンプレート）
+│       │   └── DictionaryBundle.cs  # 全辞書ファイル集約管理
+│       ├── Trie/                    # DoubleArray Trie
+│       │   ├── DoubleArrayTrie.cs   # NMeCab互換 共通接頭辞検索
+│       │   └── Utf8CharMap.cs       # UTF-8バイト⇔char オフセット変換
+│       └── Lattice/                 # ラティス＋Viterbi
+│           ├── LatticeNode.cs       # ラティスノード
+│           ├── LatticeBuilder.cs    # Trie検索+未知語生成→ラティス構築
+│           └── ViterbiDecoder.cs    # 前向きパス+後ろ向きトレース
 ├── tests/
 │   ├── TestData/                      # テストデータ
 │   │   ├── expected_phonemes.json     # pyopenjtalk期待値（18件）
 │   │   └── generate_expected.py       # テストデータ生成スクリプト
-│   └── DotNetG2P.Tests/              # xUnitテスト（812件）
+│   └── DotNetG2P.Tests/              # xUnitテスト（1,600超）
 │       ├── Models/
 │       │   ├── NjdNodeTests.cs
 │       │   └── PronunciationTests.cs
@@ -121,6 +139,14 @@ dot-net-g2p/
 │       │   ├── JPCommonBuilderTests.cs
 │       │   ├── FullContextLabelTests.cs
 │       │   └── WordAttrTests.cs
+│       ├── MeCab/                          # MeCabエンジンテスト
+│       │   ├── MeCabTokenizerTests.cs      # 基本動作テスト（~30件）
+│       │   ├── TokenizerComparisonTests.cs # NMeCab出力一致テスト（100+文×3）
+│       │   ├── G2PComparisonTests.cs       # G2Pパイプライン比較テスト（20件×6）
+│       │   ├── MeCabIndependentTests.cs    # 辞書非依存テスト
+│       │   ├── PerformanceTests.cs         # パフォーマンステスト
+│       │   ├── Utf8CharMapTests.cs         # UTF-8オフセット変換テスト
+│       │   └── DictionaryErrorTests.cs     # エラーハンドリングテスト
 │       ├── Integration/
 │       │   ├── G2PPipelineTests.cs
 │       │   ├── EdgeCaseTests.cs            # エッジケース（~57件）
@@ -282,7 +308,8 @@ DotNetG2P/
 ```
 DotNetG2P.slnx
 ├── DotNetG2P.NetCore          # NuGetパッケージ用メインライブラリ
-├── DotNetG2P.NMeCab           # NMeCabアダプター（LGPL、別NuGet）
+├── DotNetG2P.MeCab            # 独自MeCabエンジン（MIT、デフォルト推奨）
+├── DotNetG2P.NMeCab           # NMeCabアダプター（LGPL、互換オプション）
 ├── DotNetG2P.Tests            # xUnitテスト
 └── DotNetG2P.Console          # コンソールサンプル
 ```
@@ -370,7 +397,8 @@ DotNetG2P.JPCommon                   # フルコンテキストラベル（Utter
 DotNetG2P.PhonemeConverter           # 音素変換（MoraMapping, ProsodyExtractor）
 DotNetG2P.Internal                   # 内部ユーティリティ（InternalsVisibleToで限定公開）
 
-DotNetG2P.NMeCab                     # NMeCabアダプター（別パッケージ）
+DotNetG2P.MeCab                      # 独自MeCabエンジン（MIT、デフォルト）
+DotNetG2P.NMeCab                     # NMeCabアダプター（LGPL、互換オプション）
 ```
 
 ### 設計ポイント
@@ -467,9 +495,13 @@ namespace DotNetG2P
 ### 使用例
 
 ```csharp
-// NMeCabアダプターを使用
-using var tokenizer = new NMeCabTokenizer("/path/to/naist-jdic");
+// 独自MeCabエンジンを使用（デフォルト、MIT）
+using var tokenizer = new MeCabTokenizer("/path/to/naist-jdic");
 using var engine = new G2PEngine(tokenizer);
+
+// または NMeCabアダプター（互換オプション、LGPL）
+// using var tokenizer = new NMeCabTokenizer("/path/to/naist-jdic");
+// using var engine = new G2PEngine(tokenizer);
 
 // 基本的な使い方
 string phonemes = engine.ToPhonemes("こんにちは");
@@ -499,8 +531,9 @@ UniTaskのパターンに従い、**ソースの正本をUnity側に置き、NuG
 
 | パッケージ | ライセンス | 依存関係 | 説明 |
 |-----------|-----------|---------|------|
-| `DotNetG2P` | MIT/BSD | なし | コアG2Pエンジン |
-| `DotNetG2P.NMeCab` | LGPL | DotNetG2P, LibNMeCab | NMeCabアダプター |
+| `DotNetG2P` | MIT | なし | コアG2Pエンジン |
+| `DotNetG2P.MeCab` | MIT | DotNetG2P | 独自MeCabエンジン（デフォルト推奨） |
+| `DotNetG2P.NMeCab` | LGPL | DotNetG2P, LibNMeCab | NMeCabアダプター（互換オプション） |
 | `DotNetG2P.Dictionary.NaistJdic` | BSD | なし | naist-jdic辞書データ（将来検討） |
 
 ### UPMパッケージ
@@ -520,13 +553,14 @@ UniTaskのパターンに従い、**ソースの正本をUnity側に置き、NuG
 }
 ```
 
-**注意**: UPMパッケージにはNMeCabアダプターを含めない（LGPL制約）。Unity Asset Store配布時はBSD自前MeCab実装（Phase 6）完了後。
+**注意**: UPMパッケージではMIT準拠の独自MeCabエンジン（`com.dotnetg2p.mecab`）をデフォルトで使用する。NMeCabアダプターはLGPL制約のためUPMパッケージに含めない。
 
 ### Assembly Definition構成
 
 | asmdef | パス | 依存 | 用途 |
 |--------|------|------|------|
 | `DotNetG2P` | Runtime/ | なし | コアライブラリ |
+| `DotNetG2P.MeCab` | MeCab/ | DotNetG2P | 独自MeCabエンジン（MIT、デフォルト） |
 | `DotNetG2P.Editor` | Editor/ | DotNetG2P | Editor専用ツール |
 | `DotNetG2P.NMeCab` | NMeCab~/ | DotNetG2P | NMeCabアダプター（~で除外） |
 | `DotNetG2P.Tests` | Tests/ | DotNetG2P | Unity Test Runner用 |
@@ -656,6 +690,15 @@ tests/DotNetG2P.Tests/
 ├── PhonemeConverter/           # 音素変換テスト
 ├── TextNormalization/          # テキスト正規化テスト
 ├── Models/                    # データモデルテスト
+├── JPCommon/                  # JPCommonテスト
+├── MeCab/                     # MeCabエンジンテスト
+│   ├── MeCabTokenizerTests.cs      # 基本動作テスト
+│   ├── TokenizerComparisonTests.cs # NMeCab出力一致テスト
+│   ├── G2PComparisonTests.cs       # G2Pパイプライン比較テスト
+│   ├── MeCabIndependentTests.cs    # 辞書非依存テスト
+│   ├── PerformanceTests.cs         # パフォーマンステスト
+│   ├── Utf8CharMapTests.cs         # UTF-8オフセット変換テスト
+│   └── DictionaryErrorTests.cs     # エラーハンドリングテスト
 ├── Integration/               # 統合テスト
 └── TestData/                  # テストデータ（pyopenjtalk出力との比較データ）
     ├── expected_phonemes.json
@@ -773,7 +816,7 @@ jobs:
 
   create-release:
     - GitHubリリース作成
-    - NuGet push（DotNetG2P + DotNetG2P.NMeCab）
+    - NuGet push（DotNetG2P + DotNetG2P.MeCab + DotNetG2P.NMeCab）
     - .unitypackageをリリースアセットに添付
 ```
 

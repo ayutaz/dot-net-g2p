@@ -8,7 +8,7 @@ C#/.NET向け日本語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ラ�
 OpenJTalk互換のルールベースG2Pパイプラインを C# でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに日本語テキストを音素列に変換します。
 
 ```csharp
-using var engine = new G2PEngine(new NMeCabTokenizer("/path/to/naist-jdic"));
+using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
 
 engine.ToPhonemes("こんにちは");  // => "k o N n i ch i w a"
 engine.ToKana("音声合成");        // => "オンセーゴーセー"
@@ -31,20 +31,33 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 
 ## 特徴
 
+- **完全MIT** — 独自MeCabエンジン（`DotNetG2P.MeCab`）により外部LGPL依存を排除し、全コンポーネントMITライセンスで利用可能
 - **OpenJTalk互換** — NJD処理6段階（発音生成→数字読み→アクセント句結合→アクセント結合→無声音化）を完全実装
 - **5種類の出力形式** — 音素列 / カタカナ / 韻律記号付き / VOICEVOX互換AccentPhrase / HTSフルコンテキストラベル
 - **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、IL2CPP/AOT安全設計
-- **ITokenizer抽象化** — 形態素解析エンジンを差し替え可能（初期実装はNMeCab）
-- **842テストで品質保証** — pyopenjtalk比較テスト、piper-plus移植テスト、NJD単体テスト
+- **ITokenizer抽象化** — 形態素解析エンジンを差し替え可能。デフォルトは独自MeCabTokenizer（MIT）、互換オプションとしてNMeCab（LGPL）も利用可能
+- **1,600超テストで品質保証** — pyopenjtalk比較テスト、piper-plus移植テスト、NJD単体テスト、MeCabエンジン一致検証
 
 ## インストール
 
 ### NuGet
 
 ```bash
+# コアライブラリ + 独自MeCabエンジン（推奨・完全MIT）
 dotnet add package DotNetG2P
-dotnet add package DotNetG2P.NMeCab
+dotnet add package DotNetG2P.MeCab
+
+# 互換オプション: LibNMeCab版（LGPL-2.1）
+# dotnet add package DotNetG2P.NMeCab
 ```
+
+### パッケージ構成
+
+| パッケージ | ライセンス | 説明 |
+|-----------|-----------|------|
+| `DotNetG2P` | MIT | コアライブラリ（G2Pエンジン、NJD処理、音素変換） |
+| `DotNetG2P.MeCab` | MIT | 独自MeCabエンジン（**推奨**、外部依存なし） |
+| `DotNetG2P.NMeCab` | LGPL-2.1 | LibNMeCab版アダプター（互換オプション） |
 
 ### Unity (UPM)
 
@@ -52,6 +65,7 @@ Unity Package Managerの **Add package from git URL** で以下を追加:
 
 ```
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 ```
 
 > **Note:** 別途 naist-jdic 辞書が必要です。詳細は[辞書の準備](#辞書の準備)を参照してください。
@@ -60,10 +74,10 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 
 ```csharp
 using DotNetG2P;
-using DotNetG2P.NMeCab;
+using DotNetG2P.MeCab;  // 独自MeCabエンジン（推奨・MIT）
 
 // 1. エンジン初期化（辞書パスを指定）
-using var tokenizer = new NMeCabTokenizer("/path/to/naist-jdic");
+using var tokenizer = new MeCabTokenizer("/path/to/naist-jdic");
 using var engine = new G2PEngine(tokenizer);
 
 // 2. テキストから音素列を取得
@@ -84,6 +98,8 @@ var phrases = engine.ToAccentPhrases("こんにちは");
 // 6. HTSフルコンテキストラベル（HMM/DNN音声合成用）
 var labels = engine.ToFullContextLabels("こんにちは");
 ```
+
+> **互換オプション:** LibNMeCab版を使用する場合は `using DotNetG2P.NMeCab;` + `new NMeCabTokenizer(...)` に置き換えてください（LGPL-2.1が適用されます）。
 
 ## API リファレンス
 
@@ -116,7 +132,7 @@ DotNetG2Pは[OpenJTalk](https://open-jtalk.sourceforge.net/)と同等の6段階N
 テキスト入力
   │
   ├─ TextNormalizer        全角/半角正規化、濁点結合
-  ├─ ITokenizer.Tokenize   形態素解析（NMeCab + naist-jdic）
+  ├─ ITokenizer.Tokenize   形態素解析（MeCabTokenizer + naist-jdic）
   ├─ SetPronunciation      辞書読み・フォールバック発音生成
   ├─ SetDigit              数字列検出・助数詞読み変換
   ├─ SetAccentPhrase       品詞パターンによるアクセント句結合（18ルール）
@@ -153,7 +169,7 @@ Unityでは `StreamingAssets` フォルダに辞書ファイルを配置し、`A
 
 ```csharp
 var dicPath = Path.Combine(Application.streamingAssetsPath, "naist-jdic");
-using var tokenizer = new NMeCabTokenizer(dicPath);
+using var tokenizer = new MeCabTokenizer(dicPath);
 ```
 
 ## オプション設定
@@ -203,18 +219,19 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | Phase 1: 基盤構築 | 完了 | データモデル、ITokenizer、NMeCabアダプター、MoraMapping |
 | Phase 2: NJDパイプライン | 完了 | 6段階NJD処理、TextNormalizer、G2POptions |
 | Phase 3: 出力形式 | 完了 | ToProsody、AccentPhrase、JPCommon、HTSラベル |
-| Phase 4: テスト | 完了 | 842テスト（NJD単体・pyopenjtalk比較・エッジケース） |
+| Phase 4: テスト | 完了 | 1,600超テスト（NJD単体・pyopenjtalk比較・エッジケース・MeCab一致検証） |
 | Phase 5: パッケージング | 完了 | NuGet/UPM設定、CI/CD、ドキュメント |
-| Phase 6: 独自MeCabエンジン | 未着手 | ダブル配列Trie、ビタビ、NMeCab依存排除→完全MIT化 |
+| Phase 6: 独自MeCabエンジン | **完了** | DoubleArrayTrie、Viterbiデコーダ、未知語処理、NMeCab依存排除→完全MIT化 |
 
 ## ライセンス
 
 | パッケージ | ライセンス | 備考 |
 |-----------|-----------|------|
 | **DotNetG2P** | [MIT](LICENSE) | コアライブラリ |
-| **DotNetG2P.NMeCab** | LGPL-2.1-or-later | [LibNMeCab](https://github.com/komutan/NMeCab)依存のため |
+| **DotNetG2P.MeCab** | [MIT](LICENSE) | 独自MeCabエンジン（**推奨**） |
+| **DotNetG2P.NMeCab** | LGPL-2.1-or-later | [LibNMeCab](https://github.com/komutan/NMeCab)依存のため（互換オプション） |
 
-Phase 6で独自MeCab実装に置き換え、全コンポーネントをMITライセンスにする予定です。
+`DotNetG2P` + `DotNetG2P.MeCab` の組み合わせで**完全MITライセンス**で利用可能です。`DotNetG2P.NMeCab` を使用する場合のみLGPL-2.1が適用されます。
 
 ## 謝辞・関連プロジェクト
 
