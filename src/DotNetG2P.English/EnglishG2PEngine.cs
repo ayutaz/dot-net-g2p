@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DotNetG2P.English.LTS;
 
 namespace DotNetG2P.English
 {
@@ -12,7 +13,7 @@ namespace DotNetG2P.English
     /// </remarks>
     public sealed class EnglishG2PEngine : IDisposable
     {
-        private readonly CmuDictionary _dictionary;
+        private CmuDictionary? _dictionary;
         private readonly EnglishG2POptions _options;
         private bool _disposed;
 
@@ -153,7 +154,7 @@ namespace DotNetG2P.English
             if (string.IsNullOrEmpty(word))
                 return Array.Empty<EnglishPronunciation>();
 
-            if (_dictionary.TryLookup(word, out var pronunciations))
+            if (_dictionary!.TryLookup(word, out var pronunciations))
                 return pronunciations;
 
             return Array.Empty<EnglishPronunciation>();
@@ -171,7 +172,7 @@ namespace DotNetG2P.English
             if (string.IsNullOrEmpty(word))
                 return false;
 
-            return _dictionary.ContainsWord(word);
+            return _dictionary!.ContainsWord(word);
         }
 
         /// <inheritdoc />
@@ -179,6 +180,7 @@ namespace DotNetG2P.English
         {
             if (!_disposed)
             {
+                _dictionary = null;
                 _disposed = true;
             }
             GC.SuppressFinalize(this);
@@ -186,14 +188,22 @@ namespace DotNetG2P.English
 
         /// <summary>
         /// 単語の音素列を検索する内部メソッド。
-        /// OOV時はオプションに従って処理する。
+        /// OOV時はLTSフォールバック→オプションに従って処理する。
         /// </summary>
         private EnglishPhoneme[]? LookupWordInternal(string word)
         {
-            if (_dictionary.TryLookup(word, out var pronunciations))
+            if (_dictionary!.TryLookup(word, out var pronunciations))
             {
                 // 最初のバリアントを使用
-                return pronunciations[0].Phonemes;
+                return pronunciations[0].PhonemesInternal;
+            }
+
+            // LTSフォールバック
+            if (_options.EnableLts)
+            {
+                var ltsResult = LtsEngine.Predict(word);
+                if (ltsResult != null && ltsResult.Length > 0)
+                    return ltsResult;
             }
 
             // OOV処理
@@ -254,8 +264,9 @@ namespace DotNetG2P.English
                     if (start >= 0)
                     {
                         var word = text.Substring(start, i - start);
-                        // 先頭・末尾のアポストロフィをトリム
-                        word = word.Trim('\'');
+                        // 先頭・末尾のアポストロフィをトリム、末尾のピリオドをトリム
+                        word = word.Trim('\'', '\u2019');
+                        word = word.TrimEnd('.');
                         if (word.Length > 0)
                         {
                             words.Add(word);
@@ -269,13 +280,14 @@ namespace DotNetG2P.English
         }
 
         /// <summary>
-        /// 単語を構成する文字かどうかを返す（英字・アポストロフィ・ピリオド）。
+        /// 単語を構成する文字かどうかを返す（英字・アポストロフィ・スマートクォート・ピリオド）。
         /// </summary>
         private static bool IsWordChar(char c)
         {
             return (c >= 'A' && c <= 'Z')
                 || (c >= 'a' && c <= 'z')
                 || c == '\''
+                || c == '\u2019'
                 || c == '.';
         }
 

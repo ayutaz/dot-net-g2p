@@ -73,7 +73,11 @@ namespace DotNetG2P.English
                 return false;
             }
 
-            return _entries.TryGetValue(word.ToUpperInvariant(), out pronunciations!);
+            if (_entries.TryGetValue(word.ToUpperInvariant(), out pronunciations!))
+                return true;
+
+            pronunciations = Array.Empty<EnglishPronunciation>();
+            return false;
         }
 
         /// <summary>

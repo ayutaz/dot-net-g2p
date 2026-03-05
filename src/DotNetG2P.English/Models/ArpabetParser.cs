@@ -74,6 +74,10 @@ namespace DotNetG2P.English
             if (!StringToPhoneme.TryGetValue(phonemePart, out var phoneme))
                 throw new ArgumentException($"未知のARPAbetトークンです: '{token}'", nameof(token));
 
+            // 子音にストレスが付いている不正入力はStress.Noneに強制
+            if (stress != Stress.None && phoneme >= ArpabetPhoneme.B)
+                stress = Stress.None;
+
             return new EnglishPhoneme(phoneme, stress);
         }
 
@@ -111,6 +115,10 @@ namespace DotNetG2P.English
 
             if (!StringToPhoneme.TryGetValue(phonemePart, out var phoneme))
                 return false;
+
+            // 子音にストレスが付いている不正入力はStress.Noneに強制
+            if (stress != Stress.None && phoneme >= ArpabetPhoneme.B)
+                stress = Stress.None;
 
             result = new EnglishPhoneme(phoneme, stress);
             return true;

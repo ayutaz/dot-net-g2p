@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace DotNetG2P.English
 {
@@ -7,8 +8,11 @@ namespace DotNetG2P.English
     /// </summary>
     public sealed class EnglishPronunciation
     {
+        /// <summary>内部音素配列（内部からの直接アクセス用）</summary>
+        internal EnglishPhoneme[] PhonemesInternal { get; }
+
         /// <summary>音素列</summary>
-        public EnglishPhoneme[] Phonemes { get; }
+        public IReadOnlyList<EnglishPhoneme> Phonemes => PhonemesInternal;
 
         /// <summary>
         /// EnglishPronunciationを初期化する。
@@ -16,7 +20,7 @@ namespace DotNetG2P.English
         /// <param name="phonemes">音素列</param>
         public EnglishPronunciation(EnglishPhoneme[] phonemes)
         {
-            Phonemes = phonemes ?? throw new ArgumentNullException(nameof(phonemes));
+            PhonemesInternal = phonemes ?? throw new ArgumentNullException(nameof(phonemes));
         }
 
         /// <summary>
@@ -24,14 +28,14 @@ namespace DotNetG2P.English
         /// </summary>
         public override string ToString()
         {
-            if (Phonemes.Length == 0)
+            if (PhonemesInternal.Length == 0)
                 return "";
 
             // 要素数の概算で容量を確保
-            var parts = new string[Phonemes.Length];
-            for (var i = 0; i < Phonemes.Length; i++)
+            var parts = new string[PhonemesInternal.Length];
+            for (var i = 0; i < PhonemesInternal.Length; i++)
             {
-                parts[i] = Phonemes[i].ToString();
+                parts[i] = PhonemesInternal[i].ToString();
             }
 
             return string.Join(" ", parts);

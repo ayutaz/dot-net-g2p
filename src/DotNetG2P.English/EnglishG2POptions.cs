@@ -22,6 +22,9 @@ namespace DotNetG2P.English
         /// <summary>OOV（辞書未登録語）の処理方針</summary>
         public UnknownWordStrategy UnknownWordHandling { get; }
 
+        /// <summary>LTS（Letter-to-Sound）ルールによるOOVフォールバックを有効にするか</summary>
+        public bool EnableLts { get; }
+
         /// <summary>デフォルトオプション</summary>
         public static readonly EnglishG2POptions Default = new EnglishG2POptions();
 
@@ -30,12 +33,15 @@ namespace DotNetG2P.English
         /// </summary>
         /// <param name="includeStress">ストレス番号を出力に含めるか（デフォルト: true）</param>
         /// <param name="unknownWordHandling">OOV処理方針（デフォルト: Skip）</param>
+        /// <param name="enableLts">LTSフォールバックを有効にするか（デフォルト: true）</param>
         public EnglishG2POptions(
             bool includeStress = true,
-            UnknownWordStrategy unknownWordHandling = UnknownWordStrategy.Skip)
+            UnknownWordStrategy unknownWordHandling = UnknownWordStrategy.Skip,
+            bool enableLts = true)
         {
             IncludeStress = includeStress;
             UnknownWordHandling = unknownWordHandling;
+            EnableLts = enableLts;
         }
     }
 }
