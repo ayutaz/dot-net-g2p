@@ -10,7 +10,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Copyright>Copyright (c) 2025 ayutaz</Copyright>
+    <Copyright>Copyright (c) 2026 ayutaz</Copyright>
 
     <!-- SourceLink -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
