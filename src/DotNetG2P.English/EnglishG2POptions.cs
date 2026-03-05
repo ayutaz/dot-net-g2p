@@ -25,6 +25,9 @@ namespace DotNetG2P.English
         /// <summary>LTS（Letter-to-Sound）ルールによるOOVフォールバックを有効にするか</summary>
         public bool EnableLts { get; }
 
+        /// <summary>テキスト正規化（数字・通貨・時刻・略語等の展開）を有効にするか</summary>
+        public bool EnableNormalization { get; }
+
         /// <summary>デフォルトオプション</summary>
         public static readonly EnglishG2POptions Default = new EnglishG2POptions();
 
@@ -34,14 +37,17 @@ namespace DotNetG2P.English
         /// <param name="includeStress">ストレス番号を出力に含めるか（デフォルト: true）</param>
         /// <param name="unknownWordHandling">OOV処理方針（デフォルト: Skip）</param>
         /// <param name="enableLts">LTSフォールバックを有効にするか（デフォルト: true）</param>
+        /// <param name="enableNormalization">テキスト正規化を有効にするか（デフォルト: true）</param>
         public EnglishG2POptions(
             bool includeStress = true,
             UnknownWordStrategy unknownWordHandling = UnknownWordStrategy.Skip,
-            bool enableLts = true)
+            bool enableLts = true,
+            bool enableNormalization = true)
         {
             IncludeStress = includeStress;
             UnknownWordHandling = unknownWordHandling;
             EnableLts = enableLts;
+            EnableNormalization = enableNormalization;
         }
     }
 }

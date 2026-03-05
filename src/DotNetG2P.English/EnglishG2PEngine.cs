@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DotNetG2P.English.LTS;
+using DotNetG2P.English.Normalization;
 
 namespace DotNetG2P.English
 {
@@ -76,6 +77,9 @@ namespace DotNetG2P.English
             if (string.IsNullOrWhiteSpace(text))
                 return "";
 
+            if (_options.EnableNormalization)
+                text = EnglishNormalizer.Normalize(text);
+
             var words = Tokenize(text);
             var parts = new List<string>(words.Count);
 
@@ -106,6 +110,9 @@ namespace DotNetG2P.English
 
             if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<EnglishPhoneme>();
+
+            if (_options.EnableNormalization)
+                text = EnglishNormalizer.Normalize(text);
 
             var words = Tokenize(text);
             var result = new List<EnglishPhoneme>();
