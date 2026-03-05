@@ -26,6 +26,7 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 - [辞書の準備](#辞書の準備)
 - [オプション設定](#オプション設定)
 - [ビルド](#ビルド)
+- [スレッドセーフティ](#スレッドセーフティ)
 - [ライセンス](#ライセンス)
 
 ## 特徴
@@ -207,6 +208,14 @@ dotnet run --project samples/DotNetG2P.Console
 # コンソールサンプル（辞書あり: フルG2P）
 dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
+
+## スレッドセーフティ
+
+`G2PEngine` および `MeCabTokenizer` はスレッドセーフではありません。
+マルチスレッド環境では、スレッドごとにインスタンスを作成してください。
+
+辞書データ（`DictionaryBundle`）は内部でWeakReferenceキャッシュにより自動的に共有されるため、
+複数インスタンスを作成してもメモリ使用量は最小限に抑えられます。
 
 ## ライセンス
 

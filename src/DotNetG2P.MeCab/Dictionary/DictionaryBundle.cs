@@ -9,6 +9,11 @@ namespace DotNetG2P.MeCab.Dictionary
     /// MeCab辞書ファイル一式 (sys.dic, matrix.bin, char.bin, unk.dic) を集約管理する。
     /// 同一パスの辞書はWeakReferenceキャッシュにより複数インスタンス間で共有される。
     /// </summary>
+    /// <remarks>
+    /// このクラスの <see cref="Load"/> および <see cref="Dispose"/> メソッドはスレッドセーフです。
+    /// 辞書データ（<see cref="SystemDic"/>, <see cref="Matrix"/> 等）は読み取り専用のため、
+    /// 複数の <see cref="MeCabTokenizer"/> インスタンスで安全に共有できます。
+    /// </remarks>
     public sealed class DictionaryBundle : IDisposable
     {
         // 静的キャッシュ: 正規化パス → WeakReference<DictionaryBundle>
@@ -52,6 +57,9 @@ namespace DotNetG2P.MeCab.Dictionary
         /// 同一パスの辞書が既にキャッシュに存在する場合は共有インスタンスを返す。
         /// </summary>
         /// <param name="dictionaryDirectoryPath">辞書ディレクトリパス (sys.dic, matrix.bin, char.bin, unk.dic が格納されたディレクトリ)</param>
+        /// <remarks>
+        /// 参照カウント方式の WeakReference キャッシュにより、同一辞書パスの辞書データをプロセス内で共有します。
+        /// </remarks>
         public static DictionaryBundle Load(string dictionaryDirectoryPath)
         {
             if (dictionaryDirectoryPath == null)

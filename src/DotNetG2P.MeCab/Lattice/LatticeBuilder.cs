@@ -10,6 +10,10 @@ namespace DotNetG2P.MeCab.Lattice
     /// Trie検索による辞書候補と、文字種プロパティに基づく未知語候補を生成する。
     /// バッファをインスタンスフィールドとして保持し、Build()呼び出し間で再利用する。
     /// </summary>
+    /// <remarks>
+    /// 内部バッファの再利用のため、このクラスはスレッドセーフではありません。
+    /// 単一スレッドからの呼び出しを前提とします。
+    /// </remarks>
     public sealed class LatticeBuilder
     {
         private readonly DictionaryBundle _dic;

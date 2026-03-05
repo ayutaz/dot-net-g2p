@@ -25,6 +25,10 @@ namespace DotNetG2P
     ///     → SetAccentType.Process()        ← 4. アクセント結合型
     ///     → SetUnvoicedVowel.Process()     ← 5. 無声音化
     /// </summary>
+    /// <remarks>
+    /// このクラスはスレッドセーフではありません。内部の <see cref="ITokenizer"/> がスレッドセーフでないため、
+    /// マルチスレッド環境ではスレッドごとにインスタンスを作成してください。
+    /// </remarks>
     public sealed class G2PEngine : IDisposable
     {
         private readonly ITokenizer _tokenizer;

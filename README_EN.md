@@ -26,6 +26,7 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 - [Dictionary Setup](#dictionary-setup)
 - [Configuration Options](#configuration-options)
 - [Building](#building)
+- [Thread Safety](#thread-safety)
 - [License](#license)
 
 ## Features
@@ -207,6 +208,14 @@ dotnet run --project samples/DotNetG2P.Console
 # Console sample (with dictionary: full G2P)
 dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
+
+## Thread Safety
+
+`G2PEngine` and `MeCabTokenizer` are not thread-safe.
+In multi-threaded environments, create a separate instance for each thread.
+
+Dictionary data (`DictionaryBundle`) is automatically shared via an internal WeakReference cache,
+so creating multiple instances incurs minimal memory overhead.
 
 ## License
 
