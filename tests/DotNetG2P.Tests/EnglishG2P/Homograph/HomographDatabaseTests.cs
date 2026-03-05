@@ -1,0 +1,221 @@
+using DotNetG2P.English.Homograph;
+using Xunit;
+
+namespace DotNetG2P.Tests.EnglishG2P.Homograph
+{
+    /// <summary>
+    /// HomographDatabase の単体テスト。
+    /// 同綴異音語の登録内容と検索機能を検証する。
+    /// </summary>
+    public class HomographDatabaseTests
+    {
+        // ===== 主要同綴異音語がデータベースに登録されていること =====
+
+        [Theory]
+        [InlineData("read")]
+        [InlineData("lead")]
+        [InlineData("live")]
+        [InlineData("wind")]
+        [InlineData("tear")]
+        [InlineData("bow")]
+        [InlineData("close")]
+        [InlineData("record")]
+        [InlineData("present")]
+        [InlineData("produce")]
+        [InlineData("abuse")]
+        [InlineData("minute")]
+        [InlineData("separate")]
+        [InlineData("estimate")]
+        public void TryGetEntry_KnownHomograph_ReturnsTrue(string word)
+        {
+            bool found = HomographDatabase.TryGetEntry(word, out var entry);
+
+            Assert.True(found);
+            Assert.NotNull(entry);
+        }
+
+        // ===== 大文字小文字不問 =====
+
+        [Theory]
+        [InlineData("READ")]
+        [InlineData("Read")]
+        [InlineData("rEaD")]
+        [InlineData("RECORD")]
+        [InlineData("Close")]
+        public void TryGetEntry_CaseInsensitive_ReturnsTrue(string word)
+        {
+            bool found = HomographDatabase.TryGetEntry(word, out var entry);
+
+            Assert.True(found);
+            Assert.NotNull(entry);
+        }
+
+        // ===== 非同綴異音語で false を返す =====
+
+        [Theory]
+        [InlineData("hello")]
+        [InlineData("world")]
+        [InlineData("computer")]
+        [InlineData("beautiful")]
+        [InlineData("running")]
+        public void TryGetEntry_NonHomograph_ReturnsFalse(string word)
+        {
+            bool found = HomographDatabase.TryGetEntry(word, out _);
+
+            Assert.False(found);
+        }
+
+        // ===== record エントリの中身検証 =====
+
+        [Fact]
+        public void RecordEntry_NounUsesVariant1_VerbUsesVariant0()
+        {
+            // record: [0]=R AH0 K AO1 R D (動詞), [1]=R EH1 K ER0 D (名詞)
+            bool found = HomographDatabase.TryGetEntry("record", out var entry);
+
+            Assert.True(found);
+            Assert.Equal(1, entry.DefaultVariantIndex);
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Noun));
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Verb));
+        }
+
+        // ===== read エントリの中身検証 =====
+
+        [Fact]
+        public void ReadEntry_VerbAndNounUseVariant1()
+        {
+            // read: [0]=R EH1 D (過去形), [1]=R IY1 D (現在形)
+            // デフォルトは現在形(variant 1)
+            bool found = HomographDatabase.TryGetEntry("read", out var entry);
+
+            Assert.True(found);
+            Assert.Equal(1, entry.DefaultVariantIndex);
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Verb));
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Noun));
+        }
+
+        // ===== close エントリの中身検証 =====
+
+        [Fact]
+        public void CloseEntry_AdjectiveUsesVariant0_VerbUsesVariant1()
+        {
+            // close: [0]=K L OW1 S (形容詞:近い), [1]=K L OW1 Z (動詞:閉じる)
+            bool found = HomographDatabase.TryGetEntry("close", out var entry);
+
+            Assert.True(found);
+            Assert.Equal(1, entry.DefaultVariantIndex);
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Adjective));
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Adverb));
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Verb));
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Noun));
+        }
+
+        // ===== produce エントリの中身検証 =====
+
+        [Fact]
+        public void ProduceEntry_NounUsesVariant1_VerbUsesVariant0()
+        {
+            // produce: [0]=P R AH0 D UW1 S (動詞), [1]=P R OW1 D UW0 S (名詞)
+            bool found = HomographDatabase.TryGetEntry("produce", out var entry);
+
+            Assert.True(found);
+            Assert.Equal(0, entry.DefaultVariantIndex);
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Noun));
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Verb));
+        }
+
+        // ===== present エントリの中身検証 =====
+
+        [Fact]
+        public void PresentEntry_NounAdjectiveUseVariant0_VerbUsesVariant1()
+        {
+            // present: [0]=P R EH1 Z AH0 N T (名詞/形容詞), [1]=P R IY0 Z EH1 N T (動詞)
+            bool found = HomographDatabase.TryGetEntry("present", out var entry);
+
+            Assert.True(found);
+            Assert.Equal(0, entry.DefaultVariantIndex);
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Noun));
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Adjective));
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Verb));
+        }
+
+        // ===== GetVariantIndex: Unknown POS のときデフォルトバリアントを返す =====
+
+        [Theory]
+        [InlineData("record", 1)]
+        [InlineData("read", 1)]
+        [InlineData("close", 1)]
+        [InlineData("produce", 0)]
+        [InlineData("present", 0)]
+        [InlineData("bow", 0)]
+        [InlineData("lead", 1)]
+        public void GetVariantIndex_UnknownPos_ReturnsDefaultVariant(string word, int expectedDefault)
+        {
+            HomographDatabase.TryGetEntry(word, out var entry);
+
+            int result = entry.GetVariantIndex(PosTag.Unknown);
+
+            Assert.Equal(expectedDefault, result);
+        }
+
+        // ===== -ate 語尾変化型の検証 =====
+
+        [Fact]
+        public void SeparateEntry_VerbUsesVariant0_AdjectiveUsesVariant2()
+        {
+            // separate: [0]=S EH1 P ER0 EY2 T (動詞), [2]=S EH1 P R AH0 T (形容詞)
+            bool found = HomographDatabase.TryGetEntry("separate", out var entry);
+
+            Assert.True(found);
+            Assert.Equal(0, entry.DefaultVariantIndex);
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Verb));
+            Assert.Equal(2, entry.GetVariantIndex(PosTag.Adjective));
+        }
+
+        // ===== resume エントリ: バリアント2を使うケース =====
+
+        [Fact]
+        public void ResumeEntry_NounUsesVariant2()
+        {
+            // resume: [0]=R IH0 Z UW1 M (動詞:再開), [2]=R EH1 Z AH0 M EY2 (名詞:履歴書)
+            bool found = HomographDatabase.TryGetEntry("resume", out var entry);
+
+            Assert.True(found);
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Verb));
+            Assert.Equal(2, entry.GetVariantIndex(PosTag.Noun));
+        }
+
+        // ===== 登録エントリ数が60以上あること =====
+
+        [Fact]
+        public void Database_HasAtLeast30Entries()
+        {
+            Assert.True(HomographDatabase.Count >= 30,
+                $"データベースには30以上のエントリが必要ですが、{HomographDatabase.Count}件しかありません。");
+        }
+
+        [Fact]
+        public void Database_HasExpected60Entries()
+        {
+            Assert.Equal(61, HomographDatabase.Count);
+        }
+
+        // ===== null および空文字列で false を返す =====
+
+        [Fact]
+        public void TryGetEntry_Null_ReturnsFalse()
+        {
+            bool found = HomographDatabase.TryGetEntry(null!, out _);
+
+            Assert.False(found);
+        }
+
+        [Fact]
+        public void TryGetEntry_EmptyString_ReturnsFalse()
+        {
+            bool found = HomographDatabase.TryGetEntry("", out _);
+
+            Assert.False(found);
+        }
+    }
+}

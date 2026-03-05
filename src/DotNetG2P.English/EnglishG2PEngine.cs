@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DotNetG2P.English.LTS;
+using DotNetG2P.English.Homograph;
 using DotNetG2P.English.Normalization;
 
 namespace DotNetG2P.English
@@ -81,11 +82,12 @@ namespace DotNetG2P.English
                 text = EnglishNormalizer.Normalize(text);
 
             var words = Tokenize(text);
-            var parts = new List<string>(words.Count);
+            var wordsArray = words.ToArray();
+            var parts = new List<string>(wordsArray.Length);
 
-            foreach (var word in words)
+            for (var i = 0; i < wordsArray.Length; i++)
             {
-                var phonemes = LookupWordInternal(word);
+                var phonemes = LookupWordWithContext(wordsArray, i);
                 if (phonemes == null)
                     continue;
 
@@ -115,11 +117,12 @@ namespace DotNetG2P.English
                 text = EnglishNormalizer.Normalize(text);
 
             var words = Tokenize(text);
+            var wordsArray = words.ToArray();
             var result = new List<EnglishPhoneme>();
 
-            foreach (var word in words)
+            for (var i = 0; i < wordsArray.Length; i++)
             {
-                var phonemes = LookupWordInternal(word);
+                var phonemes = LookupWordWithContext(wordsArray, i);
                 if (phonemes != null)
                 {
                     result.AddRange(phonemes);
@@ -191,6 +194,40 @@ namespace DotNetG2P.English
                 _disposed = true;
             }
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 文脈を考慮して単語の音素列を検索する内部メソッド。
+        /// 同綴異音語の場合は前後の単語から品詞を推定し、適切なバリアントを選択する。
+        /// </summary>
+        private EnglishPhoneme[]? LookupWordWithContext(string[] words, int index)
+        {
+            var word = words[index];
+            if (_dictionary!.TryLookup(word, out var pronunciations))
+            {
+                if (_options.EnableHomographResolution && pronunciations.Length > 1)
+                {
+                    var variantIndex = HomographResolver.ResolveVariantIndex(words, index);
+                    if (variantIndex >= 0 && variantIndex < pronunciations.Length)
+                        return pronunciations[variantIndex].PhonemesInternal;
+                }
+                return pronunciations[0].PhonemesInternal;
+            }
+
+            // LTSフォールバック
+            if (_options.EnableLts)
+            {
+                var ltsResult = LtsEngine.Predict(word);
+                if (ltsResult != null && ltsResult.Length > 0)
+                    return ltsResult;
+            }
+
+            // OOV処理
+            if (_options.UnknownWordHandling == UnknownWordStrategy.Throw)
+                throw new KeyNotFoundException($"辞書に登録されていない単語です: '{word}'");
+
+            // Skip: nullを返す
+            return null;
         }
 
         /// <summary>
