@@ -213,6 +213,24 @@ namespace DotNetG2P
         }
 
         /// <summary>
+        /// テキストから韻律特徴量（A1/A2/A3）を音素単位で抽出する。
+        /// uPiper等の音声合成エンジンが必要とするアクセント情報を直接取得できる。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>韻律特徴量</returns>
+        public ProsodyFeatures ToProsodyFeatures(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrEmpty(text))
+                return new ProsodyFeatures(Array.Empty<string>(), Array.Empty<int>(), Array.Empty<int>(), Array.Empty<int>());
+
+            var nodes = RunPipeline(text);
+            var utterance = JPCommonBuilder.Build(nodes);
+            return FullContextLabel.ExtractProsodyFeatures(utterance);
+        }
+
+        /// <summary>
         /// テキストをNJDパイプライン処理後のNjdNodeリストとして返す。
         /// NJD処理の中間結果を取得するための高度なAPI。
         /// </summary>
@@ -299,6 +317,25 @@ namespace DotNetG2P
             for (int i = 0; i < texts.Count; i++)
             {
                 results.Add(ToFullContextLabels(texts[i]));
+            }
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストをバッチ処理で韻律特徴量に変換する。
+        /// 形態素解析器の内部バッファ（ラティス等）が文間で再利用されるため、個別呼び出しよりGC効率が良い。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>韻律特徴量のリスト</returns>
+        public IReadOnlyList<ProsodyFeatures> ToProsodyFeaturesBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<ProsodyFeatures>(texts.Count);
+            for (int i = 0; i < texts.Count; i++)
+            {
+                results.Add(ToProsodyFeatures(texts[i]));
             }
             return results;
         }

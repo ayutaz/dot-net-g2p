@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DotNetG2P.Internal;
+using DotNetG2P.Models;
 
 namespace DotNetG2P.JPCommon
 {
@@ -40,12 +41,56 @@ namespace DotNetG2P.JPCommon
             return labels;
         }
 
+        /// <summary>
+        /// JPUtteranceから韻律特徴量（A1/A2/A3）を音素単位で抽出する。
+        /// BuildLabelのA計算ロジックと同一。
+        /// </summary>
+        internal static ProsodyFeatures ExtractProsodyFeatures(JPUtterance utterance)
+        {
+            if (utterance == null)
+                throw new ArgumentNullException(nameof(utterance));
+
+            var phonemeEntries = FlattenPhonemes(utterance);
+            var withPauses = InsertSilAndPau(phonemeEntries, utterance);
+
+            int count = withPauses.Count;
+            var phonemes = new string[count];
+            var a1 = new int[count];
+            var a2 = new int[count];
+            var a3 = new int[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                var entry = withPauses[i];
+                phonemes[i] = entry.Phoneme;
+
+                if (entry.IsPause || entry.Mora == null)
+                {
+                    a1[i] = 0;
+                    a2[i] = 0;
+                    a3[i] = 0;
+                }
+                else
+                {
+                    var ap = entry.AccentPhrase;
+                    int moraCount = ap.MoraCount;
+                    int accent = NormalizeAccentForA(ap.AccentType, moraCount);
+                    int moraPos = entry.MoraIndexInAP;
+                    a1[i] = moraPos - accent + 1;
+                    a2[i] = moraPos + 1;
+                    a3[i] = moraCount - moraPos;
+                }
+            }
+
+            return new ProsodyFeatures(phonemes, a1, a2, a3);
+        }
+
         // ====== 内部構造 ======
 
         /// <summary>
         /// フラットな音素エントリ。所属階層への参照を持つ。
         /// </summary>
-        private sealed class PhonemeEntry
+        internal sealed class PhonemeEntry
         {
             public string Phoneme;
             public bool IsPause; // sil or pau
@@ -58,7 +103,7 @@ namespace DotNetG2P.JPCommon
 
         // ====== 1. 音素フラット展開 ======
 
-        private static List<PhonemeEntry> FlattenPhonemes(JPUtterance utterance)
+        internal static List<PhonemeEntry> FlattenPhonemes(JPUtterance utterance)
         {
             var result = new List<PhonemeEntry>(utterance.MoraCount * 2);
 
@@ -95,7 +140,7 @@ namespace DotNetG2P.JPCommon
 
         // ====== 2. sil/pau挿入 ======
 
-        private static List<PhonemeEntry> InsertSilAndPau(List<PhonemeEntry> phonemes, JPUtterance utterance)
+        internal static List<PhonemeEntry> InsertSilAndPau(List<PhonemeEntry> phonemes, JPUtterance utterance)
         {
             var result = new List<PhonemeEntry>(phonemes.Count + utterance.BreathGroupCount + 1);
 
@@ -592,7 +637,7 @@ namespace DotNetG2P.JPCommon
         /// Aフィールド用: アクセント位置を正規化する。0（平板型）の場合はmora_countに変換する。
         /// jpreprocess準拠。Aフィールドのa1計算でのみ使用。
         /// </summary>
-        private static int NormalizeAccentForA(int accent, int moraCount)
+        internal static int NormalizeAccentForA(int accent, int moraCount)
         {
             return accent == 0 ? moraCount : accent;
         }
