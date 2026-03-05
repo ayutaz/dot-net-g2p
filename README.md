@@ -33,7 +33,7 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 
 - **純C#実装** — ネイティブバイナリ不要、独自MeCabエンジン（`DotNetG2P.MeCab`）によりNuGetパッケージ依存なし（実行時に[naist-jdic辞書](#辞書の準備)が必要）
 - **OpenJTalk互換パイプライン** — 発音生成・数字読み・アクセント句結合・アクセント結合型・無声音化の6段階NJD処理
-- **複数の出力形式** — 音素列 / カタカナ / ESPnet韻律記号 / VOICEVOX互換AccentPhrase / HTSフルコンテキストラベル
+- **複数の出力形式** — 音素列 / カタカナ / ESPnet韻律記号 / VOICEVOX互換AccentPhrase / HTSフルコンテキストラベル / 韻律特徴量（A1/A2/A3）
 - **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、UPMパッケージ提供
 - **拡張可能な設計** — `ITokenizer`インターフェースにより形態素解析エンジンを差し替え可能
 
@@ -92,6 +92,11 @@ var phrases = engine.ToAccentPhrases("こんにちは");
 
 // 6. HTSフルコンテキストラベル（HMM/DNN音声合成用）
 var labels = engine.ToFullContextLabels("こんにちは");
+
+// 7. 韻律特徴量（音素単位のA1/A2/A3、uPiper等の音声合成エンジン向け）
+var features = engine.ToProsodyFeatures("こんにちは");
+// features.Phonemes: ["sil","k","o","N","n","i","ch","i","w","a","sil"]
+// features.A1, A2, A3: 各音素のアクセント位置情報
 ```
 
 ## API リファレンス
@@ -105,11 +110,13 @@ var labels = engine.ToFullContextLabels("こんにちは");
 | `ToProsody(text)` | `string` | ESPnet韻律記号付き (`"^ k o [ N n i ch i w a $"`) |
 | `ToAccentPhrases(text)` | `IReadOnlyList<AccentPhrase>` | VOICEVOX互換アクセント句構造体 |
 | `ToFullContextLabels(text)` | `IReadOnlyList<string>` | HTSフルコンテキストラベル |
+| `ToProsodyFeatures(text)` | `ProsodyFeatures` | 韻律特徴量（音素単位のA1/A2/A3） |
 | `Analyze(text)` | `IReadOnlyList<NjdNode>` | NJD処理後のノード列 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 複数テキストを一括で音素列に変換 |
 | `ToKanaBatch(texts)` | `IReadOnlyList<string>` | 複数テキストを一括でカタカナ読みに変換 |
 | `ToProsodyBatch(texts)` | `IReadOnlyList<string>` | 複数テキストを一括で韻律記号付きに変換 |
 | `ToFullContextLabelsBatch(texts)` | `IReadOnlyList<IReadOnlyList<string>>` | 複数テキストを一括でHTSラベルに変換 |
+| `ToProsodyFeaturesBatch(texts)` | `IReadOnlyList<ProsodyFeatures>` | 複数テキストを一括で韻律特徴量に変換 |
 
 ### 日本語音素体系
 
@@ -137,7 +144,7 @@ DotNetG2Pは[OpenJTalk](https://open-jtalk.sourceforge.net/)と同等の6段階N
   └─ SetUnvoicedVowel      無声母音化（6ルール）
   │
   ▼
-  出力（音素列 / カタカナ / 韻律記号 / AccentPhrase / HTSラベル）
+  出力（音素列 / カタカナ / 韻律記号 / AccentPhrase / HTSラベル / 韻律特徴量）
 ```
 
 ## 辞書の準備
@@ -186,6 +193,7 @@ using var engine = new G2PEngine(tokenizer, options);
 | `enableAccentPhrase` | `true` | アクセント句結合（18ルール） |
 | `enableAccentType` | `true` | アクセント結合型決定 |
 | `enableUnvoicedVowel` | `true` | 無声母音化（6ルール） |
+| `expandLongVowels` | `true` | 長音を母音繰り返しで出力（`false`=`"-"`記号を使用） |
 
 ## ビルド
 

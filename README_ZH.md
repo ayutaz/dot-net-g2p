@@ -33,7 +33,7 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 
 - **纯 C# 实现** — 无需原生二进制文件，内置自研 MeCab 引擎（`DotNetG2P.MeCab`），无 NuGet 包依赖（运行时需要 [naist-jdic 词典](#词典准备)）
 - **兼容 OpenJTalk 的处理管线** — 包含发音生成、数字读法、重音短语合并、重音结合类型、清音化的 6 阶段 NJD 处理
-- **多种输出格式** — 音素序列 / 片假名 / ESPnet 韵律符号 / VOICEVOX 兼容 AccentPhrase / HTS 全上下文标签
+- **多种输出格式** — 音素序列 / 片假名 / ESPnet 韵律符号 / VOICEVOX 兼容 AccentPhrase / HTS 全上下文标签 / 韵律特征量（A1/A2/A3）
 - **支持 Unity** — 目标框架为 .NET Standard 2.1（Unity 2021.2+），提供 UPM 包
 - **可扩展设计** — 通过 `ITokenizer` 接口可替换形态素分析引擎
 
@@ -92,6 +92,11 @@ var phrases = engine.ToAccentPhrases("こんにちは");
 
 // 6. HTS 全上下文标签（用于 HMM/DNN 语音合成）
 var labels = engine.ToFullContextLabels("こんにちは");
+
+// 7. 韵律特征量（逐音素的 A1/A2/A3，面向 uPiper 等语音合成引擎）
+var features = engine.ToProsodyFeatures("こんにちは");
+// features.Phonemes: ["sil","k","o","N","n","i","ch","i","w","a","sil"]
+// features.A1, A2, A3: 各音素的重音位置信息
 ```
 
 ## API 参考
@@ -105,11 +110,13 @@ var labels = engine.ToFullContextLabels("こんにちは");
 | `ToProsody(text)` | `string` | 带 ESPnet 韵律符号 (`"^ k o [ N n i ch i w a $"`) |
 | `ToAccentPhrases(text)` | `IReadOnlyList<AccentPhrase>` | VOICEVOX 兼容重音短语结构体 |
 | `ToFullContextLabels(text)` | `IReadOnlyList<string>` | HTS 全上下文标签 |
+| `ToProsodyFeatures(text)` | `ProsodyFeatures` | 韵律特征量（逐音素的 A1/A2/A3） |
 | `Analyze(text)` | `IReadOnlyList<NjdNode>` | NJD 处理后的节点序列 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量将多段文本转换为音素序列 |
 | `ToKanaBatch(texts)` | `IReadOnlyList<string>` | 批量将多段文本转换为片假名读音 |
 | `ToProsodyBatch(texts)` | `IReadOnlyList<string>` | 批量将多段文本转换为带韵律符号格式 |
 | `ToFullContextLabelsBatch(texts)` | `IReadOnlyList<IReadOnlyList<string>>` | 批量将多段文本转换为 HTS 标签 |
+| `ToProsodyFeaturesBatch(texts)` | `IReadOnlyList<ProsodyFeatures>` | 批量将多段文本转换为韵律特征量 |
 
 ### 日语音素体系
 
@@ -137,7 +144,7 @@ DotNetG2P 实现了与 [OpenJTalk](https://open-jtalk.sourceforge.net/) 相同�
   └─ SetUnvoicedVowel      元音清化（6 条规则）
   │
   ▼
-  输出（音素序列 / 片假名 / 韵律符号 / AccentPhrase / HTS 标签）
+  输出（音素序列 / 片假名 / 韵律符号 / AccentPhrase / HTS 标签 / 韵律特征量）
 ```
 
 ## 词典准备
@@ -186,6 +193,7 @@ using var engine = new G2PEngine(tokenizer, options);
 | `enableAccentPhrase` | `true` | 重音短语合并（18 条规则） |
 | `enableAccentType` | `true` | 重音结合类型判定 |
 | `enableUnvoicedVowel` | `true` | 元音清化（6 条规则） |
+| `expandLongVowels` | `true` | 以元音重复输出长音（`false` = 使用 `"-"` 符号） |
 
 ## 构建
 

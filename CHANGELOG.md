@@ -5,7 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2026-03-05
+
+### Added
+- ToProsodyFeatures() / ToProsodyFeaturesBatch() API追加
+  - 韻律特徴量（A1/A2/A3）を音素単位で直接取得可能に
+  - ProsodyFeaturesクラス新規追加（Phonemes, A1, A2, A3プロパティ）
+- スレッドセーフティのドキュメント整備
+  - G2PEngine・MeCabTokenizer・DictionaryBundleにXMLドキュメントコメント追加
+  - README 3言語版にスレッドセーフティセクション追記
+- README多言語化（英語版・中国語版を追加）
+
+### Changed
+- FullContextLabel内部メソッドをinternalに変更（ExtractProsodyFeaturesで再利用）
+- DotNetG2P.Core.csprojにInternalsVisibleTo追加（テストプロジェクト用）
+- UPMパッケージバージョンを1.1.0に更新
+
+## [1.0.0] - 2026-03-03
 
 ### Added
 - NJD処理パイプライン6段階すべて実装
@@ -45,13 +61,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - LibNMeCab依存を削除
 
-## [0.1.0] - 2025-01-01
-
-### Added
-- 初期リリース
-- `g2p("こんにちは")` → `"k o N n i ch i w a"` が動作
-- naist-jdic辞書によるフルパイプライン（形態素解析→NJD→音素変換）
-- .NET Standard 2.1対応（Unity 2021.2+互換）
-
-[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/ayutaz/dot-net-g2p/releases/tag/v0.1.0
+[1.1.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/ayutaz/dot-net-g2p/releases/tag/v1.0.0
