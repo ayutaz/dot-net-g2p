@@ -15,4 +15,8 @@
     <PackageLicenseFile />
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+
 </Project>

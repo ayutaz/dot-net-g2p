@@ -26,6 +26,7 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 - [词典准备](#词典准备)
 - [选项配置](#选项配置)
 - [构建](#构建)
+- [线程安全性](#线程安全性)
 - [许可证](#许可证)
 
 ## 特性
@@ -207,6 +208,14 @@ dotnet run --project samples/DotNetG2P.Console
 # 控制台示例（有词典：完整 G2P）
 dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
+
+## 线程安全性
+
+`G2PEngine` 和 `MeCabTokenizer` 不是线程安全的。
+在多线程环境中，请为每个线程创建单独的实例。
+
+字典数据（`DictionaryBundle`）通过内部 WeakReference 缓存自动共享，
+因此创建多个实例的内存开销极小。
 
 ## 许可证
 

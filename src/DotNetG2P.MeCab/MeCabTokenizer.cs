@@ -10,6 +10,12 @@ namespace DotNetG2P.MeCab
     /// 独自MeCabエンジンによるITokenizer実装。
     /// naist-jdic辞書を読み込み、DoubleArrayTrie + Viterbiデコードで形態素解析を行う。
     /// </summary>
+    /// <remarks>
+    /// このクラスはスレッドセーフではありません。Tokenize() の同時呼び出しはサポートされません。
+    /// マルチスレッド環境ではスレッドごとにインスタンスを作成してください。
+    /// 辞書データは <see cref="DictionaryBundle"/> の WeakReference キャッシュにより共有されるため、
+    /// 複数インスタンスのメモリオーバーヘッドは最小限です。
+    /// </remarks>
     public sealed class MeCabTokenizer : ITokenizer
     {
         private readonly DictionaryBundle _dic;

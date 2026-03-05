@@ -112,6 +112,62 @@ namespace DotNetG2P.Tests
             Assert.Contains("sil", result[result.Count - 1]);
         }
 
+        // ===== ToProsodyFeatures =====
+
+        [SkippableFact]
+        public void ToProsodyFeatures_EmptyString_ReturnsEmptyFeatures()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var result = _engine!.ToProsodyFeatures("");
+            Assert.Equal(0, result.Count);
+        }
+
+        [SkippableFact]
+        public void ToProsodyFeatures_Null_ReturnsEmptyFeatures()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var result = _engine!.ToProsodyFeatures(null!);
+            Assert.Equal(0, result.Count);
+        }
+
+        [SkippableFact]
+        public void ToProsodyFeatures_BasicText_ReturnsFeatures()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var result = _engine!.ToProsodyFeatures("こんにちは");
+            Assert.True(result.Count > 0);
+            // 先頭・末尾はsil
+            Assert.Equal("sil", result.Phonemes[0]);
+            Assert.Equal("sil", result.Phonemes[result.Count - 1]);
+            // 配列長が一致
+            Assert.Equal(result.Phonemes.Count, result.A1.Count);
+            Assert.Equal(result.Phonemes.Count, result.A2.Count);
+            Assert.Equal(result.Phonemes.Count, result.A3.Count);
+        }
+
+        [SkippableFact]
+        public void ToProsodyFeatures_ConsistentWithFullContextLabels()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var labels = _engine!.ToFullContextLabels("東京は晴れです");
+            var features = _engine!.ToProsodyFeatures("東京は晴れです");
+            Assert.Equal(labels.Count, features.Count);
+        }
+
+        // ===== ToProsodyFeaturesBatch =====
+
+        [SkippableFact]
+        public void ToProsodyFeaturesBatch_ReturnsCorrectCount()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var texts = new[] { "こんにちは", "東京は晴れです", "" };
+            var results = _engine!.ToProsodyFeaturesBatch(texts);
+            Assert.Equal(3, results.Count);
+            Assert.True(results[0].Count > 0);
+            Assert.True(results[1].Count > 0);
+            Assert.Equal(0, results[2].Count);
+        }
+
         // ===== Disposed後のメソッド呼び出し =====
 
         [SkippableFact]
@@ -142,6 +198,16 @@ namespace DotNetG2P.Tests
             var engine = new G2PEngine(tokenizer);
             engine.Dispose();
             Assert.Throws<ObjectDisposedException>(() => engine.ToFullContextLabels("テスト"));
+        }
+
+        [SkippableFact]
+        public void ToProsodyFeatures_AfterDispose_ThrowsObjectDisposedException()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            using var tokenizer = new MeCabTokenizer(DicPath!);
+            var engine = new G2PEngine(tokenizer);
+            engine.Dispose();
+            Assert.Throws<ObjectDisposedException>(() => engine.ToProsodyFeatures("テスト"));
         }
     }
 }
