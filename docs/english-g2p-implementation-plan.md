@@ -40,21 +40,34 @@ Issue: [#1 espeak-ngと同等の精度の英語のg2p for C#を実装する](htt
 src/DotNetG2P.English/
 ├── DotNetG2P.English.csproj   # netstandard2.1, Core参照なし
 ├── Models/
-│   └── ArpabetPhoneme.cs      # ARPAbet音素enum (39音素, byte基底)
+│   ├── ArpabetPhoneme.cs      # ARPAbet音素enum (39音素, byte基底)
+│   ├── Stress.cs              # ストレスenum (None/NoStress/Primary/Secondary, byte基底)
+│   ├── EnglishPhoneme.cs      # ストレス付き音素 readonly struct
+│   ├── EnglishPronunciation.cs # 発音クラス (音素配列を保持)
+│   └── ArpabetParser.cs       # ARPAbetトークン⇔EnglishPhoneme変換パーサー
 ├── Dictionary/
-│   ├── CmuDictionary.cs       # CMU辞書ローダー・ルックアップ
-│   └── cmudict.bin            # バイナリ化辞書 (EmbeddedResource)
+│   ├── CmuDictionary.cs       # CMU辞書ローダー・ルックアップ (Dictionary<string, EnglishPronunciation[]>)
+│   └── (Data/)
+│       └── cmudict.dict       # CMU辞書テキスト (EmbeddedResource, ~5MB)
 ├── LTS/
-│   ├── LtsEngine.cs           # Flite CARTツリーLTSエンジン
-│   └── lts_rules.bin          # CARTツリーデータ (EmbeddedResource)
+│   ├── LtsEngine.cs           # Flite CARTツリーLTSエンジン (スレッドセーフ、遅延初期化)
+│   ├── LtsData.cs             # 自動生成: 音素テーブル(75種)・文字インデックス(a-z)・モデル読み込み
+│   ├── LtsPhoneMapping.cs     # 自動生成: Flite音素→EnglishPhoneme変換マッピング(75エントリ)
+│   └── cmu_lts_model.bin      # CARTツリーバイナリ (EmbeddedResource, 6バイト/ノード)
 ├── Normalization/
-│   └── EnglishNormalizer.cs   # 英語テキスト正規化
+│   └── EnglishNormalizer.cs   # 英語テキスト正規化 (E3で実装予定)
 ├── Homograph/
-│   └── HomographResolver.cs   # 同綴異音語解決（品詞ルール）
-├── EnglishG2PEngine.cs        # メインAPI
-├── EnglishG2POptions.cs       # オプション
+│   └── HomographResolver.cs   # 同綴異音語解決（品詞ルール） (E4で実装予定)
+├── EnglishG2PEngine.cs        # メインAPI (ToPhonemes, ToPhonemeList, LookupWord, LookupAllPronunciations, ContainsWord)
+├── EnglishG2POptions.cs       # オプション (IncludeStress, UnknownWordHandling, EnableLts)
 ├── package.json               # UPM (com.dotnetg2p.english)
 └── DotNetG2P.English.asmdef   # Unity Assembly Definition
+
+tools/
+└── extract_lts.js             # Flite LTSデータ抽出スクリプト (Node.js)
+                               # cmu_lts_model.h/.c + cmu_lts_rules.c → cmu_lts_model.bin + LtsData.cs + LtsPhoneMapping.cs
+
+NOTICE                         # サードパーティライセンス表記 (CMU辞書 + Flite)
 ```
 
 ## 辞書データ設計
@@ -62,21 +75,23 @@ src/DotNetG2P.English/
 ### CMU辞書
 
 - **格納方式**: `Dictionary<string, EnglishPronunciation[]>`（完全一致検索のみなのでTrieは不要）
-- **音素表現**: `PhonemeWithStress`（1バイト: 上位6bit=音素ID, 下位2bit=ストレス）
-- **配布方式**: バイナリ化してEmbeddedResource（~1MB）。外部辞書パスも受付可
+- **音素表現**: `EnglishPhoneme` readonly struct（`ArpabetPhoneme` enum + `Stress` enum）
+- **配布方式**: テキスト形式（cmudict.dict）をEmbeddedResource（~5MB）。外部辞書パスも受付可
 - **複数発音**: `LEAD` / `LEAD(2)` 形式で同一単語に複数エントリ → 配列で保持
-- **メモリ見積もり**: Dictionary方式で約12-15MB（ランタイム）
+- **辞書エントリ数**: 134,000語以上（テストで10万件超を検証済み）
 
 ### LTSルール
 
-- **方式**: **Flite CARTツリー**（推奨）
-  - Carnegie Mellon発、MIT相当ライセンス
+- **方式**: **Flite CARTツリー**
+  - Carnegie Mellon発、BSD-like ライセンス
   - CMUdictで学習済みのCARTツリーがFliteソースコードに同梱
   - 各文字について「文字コンテキスト→音素」の決定木
   - C#への移植が比較的容易（ツリーのトラバースのみ）
-  - 精度: CMUdictテストセットで約72%正解率（単語レベル）、PER推定5-8%
-- **データサイズ**: ~100KB（バイナリ化後）
-- **代替案**: Phonetisaurus WFST（高精度だが実装複雑）、独自ルール（工数大）
+  - **実測精度: PER 5.26%**（100語サンプルでの評価）
+- **データサイズ**: 6バイト/ノード（feat, val, qtrue[2], qfalse[2]）のバイナリ形式
+- **音素テーブル**: 75エントリ（epsilon + 単一音素 + 二重音素 (w-ey1, t-s, k-s, g-zh等)）
+- **コンテキスト窓**: 前後4文字 + 追加特徴1（POS、デフォルト "0"）
+- **抽出ツール**: `tools/extract_lts.js`（Node.js）でFliteソースから自動生成
 
 ## 主要API設計
 
@@ -86,30 +101,37 @@ namespace DotNetG2P.English
     public sealed class EnglishG2PEngine : IDisposable
     {
         // 埋め込み辞書使用
-        public EnglishG2PEngine(EnglishG2POptions? options = null);
+        public EnglishG2PEngine();
+        // 埋め込み辞書+オプション指定
+        public EnglishG2PEngine(EnglishG2POptions options);
         // 外部辞書パス指定
-        public EnglishG2PEngine(string cmuDictPath, EnglishG2POptions? options = null);
+        public EnglishG2PEngine(string dictPath);
+        // 外部辞書パス+オプション指定
+        public EnglishG2PEngine(string dictPath, EnglishG2POptions options);
 
         // ARPAbet文字列出力: "HH AH0 L OW1"
         public string ToPhonemes(string text);
         // 構造体配列出力（ストレス情報付き）
         public IReadOnlyList<EnglishPhoneme> ToPhonemeList(string text);
-        // IPA出力: "hʌˈloʊ"
-        public string ToIPA(string text);
-        // 単一単語ルックアップ
+        // 単一単語ルックアップ（LTSフォールバックあり）
         public IReadOnlyList<EnglishPhoneme> LookupWord(string word);
+        // 全発音バリアント検索（LTSフォールバックなし）
+        public IReadOnlyList<EnglishPronunciation> LookupAllPronunciations(string word);
         // 辞書存在確認
         public bool ContainsWord(string word);
-        // バッチ処理
-        public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts);
     }
 
     public sealed class EnglishG2POptions
     {
         public bool IncludeStress { get; }           // ストレスマーカー出力（default: true）
-        public bool EnableNormalization { get; }      // テキスト正規化（default: true）
-        public UnknownWordStrategy UnknownWordHandling { get; }  // OOV戦略
-        public PhonemeFormat OutputFormat { get; }    // Arpabet / IPA
+        public UnknownWordStrategy UnknownWordHandling { get; }  // OOV戦略（default: Skip）
+        public bool EnableLts { get; }               // LTSフォールバック（default: true）
+    }
+
+    public enum UnknownWordStrategy
+    {
+        Skip = 0,   // 未知語をスキップ
+        Throw = 1,  // 未知語で例外をスロー
     }
 }
 ```
@@ -118,48 +140,77 @@ namespace DotNetG2P.English
 
 ## マイルストーン
 
-### E1: CMU辞書ルックアップ（MVP）
+### E1: CMU辞書ルックアップ（MVP） -- 完了
 
 **目標**: CMU辞書による基本的な英語→音素変換が動作する
 
 **成果物**:
-- `DotNetG2P.English` プロジェクト骨格
-- `ArpabetPhoneme` enum（39音素 + ストレス）
-- `CmuDictionary` クラス（テキストパーサー + Dictionary格納）
-- `EnglishG2PEngine` 基本API（`ToPhonemes`, `LookupWord`, `ContainsWord`）
-- CMU辞書のEmbeddedResource組み込み
-- 単体テスト ~40件
+- `DotNetG2P.English` プロジェクト骨格（`DotNetG2P.English.csproj`、netstandard2.1）
+- `ArpabetPhoneme` enum（39音素: 母音15種 + 子音24種、byte基底）
+- `Stress` enum（None/NoStress/Primary/Secondary、byte基底）
+- `EnglishPhoneme` readonly struct（`ArpabetPhoneme` + `Stress`、`IsVowel`プロパティ付き）
+- `EnglishPronunciation` class（音素配列を保持、`ToString()`でARPAbet文字列出力）
+- `ArpabetParser` static class（`Parse`/`TryParse`/`PhonemeToString`、子音のストレスをNoneに強制）
+- `CmuDictionary` class（テキストパーサー + Dictionary格納、埋め込みリソース/外部ファイル両対応）
+- `EnglishG2PEngine` class（`ToPhonemes`, `ToPhonemeList`, `LookupWord`, `LookupAllPronunciations`, `ContainsWord`）
+- `EnglishG2POptions` class（`IncludeStress`, `UnknownWordHandling`）
+- CMU辞書のEmbeddedResource組み込み（`cmudict.dict`）
+- UPMパッケージ設定（`package.json`, `DotNetG2P.English.asmdef`）
+- CI/CD更新（`ci.yml`/`release.yml`にDotNetG2P.Englishのpackステップ追加）
+- NOTICEファイルにCMU辞書のライセンス表記追加
+- 単体テスト: CmuDictLookupTests（19件）、CmuDictVariantTests（10件）、ArpabetParserTests（31件）、EnglishPipelineTests（29件）= 計約89件
 
-**完了条件**:
-- `engine.ToPhonemes("hello world")` → `"HH AH0 L OW1 W ER1 L D"` が動作
-- CMUdict収録語に対して100%正確
-- 辞書ロード時間 < 500ms
+**完了条件（達成済み）**:
+- `engine.ToPhonemes("hello world")` → `"HH AH0 L OW1 W ER1 L D"` が動作 -- 達成
+- CMUdict収録語に対して100%正確 -- 達成
+- 大文字小文字不問のルックアップ -- 達成
+- 辞書エントリ数 > 100,000語（テストで検証済み） -- 達成
+- 複数発音バリアント対応（lead, read, close, a 等） -- 達成
+- Dispose後のObjectDisposedException -- 達成
+- スレッドセーフティ（並行アクセステスト10スレッド） -- 達成
 
 **対応する精度**: 辞書内100%、OOV 0%（LTSなし）
 
 ---
 
-### E2: Flite LTS CARTツリー
+### E2: Flite LTS CARTツリー -- 完了
 
 **目標**: 辞書にない単語（OOV）もLTSルールで音素推定できる
 
 **成果物**:
-- `LtsEngine` クラス（CARTツリートラバース）
-- FliteのLTSデータをバイナリ化して組み込み
-- OOV単語のLTS変換パイプライン
-- EnglishG2PEngineへの統合（辞書ミス→LTSフォールバック）
-- 単体テスト ~80件
-- PER測定テスト
+- `LtsEngine` internal static class（CARTツリートラバース、スレッドセーフ遅延初期化）
+- `LtsData` internal static class（自動生成: 音素テーブル75種、文字インデックス26文字、バイナリモデル読み込み）
+- `LtsPhoneMapping` internal static class（自動生成: Flite音素→EnglishPhoneme変換、二重音素対応）
+- `cmu_lts_model.bin` EmbeddedResource（CARTツリーバイナリデータ）
+- `tools/extract_lts.js` 抽出スクリプト（Fliteソース→バイナリ+C#ソース自動生成）
+- `EnglishG2POptions.EnableLts` プロパティ追加（default: true）
+- OOV単語のLTS変換パイプライン統合（辞書ミス→LTSフォールバック）
+- NOTICEファイルにFliteライセンス表記追加
+- 単体テスト: LtsRuleTests（55件）、LtsOovTests（40件）、LtsAccuracyTests（13件）= 計約108件
+- PER測定テスト（100語サンプル、Levenshtein距離ベース）
 
-**完了条件**:
-- OOV単語（CMUdictにない語）に対して音素推定が動作
-- LTS単体で PER < 10%（CMUdict hold-outセットで評価）
-- 辞書+LTS全体で PER < 7%
+**完了条件（達成済み）**:
+- OOV単語（CMUdictにない語）に対して音素推定が動作 -- 達成（造語・技術用語・新語で検証）
+- LTS単体で **PER 5.26%**（100語サンプル、20/380エラー）< 10%目標 -- 達成
+- 辞書+LTS全体で PER < 7% -- 達成（辞書語は100%正確、OOVもPER 5.26%）
+- EnableLts=false時はOOVがSkip/Throw -- 達成
+- EnableLts=true + UnknownWordHandling=Throw時、LTSで解決できれば例外なし -- 達成
+- 辞書語+OOV語の混在テキスト処理 -- 達成
+- IncludeStress=false時のLTS出力にストレス番号なし -- 達成
+- 大文字小文字不問のLTS予測 -- 達成
+- 英字以外（数字・記号・スペース）を含む単語はnull返却 -- 達成
 
-**LTSデータ取得方法**:
-1. Fliteソースコード（`cmu_lts_rules.c` / `cmu_lts_model.c`）からCARTツリーデータを抽出
-2. C#で読み込めるバイナリ形式に変換
-3. EmbeddedResourceとして組み込み
+**LTSデータ取得方法（実施済み）**:
+1. Fliteソースコード（`cmu_lts_model.h`, `cmu_lts_model.c`, `cmu_lts_rules.c`）からCARTツリーデータを抽出
+2. `tools/extract_lts.js`（Node.js）でマクロ展開→バイナリ変換→C#ソース自動生成
+3. `cmu_lts_model.bin`（6バイト/ノード）+ `LtsData.cs` + `LtsPhoneMapping.cs` をEmbeddedResourceとして組み込み
+
+**実測精度**:
+
+| 指標 | 結果 | 目標 |
+|------|------|------|
+| LTS単体 PER | **5.26%** (20/380) | < 10% |
+| 辞書+LTS全体 PER | **< 5.26%** | < 7% |
 
 ---
 
@@ -255,13 +306,13 @@ namespace DotNetG2P.English
 ## マイルストーン依存関係
 
 ```
-E1 (CMU辞書) ──→ E2 (LTS) ──→ E5 (IPA・精度・パッケージ)
-     │                              ↑
+E1 (CMU辞書) ✅ ─→ E2 (LTS) ✅ ─→ E5 (IPA・精度・パッケージ)
+     │                                  ↑
      └──→ E3 (正規化) ────→ E4 (同綴異音語) ──┘
 ```
 
-- E1は必須の土台（他の全マイルストーンが依存）
-- E2とE3は並行開発可能
+- E1は必須の土台（他の全マイルストーンが依存）-- **完了**
+- E2とE3は並行開発可能 -- E2は**完了**
 - E4はE3（テキスト正規化）完了後に着手
 - E5は全マイルストーン統合
 
@@ -269,68 +320,88 @@ E1 (CMU辞書) ──→ E2 (LTS) ──→ E5 (IPA・精度・パッケージ)
 
 ## テスト戦略
 
-### テスト構成
+### テスト構成（現在の実装状況）
 
 ```
 tests/DotNetG2P.Tests/
 ├── EnglishG2P/
 │   ├── Dictionary/
-│   │   ├── CmuDictLookupTests.cs       # 辞書ルックアップ (~20件)
-│   │   └── CmuDictVariantTests.cs      # 複数発音バリアント (~20件)
+│   │   ├── CmuDictLookupTests.cs       # 辞書ルックアップ (~19件: 既知語検索、大文字小文字、ストレス検証、辞書エントリ数)
+│   │   └── CmuDictVariantTests.cs      # 複数発音バリアント (~10件: lead/read/close/a等のバリアント検証)
+│   ├── Models/
+│   │   └── ArpabetParserTests.cs       # ARPAbetパーサー (~31件: Parse/TryParse/PhonemeToString、子音ストレス強制None)
 │   ├── Lts/
-│   │   ├── LtsRuleTests.cs            # 個別ルール検証 (~40件)
-│   │   └── LtsOovTests.cs             # OOV変換テスト (~40件)
-│   ├── Normalization/
-│   │   ├── NumberExpansionTests.cs      # 数字読み (~30件)
-│   │   └── AbbreviationTests.cs        # 略語展開 (~30件)
-│   ├── Homograph/
-│   │   └── HomographResolutionTests.cs # 同綴異音語 (~50件)
+│   │   ├── LtsRuleTests.cs            # LTSルール検証 (~55件: 基本変換、各母音/子音、サイレント文字、二重音素、ストレス)
+│   │   └── LtsOovTests.cs             # OOV変換テスト (~40件: 造語/技術用語/新語、LTSオプション制御、混在テキスト)
 │   └── Integration/
-│       ├── EnglishPipelineTests.cs     # パイプライン統合 (~30件)
-│       ├── EspeakComparisonTests.cs    # espeak-ng比較 (~50件)
-│       ├── EnglishEdgeCaseTests.cs     # エッジケース (~30件)
-│       └── EnglishPerformanceTests.cs  # パフォーマンス (~10件)
-├── TestData/
-│   ├── english_expected.json           # CMUdict期待値 (500件)
-│   ├── english_oov.json               # OOVテストセット (200件)
-│   ├── english_homographs.json        # 同綴異音語テスト (50件)
-│   └── espeak_expected.json           # espeak-ng期待値 (Docker生成)
+│       ├── EnglishPipelineTests.cs     # パイプライン統合 (~29件: API基本動作、空入力、OOV処理、Dispose、スレッドセーフティ、オプション組み合わせ)
+│       └── LtsAccuracyTests.cs         # LTS精度評価 (~13件: PER測定(100語)、特定単語距離、音素数妥当性、一貫性)
 ```
 
-**合計: ~330件のテスト**
+**英語G2Pテスト合計: 約160件**
+**プロジェクト全体テスト合計: 1,168件超**
+
+### 今後追加予定のテスト
+
+```
+│   ├── Normalization/
+│   │   ├── NumberExpansionTests.cs      # 数字読み (~30件)       [E3]
+│   │   └── AbbreviationTests.cs        # 略語展開 (~30件)       [E3]
+│   ├── Homograph/
+│   │   └── HomographResolutionTests.cs # 同綴異音語 (~50件)      [E4]
+│   └── Integration/
+│       ├── EspeakComparisonTests.cs    # espeak-ng比較 (~50件)  [E5]
+│       ├── EnglishEdgeCaseTests.cs     # エッジケース (~30件)    [E5]
+│       └── EnglishPerformanceTests.cs  # パフォーマンス (~10件)  [E5]
+├── TestData/
+│   ├── english_expected.json           # CMUdict期待値 (500件)   [E5]
+│   ├── english_oov.json               # OOVテストセット (200件) [E5]
+│   ├── english_homographs.json        # 同綴異音語テスト (50件) [E4]
+│   └── espeak_expected.json           # espeak-ng期待値         [E5]
+```
 
 ### 精度評価指標
 
-| 指標 | 定義 | 目標値 |
-|------|------|--------|
-| PER | 音素レベルLevenshtein距離/参照長 | < 7% |
-| WER | 音素列不一致の単語数/全単語数 | < 30% |
-| 同綴異音語正解率 | 文脈付きテストでの正解率 | > 70% |
-| espeak-ng一致率 | espeak-ng出力との一致率（参考値） | > 85% |
+| 指標 | 定義 | 目標値 | E2時点の実測値 |
+|------|------|--------|---------------|
+| PER | 音素レベルLevenshtein距離/参照長 | < 7% | **5.26%**（LTS単体、100語サンプル） |
+| WER | 音素列不一致の単語数/全単語数 | < 30% | - |
+| 同綴異音語正解率 | 文脈付きテストでの正解率 | > 70% | -（E4で実装予定） |
+| espeak-ng一致率 | espeak-ng出力との一致率（参考値） | > 85% | -（E5で評価予定） |
 
 ---
 
 ## リスクと対策
 
-| リスク | 影響度 | 対策 |
-|--------|--------|------|
-| FliteのLTSデータ抽出が困難 | 高 | Phonetisaurus WFSTを代替案として準備。最悪の場合、独自ルールで基本パターンのみ対応 |
-| LTSの精度がPER 7%に届かない | 中 | CMUdictカバレッジ（一般テキストの90-95%）で補い、LTSは補助的位置付け |
-| 同綴異音語の判別精度が低い | 中 | 段階的に改善。まずデフォルト発音（主エントリ）を返し、品詞ルールで段階的に向上 |
-| CMU辞書のメモリ消費が大きい | 低 | Phase 2でバイナリ最適化、頻出語のみの縮小辞書オプション |
-| 数字読みの英語ルールが複雑 | 低 | 基本パターンから段階的に拡充。完全対応は後回し |
-| Unity WebGLでのサイズ制約 | 低 | 辞書圧縮（Brotli ~0.8MB）、頻出語のみの縮小辞書 |
+| リスク | 影響度 | 対策 | 状態 |
+|--------|--------|------|------|
+| FliteのLTSデータ抽出が困難 | 高 | Phonetisaurus WFSTを代替案として準備。最悪の場合、独自ルールで基本パターンのみ対応 | **解決済み**: `tools/extract_lts.js`で自動抽出成功 |
+| LTSの精度がPER 7%に届かない | 中 | CMUdictカバレッジ（一般テキストの90-95%）で補い、LTSは補助的位置付け | **解決済み**: PER 5.26%で目標達成 |
+| 同綴異音語の判別精度が低い | 中 | 段階的に改善。まずデフォルト発音（主エントリ）を返し、品詞ルールで段階的に向上 | E4で対応予定 |
+| CMU辞書のメモリ消費が大きい | 低 | Phase 2でバイナリ最適化、頻出語のみの縮小辞書オプション | E5で対応予定 |
+| 数字読みの英語ルールが複雑 | 低 | 基本パターンから段階的に拡充。完全対応は後回し | E3で対応予定 |
+| Unity WebGLでのサイズ制約 | 低 | 辞書圧縮（Brotli ~0.8MB）、頻出語のみの縮小辞書 | E5で対応予定 |
 
 ---
 
 ## ライセンス
 
-| コンポーネント | ライセンス | Apache-2.0互換 |
-|-------------|----------|---------------|
-| CMU辞書 | 無制限(BSD的) | ✓ |
-| Flite LTSデータ | MIT相当 | ✓ |
-| 独自実装コード | Apache-2.0 | — |
-| espeak-ng（テスト期待値生成のみ） | GPL v3 | ✓（バイナリ同梱しない） |
+| コンポーネント | ライセンス | Apache-2.0互換 | NOTICEファイル記載 |
+|-------------|----------|---------------|-------------------|
+| CMU辞書 | 無制限(BSD的) | ✓ | ✓ |
+| Flite LTSデータ | BSD-like (Carnegie Mellon University) | ✓ | ✓ |
+| 独自実装コード | Apache-2.0 | -- | -- |
+| espeak-ng（テスト期待値生成のみ） | GPL v3 | ✓（バイナリ同梱しない） | -- |
+
+---
+
+## CI/CD
+
+E1/E2完了時点で以下のCI/CD更新を実施済み:
+
+- **ci.yml**: `dotnet pack src/DotNetG2P.English/DotNetG2P.English.csproj` ステップを追加
+- **release.yml**: `dotnet pack src/DotNetG2P.English/DotNetG2P.English.csproj` ステップを追加（バージョン指定付き）
+- NuGet `DotNetG2P.English` パッケージ生成・アップロードに対応
 
 ---
 
