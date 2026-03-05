@@ -21,7 +21,7 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - JPCommon階層モデル（JPUtterance→JPBreathGroup→JPAccentPhrase→JPWord→JPMora→JPPhoneme）を実装
   - WordAttr（POS/CType/CForm→ID変換テーブル、jpreprocess word_attr.rs準拠）を実装
 - **M4（テスト・品質保証）**: 完了
-  - 502件の新規テストを追加（合計900超テスト）
+  - 502件の新規テストを追加（合計950超テスト）
   - NJD各処理の単体テスト（SetPronunciation/SetAccentPhrase/SetAccentType/DigitSequence/SetDigit）
   - MoraMapping全165パターン検証、piper-plusテスト移植（87件）、pyopenjtalk比較テスト（20件）
   - エッジケーステスト（記号/英字/空文字列/長文/混在スクリプト）
@@ -45,7 +45,7 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - enum基底型最適化（Consonant:byte, Vowel:byte, MoraKind:ushort）
   - Regex→手動パーサ（SetAccentType）、Dictionary→配列インデックス（TextNormalizer）
   - DictionaryBundle WeakReferenceキャッシュ + スレッドセーフDispose
-  - バッチ処理API追加（ToPhonemesBatch等4メソッド）
+  - バッチ処理API追加（ToPhonemesBatch等5メソッド）
   - 10エージェントレビュー + ポストレビュー修正完了
 
 ## ビルド・実行
@@ -87,7 +87,8 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── WordDetails.cs           # WordDetails class (品詞・活用・読み)
 │   │   │   ├── WordEntry.cs             # WordEntry class (表層形+詳細+アクセント情報)
 │   │   │   ├── NjdNode.cs              # NjdNode class (NJD処理中間表現)
-│   │   │   └── AccentPhrase.cs          # AccentPhrase class (VOICEVOX互換)
+│   │   │   ├── AccentPhrase.cs          # AccentPhrase class (VOICEVOX互換)
+│   │   │   └── ProsodyFeatures.cs       # ProsodyFeatures class (韻律特徴量A1/A2/A3)
 │   │   ├── Tokenizer/                   # 形態素解析抽象化
 │   │   │   ├── ITokenizer.cs            # ITokenizer interface
 │   │   │   └── IToken.cs               # IToken interface (naist-jdic 15フィールド)
@@ -111,9 +112,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── JPCommon/                    # HTSフルコンテキストラベル生成
 │   │   │   ├── Models.cs               # 階層モデル (JPUtterance/JPBreathGroup/JPAccentPhrase/JPWord/JPMora/JPPhoneme)
 │   │   │   ├── JPCommonBuilder.cs       # NjdNode列→JPCommon階層構築
-│   │   │   ├── FullContextLabel.cs      # HTSフルコンテキストラベル生成
+│   │   │   ├── FullContextLabel.cs      # HTSフルコンテキストラベル生成 + ExtractProsodyFeatures
 │   │   │   └── WordAttr.cs             # POS/CType/CForm→ID変換テーブル (jpreprocess準拠)
-│   │   ├── G2PEngine.cs                # メインAPI (ToPhonemes, ToKana, ToProsody, ToAccentPhrases, ToFullContextLabels, Analyze, +Batch API)
+│   │   ├── G2PEngine.cs                # メインAPI (ToPhonemes, ToKana, ToProsody, ToAccentPhrases, ToFullContextLabels, ToProsodyFeatures, Analyze, +Batch API)
 │   │   ├── G2POptions.cs               # 処理オプション（各段階ON/OFF）
 │   │   ├── package.json                # UPM パッケージ定義 (com.dotnetg2p.core)
 │   │   └── DotNetG2P.asmdef            # Unity Assembly Definition
@@ -143,7 +144,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   ├── TestData/                        # テストデータ
 │   │   ├── expected_phonemes.json       # pyopenjtalk期待値データ（18件）
 │   │   └── generate_expected.py         # テストデータ生成スクリプト
-│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 900超テスト)
+│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 950超テスト)
 │       ├── DotNetG2P.Tests.csproj
 │       ├── G2PEngineApiTests.cs         # G2PEngine API統合テスト
 │       ├── Models/                      # モデルテスト
@@ -167,7 +168,8 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       ├── JPCommon/                    # JPCommonテスト
 │       │   ├── JPCommonBuilderTests.cs
 │       │   ├── WordAttrTests.cs
-│       │   └── FullContextLabelTests.cs
+│       │   ├── FullContextLabelTests.cs
+│       │   └── ProsodyFeaturesTests.cs  # 韻律特徴量テスト（7件）
 │       ├── MeCab/                       # MeCabエンジンテスト
 │       │   ├── MeCabTokenizerTests.cs   # 基本動作テスト（~30件）
 │       │   ├── TokenizerComparisonTests.cs # 出力一致テスト（100+文×3）

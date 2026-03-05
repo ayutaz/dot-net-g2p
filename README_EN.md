@@ -33,7 +33,7 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 
 - **Pure C# implementation** — No native binaries required. The built-in MeCab engine (`DotNetG2P.MeCab`) eliminates NuGet package dependencies (a [naist-jdic dictionary](#dictionary-setup) is required at runtime)
 - **OpenJTalk-compatible pipeline** — Six-stage NJD processing: pronunciation generation, digit reading, accent phrase grouping, accent type assignment, and vowel devoicing
-- **Multiple output formats** — Phoneme sequences / Katakana / ESPnet prosody symbols / VOICEVOX-compatible AccentPhrase / HTS full-context labels
+- **Multiple output formats** — Phoneme sequences / Katakana / ESPnet prosody symbols / VOICEVOX-compatible AccentPhrase / HTS full-context labels / Prosody features (A1/A2/A3)
 - **Unity support** — Targets .NET Standard 2.1 (Unity 2021.2+) with UPM packages available
 - **Extensible design** — Swap out the morphological analysis engine via the `ITokenizer` interface
 
@@ -92,6 +92,11 @@ var phrases = engine.ToAccentPhrases("こんにちは");
 
 // 6. HTS full-context labels (for HMM/DNN speech synthesis)
 var labels = engine.ToFullContextLabels("こんにちは");
+
+// 7. Prosody features (per-phoneme A1/A2/A3, for speech synthesis engines like uPiper)
+var features = engine.ToProsodyFeatures("こんにちは");
+// features.Phonemes: ["sil","k","o","N","n","i","ch","i","w","a","sil"]
+// features.A1, A2, A3: accent position info for each phoneme
 ```
 
 ## API Reference
@@ -105,11 +110,13 @@ var labels = engine.ToFullContextLabels("こんにちは");
 | `ToProsody(text)` | `string` | ESPnet prosody-annotated output (`"^ k o [ N n i ch i w a $"`) |
 | `ToAccentPhrases(text)` | `IReadOnlyList<AccentPhrase>` | VOICEVOX-compatible accent phrase structures |
 | `ToFullContextLabels(text)` | `IReadOnlyList<string>` | HTS full-context labels |
+| `ToProsodyFeatures(text)` | `ProsodyFeatures` | Prosody features (per-phoneme A1/A2/A3) |
 | `Analyze(text)` | `IReadOnlyList<NjdNode>` | Node sequence after NJD processing |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch conversion of multiple texts to phoneme sequences |
 | `ToKanaBatch(texts)` | `IReadOnlyList<string>` | Batch conversion of multiple texts to katakana readings |
 | `ToProsodyBatch(texts)` | `IReadOnlyList<string>` | Batch conversion of multiple texts to prosody-annotated output |
 | `ToFullContextLabelsBatch(texts)` | `IReadOnlyList<IReadOnlyList<string>>` | Batch conversion of multiple texts to HTS labels |
+| `ToProsodyFeaturesBatch(texts)` | `IReadOnlyList<ProsodyFeatures>` | Batch conversion of multiple texts to prosody features |
 
 ### Japanese Phoneme System
 
@@ -137,7 +144,7 @@ Text Input
   └─ SetUnvoicedVowel      Vowel devoicing (6 rules)
   │
   ▼
-  Output (Phonemes / Katakana / Prosody Symbols / AccentPhrase / HTS Labels)
+  Output (Phonemes / Katakana / Prosody Symbols / AccentPhrase / HTS Labels / Prosody Features)
 ```
 
 ## Dictionary Setup
@@ -186,6 +193,7 @@ using var engine = new G2PEngine(tokenizer, options);
 | `enableAccentPhrase` | `true` | Accent phrase grouping (18 rules) |
 | `enableAccentType` | `true` | Accent type assignment |
 | `enableUnvoicedVowel` | `true` | Vowel devoicing (6 rules) |
+| `expandLongVowels` | `true` | Expand long vowels as repeated vowels (`false` = use `"-"` symbol) |
 
 ## Building
 
