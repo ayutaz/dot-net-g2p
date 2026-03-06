@@ -73,7 +73,7 @@ namespace DotNetG2P.English
                 return false;
             }
 
-            if (_entries.TryGetValue(word.ToUpperInvariant(), out pronunciations!))
+            if (_entries.TryGetValue(word, out pronunciations!))
                 return true;
 
             pronunciations = Array.Empty<EnglishPronunciation>();
@@ -88,7 +88,7 @@ namespace DotNetG2P.English
         public bool ContainsWord(string word)
         {
             if (word == null) return false;
-            return _entries.ContainsKey(word.ToUpperInvariant());
+            return _entries.ContainsKey(word);
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace DotNetG2P.English
         private static CmuDictionary ParseFromReader(StreamReader reader)
         {
             // 一時的に List で蓄積し、後で配列に変換
-            var tempDict = new Dictionary<string, List<EnglishPronunciation>>(150000, StringComparer.Ordinal);
+            var tempDict = new Dictionary<string, List<EnglishPronunciation>>(150000, StringComparer.OrdinalIgnoreCase);
 
             string? line;
             while ((line = reader.ReadLine()) != null)
@@ -138,9 +138,6 @@ namespace DotNetG2P.English
                     baseWord = rawWord.Substring(0, parenIdx);
                 }
 
-                // 大文字に正規化
-                baseWord = baseWord.ToUpperInvariant();
-
                 // 音素トークンをパース
                 var tokens = phonemesPart.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                 var phonemes = new EnglishPhoneme[tokens.Length];
@@ -170,7 +167,7 @@ namespace DotNetG2P.English
             }
 
             // List → 配列に変換
-            var entries = new Dictionary<string, EnglishPronunciation[]>(tempDict.Count, StringComparer.Ordinal);
+            var entries = new Dictionary<string, EnglishPronunciation[]>(tempDict.Count, StringComparer.OrdinalIgnoreCase);
             foreach (var kv in tempDict)
             {
                 entries[kv.Key] = kv.Value.ToArray();

@@ -96,7 +96,7 @@ namespace DotNetG2P.English.Conversion
 
         /// <summary>
         /// 音素配列をIPA文字列に変換する（ストレスマーク付き）。
-        /// Primary stress → ˈ、Secondary stress → ˌ を母音IPA表現の直前に配置する。
+        /// IPA標準に準拠し、ストレスマークは音節先頭（先行する子音群の前）に配置する。
         /// </summary>
         internal static string Convert(EnglishPhoneme[] phonemes)
         {
@@ -112,11 +112,24 @@ namespace DotNetG2P.English.Conversion
 
                 if (p.IsVowel)
                 {
-                    // ストレスマーク配置
-                    if (p.Stress == Stress.Primary)
-                        sb.Append('ˈ'); // U+02C8
-                    else if (p.Stress == Stress.Secondary)
-                        sb.Append('ˌ'); // U+02CC
+                    if (p.Stress == Stress.Primary || p.Stress == Stress.Secondary)
+                    {
+                        char mark = p.Stress == Stress.Primary ? 'ˈ' : 'ˌ';
+
+                        // 先行する連続子音群を遡り、前の母音の直後（または語頭）を探す
+                        int onset = i;
+                        while (onset > 0 && !phonemes[onset - 1].IsVowel)
+                            onset--;
+
+                        // onsetの位置にストレスマークを挿入
+                        // onset == 0 なら語頭、onset > 0 なら前の母音IPA出力の直後
+                        // sbの現在位置から、onset〜i-1 の子音分の文字数を計算して挿入位置を求める
+                        int charsToRewind = 0;
+                        for (int j = onset; j < i; j++)
+                            charsToRewind += ConsonantIpa[(int)phonemes[j].Phoneme - 15].Length;
+
+                        sb.Insert(sb.Length - charsToRewind, mark);
+                    }
 
                     bool stressed = p.Stress == Stress.Primary || p.Stress == Stress.Secondary;
                     sb.Append(stressed ? VowelIpaStressed[index] : VowelIpaUnstressed[index]);

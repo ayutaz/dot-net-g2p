@@ -50,12 +50,23 @@ namespace DotNetG2P.Multilingual
 
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
-            _japaneseEngine = new G2PEngine(
-                new MeCabTokenizer(japaneseDictPath),
-                options.JapaneseOptions ?? G2POptions.Default);
+            G2PEngine japaneseEngine = null;
+            try
+            {
+                japaneseEngine = new G2PEngine(
+                    new MeCabTokenizer(japaneseDictPath),
+                    options.JapaneseOptions ?? G2POptions.Default);
 
-            _englishEngine = new EnglishG2PEngine(
-                options.EnglishOptions ?? EnglishG2POptions.Default);
+                _englishEngine = new EnglishG2PEngine(
+                    options.EnglishOptions ?? EnglishG2POptions.Default);
+
+                _japaneseEngine = japaneseEngine;
+            }
+            catch
+            {
+                japaneseEngine?.Dispose();
+                throw;
+            }
         }
 
         /// <summary>
@@ -69,7 +80,7 @@ namespace DotNetG2P.Multilingual
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrWhiteSpace(text))
                 return "";
 
             var segments = TextSegmenter.Segment(text);
@@ -97,7 +108,7 @@ namespace DotNetG2P.Multilingual
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<G2PSegment>();
 
             var segments = TextSegmenter.Segment(text);
@@ -109,7 +120,8 @@ namespace DotNetG2P.Multilingual
             {
                 var seg = segments[i];
                 var phonemes = ConvertSegment(seg);
-                result.Add(new G2PSegment(seg.Language, seg.Text, phonemes));
+                if (!string.IsNullOrEmpty(phonemes))
+                    result.Add(new G2PSegment(seg.Language, seg.Text, phonemes));
             }
 
             return result;
@@ -118,36 +130,36 @@ namespace DotNetG2P.Multilingual
         /// <summary>
         /// 複数テキストを一括で音素文字列に変換する。
         /// </summary>
-        /// <param name="texts">入力テキストのコレクション</param>
+        /// <param name="texts">入力テキストのリスト</param>
         /// <returns>各テキストに対応する音素文字列のリスト</returns>
         /// <exception cref="ArgumentNullException">textsがnullの場合</exception>
         /// <exception cref="ObjectDisposedException">Dispose済みの場合</exception>
-        public IReadOnlyList<string> ToPhonemesBatch(IEnumerable<string> texts)
+        public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new List<string>();
-            foreach (var text in texts)
-                results.Add(ToPhonemes(text));
+            var results = new List<string>(texts.Count);
+            for (int i = 0; i < texts.Count; i++)
+                results.Add(ToPhonemes(texts[i]));
             return results;
         }
 
         /// <summary>
         /// 複数テキストを一括でG2Pセグメントリストに変換する。
         /// </summary>
-        /// <param name="texts">入力テキストのコレクション</param>
+        /// <param name="texts">入力テキストのリスト</param>
         /// <returns>各テキストに対応するG2Pセグメントリストのリスト</returns>
         /// <exception cref="ArgumentNullException">textsがnullの場合</exception>
         /// <exception cref="ObjectDisposedException">Dispose済みの場合</exception>
-        public IReadOnlyList<IReadOnlyList<G2PSegment>> ToSegmentsBatch(IEnumerable<string> texts)
+        public IReadOnlyList<IReadOnlyList<G2PSegment>> ToSegmentsBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new List<IReadOnlyList<G2PSegment>>();
-            foreach (var text in texts)
-                results.Add(ToSegments(text));
+            var results = new List<IReadOnlyList<G2PSegment>>(texts.Count);
+            for (int i = 0; i < texts.Count; i++)
+                results.Add(ToSegments(texts[i]));
             return results;
         }
 

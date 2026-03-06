@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -17,7 +18,9 @@ namespace DotNetG2P.Multilingual
                 return new List<TextSegment>();
 
             // 1パス目: 各文字のScriptKindを分類
-            var kinds = new ScriptKind[text.Length];
+            Span<ScriptKind> kinds = text.Length <= 256
+                ? stackalloc ScriptKind[text.Length]
+                : new ScriptKind[text.Length];
             for (int i = 0; i < text.Length; i++)
                 kinds[i] = LanguageDetector.Classify(text[i]);
 
@@ -29,7 +32,7 @@ namespace DotNetG2P.Multilingual
             for (int i = 0; i < text.Length; i++)
             {
                 var kind = kinds[i];
-                if (kind == ScriptKind.Japanese || kind == ScriptKind.English)
+                if (kind == ScriptKind.Japanese || kind == ScriptKind.English || kind == ScriptKind.Latin)
                 {
                     languages[i] = LanguageDetector.ToLanguage(kind);
                 }

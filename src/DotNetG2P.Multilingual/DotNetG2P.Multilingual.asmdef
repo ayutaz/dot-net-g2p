@@ -3,6 +3,7 @@
   "rootNamespace": "DotNetG2P.Multilingual",
   "references": [
     "DotNetG2P",
+    "DotNetG2P.MeCab",
     "DotNetG2P.English"
   ],
   "includePlatforms": [],

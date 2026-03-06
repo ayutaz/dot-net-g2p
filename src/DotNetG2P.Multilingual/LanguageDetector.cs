@@ -33,19 +33,25 @@ namespace DotNetG2P.Multilingual
             // 7. ASCII英字 A-Z, a-z
             if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return ScriptKind.English;
 
-            // 8. ASCII数字 0-9
+            // 8. ラテン拡張文字 U+00C0-U+024F (Latin Extended-A/B)
+            if (c >= '\u00C0' && c <= '\u024F') return ScriptKind.Latin;
+
+            // 9. ASCII数字 0-9
             if (c >= '0' && c <= '9') return ScriptKind.Digit;
 
-            // 9. 空白・タブ・改行
+            // 10. 空白・タブ・改行
             if (c == ' ' || c == '\t' || c == '\n' || c == '\r') return ScriptKind.Whitespace;
 
-            // 10. その他ASCII記号 (0x21-0x7E)
+            // 11. その他ASCII記号 (0x21-0x7E)
             if (c >= '\u0021' && c <= '\u007E') return ScriptKind.Punctuation;
 
-            // 11. 全角英数字 U+FF01-FF5E
+            // 12. 全角数字 U+FF10-FF19
+            if (c >= '\uFF10' && c <= '\uFF19') return ScriptKind.Digit;
+
+            // 13. 全角英数字 U+FF01-FF5E (全角数字を除く)
             if (c >= '\uFF01' && c <= '\uFF5E') return ScriptKind.English;
 
-            // 12. 上記以外
+            // 14. 上記以外
             return ScriptKind.Other;
         }
 
@@ -58,6 +64,7 @@ namespace DotNetG2P.Multilingual
                 case ScriptKind.Japanese:
                     return Language.Japanese;
                 case ScriptKind.English:
+                case ScriptKind.Latin:
                     return Language.English;
                 default:
                     return null;

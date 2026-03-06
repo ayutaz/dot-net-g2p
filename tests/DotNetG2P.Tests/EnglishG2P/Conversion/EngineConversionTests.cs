@@ -27,10 +27,10 @@ namespace DotNetG2P.Tests.EnglishG2P.Conversion
         public void ToIPA_Hello_ReturnsExpectedIPA()
         {
             var result = _engine.ToIPA("hello");
-            // HELLO: HH AH0 L OW1 → həlˈoʊ
+            // HELLO: HH AH0 L OW1 → həˈloʊ（IPA標準: ストレスマークは音節オンセット前）
             Assert.Contains("h", result);
             Assert.Contains("ə", result);
-            Assert.Equal("həlˈoʊ", result);
+            Assert.Equal("həˈloʊ", result);
         }
 
         [Fact]
@@ -39,8 +39,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Conversion
             var result = _engine.ToIPA("hello world");
             var parts = result.Split(' ');
             Assert.Equal(2, parts.Length);
-            Assert.Equal("həlˈoʊ", parts[0]);
-            Assert.Equal("wˈɝld", parts[1]);
+            Assert.Equal("həˈloʊ", parts[0]);
+            Assert.Equal("ˈwɝld", parts[1]);
         }
 
         [Fact]

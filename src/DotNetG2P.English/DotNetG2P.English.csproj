@@ -9,6 +9,8 @@
     <Description>English Grapheme-to-Phoneme (G2P) library for .NET and Unity. CMU Pronouncing Dictionary based ARPAbet phoneme lookup with stress marking support.</Description>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseFile />
     <PackageTags>g2p;english;tts;phoneme;arpabet;cmu;text-to-speech;unity</PackageTags>
   </PropertyGroup>
   <ItemGroup>

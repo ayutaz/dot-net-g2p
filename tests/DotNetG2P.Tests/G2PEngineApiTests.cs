@@ -168,6 +168,117 @@ namespace DotNetG2P.Tests
             Assert.Equal(0, results[2].Count);
         }
 
+        // ===== バッチAPI =====
+
+        [SkippableFact]
+        public void ToPhonemesBatch_NullArgument_ThrowsArgumentNullException()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            Assert.Throws<ArgumentNullException>(() => _engine!.ToPhonemesBatch(null!));
+        }
+
+        [SkippableFact]
+        public void ToKanaBatch_NullArgument_ThrowsArgumentNullException()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            Assert.Throws<ArgumentNullException>(() => _engine!.ToKanaBatch(null!));
+        }
+
+        [SkippableFact]
+        public void ToProsodyBatch_NullArgument_ThrowsArgumentNullException()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            Assert.Throws<ArgumentNullException>(() => _engine!.ToProsodyBatch(null!));
+        }
+
+        [SkippableFact]
+        public void ToFullContextLabelsBatch_NullArgument_ThrowsArgumentNullException()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            Assert.Throws<ArgumentNullException>(() => _engine!.ToFullContextLabelsBatch(null!));
+        }
+
+        [SkippableFact]
+        public void ToProsodyFeaturesBatch_NullArgument_ThrowsArgumentNullException()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            Assert.Throws<ArgumentNullException>(() => _engine!.ToProsodyFeaturesBatch(null!));
+        }
+
+        [SkippableFact]
+        public void ToPhonemesBatch_EmptyList_ReturnsEmptyList()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var result = _engine!.ToPhonemesBatch(Array.Empty<string>());
+            Assert.Empty(result);
+        }
+
+        [SkippableFact]
+        public void ToKanaBatch_EmptyList_ReturnsEmptyList()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var result = _engine!.ToKanaBatch(Array.Empty<string>());
+            Assert.Empty(result);
+        }
+
+        [SkippableFact]
+        public void ToProsodyBatch_EmptyList_ReturnsEmptyList()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var result = _engine!.ToProsodyBatch(Array.Empty<string>());
+            Assert.Empty(result);
+        }
+
+        [SkippableFact]
+        public void ToFullContextLabelsBatch_EmptyList_ReturnsEmptyList()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var result = _engine!.ToFullContextLabelsBatch(Array.Empty<string>());
+            Assert.Empty(result);
+        }
+
+        [SkippableFact]
+        public void ToPhonemesBatch_MixedInput_HandlesAllElements()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var texts = new string[] { "こんにちは", "", null! };
+            var result = _engine!.ToPhonemesBatch(texts);
+
+            Assert.Equal(3, result.Count);
+            Assert.NotEmpty(result[0]); // 通常文字列は音素が出る
+            Assert.Equal("", result[1]); // 空文字列は空
+            Assert.Equal("", result[2]); // nullは空
+        }
+
+        [SkippableFact]
+        public void ToKanaBatch_MixedInput_HandlesAllElements()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var texts = new string[] { "東京", "", null! };
+            var result = _engine!.ToKanaBatch(texts);
+
+            Assert.Equal(3, result.Count);
+            Assert.NotEmpty(result[0]);
+            Assert.Equal("", result[1]);
+            Assert.Equal("", result[2]);
+        }
+
+        [SkippableFact]
+        public void ToPhonemesBatch_MultipleTexts_ReturnsCorrectCount()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var texts = new string[] { "東京", "大阪", "名古屋" };
+            var result = _engine!.ToPhonemesBatch(texts);
+
+            Assert.Equal(3, result.Count);
+            foreach (var r in result)
+            {
+                Assert.NotEmpty(r);
+                // 音素文字列がスペース区切りであることを検証
+                Assert.Contains(" ", r);
+            }
+        }
+
         // ===== Disposed後のメソッド呼び出し =====
 
         [SkippableFact]

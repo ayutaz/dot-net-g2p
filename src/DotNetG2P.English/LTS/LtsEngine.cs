@@ -51,6 +51,7 @@ namespace DotNetG2P.English.LTS
 
         /// <summary>
         /// 英単語のスペルからARPAbet音素列を予測する。
+        /// アポストロフィを含む単語は分割して各部分をLTS処理し結合する。
         /// </summary>
         /// <param name="word">入力単語（英字のみ、小文字推奨）</param>
         /// <returns>予測された音素配列。予測不可の場合はnull。</returns>
@@ -60,6 +61,12 @@ namespace DotNetG2P.English.LTS
                 return null;
 
             var lowerWord = word.ToLowerInvariant();
+
+            // アポストロフィを含む場合は分割して各部分を処理
+            if (lowerWord.IndexOf('\'') >= 0 || lowerWord.IndexOf('\u2019') >= 0)
+            {
+                return PredictWithApostrophe(lowerWord);
+            }
 
             // 英字以外を含む場合はスキップ
             for (var i = 0; i < lowerWord.Length; i++)
@@ -131,6 +138,28 @@ namespace DotNetG2P.English.LTS
                 return null;
 
             return result.ToArray();
+        }
+
+        /// <summary>
+        /// アポストロフィを含む単語を分割してLTS処理し結合する。
+        /// </summary>
+        private static EnglishPhoneme[]? PredictWithApostrophe(string lowerWord)
+        {
+            // アポストロフィ（ASCII ' と U+2019）で分割
+            var parts = lowerWord.Split(new[] { '\'', '\u2019' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+                return null;
+
+            var result = new List<EnglishPhoneme>();
+            foreach (var part in parts)
+            {
+                // 各部分を個別にPredict（再帰呼び出しだが、アポストロフィは除去済みなので通常パスに入る）
+                var partResult = Predict(part);
+                if (partResult != null)
+                    result.AddRange(partResult);
+            }
+
+            return result.Count > 0 ? result.ToArray() : null;
         }
 
         /// <summary>

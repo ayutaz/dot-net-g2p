@@ -11,7 +11,10 @@ namespace DotNetG2P.Multilingual
         /// <summary>ASCII英字 (A-Z, a-z)</summary>
         English,
 
-        /// <summary>ASCII数字 (0-9)</summary>
+        /// <summary>ラテン拡張文字 (U+00C0-U+024F)</summary>
+        Latin,
+
+        /// <summary>ASCII数字 (0-9) および全角数字 (U+FF10-FF19)</summary>
         Digit,
 
         /// <summary>ASCII句読点・記号</summary>

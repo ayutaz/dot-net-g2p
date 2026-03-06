@@ -67,6 +67,7 @@ namespace DotNetG2P.English.Normalization
         /// トークンが既知の略語であれば展開形を返す。未知の場合はnullを返す。
         /// ピリオド付き（"Dr."）/なし（"Dr"）のどちらにも対応する。
         /// 大文字小文字は不問。
+        /// ただし "no" は大文字始まり（"No"/"No."）の場合のみ "Number" に展開する。
         /// </summary>
         /// <param name="token">入力トークン</param>
         /// <returns>展開形。未知の略語の場合はnull。</returns>
@@ -81,7 +82,14 @@ namespace DotNetG2P.English.Normalization
             if (key.Length == 0)
                 return null;
 
-            return s_abbreviations.TryGetValue(key, out var expanded) ? expanded : null;
+            if (!s_abbreviations.TryGetValue(key, out var expanded))
+                return null;
+
+            // "no" → "Number" は大文字始まり（"No", "No."）の場合のみ展開
+            if (key == "no" && token[0] != 'N')
+                return null;
+
+            return expanded;
         }
     }
 }

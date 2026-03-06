@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using DotNetG2P.JPCommon;
 using DotNetG2P.Models;
+using DotNetG2P.Tests.TestHelpers;
 using Xunit;
 
 namespace DotNetG2P.Tests.JPCommon
@@ -175,6 +177,286 @@ namespace DotNetG2P.Tests.JPCommon
 
             // Kフィールド (発話レベル): 2BG, 2AP, 10モーラ
             Assert.EndsWith("/K:2+2-10", labels[0]);
+        }
+
+        // =====================================================================
+        // テスト4: 空発話
+        // =====================================================================
+
+        /// <summary>
+        /// 空のNjdNodeリストから構築されたJPUtteranceはラベルも空。
+        /// </summary>
+        [Fact]
+        public void EmptyUtterance_ReturnsEmptyLabels()
+        {
+            var utterance = JPCommonBuilder.Build(Array.Empty<NjdNode>());
+            var labels = FullContextLabel.Generate(utterance);
+
+            // 空のJPUtteranceは音素が存在しないため、sil + silの2ラベルのみ
+            // ただしFlattenPhonemesが空→InsertSilAndPauでsil+silの2つ
+            Assert.Equal(2, labels.Count);
+            Assert.Contains("-sil+", labels[0]);
+            Assert.Contains("-sil+", labels[1]);
+        }
+
+        // =====================================================================
+        // テスト5: 複数アクセント句（同一BG内）
+        // JPCommonBuilderを使ってNjdNodeから構築
+        // =====================================================================
+
+        /// <summary>
+        /// 「東京タワー」→ 2つのアクセント句が同一BG内に存在するケース。
+        /// node1: "東京" (トーキョー, accent=0, chainFlag=null)
+        /// node2: "タワー" (タワー, accent=1, chainFlag=false)
+        /// → BG1: [AP1(トーキョー), AP2(タワー)]
+        /// </summary>
+        [Fact]
+        public void MultipleAccentPhrases_SameBG_CorrectStructure()
+        {
+            var node1 = NjdNodeFactory.CreateWithPronunciation("東京", "トーキョー", accentType: 0);
+            var node2 = NjdNodeFactory.CreateWithPronunciation("タワー", "タワー", accentType: 1, chainFlag: false);
+
+            var nodes = new List<NjdNode> { node1, node2 };
+            var utterance = JPCommonBuilder.Build(nodes);
+            var labels = FullContextLabel.Generate(utterance);
+
+            // 音素数: sil + t,o,o,ky,o,o + t,a,w,a,a + sil
+            // 長音は前母音に展開されるのでトーキョー→t,o,(o),ky,o,(o) = 6音素、タワー→t,a,w,a,(a) = 5音素
+            // sil + 6 + 5 + sil = 13
+            Assert.True(labels.Count >= 8, $"ラベル数が少なすぎる: {labels.Count}");
+
+            // 先頭silと末尾sil
+            Assert.Contains("-sil+", labels[0]);
+            Assert.Contains("-sil+", labels[labels.Count - 1]);
+
+            // Kフィールド: 1BG, 2AP
+            Assert.Contains("/K:1+2-", labels[0]);
+        }
+
+        // =====================================================================
+        // テスト6: アクセント位置バリエーション - 頭高型（accent=1）
+        // =====================================================================
+
+        /// <summary>
+        /// アクセント位置1（頭高型）: "カゼ" (accent=1, 2モーラ)
+        /// A1の計算: moraPos(0) - accent(1) + 1 = 0
+        /// </summary>
+        [Fact]
+        public void AccentPosition1_Atamadaka_CorrectAField()
+        {
+            var node = NjdNodeFactory.CreateWithPronunciation("風", "カゼ", accentType: 1);
+            var nodes = new List<NjdNode> { node };
+            var utterance = JPCommonBuilder.Build(nodes);
+            var labels = FullContextLabel.Generate(utterance);
+
+            // sil + k,a,z,e + sil = 6ラベル
+            Assert.Equal(6, labels.Count);
+
+            // k音素（モーラ0）: A1 = 0 - 1 + 1 = 0, A2 = 1, A3 = 2
+            Assert.Contains("/A:0+1+2/", labels[1]);
+
+            // a音素（モーラ0）: 同じモーラなので同じA値
+            Assert.Contains("/A:0+1+2/", labels[2]);
+
+            // z音素（モーラ1）: A1 = 1 - 1 + 1 = 1, A2 = 2, A3 = 1
+            Assert.Contains("/A:1+2+1/", labels[3]);
+        }
+
+        // =====================================================================
+        // テスト7: アクセント位置バリエーション - 尾高型（accent=末尾モーラ）
+        // =====================================================================
+
+        /// <summary>
+        /// アクセント位置=末尾モーラ（尾高型）: "アメ" (accent=2, 2モーラ)
+        /// </summary>
+        [Fact]
+        public void AccentPositionEnd_Odaka_CorrectAField()
+        {
+            var node = NjdNodeFactory.CreateWithPronunciation("雨", "アメ", accentType: 2);
+            var nodes = new List<NjdNode> { node };
+            var utterance = JPCommonBuilder.Build(nodes);
+            var labels = FullContextLabel.Generate(utterance);
+
+            // sil + a,m,e + sil = 5ラベル
+            Assert.Equal(5, labels.Count);
+
+            // a音素（モーラ0）: A1 = 0 - 2 + 1 = -1, A2 = 1, A3 = 2
+            Assert.Contains("/A:-1+1+2/", labels[1]);
+
+            // m音素（モーラ1）: A1 = 1 - 2 + 1 = 0, A2 = 2, A3 = 1
+            Assert.Contains("/A:0+2+1/", labels[2]);
+
+            // e音素（モーラ1）: 同じモーラ
+            Assert.Contains("/A:0+2+1/", labels[3]);
+        }
+
+        // =====================================================================
+        // テスト8: 長音を含むノード
+        // =====================================================================
+
+        /// <summary>
+        /// 長音を含む「コーヒー」(accent=3, 4モーラ)。
+        /// 長音はJPCommonBuilderで前母音に展開される。
+        /// </summary>
+        [Fact]
+        public void LongVowel_ExpandedCorrectly()
+        {
+            var node = NjdNodeFactory.CreateWithPronunciation("コーヒー", "コーヒー", accentType: 3);
+            var nodes = new List<NjdNode> { node };
+            var utterance = JPCommonBuilder.Build(nodes);
+            var labels = FullContextLabel.Generate(utterance);
+
+            // コーヒー → k,o,(長音→o),h,i,(長音→i) = 6音素
+            // sil + 6 + sil = 8
+            Assert.Equal(8, labels.Count);
+
+            // 長音が母音に展開されていることを確認（「-」が残っていない）
+            foreach (var label in labels)
+            {
+                Assert.DoesNotContain("--+", label); // 「-」音素が使われていないこと
+            }
+
+            // 2番目の音素はk
+            Assert.Contains("-k+", labels[1]);
+            // 3番目はo
+            Assert.Contains("-o+", labels[2]);
+            // 4番目もo（長音展開）
+            Assert.Contains("-o+", labels[3]);
+        }
+
+        // =====================================================================
+        // テスト9: 3アクセント句を持つ入力（1BG内）
+        // =====================================================================
+
+        /// <summary>
+        /// 3アクセント句: 「猫」「が」「走る」
+        /// node1: 名詞 (chainFlag=null → 新AP)
+        /// node2: 助詞 (chainFlag=true → node1のAPに結合)
+        /// node3: 動詞 (chainFlag=false → 新AP)
+        /// → BG1: [AP1(ネコガ), AP2(ハシル)]
+        /// ※ 助詞は前のAPに結合されるので2APになる
+        /// </summary>
+        [Fact]
+        public void ThreeNodes_TwoAccentPhrases_CorrectKField()
+        {
+            var node1 = NjdNodeFactory.CreateWithPronunciation("猫", "ネコ", accentType: 1);
+            var node2 = NjdNodeFactory.CreateWithPronunciation("が", "ガ",
+                posType: POSType.Joshi, sub1: "格助詞", accentType: 0, chainFlag: true);
+            var node3 = NjdNodeFactory.CreateWithPronunciation("走る", "ハシル",
+                posType: POSType.Doushi, sub1: "自立", accentType: 2, chainFlag: false);
+
+            var nodes = new List<NjdNode> { node1, node2, node3 };
+            var utterance = JPCommonBuilder.Build(nodes);
+            var labels = FullContextLabel.Generate(utterance);
+
+            // 音素: ネコガ (n,e,k,o,g,a) + ハシル (h,a,sh,i,r,u) = 12音素
+            // sil + 12 + sil = 14
+            Assert.True(labels.Count >= 10, $"ラベル数が少なすぎる: {labels.Count}");
+
+            // Kフィールド: 1BG, 2AP
+            Assert.Contains("/K:1+2-", labels[0]);
+        }
+
+        // =====================================================================
+        // テスト10: 疑問文で疑問フラグがFフィールドに反映されるか
+        // =====================================================================
+
+        /// <summary>
+        /// 疑問文の「ナニ？」でIsInterrogative=trueがFフィールド#に反映される。
+        /// </summary>
+        [Fact]
+        public void QuestionFlag_ReflectedInFField()
+        {
+            var node = NjdNodeFactory.CreateWithPronunciation("何", "ナニ", accentType: 1);
+            var questionNode = NjdNodeFactory.CreateQuestion();
+
+            var nodes = new List<NjdNode> { node, questionNode };
+            var utterance = JPCommonBuilder.Build(nodes);
+            var labels = FullContextLabel.Generate(utterance);
+
+            // 音素: sil + n,a,n,i + sil = 6
+            Assert.Equal(6, labels.Count);
+
+            // Fフィールドの疑問フラグ: #1（IsInterrogative=true）
+            // Fフィールドの形式: F:{moraCount}_{accent}#{isInterr}_{xx}@...
+            Assert.Contains("#1_", labels[1]); // n音素のFフィールドに疑問フラグ1
+        }
+
+        // =====================================================================
+        // テスト11: 非疑問文でFフィールドの疑問フラグが0であること
+        // =====================================================================
+
+        /// <summary>
+        /// 非疑問文の「ナニ」でIsInterrogative=falseがFフィールドに反映される。
+        /// </summary>
+        [Fact]
+        public void NonQuestion_FFieldHasZeroFlag()
+        {
+            var node = NjdNodeFactory.CreateWithPronunciation("何", "ナニ", accentType: 1);
+            var nodes = new List<NjdNode> { node };
+            var utterance = JPCommonBuilder.Build(nodes);
+            var labels = FullContextLabel.Generate(utterance);
+
+            // Fフィールドの疑問フラグ: #0（IsInterrogative=false）
+            Assert.Contains("#0_", labels[1]); // n音素のFフィールドに疑問フラグ0
+        }
+
+        // =====================================================================
+        // テスト12: NullのJPUtteranceで例外がスローされること
+        // =====================================================================
+
+        [Fact]
+        public void Generate_NullUtterance_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => FullContextLabel.Generate(null!));
+        }
+
+        // =====================================================================
+        // テスト13: 促音を含むノード
+        // =====================================================================
+
+        /// <summary>
+        /// 促音を含む「カッパ」(accent=0, 3モーラ: カ,ッ,パ)。
+        /// 促音は "cl" 音素として出力される。
+        /// </summary>
+        [Fact]
+        public void Sokuon_GeneratesClPhoneme()
+        {
+            var node = NjdNodeFactory.CreateWithPronunciation("河童", "カッパ", accentType: 0);
+            var nodes = new List<NjdNode> { node };
+            var utterance = JPCommonBuilder.Build(nodes);
+            var labels = FullContextLabel.Generate(utterance);
+
+            // カッパ → k,a,cl,p,a = 5音素
+            // sil + 5 + sil = 7
+            Assert.Equal(7, labels.Count);
+
+            // cl音素の存在確認
+            Assert.Contains("-cl+", labels[3]);
+        }
+
+        // =====================================================================
+        // テスト14: 撥音を含むノード
+        // =====================================================================
+
+        /// <summary>
+        /// 撥音を含む「サンポ」(accent=0, 3モーラ: サ,ン,ポ)。
+        /// 撥音は "N" 音素として出力される。
+        /// </summary>
+        [Fact]
+        public void Hatsuon_GeneratesNPhoneme()
+        {
+            var node = NjdNodeFactory.CreateWithPronunciation("散歩", "サンポ", accentType: 0);
+            var nodes = new List<NjdNode> { node };
+            var utterance = JPCommonBuilder.Build(nodes);
+            var labels = FullContextLabel.Generate(utterance);
+
+            // サンポ → s,a,N,p,o = 5音素
+            // sil + 5 + sil = 7
+            Assert.Equal(7, labels.Count);
+
+            // N音素の存在確認
+            Assert.Contains("-N+", labels[3]);
         }
 
         // =====================================================================

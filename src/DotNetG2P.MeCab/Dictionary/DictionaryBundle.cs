@@ -23,7 +23,6 @@ namespace DotNetG2P.MeCab.Dictionary
 
         private int _refCount;
         private readonly string _path;
-        private int _disposed; // Interlocked.CompareExchangeでスレッドセーフなDispose制御
 
         /// <summary>システム辞書</summary>
         public SystemDictionary SystemDic { get; }
@@ -113,13 +112,16 @@ namespace DotNetG2P.MeCab.Dictionary
         /// <inheritdoc/>
         public void Dispose()
         {
-            // Interlocked.CompareExchangeで二重Disposeをスレッドセーフに防止
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0) return;
-
             int remaining = Interlocked.Decrement(ref _refCount);
-            if (remaining <= 0)
+            if (remaining < 0)
             {
-                // 最後の参照が解放された → キャッシュから除去
+                // 既にrefCount==0だった（二重Dispose）→元に戻す
+                Interlocked.Increment(ref _refCount);
+                return;
+            }
+            if (remaining == 0)
+            {
+                // 最後の参照者 → キャッシュから除去してリソース解放
                 lock (_cacheLock)
                 {
                     _cache.Remove(_path);

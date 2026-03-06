@@ -78,8 +78,10 @@ namespace DotNetG2P.English.Normalization
         /// </summary>
         public static string ExpandDecimal(string intPart, string fracPart)
         {
-            // 整数部をパースしてCardinal変換
-            long intValue = long.Parse(intPart);
+            // 整数部をパースしてCardinal変換（パース失敗時は元テキストをそのまま返す）
+            if (!long.TryParse(intPart, out long intValue))
+                return intPart + "." + fracPart;
+
             var result = Cardinal(intValue) + " point";
 
             // 小数部は各桁を個別に読み上げ

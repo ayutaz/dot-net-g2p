@@ -124,8 +124,9 @@ namespace DotNetG2P.Tests.EnglishG2P.Conversion
                 P(ArpabetPhoneme.OW, Stress.Primary),
             };
             var result = IpaConverter.Convert(phonemes);
-            // h + ə + l + ˈoʊ
-            Assert.Equal("həlˈoʊ", result);
+            // IPA標準: ストレスマークは音節オンセット（先行子音群の前）に配置
+            // h + ə + ˈl + oʊ
+            Assert.Equal("həˈloʊ", result);
         }
 
         [Fact]
@@ -140,8 +141,9 @@ namespace DotNetG2P.Tests.EnglishG2P.Conversion
                 P(ArpabetPhoneme.D),
             };
             var result = IpaConverter.Convert(phonemes);
-            // w + ˈɝ + l + d
-            Assert.Equal("wˈɝld", result);
+            // IPA標準: ストレスマークは音節オンセット（先行子音群の前）に配置
+            // ˈw + ɝ + l + d（語頭の子音Wの前にストレスマーク）
+            Assert.Equal("ˈwɝld", result);
         }
 
         [Fact]
@@ -160,8 +162,9 @@ namespace DotNetG2P.Tests.EnglishG2P.Conversion
                 P(ArpabetPhoneme.ER, Stress.NoStress),
             };
             var result = IpaConverter.Convert(phonemes);
-            // k + ə + m + p + j + ˈu + t + ɚ
-            Assert.Equal("kəmpjˈutɚ", result);
+            // IPA標準: ストレスマークは音節オンセット（先行子音群の前）に配置
+            // k + ə + ˈm + p + j + u + t + ɚ（ストレス母音UWの前の子音群MPYの前にマーク）
+            Assert.Equal("kəˈmpjutɚ", result);
         }
 
         [Fact]

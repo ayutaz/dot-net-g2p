@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using DotNetG2P.Models;
 
@@ -69,7 +70,7 @@ namespace DotNetG2P.NJD
     internal sealed class ChainRules
     {
         // キャッシュ: 同じChainRule文字列に対するChainRulesインスタンスを再利用する
-        private static readonly Dictionary<string, ChainRules> Cache = new Dictionary<string, ChainRules>();
+        private static readonly ConcurrentDictionary<string, ChainRules> Cache = new ConcurrentDictionary<string, ChainRules>();
 
         /// <summary>デフォルトルール（品詞指定なし）</summary>
         public AccentChainRule? Default { get; private set; }
@@ -96,12 +97,7 @@ namespace DotNetG2P.NJD
             if (ruleStr == null || ruleStr == "*")
                 return Empty;
 
-            if (Cache.TryGetValue(ruleStr, out var cached))
-                return cached;
-
-            var rules = new ChainRules(ruleStr);
-            Cache[ruleStr] = rules;
-            return rules;
+            return Cache.GetOrAdd(ruleStr, s => new ChainRules(s));
         }
 
         /// <summary>空のChainRules（ルールなし）</summary>
@@ -319,7 +315,10 @@ namespace DotNetG2P.NJD
                 else if (prev != null)
                 {
                     // 結合中のノード: アクセント計算
-                    topNodeNewAcc = CalcTopNodeAcc(current, prev, topNode, moraSize);
+                    int rawAcc = CalcTopNodeAcc(current, prev, topNode, moraSize);
+                    // アクセント核位置を0〜アクセント句全体のモーラ数にクランプ
+                    int totalMoraCount = moraSize + current.MoraCount;
+                    topNodeNewAcc = Math.Max(0, Math.Min(totalMoraCount, rawAcc));
 
                     // 数詞同士の結合: 前ノードのアクセントを再計算
                     if (IsKazu(prev) && IsKazu(current))

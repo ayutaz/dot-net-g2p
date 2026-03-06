@@ -23,7 +23,7 @@ namespace DotNetG2P.English.Normalization
             "SVG", "PNG", "GIF",
 
             // IoT・AI関連
-            "IoT", "AI", "ML", "UI", "UX", "QA",
+            "IOT", "AI", "ML", "UI", "UX", "QA",
 
             // ビジネス・組織
             "CEO", "CFO", "CTO", "COO", "MVP", "VIP", "HR", "PR", "IT",
@@ -78,27 +78,38 @@ namespace DotNetG2P.English.Normalization
         /// <returns>スペルアウトすべきならtrue</returns>
         public static bool ShouldSpellOut(string token)
         {
-            if (!IsAllUpperCase(token))
+            if (string.IsNullOrEmpty(token) || token.Length < 2)
                 return false;
 
+            // 大文字に正規化してルックアップ（"IoT" → "IOT" 等のmixed caseも対応）
+            var upper = token.ToUpperInvariant();
+
+            // AllUpperCaseチェック（正規化後でなく元のトークンが2文字以上の英字であること）
+            for (int i = 0; i < upper.Length; i++)
+            {
+                char c = upper[i];
+                if (c < 'A' || c > 'Z')
+                    return false;
+            }
+
             // 既知のスペルアウト辞書に一致
-            if (s_spellOutSet.Contains(token))
+            if (s_spellOutSet.Contains(upper))
                 return true;
 
             // 既知の1語読み辞書に一致
-            if (s_acronymSet.Contains(token))
+            if (s_acronymSet.Contains(upper))
                 return false;
 
             // ヒューリスティック判定
             // 2文字は常にスペルアウト
-            if (token.Length == 2)
+            if (upper.Length == 2)
                 return true;
 
             // 母音を含まなければスペルアウト（例: CTRL, FPS）
             bool hasVowel = false;
-            for (int i = 0; i < token.Length; i++)
+            for (int i = 0; i < upper.Length; i++)
             {
-                char c = token[i];
+                char c = upper[i];
                 if (c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U')
                 {
                     hasVowel = true;
@@ -111,9 +122,9 @@ namespace DotNetG2P.English.Normalization
 
             // 子音のみの連続が3文字以上あればスペルアウト
             int consonantRun = 0;
-            for (int i = 0; i < token.Length; i++)
+            for (int i = 0; i < upper.Length; i++)
             {
-                char c = token[i];
+                char c = upper[i];
                 if (c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U')
                 {
                     consonantRun = 0;

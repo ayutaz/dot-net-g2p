@@ -5,7 +5,7 @@ namespace DotNetG2P.Tests.Multilingual
     public class LanguageDetectorTests
     {
         // ScriptKindはinternalなので、Theoryパラメータではint経由でキャストする
-        // ScriptKind: Japanese=0, English=1, Digit=2, Punctuation=3, Whitespace=4, Other=5
+        // ScriptKind: Japanese=0, English=1, Latin=2, Digit=3, Punctuation=4, Whitespace=5, Other=6
 
         // ===== Classify: 日本語文字種 =====
 
@@ -41,20 +41,20 @@ namespace DotNetG2P.Tests.Multilingual
             Assert.Equal(ScriptKind.Digit, LanguageDetector.Classify('5'));
         }
 
-        // ===== Classify: 全角数字は全角英数字範囲（U+FF01-FF5E）に含まれEnglishを返す =====
+        // ===== Classify: 全角数字 (U+FF10-FF19) はDigitを返す =====
 
         [Fact]
-        public void Classify_全角数字_Englishを返す()
+        public void Classify_全角数字_Digitを返す()
         {
-            Assert.Equal(ScriptKind.English, LanguageDetector.Classify('１'));
+            Assert.Equal(ScriptKind.Digit, LanguageDetector.Classify('１'));
         }
 
         // ===== Classify: 空白文字 =====
 
         [Theory]
-        [InlineData(' ', 4)]   // ASCII空白 → Whitespace
-        [InlineData('\t', 4)]  // タブ → Whitespace
-        [InlineData('\n', 4)]  // 改行 → Whitespace
+        [InlineData(' ', 5)]   // ASCII空白 → Whitespace
+        [InlineData('\t', 5)]  // タブ → Whitespace
+        [InlineData('\n', 5)]  // 改行 → Whitespace
         public void Classify_空白文字_Whitespaceを返す(char c, int expected)
         {
             Assert.Equal((ScriptKind)expected, LanguageDetector.Classify(c));
@@ -63,8 +63,8 @@ namespace DotNetG2P.Tests.Multilingual
         // ===== Classify: ASCII句読点 =====
 
         [Theory]
-        [InlineData('!', 3)]  // Punctuation
-        [InlineData(',', 3)]  // Punctuation
+        [InlineData('!', 4)]  // Punctuation
+        [InlineData(',', 4)]  // Punctuation
         public void Classify_ASCII句読点_Punctuationを返す(char c, int expected)
         {
             Assert.Equal((ScriptKind)expected, LanguageDetector.Classify(c));

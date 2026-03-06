@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using DotNetG2P.Internal;
 using DotNetG2P.JPCommon;
 using DotNetG2P.Models;
@@ -33,7 +34,7 @@ namespace DotNetG2P
     {
         private readonly ITokenizer _tokenizer;
         private readonly G2POptions _options;
-        private bool _disposed;
+        private int _disposed;
 
         /// <summary>
         /// G2PEngineを初期化する（デフォルトオプション）。
@@ -118,7 +119,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text)) return "";
+            if (string.IsNullOrWhiteSpace(text)) return "";
 
             var nodes = RunPipeline(text);
 
@@ -149,7 +150,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text)) return "";
+            if (string.IsNullOrWhiteSpace(text)) return "";
 
             var nodes = RunPipeline(text);
 
@@ -175,7 +176,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text)) return "";
+            if (string.IsNullOrWhiteSpace(text)) return "";
 
             var nodes = RunPipeline(text);
             return ProsodyExtractor.Extract(nodes, _options.ExpandLongVowels);
@@ -190,7 +191,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text)) return Array.Empty<AccentPhrase>();
+            if (string.IsNullOrWhiteSpace(text)) return Array.Empty<AccentPhrase>();
 
             var nodes = RunPipeline(text);
             return AccentPhraseConverter.Convert(nodes);
@@ -205,7 +206,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text)) return Array.Empty<string>();
+            if (string.IsNullOrWhiteSpace(text)) return Array.Empty<string>();
 
             var nodes = RunPipeline(text);
             var utterance = JPCommonBuilder.Build(nodes);
@@ -222,7 +223,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrWhiteSpace(text))
                 return new ProsodyFeatures(Array.Empty<string>(), Array.Empty<int>(), Array.Empty<int>(), Array.Empty<int>());
 
             var nodes = RunPipeline(text);
@@ -240,7 +241,7 @@ namespace DotNetG2P
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text)) return Array.Empty<NjdNode>();
+            if (string.IsNullOrWhiteSpace(text)) return Array.Empty<NjdNode>();
 
             return RunPipeline(text);
         }
@@ -342,17 +343,15 @@ namespace DotNetG2P
 
         public void Dispose()
         {
-            if (!_disposed)
-            {
-                _tokenizer.Dispose();
-                _disposed = true;
-            }
-            GC.SuppressFinalize(this);
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
+                return;
+
+            _tokenizer.Dispose();
         }
 
         private void ThrowIfDisposed()
         {
-            if (_disposed)
+            if (Volatile.Read(ref _disposed) != 0)
                 throw new ObjectDisposedException(nameof(G2PEngine));
         }
     }

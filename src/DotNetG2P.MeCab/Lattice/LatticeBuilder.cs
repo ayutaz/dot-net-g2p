@@ -171,7 +171,6 @@ namespace DotNetG2P.MeCab.Lattice
                     for (int t = 0; t < tokenCount; t++)
                     {
                         var dicToken = _dic.SystemDic.GetToken(tokenStart, t);
-                        string feature = _dic.SystemDic.GetFeature(dicToken.FeatureOffset);
 
                         var node = new LatticeNode
                         {
@@ -181,7 +180,7 @@ namespace DotNetG2P.MeCab.Lattice
                             LeftCtxId = dicToken.LcAttr,
                             RightCtxId = dicToken.RcAttr,
                             WordCost = dicToken.WCost,
-                            Feature = feature,
+                            FeatureOffset = dicToken.FeatureOffset,
                             IsUnknown = false,
                         };
                         _endNodes[endCharPos].Add(node);

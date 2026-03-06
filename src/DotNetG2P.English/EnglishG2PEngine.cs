@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using DotNetG2P.English.Conversion;
 using DotNetG2P.English.LTS;
 using DotNetG2P.English.Homograph;
@@ -16,9 +17,9 @@ namespace DotNetG2P.English
     /// </remarks>
     public sealed class EnglishG2PEngine : IDisposable
     {
-        private CmuDictionary? _dictionary;
+        private readonly CmuDictionary _dictionary;
         private readonly EnglishG2POptions _options;
-        private bool _disposed;
+        private int _disposed;
 
         /// <summary>
         /// 埋め込みCMU辞書を使用してエンジンを初期化する。
@@ -74,32 +75,11 @@ namespace DotNetG2P.English
         /// <returns>スペース区切りのARPAbet音素文字列</returns>
         public string ToPhonemes(string text)
         {
-            ThrowIfDisposed();
-
-            if (string.IsNullOrWhiteSpace(text))
-                return "";
-
-            if (_options.EnableNormalization)
-                text = EnglishNormalizer.Normalize(text);
-
-            var words = Tokenize(text);
-            var wordsArray = words.ToArray();
-            var parts = new List<string>(wordsArray.Length);
-
-            for (var i = 0; i < wordsArray.Length; i++)
+            return ProcessPipeline(text, phonemes =>
             {
-                var phonemes = LookupWordWithContext(wordsArray, i);
-                if (phonemes == null)
-                    continue;
-
-                var phonemeStr = FormatPhonemes(phonemes);
-                if (phonemeStr.Length > 0)
-                {
-                    parts.Add(phonemeStr);
-                }
-            }
-
-            return string.Join(" ", parts);
+                var s = FormatPhonemes(phonemes);
+                return s.Length > 0 ? s : null;
+            });
         }
 
         /// <summary>
@@ -165,7 +145,7 @@ namespace DotNetG2P.English
             if (string.IsNullOrEmpty(word))
                 return Array.Empty<EnglishPronunciation>();
 
-            if (_dictionary!.TryLookup(word, out var pronunciations))
+            if (_dictionary.TryLookup(word, out var pronunciations))
                 return pronunciations;
 
             return Array.Empty<EnglishPronunciation>();
@@ -183,7 +163,7 @@ namespace DotNetG2P.English
             if (string.IsNullOrEmpty(word))
                 return false;
 
-            return _dictionary!.ContainsWord(word);
+            return _dictionary.ContainsWord(word);
         }
 
         // =====================================================================
@@ -199,26 +179,7 @@ namespace DotNetG2P.English
         /// <returns>IPA文字列</returns>
         public string ToIPA(string text)
         {
-            ThrowIfDisposed();
-
-            if (string.IsNullOrWhiteSpace(text))
-                return "";
-
-            if (_options.EnableNormalization)
-                text = EnglishNormalizer.Normalize(text);
-
-            var words = Tokenize(text);
-            var wordsArray = words.ToArray();
-            var parts = new List<string>(wordsArray.Length);
-
-            for (var i = 0; i < wordsArray.Length; i++)
-            {
-                var phonemes = LookupWordWithContext(wordsArray, i);
-                if (phonemes != null && phonemes.Length > 0)
-                    parts.Add(IpaConverter.Convert(phonemes));
-            }
-
-            return string.Join(" ", parts);
+            return ProcessPipeline(text, IpaConverter.Convert);
         }
 
         /// <summary>
@@ -228,26 +189,7 @@ namespace DotNetG2P.English
         /// <returns>ストレスマークなしのIPA文字列</returns>
         public string ToIPAWithoutStress(string text)
         {
-            ThrowIfDisposed();
-
-            if (string.IsNullOrWhiteSpace(text))
-                return "";
-
-            if (_options.EnableNormalization)
-                text = EnglishNormalizer.Normalize(text);
-
-            var words = Tokenize(text);
-            var wordsArray = words.ToArray();
-            var parts = new List<string>(wordsArray.Length);
-
-            for (var i = 0; i < wordsArray.Length; i++)
-            {
-                var phonemes = LookupWordWithContext(wordsArray, i);
-                if (phonemes != null && phonemes.Length > 0)
-                    parts.Add(IpaConverter.ConvertWithoutStress(phonemes));
-            }
-
-            return string.Join(" ", parts);
+            return ProcessPipeline(text, IpaConverter.ConvertWithoutStress);
         }
 
         // =====================================================================
@@ -262,26 +204,7 @@ namespace DotNetG2P.English
         /// <returns>X-SAMPA文字列</returns>
         public string ToXSampa(string text)
         {
-            ThrowIfDisposed();
-
-            if (string.IsNullOrWhiteSpace(text))
-                return "";
-
-            if (_options.EnableNormalization)
-                text = EnglishNormalizer.Normalize(text);
-
-            var words = Tokenize(text);
-            var wordsArray = words.ToArray();
-            var parts = new List<string>(wordsArray.Length);
-
-            for (var i = 0; i < wordsArray.Length; i++)
-            {
-                var phonemes = LookupWordWithContext(wordsArray, i);
-                if (phonemes != null && phonemes.Length > 0)
-                    parts.Add(XSampaConverter.Convert(phonemes));
-            }
-
-            return string.Join(" ", parts);
+            return ProcessPipeline(text, XSampaConverter.Convert);
         }
 
         /// <summary>
@@ -291,6 +214,89 @@ namespace DotNetG2P.English
         /// <returns>ストレスマークなしのX-SAMPA文字列</returns>
         public string ToXSampaWithoutStress(string text)
         {
+            return ProcessPipeline(text, XSampaConverter.ConvertWithoutStress);
+        }
+
+        // =====================================================================
+        // バッチAPI
+        // =====================================================================
+
+        /// <summary>
+        /// 複数テキストを一括でARPAbet音素列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>各テキストに対応するARPAbet音素文字列のリスト</returns>
+        public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>(texts.Count);
+            for (var i = 0; i < texts.Count; i++)
+                results.Add(ToPhonemes(texts[i]));
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括でIPA文字列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>各テキストに対応するIPA文字列のリスト</returns>
+        public IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>(texts.Count);
+            for (var i = 0; i < texts.Count; i++)
+                results.Add(ToIPA(texts[i]));
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括でX-SAMPA文字列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>各テキストに対応するX-SAMPA文字列のリスト</returns>
+        public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>(texts.Count);
+            for (var i = 0; i < texts.Count; i++)
+                results.Add(ToXSampa(texts[i]));
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で音素リストに変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>各テキストに対応する音素リストのリスト</returns>
+        public IReadOnlyList<IReadOnlyList<EnglishPhoneme>> ToPhonemeListBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<IReadOnlyList<EnglishPhoneme>>(texts.Count);
+            for (var i = 0; i < texts.Count; i++)
+                results.Add(ToPhonemeList(texts[i]));
+            return results;
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            Interlocked.CompareExchange(ref _disposed, 1, 0);
+        }
+
+        /// <summary>
+        /// 共通パイプライン: Normalize→Tokenize→LookupWithContext→Format。
+        /// formatterは音素配列を文字列に変換する。nullを返した場合はスキップされる。
+        /// </summary>
+        private string ProcessPipeline(string text, Func<EnglishPhoneme[], string?> formatter)
+        {
             ThrowIfDisposed();
 
             if (string.IsNullOrWhiteSpace(text))
@@ -307,89 +313,14 @@ namespace DotNetG2P.English
             {
                 var phonemes = LookupWordWithContext(wordsArray, i);
                 if (phonemes != null && phonemes.Length > 0)
-                    parts.Add(XSampaConverter.ConvertWithoutStress(phonemes));
+                {
+                    var formatted = formatter(phonemes);
+                    if (formatted != null)
+                        parts.Add(formatted);
+                }
             }
 
             return string.Join(" ", parts);
-        }
-
-        // =====================================================================
-        // バッチAPI
-        // =====================================================================
-
-        /// <summary>
-        /// 複数テキストを一括でARPAbet音素列に変換する。
-        /// </summary>
-        /// <param name="texts">入力テキストのコレクション</param>
-        /// <returns>各テキストに対応するARPAbet音素文字列のリスト</returns>
-        public IReadOnlyList<string> ToPhonemesBatch(IEnumerable<string> texts)
-        {
-            ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>();
-            foreach (var text in texts)
-                results.Add(ToPhonemes(text));
-            return results;
-        }
-
-        /// <summary>
-        /// 複数テキストを一括でIPA文字列に変換する。
-        /// </summary>
-        /// <param name="texts">入力テキストのコレクション</param>
-        /// <returns>各テキストに対応するIPA文字列のリスト</returns>
-        public IReadOnlyList<string> ToIPABatch(IEnumerable<string> texts)
-        {
-            ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>();
-            foreach (var text in texts)
-                results.Add(ToIPA(text));
-            return results;
-        }
-
-        /// <summary>
-        /// 複数テキストを一括でX-SAMPA文字列に変換する。
-        /// </summary>
-        /// <param name="texts">入力テキストのコレクション</param>
-        /// <returns>各テキストに対応するX-SAMPA文字列のリスト</returns>
-        public IReadOnlyList<string> ToXSampaBatch(IEnumerable<string> texts)
-        {
-            ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>();
-            foreach (var text in texts)
-                results.Add(ToXSampa(text));
-            return results;
-        }
-
-        /// <summary>
-        /// 複数テキストを一括で音素リストに変換する。
-        /// </summary>
-        /// <param name="texts">入力テキストのコレクション</param>
-        /// <returns>各テキストに対応する音素リストのリスト</returns>
-        public IReadOnlyList<IReadOnlyList<EnglishPhoneme>> ToPhonemeListBatch(IEnumerable<string> texts)
-        {
-            ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<IReadOnlyList<EnglishPhoneme>>();
-            foreach (var text in texts)
-                results.Add(ToPhonemeList(text));
-            return results;
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            if (!_disposed)
-            {
-                _dictionary = null;
-                _disposed = true;
-            }
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -399,7 +330,7 @@ namespace DotNetG2P.English
         private EnglishPhoneme[]? LookupWordWithContext(string[] words, int index)
         {
             var word = words[index];
-            if (_dictionary!.TryLookup(word, out var pronunciations))
+            if (_dictionary.TryLookup(word, out var pronunciations))
             {
                 if (_options.EnableHomographResolution && pronunciations.Length > 1)
                 {
@@ -432,7 +363,7 @@ namespace DotNetG2P.English
         /// </summary>
         private EnglishPhoneme[]? LookupWordInternal(string word)
         {
-            if (_dictionary!.TryLookup(word, out var pronunciations))
+            if (_dictionary.TryLookup(word, out var pronunciations))
             {
                 // 最初のバリアントを使用
                 return pronunciations[0].PhonemesInternal;
@@ -533,7 +464,7 @@ namespace DotNetG2P.English
 
         private void ThrowIfDisposed()
         {
-            if (_disposed)
+            if (Volatile.Read(ref _disposed) != 0)
                 throw new ObjectDisposedException(nameof(EnglishG2PEngine));
         }
     }

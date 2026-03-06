@@ -88,10 +88,18 @@ namespace DotNetG2P.Tests.EnglishG2P.Normalization
         }
 
         [Fact]
-        public void ShouldSpellOut_NonUpperCase_ReturnsFalse()
+        public void ShouldSpellOut_MixedCase_KnownAcronym_ReturnsTrue()
         {
-            // IsAllUpperCase がfalseならShouldSpellOutもfalse
-            Assert.False(AcronymDetector.ShouldSpellOut("Api"));
+            // ToUpperInvariantで正規化し、既知の頭字語なら mixed case でもtrue
+            Assert.True(AcronymDetector.ShouldSpellOut("Api"));
+            Assert.True(AcronymDetector.ShouldSpellOut("IoT"));
+        }
+
+        [Fact]
+        public void ShouldSpellOut_LowercaseNonAcronym_ReturnsFalse()
+        {
+            // 一般的な小文字単語はスペルアウト対象外
+            Assert.False(AcronymDetector.ShouldSpellOut("hello"));
         }
 
         // --- SpellOut ---
