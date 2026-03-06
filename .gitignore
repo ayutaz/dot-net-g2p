@@ -28,3 +28,12 @@ Desktop.ini
 ## Temp
 nul
 temp_*
+test_output.txt
+C?UsersyutaDesktopPrivatedot-net-g2p*
+
+## Dictionary (large binary)
+open_jtalk_dic_utf_8-*/
+open_jtalk_dic*.tar.gz
+
+## Claude Code
+.claude/settings.local.json
