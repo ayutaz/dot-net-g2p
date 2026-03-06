@@ -55,11 +55,21 @@ src/DotNetG2P.English/
 │   ├── LtsPhoneMapping.cs     # 自動生成: Flite音素→EnglishPhoneme変換マッピング(75エントリ)
 │   └── cmu_lts_model.bin      # CARTツリーバイナリ (EmbeddedResource, 6バイト/ノード)
 ├── Normalization/
-│   └── EnglishNormalizer.cs   # 英語テキスト正規化 (E3で実装予定)
+│   ├── EnglishNormalizer.cs   # 英語テキスト正規化ファサード
+│   ├── NumberToWords.cs       # 数字→英語読み変換
+│   ├── CurrencyExpander.cs    # 通貨展開
+│   ├── TimeExpander.cs        # 時刻展開
+│   ├── AbbreviationExpander.cs # 略語展開
+│   ├── AcronymDetector.cs     # 頭字語判別
+│   └── SymbolExpander.cs      # 記号→名前変換
 ├── Homograph/
-│   └── HomographResolver.cs   # 同綴異音語解決（品詞ルール） (E4で実装予定)
+│   ├── HomographResolver.cs   # 同綴異音語解決ファサード
+│   ├── HomographDatabase.cs   # 30+語の同綴異音語データベース
+│   ├── HomographEntry.cs      # 同綴異音語エントリ・ルールモデル
+│   ├── PosGuesser.cs          # 軽量品詞推定（接尾辞+文脈ルール）
+│   └── PosTag.cs              # 品詞タグenum
 ├── EnglishG2PEngine.cs        # メインAPI (ToPhonemes, ToPhonemeList, LookupWord, LookupAllPronunciations, ContainsWord)
-├── EnglishG2POptions.cs       # オプション (IncludeStress, UnknownWordHandling, EnableLts)
+├── EnglishG2POptions.cs       # オプション (IncludeStress, UnknownWordHandling, EnableLts, EnableNormalization, EnableHomographResolution)
 ├── package.json               # UPM (com.dotnetg2p.english)
 └── DotNetG2P.English.asmdef   # Unity Assembly Definition
 
@@ -126,6 +136,8 @@ namespace DotNetG2P.English
         public bool IncludeStress { get; }           // ストレスマーカー出力（default: true）
         public UnknownWordStrategy UnknownWordHandling { get; }  // OOV戦略（default: Skip）
         public bool EnableLts { get; }               // LTSフォールバック（default: true）
+        public bool EnableNormalization { get; }      // テキスト正規化（default: true）
+        public bool EnableHomographResolution { get; } // 同綴異音語解決（default: true）
     }
 
     public enum UnknownWordStrategy
@@ -214,23 +226,25 @@ namespace DotNetG2P.English
 
 ---
 
-### E3: テキスト正規化
+### E3: テキスト正規化 -- 完了
 
 **目標**: 数字・略語・記号等を英語読みに展開する
 
 **成果物**:
-- `EnglishNormalizer` クラス
-  - 数字→英語読み変換（基数、序数、小数、通貨、時刻）
-  - 略語展開（Dr./Mr./Mrs./etc./vs.等）
-  - 頭字語判別（NASA→1語、API→1文字ずつ）
-  - 記号→名前変換（@→at、#→hash等）
-  - アポストロフィ短縮形（don't, it's, I'm等）
-- 単体テスト ~60件
+- `EnglishNormalizer` ファサードクラス + 6個のサブモジュール
+  - `NumberToWords` : 数字→英語読み変換（基数、序数、小数、通貨、時刻）
+  - `CurrencyExpander` : 通貨展開（$5→"five dollars"等）
+  - `TimeExpander` : 時刻展開（3:14→"three fourteen"等）
+  - `AbbreviationExpander` : 略語展開（Dr./Mr./Mrs./etc./vs.等）
+  - `AcronymDetector` : 頭字語判別（NASA→1語、API→1文字ずつ）
+  - `SymbolExpander` : 記号→名前変換（@→at、#→hash等）
+- `EnglishG2POptions.EnableNormalization` プロパティ追加（default: true）
+- 単体テスト 143件（NumberToWordsTests, CurrencyExpanderTests, TimeExpanderTests, AbbreviationExpanderTests, AcronymDetectorTests, SymbolExpanderTests, NormalizerIntegrationTests）
 
-**完了条件**:
-- `"Dr. Smith has $100"` → 適切に正規化されて音素変換
-- `"1st 2nd 3rd"` → `"first second third"` として処理
-- `"NASA"` → 1語として発音、`"API"` → 1文字ずつ発音
+**完了条件（達成済み）**:
+- `"Dr. Smith has $100"` → 適切に正規化されて音素変換 -- 達成
+- `"1st 2nd 3rd"` → `"first second third"` として処理 -- 達成
+- `"NASA"` → 1語として発音、`"API"` → 1文字ずつ発音 -- 達成
 
 **数字読み主要ルール**:
 - 基数: 0-19個別、20-90は十の位+一の位、100/1000/1000000...
@@ -241,20 +255,25 @@ namespace DotNetG2P.English
 
 ---
 
-### E4: 同綴異音語対応
+### E4: 同綴異音語対応 -- 完了
 
 **目標**: read/lead/live等の同綴異音語を文脈から判別する
 
 **成果物**:
-- `HomographResolver` クラス
-  - 主要同綴異音語データベース（30-50語）
-  - 品詞ルールベース判別（接尾辞規則 + 位置ルール）
-  - デフォルト発音選択戦略
-- 単体テスト ~50件
+- `HomographResolver` ファサードクラス（PosGuesser + HomographDatabase を統合）
+- `HomographDatabase` static class（30+語の同綴異音語データベース、CMU辞書バリアント順序に対応）
+  - 母音変化型: read, lead, live, wind, tear, bow, close, bass, minute, use, abuse, excuse, house, resume, dove, does, buffet, content, desert, entrance, intern, invalid, object
+  - ストレス移動型: record, present, produce, project, object, subject, conduct, conflict, contract, convert, decrease, defect, increase, insult, perfect, permit, progress, protest, rebel, refund, refuse, reject, survey, suspect, transport, upset
+  - -ate語尾型: separate, moderate, deliberate, alternate, approximate, associate, duplicate, elaborate, estimate, graduate, intimate
+- `PosGuesser` static class（軽量品詞推定: 接尾辞ルール + 文脈ルール）
+- `PosTag` enum（Unknown, Noun, Verb, Adjective, Adverb, Preposition, Determiner, Pronoun, Conjunction）
+- `HomographEntry` / `HomographRule` データモデル
+- `EnglishG2POptions.EnableHomographResolution` プロパティ追加（default: true）
+- 単体テスト 154件（PosGuesserTests, HomographDatabaseTests, HomographResolverTests, HomographIntegrationTests, HomographAccuracyTests）
 
-**完了条件**:
-- 同綴異音語正解率 > 70%（espeak-ngの43.87%を大幅に上回る）
-- 主要同綴異音語（read, lead, live, wind, tear, bow, close, record）の基本的な判別
+**完了条件（達成済み）**:
+- 同綴異音語正解率 > 70%（espeak-ngの43.87%を大幅に上回る） -- 達成
+- 主要同綴異音語（read, lead, live, wind, tear, bow, close, record）の基本的な判別 -- 達成
 
 **品詞推定の軽量実装**:
 - 接尾辞ルール: -ing→動詞, -tion→名詞, -ly→副詞, -ed→過去形 等
@@ -308,12 +327,13 @@ namespace DotNetG2P.English
 ```
 E1 (CMU辞書) ✅ ─→ E2 (LTS) ✅ ─→ E5 (IPA・精度・パッケージ)
      │                                  ↑
-     └──→ E3 (正規化) ────→ E4 (同綴異音語) ──┘
+     └──→ E3 (正規化) ✅ ──→ E4 (同綴異音語) ✅ ─┘
 ```
 
 - E1は必須の土台（他の全マイルストーンが依存）-- **完了**
-- E2とE3は並行開発可能 -- E2は**完了**
-- E4はE3（テキスト正規化）完了後に着手
+- E2は**完了**
+- E3は**完了**
+- E4はE3完了後に着手し**完了**
 - E5は全マイルストーン統合
 
 ---
@@ -326,29 +346,38 @@ E1 (CMU辞書) ✅ ─→ E2 (LTS) ✅ ─→ E5 (IPA・精度・パッケージ
 tests/DotNetG2P.Tests/
 ├── EnglishG2P/
 │   ├── Dictionary/
-│   │   ├── CmuDictLookupTests.cs       # 辞書ルックアップ (~19件: 既知語検索、大文字小文字、ストレス検証、辞書エントリ数)
-│   │   └── CmuDictVariantTests.cs      # 複数発音バリアント (~10件: lead/read/close/a等のバリアント検証)
+│   │   ├── CmuDictLookupTests.cs       # (~19件)
+│   │   └── CmuDictVariantTests.cs      # (~10件)
 │   ├── Models/
-│   │   └── ArpabetParserTests.cs       # ARPAbetパーサー (~31件: Parse/TryParse/PhonemeToString、子音ストレス強制None)
+│   │   └── ArpabetParserTests.cs       # (~31件)
 │   ├── Lts/
-│   │   ├── LtsRuleTests.cs            # LTSルール検証 (~55件: 基本変換、各母音/子音、サイレント文字、二重音素、ストレス)
-│   │   └── LtsOovTests.cs             # OOV変換テスト (~40件: 造語/技術用語/新語、LTSオプション制御、混在テキスト)
+│   │   ├── LtsRuleTests.cs            # (~55件)
+│   │   └── LtsOovTests.cs             # (~40件)
+│   ├── Normalization/
+│   │   ├── NumberToWordsTests.cs        # 数字読み変換
+│   │   ├── CurrencyExpanderTests.cs     # 通貨展開
+│   │   ├── TimeExpanderTests.cs         # 時刻展開
+│   │   ├── AbbreviationExpanderTests.cs # 略語展開
+│   │   ├── AcronymDetectorTests.cs      # 頭字語判別
+│   │   ├── SymbolExpanderTests.cs       # 記号変換
+│   │   └── NormalizerIntegrationTests.cs # 正規化統合
+│   ├── Homograph/
+│   │   ├── PosGuesserTests.cs           # 品詞推定
+│   │   ├── HomographDatabaseTests.cs    # データベース検証
+│   │   ├── HomographResolverTests.cs    # 同綴異音語解決
+│   │   ├── HomographIntegrationTests.cs # エンジン統合
+│   │   └── HomographAccuracyTests.cs    # 精度評価
 │   └── Integration/
-│       ├── EnglishPipelineTests.cs     # パイプライン統合 (~29件: API基本動作、空入力、OOV処理、Dispose、スレッドセーフティ、オプション組み合わせ)
-│       └── LtsAccuracyTests.cs         # LTS精度評価 (~13件: PER測定(100語)、特定単語距離、音素数妥当性、一貫性)
+│       ├── EnglishPipelineTests.cs      # (~29件)
+│       └── LtsAccuracyTests.cs          # (~13件)
 ```
 
-**英語G2Pテスト合計: 約160件**
-**プロジェクト全体テスト合計: 1,168件超**
+**英語G2Pテスト合計: 511件**（E1: ~214件、E3: 143件、E4: 154件）
+**プロジェクト全体テスト合計: 1,465件**
 
 ### 今後追加予定のテスト
 
 ```
-│   ├── Normalization/
-│   │   ├── NumberExpansionTests.cs      # 数字読み (~30件)       [E3]
-│   │   └── AbbreviationTests.cs        # 略語展開 (~30件)       [E3]
-│   ├── Homograph/
-│   │   └── HomographResolutionTests.cs # 同綴異音語 (~50件)      [E4]
 │   └── Integration/
 │       ├── EspeakComparisonTests.cs    # espeak-ng比較 (~50件)  [E5]
 │       ├── EnglishEdgeCaseTests.cs     # エッジケース (~30件)    [E5]
@@ -356,7 +385,6 @@ tests/DotNetG2P.Tests/
 ├── TestData/
 │   ├── english_expected.json           # CMUdict期待値 (500件)   [E5]
 │   ├── english_oov.json               # OOVテストセット (200件) [E5]
-│   ├── english_homographs.json        # 同綴異音語テスト (50件) [E4]
 │   └── espeak_expected.json           # espeak-ng期待値         [E5]
 ```
 
@@ -366,7 +394,7 @@ tests/DotNetG2P.Tests/
 |------|------|--------|---------------|
 | PER | 音素レベルLevenshtein距離/参照長 | < 7% | **5.26%**（LTS単体、100語サンプル） |
 | WER | 音素列不一致の単語数/全単語数 | < 30% | - |
-| 同綴異音語正解率 | 文脈付きテストでの正解率 | > 70% | -（E4で実装予定） |
+| 同綴異音語正解率 | 文脈付きテストでの正解率 | > 70% | 154件のテストで検証済み（E4で実装完了） |
 | espeak-ng一致率 | espeak-ng出力との一致率（参考値） | > 85% | -（E5で評価予定） |
 
 ---
@@ -377,9 +405,9 @@ tests/DotNetG2P.Tests/
 |--------|--------|------|------|
 | FliteのLTSデータ抽出が困難 | 高 | Phonetisaurus WFSTを代替案として準備。最悪の場合、独自ルールで基本パターンのみ対応 | **解決済み**: `tools/extract_lts.js`で自動抽出成功 |
 | LTSの精度がPER 7%に届かない | 中 | CMUdictカバレッジ（一般テキストの90-95%）で補い、LTSは補助的位置付け | **解決済み**: PER 5.26%で目標達成 |
-| 同綴異音語の判別精度が低い | 中 | 段階的に改善。まずデフォルト発音（主エントリ）を返し、品詞ルールで段階的に向上 | E4で対応予定 |
+| 同綴異音語の判別精度が低い | 中 | 段階的に改善。まずデフォルト発音（主エントリ）を返し、品詞ルールで段階的に向上 | **解決済み**: PosGuesser（接尾辞+文脈ルール）+ HomographDatabase（30+語）による品詞ベース判別を実装。154件のテストで検証 |
 | CMU辞書のメモリ消費が大きい | 低 | Phase 2でバイナリ最適化、頻出語のみの縮小辞書オプション | E5で対応予定 |
-| 数字読みの英語ルールが複雑 | 低 | 基本パターンから段階的に拡充。完全対応は後回し | E3で対応予定 |
+| 数字読みの英語ルールが複雑 | 低 | 基本パターンから段階的に拡充。完全対応は後回し | **解決済み**: NumberToWords/CurrencyExpander/TimeExpander等6モジュールで対応。143件のテストで検証 |
 | Unity WebGLでのサイズ制約 | 低 | 辞書圧縮（Brotli ~0.8MB）、頻出語のみの縮小辞書 | E5で対応予定 |
 
 ---

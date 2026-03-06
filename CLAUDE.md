@@ -47,6 +47,21 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - DictionaryBundle WeakReferenceキャッシュ + スレッドセーフDispose
   - バッチ処理API追加（ToPhonemesBatch等5メソッド）
   - 10エージェントレビュー + ポストレビュー修正完了
+- **英語G2P (DotNetG2P.English)**: E4完了（feature/english-g2p ブランチ）
+  - **E1（CMU辞書ルックアップMVP）**: 完了
+    - 135,166エントリのCMU辞書埋め込み、`EnglishG2PEngine` メインAPI、ARPAbet音素体系（39音素）
+    - テスト約214件
+  - **E2（Flite LTS CARTツリー）**: 完了
+    - 25,505ノードのCARTツリーによるOOV音素推定、PER 5.26%（espeak-ng 6.92%を上回る）
+    - `LtsEngine` スレッドセーフ遅延初期化、`tools/extract_lts.js` 抽出ツール
+  - **E3（テキスト正規化）**: 完了
+    - `EnglishNormalizer` + 6サブモジュール（NumberToWords, CurrencyExpander, TimeExpander, AbbreviationExpander, AcronymDetector, SymbolExpander）
+    - 数字・通貨・時刻・略語・頭字語・記号の英語読み展開、テスト143件
+  - **E4（同綴異音語解決）**: 完了
+    - `HomographResolver`（PosGuesser + HomographDatabase）による品詞ルールベース判別
+    - 30+語の同綴異音語データベース（母音変化型・ストレス移動型・-ate語尾型）、テスト154件
+  - **E5（IPA出力・精度改善・パッケージング）**: 計画中
+  - **E6（日英混在テキスト対応）**: 計画中
 
 ## ビルド・実行
 
@@ -139,6 +154,41 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   └── ViterbiDecoder.cs        # 前向きパス+後ろ向きトレース
 │       ├── DotNetG2P.MeCab.asmdef       # Unity Assembly Definition
 │       └── package.json                 # UPM パッケージ定義 (com.dotnetg2p.mecab)
+│   │
+│   └── DotNetG2P.English/              # 英語G2Pパッケージ（独立、Core参照なし）
+│       ├── DotNetG2P.English.csproj     # .NET Standard 2.1
+│       ├── EnglishG2PEngine.cs          # メインAPI (ToPhonemes, ToPhonemeList, LookupWord等)
+│       ├── EnglishG2POptions.cs         # オプション (IncludeStress, EnableLts, EnableNormalization, EnableHomographResolution)
+│       ├── Models/
+│       │   ├── ArpabetPhoneme.cs        # ARPAbet音素enum (39音素, byte基底)
+│       │   ├── Stress.cs                # ストレスenum (None/NoStress/Primary/Secondary)
+│       │   ├── EnglishPhoneme.cs        # ストレス付き音素 readonly struct
+│       │   ├── EnglishPronunciation.cs  # 発音クラス (音素配列)
+│       │   └── ArpabetParser.cs         # ARPAbetパーサー
+│       ├── Dictionary/
+│       │   ├── CmuDictionary.cs         # CMU辞書ルックアップ (135,166エントリ)
+│       │   └── Data/cmudict.dict        # CMU辞書 (EmbeddedResource)
+│       ├── LTS/
+│       │   ├── LtsEngine.cs             # Flite CARTツリーLTSエンジン
+│       │   ├── LtsData.cs               # CARTツリーデータ定義
+│       │   ├── LtsPhoneMapping.cs       # LTS→ARPAbetマッピング
+│       │   └── cmu_lts_model.bin        # CARTツリーバイナリ (EmbeddedResource)
+│       ├── Normalization/               # テキスト正規化 (E3)
+│       │   ├── EnglishNormalizer.cs     # ファサード
+│       │   ├── NumberToWords.cs         # 数字→英語読み
+│       │   ├── CurrencyExpander.cs      # 通貨展開
+│       │   ├── TimeExpander.cs          # 時刻展開
+│       │   ├── AbbreviationExpander.cs  # 略語展開
+│       │   ├── AcronymDetector.cs       # 頭字語判別
+│       │   └── SymbolExpander.cs        # 記号→名前変換
+│       ├── Homograph/                   # 同綴異音語解決 (E4)
+│       │   ├── HomographResolver.cs     # 解決ファサード
+│       │   ├── HomographDatabase.cs     # 30+語データベース
+│       │   ├── HomographEntry.cs        # エントリ・ルールモデル
+│       │   ├── PosGuesser.cs            # 軽量品詞推定
+│       │   └── PosTag.cs               # 品詞タグenum
+│       ├── package.json                 # UPM (com.dotnetg2p.english)
+│       └── DotNetG2P.English.asmdef     # Unity Assembly Definition
 │
 ├── tests/
 │   ├── TestData/                        # テストデータ
@@ -178,6 +228,13 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── DictionaryErrorTests.cs  # エラーハンドリングテスト
 │       │   ├── MeCabIndependentTests.cs # 独立仕様検証テスト（21件）
 │       │   └── PerformanceTests.cs      # パフォーマンステスト（5件）
+│       ├── EnglishG2P/                  # 英語G2Pテスト (511件)
+│       │   ├── Dictionary/              # 辞書テスト (~29件)
+│       │   ├── Models/                  # モデルテスト (~31件)
+│       │   ├── Lts/                     # LTSテスト (~95件)
+│       │   ├── Normalization/           # 正規化テスト (143件)
+│       │   ├── Homograph/              # 同綴異音語テスト (154件)
+│       │   └── Integration/            # 統合テスト (~42件)
 │       └── Integration/                # 統合テスト
 │           ├── G2PPipelineTests.cs
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）

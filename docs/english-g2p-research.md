@@ -9,7 +9,7 @@ Issue: [#1 espeak-ngと同等の精度の英語のg2p for C#を実装する](htt
 3. [既存のC#/.NET向け英語G2Pライブラリ](#3-既存のcnet向け英語g2pライブラリ)
 4. [辞書データ・音素体系・ライセンス互換性](#4-辞書データ音素体系ライセンス互換性)
 5. [推奨アプローチ](#5-推奨アプローチ)
-6. [実装結果（E1/E2）](#6-実装結果e1e2)
+6. [実装結果（E1-E4）](#6-実装結果e1-e4)
 
 ---
 
@@ -528,7 +528,7 @@ COMPUTER  K AH0 M P Y UW1 T ER0
 
 ### 結論: CMU辞書 + ルールベースLTSのハイブリッド方式
 
-> **実装状況**: この推奨アプローチはE1（CMU辞書ルックアップ）およびE2（Flite LTS CARTツリー）として実装完了済み。詳細は[6. 実装結果](#6-実装結果e1e2)を参照。
+> **実装状況**: この推奨アプローチはE1〜E4として段階的に実装完了済み。E1（CMU辞書ルックアップ）、E2（Flite LTS CARTツリー）、E3（テキスト正規化）、E4（同綴異音語解決）。詳細は[6. 実装結果](#6-実装結果e1-e4)を参照。
 
 ### アーキテクチャ
 
@@ -568,8 +568,8 @@ COMPUTER  K AH0 M P Y UW1 T ER0
 |---------|------|---------|------|
 | Phase 1 (E1) | CMU辞書ルックアップ + 基本テキスト正規化 | 辞書内100%、OOV 0% | **完了** |
 | Phase 2 (E2) | Flite LTS CARTツリーによるOOVフォールバック | PER 5.26%（実測） | **完了** |
-| Phase 3 | LTSルール拡充（コンテキスト依存） | PER ~92% | 未着手 |
-| Phase 4 | ストレス推定、同綴異音語（POS判別） | PER ~95% | 未着手 |
+| Phase 3 (E3) | テキスト正規化（数字・通貨・時刻・略語・頭字語・記号） | - | **完了** |
+| Phase 4 (E4) | 同綴異音語解決（品詞ルールベース判別、30+語） | - | **完了** |
 | Phase 5 | IPA/X-SAMPA出力対応、日本語G2Pとの統合API | — | 未着手 |
 
 ### パッケージ構成
@@ -604,7 +604,7 @@ src/
 ### リスクと課題
 
 1. **LTSルールの品質**: ~~espeak-ngの7,131行ルールに匹敵するルールセットの構築には相当な工数が必要~~ → **解決済み**: Flite LTS CARTツリー（25,505ノード）を移植し、PER 5.26%を達成。espeak-ng（PER 6.92%）を上回る結果。
-2. **同綴異音語**: "read"(リード/レッド)、"live"(ライヴ/リヴ)等の判別にはPOSタグ等の文脈情報が必要（未解決、今後の課題）
+2. **同綴異音語**: ~~"read"(リード/レッド)、"live"(ライヴ/リヴ)等の判別にはPOSタグ等の文脈情報が必要（未解決、今後の課題）~~ → **E4で解決済み**: PosGuesser + HomographDatabase による品詞ルールベース判別を実装。30+語のデータベースで対応
 3. **ストレス推定**: LTS CARTツリーがストレス情報を含む音素を出力するため基本的な推定は可能。ただしより高精度な推定は今後の課題
 4. **固有名詞**: 人名・地名等は辞書にもルールにも対応困難（未解決、LTSフォールバックで部分的に対応可能）
 5. **英語方言**: CMUdictは北米英語のみ。英国英語対応は将来課題
@@ -613,9 +613,9 @@ src/
 
 ---
 
-## 6. 実装結果（E1/E2）
+## 6. 実装結果（E1-E4）
 
-本セクションでは、推奨アプローチ（セクション5）に基づいて実際に実装されたE1（CMU辞書ルックアップ）およびE2（Flite LTS CARTツリー）の技術詳細と実測結果をまとめる。
+本セクションでは、推奨アプローチ（セクション5）に基づいて実際に実装されたE1〜E4の技術詳細と実測結果をまとめる。
 
 ### 6.1 E1: CMU辞書ルックアップ
 
@@ -671,7 +671,98 @@ LTS内部の75音素は、CMU辞書と異なる表記（`ax0` = schwa、`w-ey1` 
 - **二重音素** (17種): `w-ey1` → [W, EY1], `k-s` → [K, S], `ax0-l` → [AH0, L] 等
 - **epsilon** (1種): 出力なし（文字が無音の場合。例: "knight" の "k"）
 
-### 6.3 ARPAbet音素体系の実装
+### 6.3 E3: テキスト正規化
+
+#### 技術選択
+
+| 項目 | 実装詳細 |
+|------|---------|
+| **アーキテクチャ** | EnglishNormalizerファサード + 6個の専門サブモジュール |
+| **数字変換** | NumberToWords: 基数（0〜999,999,999,999+）、序数（1st〜）、小数、負数 |
+| **通貨** | CurrencyExpander: $, £, €, ¥ → "X dollars Y cents" 等 |
+| **時刻** | TimeExpander: "3:14" → "three fourteen", "3:00" → "three o'clock" |
+| **略語** | AbbreviationExpander: Dr./Mr./Mrs./St./etc./vs./Jr./Sr. 等 |
+| **頭字語** | AcronymDetector: 大文字連続 + ドット区切り + ハイフン連続を検出 |
+| **記号** | SymbolExpander: @→at, #→number, &→and, %→percent 等 |
+| **オプション** | `EnglishG2POptions.EnableNormalization` (default: true) |
+| **テスト数** | 143件（7テストクラス） |
+
+#### 正規化パイプライン
+
+```
+入力テキスト
+  → 通貨展開 ($100 → "one hundred dollars")
+  → 時刻展開 (3:14 → "three fourteen")
+  → 略語展開 (Dr. → "doctor")
+  → 頭字語スペース挿入 (NASA → そのまま, API → "A P I")
+  → 序数展開 (1st → "first")
+  → 数字展開 (123 → "one hundred twenty three")
+  → 記号展開 (@ → "at")
+```
+
+#### 主要機能
+
+| 機能 | 入力例 | 出力例 |
+|------|--------|--------|
+| 基数 | "123" | "one hundred twenty three" |
+| 序数 | "1st" | "first" |
+| 小数 | "3.14" | "three point one four" |
+| 通貨 | "$5.50" | "five dollars fifty cents" |
+| 時刻 | "3:14 PM" | "three fourteen PM" |
+| 略語 | "Dr. Smith" | "doctor Smith" |
+| 頭字語 | "API" | "A P I" |
+| 記号 | "@" | "at" |
+
+### 6.4 E4: 同綴異音語解決
+
+#### 技術選択
+
+| 項目 | 実装詳細 |
+|------|---------|
+| **アーキテクチャ** | HomographResolverファサード（PosGuesser + HomographDatabase） |
+| **品詞推定** | PosGuesser: 文脈ルール（優先）→ 接尾辞ルール（フォールバック） |
+| **同綴異音語DB** | HomographDatabase: 30+語、CMU辞書のバリアント順序に対応 |
+| **データモデル** | HomographEntry + HomographRule（品詞→バリアントインデックス） |
+| **品詞タグ** | PosTag enum: Unknown, Noun, Verb, Adjective, Adverb, Preposition, Determiner, Pronoun, Conjunction |
+| **オプション** | `EnglishG2POptions.EnableHomographResolution` (default: true) |
+| **テスト数** | 154件（5テストクラス） |
+
+#### 解決アルゴリズム
+
+```
+入力: 単語配列 + 対象インデックス
+  → HomographDatabase.TryGetEntry(word)
+  → ヒットしない → デフォルトバリアント (index 0)
+  → ヒット → PosGuesser.Guess(words, index) で品詞推定
+    → 文脈ルール（優先）:
+      - 前単語が冠詞(a/an/the)/所有格 → Noun
+      - 前単語が助動詞(will/can/should/would/could/may/might/must)/to → Verb
+      - 前単語が代名詞(I/you/he/she/it/we/they) → Verb
+      - 前単語がbe動詞(is/am/are/was/were/be/been/being) → Adjective
+    → 接尾辞ルール（フォールバック）:
+      - -ing/-ed/-ize/-ify → Verb
+      - -tion/-ment/-ness/-ity → Noun
+      - -ly → Adverb
+      - -ful/-ous/-ive/-able → Adjective
+  → HomographEntry.GetVariantIndex(posTag) → バリアントインデックス
+```
+
+#### 同綴異音語カテゴリ
+
+| カテゴリ | 例 | 判別方法 |
+|---------|-----|---------|
+| **母音変化型** | read (IY1 D/EH1 D), lead (IY1 D/EH1 D), live (IH1 V/AY1 V) | 動詞/名詞の品詞推定 |
+| **ストレス移動型** | record (RIH-KAORD/REH-KERD), present, produce, project等26語 | 動詞=第2音節ストレス, 名詞=第1音節ストレス |
+| **-ate語尾型** | separate, moderate, deliberate等11語 | 動詞=-EY2 T, 形容詞/名詞=-AH0 T |
+
+#### エンジン統合
+
+`EnglishG2PEngine` に `LookupWordWithContext(string[] words, int index)` メソッドを追加:
+- 辞書にヒットし、複数バリアントがあり、EnableHomographResolution=true の場合に HomographResolver を呼び出す
+- `ToPhonemes` / `ToPhonemeList` の内部ループをfor文+配列ベースに変更してコンテキスト情報を渡す
+- `LookupWord`（単一単語API）は文脈情報なしのため、常にデフォルトバリアント（index 0）を返す
+
+### 6.5 ARPAbet音素体系の実装
 
 #### 実際に採用した音素定義
 
@@ -693,7 +784,7 @@ LTS内部の75音素は、CMU辞書と異なる表記（`ax0` = schwa、`w-ey1` 
 
 **設計判断**: CMU辞書のストレス値 "0", "1", "2" にストレスなし子音の `None` を加えた4段階。`EnglishPhoneme` は `readonly struct` として音素とストレスを一体的に保持し、ボクシング回避とメモリ効率を確保している。
 
-### 6.4 精度測定結果
+### 6.6 精度測定結果
 
 #### PER（Phoneme Error Rate）実測値
 
@@ -716,7 +807,7 @@ LTS内部の75音素は、CMU辞書と異なる表記（`ax0` = schwa、`w-ey1` 
 
 CMU辞書のカバレッジ（一般テキストの90-95%）を考慮すると、実効PERは5.26%よりもさらに低い。辞書ヒット時は100%正確であるため、**実テキストでの実効PERはespeak-ngを明確に上回る**と推定される。
 
-### 6.5 ライセンス対応
+### 6.7 ライセンス対応
 
 プロジェクトルートに `NOTICE` ファイルを作成し、以下の帰属表示を記載:
 
@@ -727,13 +818,16 @@ CMU辞書のカバレッジ（一般テキストの90-95%）を考慮すると�
 
 いずれもApache-2.0との互換性に問題はなく、NOTICEファイルによる帰属表示で要件を満たしている。
 
-### 6.6 実装アーキテクチャまとめ
+### 6.8 実装アーキテクチャまとめ
 
 ```
 英語テキスト入力 ("Hello world")
+  → EnglishNormalizer.Normalize(): テキスト正規化（数字・通貨・時刻・略語・頭字語・記号）
   → Tokenize(): 単語分割（句読点除去、アポストロフィ保持）
   → 各単語について:
       → CmuDictionary.TryLookup() (135,166語)
+      → ヒット + 複数バリアント + EnableHomographResolution
+        → HomographResolver.ResolveVariantIndex() で文脈ベースバリアント選択
       → ヒット → EnglishPronunciation (ARPAbet + ストレス) を返す
       → ミス → LtsEngine.Predict() (CARTツリー 25,505ノード)
            → 英字のみの単語を処理、各文字について専用CARTツリーをトラバース
@@ -758,6 +852,8 @@ CMU辞書のカバレッジ（一般テキストの90-95%）を考慮すると�
 |-----------|----------|------|
 | `IncludeStress` | `true` | ストレス番号を出力に含めるか |
 | `EnableLts` | `true` | LTSフォールバックを有効にするか |
+| `EnableNormalization` | `true` | テキスト正規化を有効にするか |
+| `EnableHomographResolution` | `true` | 同綴異音語解決を有効にするか |
 | `UnknownWordHandling` | `Skip` | OOV処理方針（Skip / Throw） |
 
 ---
