@@ -2,6 +2,7 @@
 // Licensed under the Apache-2.0 license.
 
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace DotNetG2P.English.Normalization
 {
@@ -38,6 +39,7 @@ namespace DotNetG2P.English.Normalization
         /// </summary>
         /// <param name="token">入力トークン。</param>
         /// <returns>記号の英語名。対象外の場合は null。</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string? TryExpand(string token)
         {
             if (token == null || token.Length != 1)

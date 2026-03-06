@@ -40,8 +40,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
             sw.Stop();
 
             _output.WriteLine($"辞書ロード時間: {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 5000,
-                $"辞書ロードが{sw.ElapsedMilliseconds}msかかりました（閾値: 5000ms）");
+            Assert.True(sw.ElapsedMilliseconds < 2000,
+                $"辞書ロードが{sw.ElapsedMilliseconds}msかかりました（閾値: 2000ms）");
         }
 
         [Fact]
@@ -61,8 +61,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
             var max = times.Max();
             _output.WriteLine($"3回ロード時間: {times[0]}ms, {times[1]}ms, {times[2]}ms (平均: {avg:F1}ms)");
 
-            Assert.True(avg < 10000,
-                $"辞書ロード平均が{avg:F1}msかかりました（閾値: 10000ms）");
+            Assert.True(avg < 4000,
+                $"辞書ロード平均が{avg:F1}msかかりました（閾値: 4000ms）");
             // 最大値が平均の3倍を超えないことで安定性を確認
             Assert.True(max < avg * 3 + 500,
                 $"辞書ロード最大値({max}ms)が平均({avg:F1}ms)に対して不安定です");
@@ -73,8 +73,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
         [Fact]
         public void ToPhonemes_CommonWord_1000Times_CompletesQuickly()
         {
-            // ウォームアップ
-            _engine.ToPhonemes("hello");
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _engine.ToPhonemes("hello");
 
             var sw = Stopwatch.StartNew();
             for (var i = 0; i < 1000; i++)
@@ -92,8 +92,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
         public void ToPhonemes_ShortSentence_1000Times_CompletesQuickly()
         {
             var sentence = "I love you so much";
-            // ウォームアップ
-            _engine.ToPhonemes(sentence);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _engine.ToPhonemes(sentence);
 
             var sw = Stopwatch.StartNew();
             for (var i = 0; i < 1000; i++)
@@ -111,8 +111,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
         public void ToPhonemes_LongSentence_100Times_CompletesReasonably()
         {
             var sentence = "The quick brown fox jumps over the lazy dog and then runs around the big red barn looking for food";
-            // ウォームアップ
-            _engine.ToPhonemes(sentence);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _engine.ToPhonemes(sentence);
 
             var sw = Stopwatch.StartNew();
             for (var i = 0; i < 100; i++)
@@ -155,8 +155,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
                 "tuskfeld", "ulmfield", "vestbird", "wiskfeld", "xerfbird",
             };
 
-            // ウォームアップ（LTSモデル初期化を含む）
-            _engine.ToPhonemes("xyzzyplugh");
+            // ウォームアップ (JIT Tiered Compilation安定化、LTSモデル初期化を含む)
+            for (int w = 0; w < 10; w++) _engine.ToPhonemes("xyzzyplugh");
 
             var sw = Stopwatch.StartNew();
             foreach (var word in madeUpWords)
@@ -166,8 +166,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
             sw.Stop();
 
             _output.WriteLine($"造語{madeUpWords.Length}語のLTS変換: {sw.ElapsedMilliseconds}ms (平均: {sw.ElapsedMilliseconds / (double)madeUpWords.Length:F3}ms)");
-            Assert.True(sw.ElapsedMilliseconds < 3000,
-                $"造語{madeUpWords.Length}語のLTS変換が{sw.ElapsedMilliseconds}msかかりました（閾値: 3000ms）");
+            Assert.True(sw.ElapsedMilliseconds < 1500,
+                $"造語{madeUpWords.Length}語のLTS変換が{sw.ElapsedMilliseconds}msかかりました（閾値: 1500ms）");
         }
 
         [Fact]
@@ -177,9 +177,12 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
             var oovWords = new[] { "blorft", "snazzle", "grumpkin", "flibbert", "quozzle" };
             const int iterations = 500;
 
-            // ウォームアップ
-            foreach (var w in dictWords) _engine.ToPhonemes(w);
-            foreach (var w in oovWords) _engine.ToPhonemes(w);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int warmup = 0; warmup < 10; warmup++)
+            {
+                foreach (var w in dictWords) _engine.ToPhonemes(w);
+                foreach (var w in oovWords) _engine.ToPhonemes(w);
+            }
 
             // 辞書単語の測定
             var swDict = Stopwatch.StartNew();
@@ -237,8 +240,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
 
             _output.WriteLine($"エンジン作成後のメモリ増加: {memUsedMb:F2} MB");
             // フルスイート実行時は他テストのGC遅延によりメモリが膨らむことがあるため余裕を持たせる
-            Assert.True(memUsedMb < 150,
-                $"メモリ使用量が{memUsedMb:F2}MBで閾値(150MB)を超えています");
+            Assert.True(memUsedMb < 80,
+                $"メモリ使用量が{memUsedMb:F2}MBで閾値(80MB)を超えています");
         }
 
         [Fact]
@@ -284,8 +287,9 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
             var errors = new int[threadCount];
             var barrier = new Barrier(threadCount);
 
-            // ウォームアップ
-            foreach (var w in testWords) _engine.ToPhonemes(w);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int warmup = 0; warmup < 10; warmup++)
+                foreach (var w in testWords) _engine.ToPhonemes(w);
 
             var sw = Stopwatch.StartNew();
             var tasks = Enumerable.Range(0, threadCount).Select(threadIdx => Task.Run(() =>

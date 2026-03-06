@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace DotNetG2P.English.Normalization
 {
@@ -71,16 +72,24 @@ namespace DotNetG2P.English.Normalization
         /// </summary>
         /// <param name="token">入力トークン</param>
         /// <returns>展開形。未知の略語の場合はnull。</returns>
+        // 辞書内最長キーは6文字（"approx"）
+        private const int MaxKeyLength = 6;
+
         public static string? TryExpand(string token)
         {
             if (string.IsNullOrEmpty(token))
                 return null;
 
-            // 末尾のピリオドを除去して小文字化
-            var key = token.TrimEnd('.').ToLowerInvariant();
+            // 実効長を計算（末尾ピリオドをスキップ）
+            int len = token.Length;
+            while (len > 0 && token[len - 1] == '.')
+                len--;
 
-            if (key.Length == 0)
+            if (len == 0 || len > MaxKeyLength)
                 return null;
+
+            // 短い略語のみ検索（アロケーション回避のためSpanベース小文字化）
+            var key = ToLowerInvariantSubstring(token, len);
 
             if (!s_abbreviations.TryGetValue(key, out var expanded))
                 return null;
@@ -90,6 +99,27 @@ namespace DotNetG2P.English.Normalization
                 return null;
 
             return expanded;
+        }
+
+        /// <summary>
+        /// token[0..length) を小文字化した文字列を返す。
+        /// stackallocで短い文字列のヒープアロケーションを回避。
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string ToLowerInvariantSubstring(string token, int length)
+        {
+            // MaxKeyLength以下なのでstackallocで安全
+            Span<char> buf = stackalloc char[length];
+            for (int i = 0; i < length; i++)
+            {
+                char c = token[i];
+                // ASCII大文字→小文字
+                if ((uint)(c - 'A') <= ('Z' - 'A'))
+                    buf[i] = (char)(c | 0x20);
+                else
+                    buf[i] = c;
+            }
+            return new string(buf);
         }
     }
 }

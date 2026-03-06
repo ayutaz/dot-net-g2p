@@ -97,47 +97,63 @@ namespace DotNetG2P.English.Conversion
         /// <summary>
         /// 音素配列をIPA文字列に変換する（ストレスマーク付き）。
         /// IPA標準に準拠し、ストレスマークは音節先頭（先行する子音群の前）に配置する。
+        /// 2パス方式: パス1で各音素のIPA文字列とストレスマーク挿入位置を事前計算し、
+        /// パス2で順方向Appendのみで構築する。
         /// </summary>
         internal static string Convert(EnglishPhoneme[] phonemes)
         {
             if (phonemes == null || phonemes.Length == 0)
                 return string.Empty;
 
-            var sb = new StringBuilder(phonemes.Length * 2);
+            int len = phonemes.Length;
 
-            for (int i = 0; i < phonemes.Length; i++)
+            // パス1: 各音素のIPA文字列を事前計算し、ストレスマーク挿入位置を決定
+            var ipaStrings = new string[len];
+            // stressMarks[i] != '\0' なら、ipaStrings[i]の前にストレスマークを挿入
+            var stressMarks = new char[len];
+            int totalLength = 0;
+
+            for (int i = 0; i < len; i++)
             {
                 var p = phonemes[i];
                 int index = (int)p.Phoneme;
 
                 if (p.IsVowel)
                 {
-                    if (p.Stress == Stress.Primary || p.Stress == Stress.Secondary)
+                    bool stressed = p.Stress == Stress.Primary || p.Stress == Stress.Secondary;
+                    ipaStrings[i] = stressed ? VowelIpaStressed[index] : VowelIpaUnstressed[index];
+
+                    if (stressed)
                     {
                         char mark = p.Stress == Stress.Primary ? 'ˈ' : 'ˌ';
 
-                        // 先行する連続子音群を遡り、前の母音の直後（または語頭）を探す
+                        // 先行する連続子音群を遡り、音節先頭（onset）を求める
                         int onset = i;
                         while (onset > 0 && !phonemes[onset - 1].IsVowel)
                             onset--;
 
-                        // onsetの位置にストレスマークを挿入
-                        // onset == 0 なら語頭、onset > 0 なら前の母音IPA出力の直後
-                        // sbの現在位置から、onset〜i-1 の子音分の文字数を計算して挿入位置を求める
-                        int charsToRewind = 0;
-                        for (int j = onset; j < i; j++)
-                            charsToRewind += ConsonantIpa[(int)phonemes[j].Phoneme - 15].Length;
-
-                        sb.Insert(sb.Length - charsToRewind, mark);
+                        // onset位置にストレスマークを記録
+                        stressMarks[onset] = mark;
+                        totalLength++; // ストレスマーク1文字分
                     }
-
-                    bool stressed = p.Stress == Stress.Primary || p.Stress == Stress.Secondary;
-                    sb.Append(stressed ? VowelIpaStressed[index] : VowelIpaUnstressed[index]);
                 }
                 else
                 {
-                    sb.Append(ConsonantIpa[index - 15]);
+                    ipaStrings[i] = ConsonantIpa[index - 15];
                 }
+
+                totalLength += ipaStrings[i].Length;
+            }
+
+            // パス2: 順方向Appendのみで構築
+            var sb = new StringBuilder(totalLength);
+
+            for (int i = 0; i < len; i++)
+            {
+                if (stressMarks[i] != '\0')
+                    sb.Append(stressMarks[i]);
+
+                sb.Append(ipaStrings[i]);
             }
 
             return sb.ToString();

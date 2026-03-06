@@ -114,48 +114,54 @@ namespace DotNetG2P.English
                 if (line.Length == 0 || line[0] == ';')
                     continue;
 
+                ReadOnlySpan<char> lineSpan = line.AsSpan();
+
                 // 行フォーマット: "word phoneme1 phoneme2 ..." または "word(2) phoneme1 phoneme2 ..."
                 // '#' 以降はインラインコメント
-                var commentIdx = line.IndexOf('#');
+                var commentIdx = lineSpan.IndexOf('#');
                 if (commentIdx >= 0)
                 {
-                    line = line.Substring(0, commentIdx);
+                    lineSpan = lineSpan.Slice(0, commentIdx);
                 }
 
-                // 先頭の空白をトリムしてからsplit
-                line = line.TrimEnd();
-                if (line.Length == 0)
+                // 末尾の空白をトリム
+                lineSpan = lineSpan.TrimEnd();
+                if (lineSpan.IsEmpty)
                     continue;
 
                 // 最初のスペースで単語と音素列を分割
-                var firstSpace = line.IndexOf(' ');
+                var firstSpace = lineSpan.IndexOf(' ');
                 if (firstSpace < 0)
                     continue;
 
-                var rawWord = line.Substring(0, firstSpace);
-                var phonemesPart = line.Substring(firstSpace + 1).TrimStart();
+                ReadOnlySpan<char> rawWordSpan = lineSpan.Slice(0, firstSpace);
+                ReadOnlySpan<char> phonemesSpan = lineSpan.Slice(firstSpace + 1).TrimStart();
 
-                if (phonemesPart.Length == 0)
+                if (phonemesSpan.IsEmpty)
                     continue;
 
                 // "word(2)" → "word" に正規化（バリアント番号を除去）
-                var baseWord = rawWord;
-                var parenIdx = rawWord.IndexOf('(');
+                var parenIdx = rawWordSpan.IndexOf('(');
+                string baseWord;
                 if (parenIdx >= 0)
                 {
-                    baseWord = rawWord.Substring(0, parenIdx);
+                    baseWord = new string(rawWordSpan.Slice(0, parenIdx));
+                }
+                else
+                {
+                    baseWord = new string(rawWordSpan);
                 }
 
                 // 音素トークンをパース（Split回避: 手動でスペース区切りを走査）
                 var phonemeList = new List<EnglishPhoneme>(8); // 平均的な音素数に合わせた初期容量
                 var valid = true;
                 var scanPos = 0;
-                var partLen = phonemesPart.Length;
+                var partLen = phonemesSpan.Length;
 
                 while (scanPos < partLen)
                 {
                     // 先頭のスペースをスキップ
-                    while (scanPos < partLen && phonemesPart[scanPos] == ' ')
+                    while (scanPos < partLen && phonemesSpan[scanPos] == ' ')
                         scanPos++;
 
                     if (scanPos >= partLen)
@@ -163,11 +169,11 @@ namespace DotNetG2P.English
 
                     // トークン終端を探す
                     var tokenStart = scanPos;
-                    while (scanPos < partLen && phonemesPart[scanPos] != ' ')
+                    while (scanPos < partLen && phonemesSpan[scanPos] != ' ')
                         scanPos++;
 
-                    var tokenStr = phonemesPart.Substring(tokenStart, scanPos - tokenStart);
-                    if (!ArpabetParser.TryParse(tokenStr, out var parsed))
+                    ReadOnlySpan<char> tokenSpan = phonemesSpan.Slice(tokenStart, scanPos - tokenStart);
+                    if (!ArpabetParser.TryParse(tokenSpan, out var parsed))
                     {
                         valid = false;
                         break;

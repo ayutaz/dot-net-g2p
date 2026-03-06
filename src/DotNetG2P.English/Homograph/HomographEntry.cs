@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace DotNetG2P.English.Homograph
 {
     /// <summary>
@@ -43,6 +45,7 @@ namespace DotNetG2P.English.Homograph
         /// 指定品詞に対応するバリアントインデックスを返す。
         /// マッチするルールがなければデフォルトを返す。
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetVariantIndex(PosTag pos)
         {
             for (int i = 0; i < Rules.Length; i++)

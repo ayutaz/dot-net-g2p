@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace DotNetG2P.English
 {
@@ -38,7 +39,7 @@ namespace DotNetG2P.English
             if (string.IsNullOrEmpty(token))
                 throw new ArgumentException("トークンが空です。", nameof(token));
 
-            if (!TryParseCore(token, out var phoneme, out var stress))
+            if (!TryParseCore(token.AsSpan(), out var phoneme, out var stress))
                 throw new ArgumentException($"未知のARPAbetトークンです: '{token}'", nameof(token));
 
             return new EnglishPhoneme(phoneme, stress);
@@ -57,6 +58,26 @@ namespace DotNetG2P.English
             if (string.IsNullOrEmpty(token))
                 return false;
 
+            if (!TryParseCore(token.AsSpan(), out var phoneme, out var stress))
+                return false;
+
+            result = new EnglishPhoneme(phoneme, stress);
+            return true;
+        }
+
+        /// <summary>
+        /// CMU辞書のトークンSpanの変換を試みる（アロケーションフリー）。
+        /// </summary>
+        /// <param name="token">ARPAbetトークンSpan</param>
+        /// <param name="result">変換結果</param>
+        /// <returns>変換に成功した場合 true</returns>
+        public static bool TryParse(ReadOnlySpan<char> token, out EnglishPhoneme result)
+        {
+            result = default;
+
+            if (token.IsEmpty)
+                return false;
+
             if (!TryParseCore(token, out var phoneme, out var stress))
                 return false;
 
@@ -66,9 +87,9 @@ namespace DotNetG2P.English
 
         /// <summary>
         /// Substring不要のコアパーサー。
-        /// トークン文字列から直接char値を読み取り、switch式で音素を特定する。
+        /// トークンSpanから直接char値を読み取り、switch式で音素を特定する。
         /// </summary>
-        private static bool TryParseCore(string token, out ArpabetPhoneme phoneme, out Stress stress)
+        private static bool TryParseCore(ReadOnlySpan<char> token, out ArpabetPhoneme phoneme, out Stress stress)
         {
             phoneme = default;
             stress = Stress.None;
@@ -115,6 +136,7 @@ namespace DotNetG2P.English
         }
 
         /// <summary>1文字音素名のパース（B, D, F, G, K, L, M, N, P, R, S, T, V, W, Y, Z）</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryParseSingle(char c, out ArpabetPhoneme phoneme)
         {
             switch (c)
@@ -142,6 +164,7 @@ namespace DotNetG2P.English
         }
 
         /// <summary>2文字音素名のパース（AA, AE, AH, ... ZH）</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryParseDouble(char c1, char c2, out ArpabetPhoneme phoneme)
         {
             // 第1文字で分岐し、第2文字で確定

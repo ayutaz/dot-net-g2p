@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace DotNetG2P.English.Normalization
 {
@@ -55,6 +56,7 @@ namespace DotNetG2P.English.Normalization
         /// </summary>
         /// <param name="token">判定対象のトークン</param>
         /// <returns>全大文字かどうか</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsAllUpperCase(string token)
         {
             if (token == null || token.Length < 2)
@@ -81,16 +83,22 @@ namespace DotNetG2P.English.Normalization
             if (string.IsNullOrEmpty(token) || token.Length < 2)
                 return false;
 
-            // 大文字に正規化してルックアップ（"IoT" → "IOT" 等のmixed caseも対応）
-            var upper = token.ToUpperInvariant();
-
-            // AllUpperCaseチェック（正規化後でなく元のトークンが2文字以上の英字であること）
-            for (int i = 0; i < upper.Length; i++)
+            // 既に全大文字かチェック（ToUpperInvariant回避）
+            bool alreadyUpper = true;
+            for (int i = 0; i < token.Length; i++)
             {
-                char c = upper[i];
+                char c = token[i];
                 if (c < 'A' || c > 'Z')
-                    return false;
+                {
+                    // 小文字英字かチェック（英字以外は即false）
+                    if (c < 'a' || c > 'z')
+                        return false;
+                    alreadyUpper = false;
+                }
             }
+
+            // mixed caseの場合のみToUpperInvariantを実行
+            var upper = alreadyUpper ? token : token.ToUpperInvariant();
 
             // 既知のスペルアウト辞書に一致
             if (s_spellOutSet.Contains(upper))
@@ -105,37 +113,33 @@ namespace DotNetG2P.English.Normalization
             if (upper.Length == 2)
                 return true;
 
-            // 母音を含まなければスペルアウト（例: CTRL, FPS）
+            // 母音チェック + 子音連続チェックを1パスで実行
             bool hasVowel = false;
+            int consonantRun = 0;
+            int maxConsonantRun = 0;
             for (int i = 0; i < upper.Length; i++)
             {
                 char c = upper[i];
                 if (c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U')
                 {
                     hasVowel = true;
-                    break;
-                }
-            }
-
-            if (!hasVowel)
-                return true;
-
-            // 子音のみの連続が3文字以上あればスペルアウト
-            int consonantRun = 0;
-            for (int i = 0; i < upper.Length; i++)
-            {
-                char c = upper[i];
-                if (c == 'A' || c == 'E' || c == 'I' || c == 'O' || c == 'U')
-                {
                     consonantRun = 0;
                 }
                 else
                 {
                     consonantRun++;
-                    if (consonantRun >= 3)
-                        return true;
+                    if (consonantRun > maxConsonantRun)
+                        maxConsonantRun = consonantRun;
                 }
             }
+
+            // 母音を含まなければスペルアウト（例: CTRL, FPS）
+            if (!hasVowel)
+                return true;
+
+            // 子音のみの連続が3文字以上あればスペルアウト
+            if (maxConsonantRun >= 3)
+                return true;
 
             // 母音を含み、子音連続が3未満 → 1語読み（例: YOLO, BOGO）
             return false;

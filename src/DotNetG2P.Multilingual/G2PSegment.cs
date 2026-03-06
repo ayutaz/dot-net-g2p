@@ -3,7 +3,7 @@
 namespace DotNetG2P.Multilingual
 {
     /// <summary>言語タグ付きG2P結果セグメント。</summary>
-    public sealed class G2PSegment
+    public readonly struct G2PSegment
     {
         /// <summary>セグメントの言語。</summary>
         public Language Language { get; }

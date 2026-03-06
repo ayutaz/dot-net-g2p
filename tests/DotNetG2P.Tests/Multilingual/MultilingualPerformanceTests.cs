@@ -62,13 +62,13 @@ namespace DotNetG2P.Tests.Multilingual
 
             var text = "こんにちは world";
 
-            // ウォームアップ
-            _engine!.ToPhonemes(text);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _engine!.ToPhonemes(text);
 
             var sw = Stopwatch.StartNew();
             for (int i = 0; i < 100; i++)
             {
-                _engine.ToPhonemes(text);
+                _engine!.ToPhonemes(text);
             }
             sw.Stop();
 
@@ -97,16 +97,16 @@ namespace DotNetG2P.Tests.Multilingual
             var longText = string.Concat(Enumerable.Repeat(
                 string.Concat(parts), 5)).Substring(0, 500);
 
-            // ウォームアップ
-            _engine!.ToPhonemes(longText);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _engine!.ToPhonemes(longText);
 
             var sw = Stopwatch.StartNew();
-            _engine.ToPhonemes(longText);
+            _engine!.ToPhonemes(longText);
             sw.Stop();
 
             _output.WriteLine($"長文({longText.Length}文字): {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 5000,
-                $"500文字の混在テキスト変換が5秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 2500,
+                $"500文字の混在テキスト変換が2.5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [SkippableFact]
@@ -118,8 +118,8 @@ namespace DotNetG2P.Tests.Multilingual
                 .Select(i => i % 2 == 0 ? "こんにちは world" : "Hello 世界")
                 .ToList();
 
-            // ウォームアップ
-            _engine!.ToPhonemes(texts[0]);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _engine!.ToPhonemes(texts[0]);
 
             // 個別変換の計測
             var swLoop = Stopwatch.StartNew();
@@ -155,13 +155,13 @@ namespace DotNetG2P.Tests.Multilingual
             }
             var mixedText = string.Join("", parts);
 
-            // ウォームアップ
-            _engine!.ToPhonemes(mixedText);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _engine!.ToPhonemes(mixedText);
 
             var sw = Stopwatch.StartNew();
             for (int i = 0; i < 10; i++)
             {
-                _engine.ToPhonemes(mixedText);
+                _engine!.ToPhonemes(mixedText);
             }
             sw.Stop();
 
@@ -196,8 +196,8 @@ namespace DotNetG2P.Tests.Multilingual
             var memDiffMB = (memAfter - memBefore) / (1024.0 * 1024.0);
             _output.WriteLine($"メモリ差分: {memDiffMB:F2} MB (前={memBefore / 1024.0 / 1024.0:F2}MB, 後={memAfter / 1024.0 / 1024.0:F2}MB)");
 
-            Assert.True(memDiffMB < 200,
-                $"500回変換後のメモリ増加が200MBを超過: {memDiffMB:F2}MB");
+            Assert.True(memDiffMB < 100,
+                $"500回変換後のメモリ増加が100MBを超過: {memDiffMB:F2}MB");
         }
 
         // ===== 辞書不要テスト（Fact）=====
@@ -210,8 +210,8 @@ namespace DotNetG2P.Tests.Multilingual
             var repeated = string.Concat(Enumerable.Repeat(string.Concat(parts), 500));
             var text = repeated.Substring(0, 10000);
 
-            // ウォームアップ
-            TextSegmenter.Segment(text);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) TextSegmenter.Segment(text);
 
             var sw = Stopwatch.StartNew();
             for (int i = 0; i < 100; i++)
@@ -221,8 +221,8 @@ namespace DotNetG2P.Tests.Multilingual
             sw.Stop();
 
             _output.WriteLine($"10000文字テキスト100回セグメント化: {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 3000,
-                $"10000文字テキスト100回のセグメント化が3秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 1500,
+                $"10000文字テキスト100回のセグメント化が1.5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [Fact]
@@ -231,8 +231,8 @@ namespace DotNetG2P.Tests.Multilingual
             // "aあ" を繰り返して5000文字
             var text = string.Concat(Enumerable.Repeat("aあ", 2500));
 
-            // ウォームアップ
-            TextSegmenter.Segment(text);
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) TextSegmenter.Segment(text);
 
             var sw = Stopwatch.StartNew();
             for (int i = 0; i < 100; i++)
@@ -242,8 +242,8 @@ namespace DotNetG2P.Tests.Multilingual
             sw.Stop();
 
             _output.WriteLine($"頻繁言語切替5000文字100回: {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 3000,
-                $"頻繁言語切替5000文字100回のセグメント化が3秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 1500,
+                $"頻繁言語切替5000文字100回のセグメント化が1.5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [Fact]

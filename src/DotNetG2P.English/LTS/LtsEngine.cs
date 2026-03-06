@@ -1,5 +1,7 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace DotNetG2P.English.LTS
 {
@@ -20,11 +22,14 @@ namespace DotNetG2P.English.LTS
     /// </remarks>
     internal static class LtsEngine
     {
-        /// <summary>パディング文字列（単語の前後に付与）</summary>
-        private const string Padding = "000#";
-
         /// <summary>コンテキスト窓の全要素数（左4+右4+追加特徴1）</summary>
         private const int ContextSize = LtsData.ContextWindowSize * 2 + LtsData.ContextExtraFeats;
+
+        /// <summary>stackallocの閾値（パディング付き単語バッファ）</summary>
+        private const int StackAllocThreshold = 128;
+
+        /// <summary>結果バッファの初期サイズ（各文字から最大2音素、一般的な英単語は20文字未満）</summary>
+        private const int ResultBufSize = 64;
 
         /// <summary>遅延初期化されたモデルデータ</summary>
         private static volatile byte[]? s_modelData;
@@ -71,41 +76,56 @@ namespace DotNetG2P.English.LTS
             if (string.IsNullOrEmpty(word))
                 return null;
 
-            var lowerWord = word.ToLowerInvariant();
+            // ToLowerInvariant回避: stackallocバッファでインプレース小文字化
+            var wordLen = word.Length;
+            Span<char> lowerBuf = wordLen <= StackAllocThreshold
+                ? stackalloc char[StackAllocThreshold]
+                : new char[wordLen];
+            var lowerSpan = lowerBuf.Slice(0, wordLen);
+            for (var i = 0; i < wordLen; i++)
+                lowerSpan[i] = char.ToLowerInvariant(word[i]);
 
             // アポストロフィを含む場合は分割して各部分を処理
-            if (lowerWord.IndexOf('\'') >= 0 || lowerWord.IndexOf('\u2019') >= 0)
+            // （string化が必要なのでこのパスのみアロケーション発生）
+            for (var i = 0; i < wordLen; i++)
             {
-                return PredictWithApostrophe(lowerWord);
+                var c = lowerSpan[i];
+                if (c == '\'' || c == '\u2019')
+                    return PredictWithApostrophe(new string(lowerSpan.ToArray()));
             }
 
             // 英字以外を含む場合はスキップ
-            for (var i = 0; i < lowerWord.Length; i++)
+            for (var i = 0; i < wordLen; i++)
             {
-                var c = lowerWord[i];
+                var c = lowerSpan[i];
                 if (c < 'a' || c > 'z')
                     return null;
             }
 
             var modelData = ModelData;
-            var result = new List<EnglishPhoneme>();
 
-            // パディング付き文字配列を構築: "000#word#000"（string.Concatによるアロケーション回避）
-            var paddedLen = Padding.Length + lowerWord.Length + 4; // "000#" + word + "#000"
-            var padded = new char[paddedLen];
+            // パディング付き文字配列を構築: "000#word#000"
+            var paddedLen = 8 + wordLen; // "000#" (4) + word + "#000" (4)
+            Span<char> padded = paddedLen <= StackAllocThreshold
+                ? stackalloc char[StackAllocThreshold]
+                : new char[paddedLen];
+            padded = padded.Slice(0, paddedLen);
             padded[0] = '0'; padded[1] = '0'; padded[2] = '0'; padded[3] = '#';
-            lowerWord.CopyTo(0, padded, Padding.Length, lowerWord.Length);
-            var suffixStart = Padding.Length + lowerWord.Length;
+            lowerSpan.CopyTo(padded.Slice(4));
+            var suffixStart = 4 + wordLen;
             padded[suffixStart] = '#'; padded[suffixStart + 1] = '0';
             padded[suffixStart + 2] = '0'; padded[suffixStart + 3] = '0';
 
             // 各文字を順方向に処理（先頭→末尾）
-            // パディング後の文字列中、単語部分のインデックスは [4, 4+len-1]
-            var wordStart = Padding.Length; // 4
-            var wordEnd = wordStart + lowerWord.Length - 1;
+            const int wordStart = 4; // パディング長
+            var wordEnd = wordStart + wordLen - 1;
 
-            // コンテキスト窓バッファをループ外に配置し再利用
-            var fvalBuff = new byte[ContextSize];
+            // コンテキスト窓バッファ（9バイト固定）をstackallocで確保
+            Span<byte> fvalBuff = stackalloc byte[ContextSize];
+
+            // 結果バッファをstackallocで確保
+            Span<EnglishPhoneme> resultBuf = stackalloc EnglishPhoneme[ResultBufSize];
+            var resultCount = 0;
 
             for (var pos = wordStart; pos <= wordEnd; pos++)
             {
@@ -149,13 +169,18 @@ namespace DotNetG2P.English.LTS
                 if (mapped == null) // epsilon
                     continue;
 
-                result.AddRange(mapped);
+                // 結果バッファに追加
+                for (var m = 0; m < mapped.Length; m++)
+                {
+                    if (resultCount < ResultBufSize)
+                        resultBuf[resultCount++] = mapped[m];
+                }
             }
 
-            if (result.Count == 0)
+            if (resultCount == 0)
                 return null;
 
-            return result.ToArray();
+            return resultBuf.Slice(0, resultCount).ToArray();
         }
 
         /// <summary>
@@ -187,7 +212,8 @@ namespace DotNetG2P.English.LTS
         /// <param name="startNode">ツリー開始ノードインデックス</param>
         /// <param name="fvalBuff">コンテキスト窓のバイト配列</param>
         /// <returns>PhoneTableインデックス。エラー時は-1。</returns>
-        private static int TraverseTree(byte[] data, int startNode, byte[] fvalBuff)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int TraverseTree(byte[] data, int startNode, Span<byte> fvalBuff)
         {
             var nodeIdx = startNode;
 
@@ -205,8 +231,8 @@ namespace DotNetG2P.English.LTS
 
                 var feat = data[offset];
                 var val = data[offset + 1];
-                var qtrue = (ushort)(data[offset + 2] | (data[offset + 3] << 8));
-                var qfalse = (ushort)(data[offset + 4] | (data[offset + 5] << 8));
+                var qtrue = BinaryPrimitives.ReadUInt16LittleEndian(data.AsSpan(offset + 2));
+                var qfalse = BinaryPrimitives.ReadUInt16LittleEndian(data.AsSpan(offset + 4));
 
                 // リーフノード: feat == EndOfRule (255)
                 if (feat == LtsData.EndOfRule)

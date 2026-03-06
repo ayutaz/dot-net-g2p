@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using DotNetG2P.English.Conversion;
 using DotNetG2P.English.LTS;
@@ -399,21 +401,22 @@ namespace DotNetG2P.English
             if (phonemes.Length == 0)
                 return "";
 
-            var parts = new string[phonemes.Length];
+            var sb = new StringBuilder();
             for (var i = 0; i < phonemes.Length; i++)
             {
+                if (i > 0) sb.Append(' ');
+
                 if (_options.IncludeStress)
                 {
-                    parts[i] = phonemes[i].ToString();
+                    sb.Append(phonemes[i].ToString());
                 }
                 else
                 {
-                    // ストレスなしの場合は音素名のみ
-                    parts[i] = ArpabetParser.PhonemeToString(phonemes[i].Phoneme);
+                    sb.Append(ArpabetParser.PhonemeToString(phonemes[i].Phoneme));
                 }
             }
 
-            return string.Join(" ", parts);
+            return sb.ToString();
         }
 
         /// <summary>
@@ -457,6 +460,7 @@ namespace DotNetG2P.English
         /// <summary>
         /// 単語を構成する文字かどうかを返す（英字・アポストロフィ・スマートクォート・ピリオド）。
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsWordChar(char c)
         {
             return (c >= 'A' && c <= 'Z')

@@ -43,16 +43,16 @@ namespace DotNetG2P.Tests.MeCab
         public void Tokenize_ShortText_CompletesQuickly()
         {
             SkipIfNoDictionary();
-            // ウォームアップ
-            _mecabTokenizer!.Tokenize("テスト");
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _mecabTokenizer!.Tokenize("テスト");
 
             var sw = Stopwatch.StartNew();
             for (int i = 0; i < 100; i++)
-                _mecabTokenizer.Tokenize("こんにちは");
+                _mecabTokenizer!.Tokenize("こんにちは");
             sw.Stop();
 
             _output.WriteLine($"短文100回: {sw.ElapsedMilliseconds}ms (平均: {sw.ElapsedMilliseconds / 100.0:F2}ms)");
-            Assert.True(sw.ElapsedMilliseconds < 5000, $"短文100回が5秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 2500, $"短文100回が2.5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [SkippableFact]
@@ -60,15 +60,16 @@ namespace DotNetG2P.Tests.MeCab
         {
             SkipIfNoDictionary();
             var text = "東京から大阪まで新幹線で行きます";
-            _mecabTokenizer!.Tokenize(text); // ウォームアップ
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _mecabTokenizer!.Tokenize(text);
 
             var sw = Stopwatch.StartNew();
             for (int i = 0; i < 100; i++)
-                _mecabTokenizer.Tokenize(text);
+                _mecabTokenizer!.Tokenize(text);
             sw.Stop();
 
             _output.WriteLine($"標準文100回: {sw.ElapsedMilliseconds}ms (平均: {sw.ElapsedMilliseconds / 100.0:F2}ms)");
-            Assert.True(sw.ElapsedMilliseconds < 10000, $"標準文100回が10秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 5000, $"標準文100回が5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [SkippableFact]
@@ -76,7 +77,8 @@ namespace DotNetG2P.Tests.MeCab
         {
             SkipIfNoDictionary();
             var text = string.Concat(Enumerable.Repeat("東京タワーに行きたいです。", 10));
-            _mecabTokenizer!.Tokenize(text); // ウォームアップ
+            // ウォームアップ (JIT Tiered Compilation安定化)
+            for (int w = 0; w < 10; w++) _mecabTokenizer!.Tokenize(text);
 
             var sw = Stopwatch.StartNew();
             for (int i = 0; i < 10; i++)

@@ -1,6 +1,8 @@
 // Copyright (c) 2026 DotNetG2P Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Runtime.CompilerServices;
+
 namespace DotNetG2P.English.Normalization
 {
     /// <summary>
@@ -102,6 +104,7 @@ namespace DotNetG2P.English.Normalization
         /// <summary>
         /// 文字列がすべてASCII数字で構成されているか検証する。
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsDigits(string s)
         {
             for (int i = 0; i < s.Length; i++)
