@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DotNetG2P.English.Conversion;
 using DotNetG2P.English.LTS;
 using DotNetG2P.English.Homograph;
 using DotNetG2P.English.Normalization;
@@ -183,6 +184,201 @@ namespace DotNetG2P.English
                 return false;
 
             return _dictionary!.ContainsWord(word);
+        }
+
+        // =====================================================================
+        // IPA変換API
+        // =====================================================================
+
+        /// <summary>
+        /// テキストをIPA（国際音声記号）文字列に変換する。
+        /// 単語はスペースで区切られる。
+        /// 例: "Hello world" → "həˈloʊ wˈɝld"
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>IPA文字列</returns>
+        public string ToIPA(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return "";
+
+            if (_options.EnableNormalization)
+                text = EnglishNormalizer.Normalize(text);
+
+            var words = Tokenize(text);
+            var wordsArray = words.ToArray();
+            var parts = new List<string>(wordsArray.Length);
+
+            for (var i = 0; i < wordsArray.Length; i++)
+            {
+                var phonemes = LookupWordWithContext(wordsArray, i);
+                if (phonemes != null && phonemes.Length > 0)
+                    parts.Add(IpaConverter.Convert(phonemes));
+            }
+
+            return string.Join(" ", parts);
+        }
+
+        /// <summary>
+        /// テキストをIPA文字列に変換する（ストレスマークなし）。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>ストレスマークなしのIPA文字列</returns>
+        public string ToIPAWithoutStress(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return "";
+
+            if (_options.EnableNormalization)
+                text = EnglishNormalizer.Normalize(text);
+
+            var words = Tokenize(text);
+            var wordsArray = words.ToArray();
+            var parts = new List<string>(wordsArray.Length);
+
+            for (var i = 0; i < wordsArray.Length; i++)
+            {
+                var phonemes = LookupWordWithContext(wordsArray, i);
+                if (phonemes != null && phonemes.Length > 0)
+                    parts.Add(IpaConverter.ConvertWithoutStress(phonemes));
+            }
+
+            return string.Join(" ", parts);
+        }
+
+        // =====================================================================
+        // X-SAMPA変換API
+        // =====================================================================
+
+        /// <summary>
+        /// テキストをX-SAMPA表記に変換する。
+        /// 単語はスペースで区切られ、各単語内の音素もスペース区切り。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>X-SAMPA文字列</returns>
+        public string ToXSampa(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return "";
+
+            if (_options.EnableNormalization)
+                text = EnglishNormalizer.Normalize(text);
+
+            var words = Tokenize(text);
+            var wordsArray = words.ToArray();
+            var parts = new List<string>(wordsArray.Length);
+
+            for (var i = 0; i < wordsArray.Length; i++)
+            {
+                var phonemes = LookupWordWithContext(wordsArray, i);
+                if (phonemes != null && phonemes.Length > 0)
+                    parts.Add(XSampaConverter.Convert(phonemes));
+            }
+
+            return string.Join(" ", parts);
+        }
+
+        /// <summary>
+        /// テキストをX-SAMPA表記に変換する（ストレスマークなし）。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>ストレスマークなしのX-SAMPA文字列</returns>
+        public string ToXSampaWithoutStress(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return "";
+
+            if (_options.EnableNormalization)
+                text = EnglishNormalizer.Normalize(text);
+
+            var words = Tokenize(text);
+            var wordsArray = words.ToArray();
+            var parts = new List<string>(wordsArray.Length);
+
+            for (var i = 0; i < wordsArray.Length; i++)
+            {
+                var phonemes = LookupWordWithContext(wordsArray, i);
+                if (phonemes != null && phonemes.Length > 0)
+                    parts.Add(XSampaConverter.ConvertWithoutStress(phonemes));
+            }
+
+            return string.Join(" ", parts);
+        }
+
+        // =====================================================================
+        // バッチAPI
+        // =====================================================================
+
+        /// <summary>
+        /// 複数テキストを一括でARPAbet音素列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのコレクション</param>
+        /// <returns>各テキストに対応するARPAbet音素文字列のリスト</returns>
+        public IReadOnlyList<string> ToPhonemesBatch(IEnumerable<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>();
+            foreach (var text in texts)
+                results.Add(ToPhonemes(text));
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括でIPA文字列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのコレクション</param>
+        /// <returns>各テキストに対応するIPA文字列のリスト</returns>
+        public IReadOnlyList<string> ToIPABatch(IEnumerable<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>();
+            foreach (var text in texts)
+                results.Add(ToIPA(text));
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括でX-SAMPA文字列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのコレクション</param>
+        /// <returns>各テキストに対応するX-SAMPA文字列のリスト</returns>
+        public IReadOnlyList<string> ToXSampaBatch(IEnumerable<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>();
+            foreach (var text in texts)
+                results.Add(ToXSampa(text));
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で音素リストに変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのコレクション</param>
+        /// <returns>各テキストに対応する音素リストのリスト</returns>
+        public IReadOnlyList<IReadOnlyList<EnglishPhoneme>> ToPhonemeListBatch(IEnumerable<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<IReadOnlyList<EnglishPhoneme>>();
+            foreach (var text in texts)
+                results.Add(ToPhonemeList(text));
+            return results;
         }
 
         /// <inheritdoc />
