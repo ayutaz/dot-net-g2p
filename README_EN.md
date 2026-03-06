@@ -6,14 +6,22 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-A Japanese G2P (Grapheme-to-Phoneme) library for C#/.NET.
-Natively reimplements the OpenJTalk-compatible rule-based G2P pipeline in C#, converting Japanese text to phoneme sequences without any dependency on Python or native binaries.
+A multilingual Japanese-English G2P (Grapheme-to-Phoneme) library for C#/.NET.
+Natively reimplements the OpenJTalk-compatible Japanese G2P pipeline and CMU dictionary-based English G2P in C#, converting mixed Japanese-English text to phoneme sequences without any dependency on Python or native binaries.
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
 
 engine.ToPhonemes("こんにちは");  // => "k o N n i ch i w a"
 engine.ToKana("音声合成");        // => "オンセーゴーセー"
+
+// English G2P
+using var enEngine = new EnglishG2PEngine();
+enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
+
+// Mixed Japanese-English text
+using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+multiEngine.ToPhonemes("私はhelloと言った");  // Japanese => Japanese phonemes, English => ARPAbet
 ```
 
 ## Table of Contents
@@ -36,15 +44,23 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 - **Multiple output formats** — Phoneme sequences / Katakana / ESPnet prosody symbols / VOICEVOX-compatible AccentPhrase / HTS full-context labels / Prosody features (A1/A2/A3)
 - **Unity support** — Targets .NET Standard 2.1 (Unity 2021.2+) with UPM packages available
 - **Extensible design** — Swap out the morphological analysis engine via the `ITokenizer` interface
+- **English G2P support** — CMU dictionary (135,000 words) + Flite LTS rules for OOV estimation, IPA/X-SAMPA output, text normalization, and heteronym resolution
+- **Mixed Japanese-English text support** — Automatic language detection and segment splitting based on Unicode character categories for seamless processing of mixed-language text
 
 ## Installation
 
 ### NuGet
 
 ```bash
-# Core library + built-in MeCab engine
+# Core library + built-in MeCab engine (Japanese G2P)
 dotnet add package DotNetG2P
 dotnet add package DotNetG2P.MeCab
+
+# English G2P
+dotnet add package DotNetG2P.English
+
+# Mixed Japanese-English text support
+dotnet add package DotNetG2P.Multilingual
 ```
 
 ### Package Overview
@@ -53,6 +69,8 @@ dotnet add package DotNetG2P.MeCab
 |---------|---------|-------------|
 | `DotNetG2P` | Apache-2.0 | Core library (G2P engine, NJD processing, phoneme conversion) |
 | `DotNetG2P.MeCab` | Apache-2.0 | Built-in MeCab engine (no external dependencies) |
+| `DotNetG2P.English` | Apache-2.0 | English G2P engine (CMU dictionary + LTS rules) |
+| `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English text support) |
 
 ### Unity (UPM)
 
@@ -61,6 +79,8 @@ Add the following URLs via Unity Package Manager's **Add package from git URL**:
 ```
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
 > **Note:** A naist-jdic dictionary is required separately. See [Dictionary Setup](#dictionary-setup) for details.
@@ -97,6 +117,23 @@ var labels = engine.ToFullContextLabels("こんにちは");
 var features = engine.ToProsodyFeatures("こんにちは");
 // features.Phonemes: ["sil","k","o","N","n","i","ch","i","w","a","sil"]
 // features.A1, A2, A3: accent position info for each phoneme
+
+// === English G2P ===
+using DotNetG2P.English;
+
+using var enEngine = new EnglishG2PEngine();
+string enPhonemes = enEngine.ToPhonemes("hello world");
+// => "HH AH0 L OW1 W ER1 L D"
+
+// === Mixed Japanese-English Text ===
+using DotNetG2P.Multilingual;
+
+using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+string mixed = multiEngine.ToPhonemes("今日はgood dayです");
+// Japanese segments => Japanese phonemes, English segments => ARPAbet phonemes
+
+var segments = multiEngine.ToSegments("今日はgood dayです");
+// List of segments with language tags
 ```
 
 ## API Reference
@@ -117,6 +154,25 @@ var features = engine.ToProsodyFeatures("こんにちは");
 | `ToProsodyBatch(texts)` | `IReadOnlyList<string>` | Batch conversion of multiple texts to prosody-annotated output |
 | `ToFullContextLabelsBatch(texts)` | `IReadOnlyList<IReadOnlyList<string>>` | Batch conversion of multiple texts to HTS labels |
 | `ToProsodyFeaturesBatch(texts)` | `IReadOnlyList<ProsodyFeatures>` | Batch conversion of multiple texts to prosody features |
+
+### EnglishG2PEngine
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ToPhonemes(text)` | `string` | ARPAbet phoneme sequence (`"HH AH0 L OW1"`) |
+| `ToIPA(text)` | `string` | IPA transcription |
+| `ToPhonemeList(text)` | `IReadOnlyList<EnglishPhoneme>` | Structured phoneme list |
+| `LookupWord(word)` | `IReadOnlyList<EnglishPhoneme>` | Single-word lookup |
+| `ContainsWord(word)` | `bool` | Dictionary existence check |
+
+### MultilingualG2PEngine
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ToPhonemes(text)` | `string` | Mixed Japanese-English phoneme sequence |
+| `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | Language-tagged segments |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
+| `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | Batch segment conversion |
 
 ### Japanese Phoneme System
 
@@ -231,5 +287,7 @@ so creating multiple instances incurs minimal memory overhead.
 |---------|---------|-------|
 | **DotNetG2P** | [Apache-2.0](LICENSE) | Core library |
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | Built-in MeCab engine |
+| **DotNetG2P.English** | [Apache-2.0](LICENSE) | English G2P engine |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine |
 
 All components are available under the **Apache-2.0 License**.

@@ -304,7 +304,7 @@ namespace DotNetG2P.English
 
 ---
 
-### E6: 日英混在テキスト対応
+### E6: 日英混在テキスト対応 -- 完了
 
 **目標**: 日本語と英語が混在するテキストの処理
 
@@ -341,16 +341,16 @@ namespace DotNetG2P.English
 - パフォーマンス/Disposeテスト: ~23件
 - 計~163件のテスト
 
-**完了条件**:
-- `"私はhelloと言った"` → 日本語部分は日本語音素、英語部分はARPAbet -- 正しい分割
-- 日本語のみの入力 → G2PEngine単独と同一結果
-- 英語のみの入力 → EnglishG2PEngine単独と同一結果
-- 混在テキスト内の英語部分のPER < 7%（単独エンジンと同等）
-- 空入力/記号のみ/絵文字等でクラッシュしない
-- Dispose後のObjectDisposedException
-- 並行アクセスが安全（ThreadLocalパターン）
-- 2エンジン同時ロード時のメモリ < 200MB
-- テスト合計 ~163件
+**完了条件（達成済み）**:
+- `"私はhelloと言った"` → 日本語部分は日本語音素、英語部分はARPAbet -- 正しい分割 -- 達成
+- 日本語のみの入力 → G2PEngine単独と同一結果 -- 達成
+- 英語のみの入力 → EnglishG2PEngine単独と同一結果 -- 達成
+- 混在テキスト内の英語部分のPER < 7%（単独エンジンと同等） -- 達成
+- 空入力/記号のみ/絵文字等でクラッシュしない -- 達成
+- Dispose後のObjectDisposedException -- 達成
+- 並行アクセスが安全（lockパターン） -- 達成
+- 2エンジン同時ロード時のメモリ < 200MB -- 達成
+- テスト合計 162件 -- 達成
 
 **設計上の重要判断**:
 1. **言語判定はTextNormalization前に実行**（TextNormalizerがASCIIを全角化するため）
@@ -370,7 +370,7 @@ namespace DotNetG2P.English
 ## マイルストーン依存関係
 
 ```
-E1 (CMU辞書) ✅ ─→ E2 (LTS) ✅ ─→ E5 (IPA・テスト) ✅ ─→ E6 (日英混在)
+E1 (CMU辞書) ✅ ─→ E2 (LTS) ✅ ─→ E5 (IPA・テスト) ✅ ─→ E6 (日英混在) ✅
      │                                  ↑                       ↑
      └──→ E3 (正規化) ✅ ──→ E4 (同綴異音語) ✅ ─┘               │
                                                   DotNetG2P.Core ─┘
@@ -381,7 +381,7 @@ E1 (CMU辞書) ✅ ─→ E2 (LTS) ✅ ─→ E5 (IPA・テスト) ✅ ─→ E6
 - E3は**完了**
 - E4はE3完了後に着手し**完了**
 - E5は全マイルストーン統合 -- **完了**
-- E6はE5 + DotNetG2P.Coreに依存（新パッケージ`DotNetG2P.Multilingual`）
+- E6はE5 + DotNetG2P.Coreに依存（新パッケージ`DotNetG2P.Multilingual`） -- **完了**
 
 ---
 
@@ -427,20 +427,20 @@ tests/DotNetG2P.Tests/
 │       └── EnglishAccuracyTests.cs      # 精度評価 (~15件)       [E5]
 ```
 
-**英語G2Pテスト合計: ~708件**（E1: ~214件、E3: 143件、E4: 154件、E5: ~197件）
-**プロジェクト全体テスト合計: 1,662件**
+**英語G2Pテスト合計: ~870件**（E1: ~214件、E3: 143件、E4: 154件、E5: ~197件、E6: 162件）
+**プロジェクト全体テスト合計: 1,824件**
 
-### E6で追加予定のテスト
+### E6で追加されたテスト
 
 ```
 ├── Multilingual/
-│   ├── LanguageDetectorTests.cs        # 言語判定 (~25件)
-│   ├── TextSegmenterTests.cs           # セグメント分割 (~30件)
-│   ├── MultilingualEngineTests.cs      # エンジン統合 (~35件)
-│   ├── LanguageConsistencyTests.cs     # 単独一致検証 (~20件)
-│   ├── MultilingualEdgeCaseTests.cs    # エッジケース (~30件)
-│   ├── MultilingualPerformanceTests.cs # パフォーマンス (~8件)
-│   └── MultilingualDisposeTests.cs     # Dispose/スレッド (~15件)
+│   ├── LanguageDetectorTests.cs        # 言語判定 (29件)
+│   ├── TextSegmenterTests.cs           # セグメント分割 (30件)
+│   ├── MultilingualEngineTests.cs      # エンジン統合 (28件)
+│   ├── LanguageConsistencyTests.cs     # 単独一致検証 (27件)
+│   ├── MultilingualEdgeCaseTests.cs    # エッジケース (25件)
+│   ├── MultilingualPerformanceTests.cs # パフォーマンス (8件)
+│   └── MultilingualDisposeTests.cs     # Dispose/スレッド (15件)
 ```
 
 ### 精度評価指標
@@ -464,9 +464,9 @@ tests/DotNetG2P.Tests/
 | CMU辞書のメモリ消費が大きい | 低 | Phase 2でバイナリ最適化、頻出語のみの縮小辞書オプション | 継続監視 |
 | 数字読みの英語ルールが複雑 | 低 | 基本パターンから段階的に拡充。完全対応は後回し | **解決済み**: NumberToWords/CurrencyExpander/TimeExpander等6モジュールで対応。143件のテストで検証 |
 | Unity WebGLでのサイズ制約 | 低 | 辞書圧縮（Brotli ~0.8MB）、頻出語のみの縮小辞書 | 継続監視 |
-| 日英混在時のTextNormalizer競合 | 中 | 言語判定をTextNormalization前に実行。セグメントごとに適切なNormalizerを適用 | E6で対応予定 |
-| 2エンジン同時ロード時のメモリ | 中 | 日英合計~90-120MB。遅延初期化で片方だけロードする選択肢を提供 | E6で対応予定 |
-| 日本語エンジンの非スレッドセーフ | 中 | ThreadLocal<G2PEngine>パターンでスレッドごとにインスタンス生成。DictionaryBundleの参照カウント共有で辞書メモリは共有 | E6で対応予定 |
+| 日英混在時のTextNormalizer競合 | 中 | 言語判定をTextNormalization前に実行。セグメントごとに適切なNormalizerを適用 | **解決済み**: LanguageDetectorで言語判定後にセグメント単位でG2P処理 |
+| 2エンジン同時ロード時のメモリ | 中 | 日英合計~90-120MB。遅延初期化で片方だけロードする選択肢を提供 | **解決済み**: MultilingualG2PEngine内で両エンジンを管理、Dispose時に解放 |
+| 日本語エンジンの非スレッドセーフ | 中 | ThreadLocal<G2PEngine>パターンでスレッドごとにインスタンス生成。DictionaryBundleの参照カウント共有で辞書メモリは共有 | **解決済み**: lockパターンで日本語エンジンを保護 |
 
 ---
 
@@ -485,9 +485,9 @@ tests/DotNetG2P.Tests/
 
 E1/E2完了時点で以下のCI/CD更新を実施済み:
 
-- **ci.yml**: `dotnet pack src/DotNetG2P.English/DotNetG2P.English.csproj` ステップを追加
-- **release.yml**: `dotnet pack src/DotNetG2P.English/DotNetG2P.English.csproj` ステップを追加（バージョン指定付き）
-- NuGet `DotNetG2P.English` パッケージ生成・アップロードに対応
+- **ci.yml**: `dotnet pack src/DotNetG2P.English/DotNetG2P.English.csproj` + `dotnet pack src/DotNetG2P.Multilingual/DotNetG2P.Multilingual.csproj` ステップを追加
+- **release.yml**: 同上
+- NuGet `DotNetG2P.English`, `DotNetG2P.Multilingual` パッケージ生成・アップロードに対応
 
 ---
 
