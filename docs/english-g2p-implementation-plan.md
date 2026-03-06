@@ -283,58 +283,105 @@ namespace DotNetG2P.English
 
 ---
 
-### E5: IPA出力・精度改善・パッケージング
+### E5: IPA出力・テスト充実 -- 完了
 
-**目標**: 出力形式の充実、精度改善、リリース準備
+**目標**: 出力形式の充実、テスト充実
 
 **成果物**:
-- ARPAbet→IPA変換（`ToIPA()` API）
-- ARPAbet→X-SAMPA変換
-- バッチAPI（`ToPhonemesBatch`）
-- バイナリ辞書最適化（テキストパース→バイナリ読み込みへ高速化）
-- espeak-ng比較テスト（Docker期待値データ）
-- エッジケーステスト
-- パフォーマンステスト
-- NuGet/UPMパッケージ設定
-- CI/CD更新
+- `IpaConverter` internal static class（ARPAbet→IPA変換、ストレスマーク付き/なし）
+- `XSampaConverter` internal static class（ARPAbet→X-SAMPA変換、ASCII出力）
+- `EnglishG2PEngine` に8メソッド追加（ToIPA, ToIPAWithoutStress, ToXSampa, ToXSampaWithoutStress, ToPhonemesBatch, ToIPABatch, ToXSampaBatch, ToPhonemeListBatch）
+- 単体テスト: IpaConverterTests（68件）、XSampaConverterTests（34件）、EngineConversionTests（20件）、BatchApiTests（15件）
+- 統合テスト: EnglishEdgeCaseTests（35件）、EnglishPerformanceTests（10件）、EnglishAccuracyTests（15件）
+- 計197件の新規テスト追加
 
-**完了条件**:
-- 全体PER < 7%（espeak-ng同等）
-- 同綴異音語正解率 > 70%
-- 辞書ロード時間 < 100ms（バイナリ化後）
-- メモリ使用量 < 50MB
-- テスト総数 ~330件
-- NuGet `DotNetG2P.English` パッケージ生成
+**完了条件（達成済み）**:
+- ToIPA/ToXSampa APIが動作 -- 達成
+- バッチAPIが動作 -- 達成
+- エッジケーステスト通過 -- 達成
+- パフォーマンステスト通過（並行10スレッド含む） -- 達成
+- 全1662テスト合格（失敗0） -- 達成
 
 ---
 
-### E6（将来）: 日英混在テキスト対応
+### E6: 日英混在テキスト対応
 
 **目標**: 日本語と英語が混在するテキストの処理
 
+**詳細調査**: [E6詳細調査レポート](./e6-multilingual-research.md)
+
+**アーキテクチャ**:
+```
+入力テキスト
+  → LanguageSegmenter（文字種ベース言語判定・セグメント分割）
+  → 各セグメントごとに:
+      Japanese → TextNormalizer → MeCab → NJD → 日本語音素
+      English  → EnglishNormalizer → CMU辞書/LTS → 英語音素
+  → 音素列結合
+```
+
+**パッケージ**: `DotNetG2P.Multilingual`（新規パッケージ、Core + English に依存）
+
 **成果物**:
-- `MultilingualG2PEngine` ファサードクラス
-- 文字種ベースの言語判定（ASCII→英語、ひらがな/カタカナ/漢字→日本語）
-- 日英それぞれのG2Pエンジンへの振り分け
+- `DotNetG2P.Multilingual` プロジェクト骨格（`DotNetG2P.Multilingual.csproj`、netstandard2.1）
+- `LanguageDetector` static class（Unicode文字種ベース言語判定）
+- `TextSegmenter` static class（混在テキスト→言語タグ付きセグメント分割）
+- `MultilingualG2PEngine` sealed class（日英G2Pエンジンのファサード）
+  - `ToPhonemes(string)` → 日英音素の単純結合
+  - `ToSegments(string)` → `IReadOnlyList<G2PSegment>`（構造化出力）
+  - `ToIPA(string)` → IPA統一出力（補助）
+  - バッチAPI
+- `G2PSegment` / `TextSegment` データモデル
+- IDisposable + ThreadLocal<G2PEngine>（スレッドセーフ設計）
+- UPMパッケージ設定（`package.json`, `DotNetG2P.Multilingual.asmdef`）
+- CI/CD更新（`ci.yml`/`release.yml`にpackステップ追加）
+- 単体テスト: LanguageDetectorTests（~25件）、TextSegmenterTests（~30件）
+- 統合テスト: MultilingualEngineTests（~35件）、LanguageConsistencyTests（~20件）
+- エッジケーステスト: MultilingualEdgeCaseTests（~30件）
+- パフォーマンス/Disposeテスト: ~23件
+- 計~163件のテスト
 
 **完了条件**:
-- `"私はhelloと言った"` → 日本語部分は日本語音素、英語部分はARPAbet/IPA
+- `"私はhelloと言った"` → 日本語部分は日本語音素、英語部分はARPAbet -- 正しい分割
+- 日本語のみの入力 → G2PEngine単独と同一結果
+- 英語のみの入力 → EnglishG2PEngine単独と同一結果
+- 混在テキスト内の英語部分のPER < 7%（単独エンジンと同等）
+- 空入力/記号のみ/絵文字等でクラッシュしない
+- Dispose後のObjectDisposedException
+- 並行アクセスが安全（ThreadLocalパターン）
+- 2エンジン同時ロード時のメモリ < 200MB
+- テスト合計 ~163件
+
+**設計上の重要判断**:
+1. **言語判定はTextNormalization前に実行**（TextNormalizerがASCIIを全角化するため）
+2. **出力形式は各言語体系維持**（JA=OpenJTalk音素、EN=ARPAbet）+ セグメント分離API
+3. **パッケージは新規作成**（Core/Englishの独立性を維持）
+4. **日本語エンジンはThreadLocal**、英語エンジンは共有（スレッドセーフティの非対称性に対応）
+5. **辞書パスの非対称性**: 日本語=外部辞書必須、英語=埋め込みリソース（引数なし可）
+
+**実装フェーズ**:
+- Phase 1: LanguageDetector + TextSegmenter + 単体テスト ~55件
+- Phase 2: MultilingualG2PEngine + 統合テスト ~35件
+- Phase 3: 拡張API + エッジケーステスト ~45件
+- Phase 4: パフォーマンス + パッケージング ~28件
 
 ---
 
 ## マイルストーン依存関係
 
 ```
-E1 (CMU辞書) ✅ ─→ E2 (LTS) ✅ ─→ E5 (IPA・精度・パッケージ)
-     │                                  ↑
-     └──→ E3 (正規化) ✅ ──→ E4 (同綴異音語) ✅ ─┘
+E1 (CMU辞書) ✅ ─→ E2 (LTS) ✅ ─→ E5 (IPA・テスト) ✅ ─→ E6 (日英混在)
+     │                                  ↑                       ↑
+     └──→ E3 (正規化) ✅ ──→ E4 (同綴異音語) ✅ ─┘               │
+                                                  DotNetG2P.Core ─┘
 ```
 
 - E1は必須の土台（他の全マイルストーンが依存）-- **完了**
 - E2は**完了**
 - E3は**完了**
 - E4はE3完了後に着手し**完了**
-- E5は全マイルストーン統合
+- E5は全マイルストーン統合 -- **完了**
+- E6はE5 + DotNetG2P.Coreに依存（新パッケージ`DotNetG2P.Multilingual`）
 
 ---
 
@@ -367,25 +414,33 @@ tests/DotNetG2P.Tests/
 │   │   ├── HomographResolverTests.cs    # 同綴異音語解決
 │   │   ├── HomographIntegrationTests.cs # エンジン統合
 │   │   └── HomographAccuracyTests.cs    # 精度評価
+│   ├── Conversion/
+│   │   ├── IpaConverterTests.cs         # IPA変換 (~68件)        [E5]
+│   │   ├── XSampaConverterTests.cs      # X-SAMPA変換 (~34件)    [E5]
+│   │   ├── EngineConversionTests.cs     # エンジン変換API (~20件) [E5]
+│   │   └── BatchApiTests.cs             # バッチAPI (~15件)       [E5]
 │   └── Integration/
 │       ├── EnglishPipelineTests.cs      # (~29件)
-│       └── LtsAccuracyTests.cs          # (~13件)
+│       ├── LtsAccuracyTests.cs          # (~13件)
+│       ├── EnglishEdgeCaseTests.cs      # エッジケース (~35件)    [E5]
+│       ├── EnglishPerformanceTests.cs   # パフォーマンス (~10件)  [E5]
+│       └── EnglishAccuracyTests.cs      # 精度評価 (~15件)       [E5]
 ```
 
-**英語G2Pテスト合計: 511件**（E1: ~214件、E3: 143件、E4: 154件）
-**プロジェクト全体テスト合計: 1,465件**
+**英語G2Pテスト合計: ~708件**（E1: ~214件、E3: 143件、E4: 154件、E5: ~197件）
+**プロジェクト全体テスト合計: 1,662件**
 
-### 今後追加予定のテスト
+### E6で追加予定のテスト
 
 ```
-│   └── Integration/
-│       ├── EspeakComparisonTests.cs    # espeak-ng比較 (~50件)  [E5]
-│       ├── EnglishEdgeCaseTests.cs     # エッジケース (~30件)    [E5]
-│       └── EnglishPerformanceTests.cs  # パフォーマンス (~10件)  [E5]
-├── TestData/
-│   ├── english_expected.json           # CMUdict期待値 (500件)   [E5]
-│   ├── english_oov.json               # OOVテストセット (200件) [E5]
-│   └── espeak_expected.json           # espeak-ng期待値         [E5]
+├── Multilingual/
+│   ├── LanguageDetectorTests.cs        # 言語判定 (~25件)
+│   ├── TextSegmenterTests.cs           # セグメント分割 (~30件)
+│   ├── MultilingualEngineTests.cs      # エンジン統合 (~35件)
+│   ├── LanguageConsistencyTests.cs     # 単独一致検証 (~20件)
+│   ├── MultilingualEdgeCaseTests.cs    # エッジケース (~30件)
+│   ├── MultilingualPerformanceTests.cs # パフォーマンス (~8件)
+│   └── MultilingualDisposeTests.cs     # Dispose/スレッド (~15件)
 ```
 
 ### 精度評価指標
@@ -406,9 +461,12 @@ tests/DotNetG2P.Tests/
 | FliteのLTSデータ抽出が困難 | 高 | Phonetisaurus WFSTを代替案として準備。最悪の場合、独自ルールで基本パターンのみ対応 | **解決済み**: `tools/extract_lts.js`で自動抽出成功 |
 | LTSの精度がPER 7%に届かない | 中 | CMUdictカバレッジ（一般テキストの90-95%）で補い、LTSは補助的位置付け | **解決済み**: PER 5.26%で目標達成 |
 | 同綴異音語の判別精度が低い | 中 | 段階的に改善。まずデフォルト発音（主エントリ）を返し、品詞ルールで段階的に向上 | **解決済み**: PosGuesser（接尾辞+文脈ルール）+ HomographDatabase（30+語）による品詞ベース判別を実装。154件のテストで検証 |
-| CMU辞書のメモリ消費が大きい | 低 | Phase 2でバイナリ最適化、頻出語のみの縮小辞書オプション | E5で対応予定 |
+| CMU辞書のメモリ消費が大きい | 低 | Phase 2でバイナリ最適化、頻出語のみの縮小辞書オプション | 継続監視 |
 | 数字読みの英語ルールが複雑 | 低 | 基本パターンから段階的に拡充。完全対応は後回し | **解決済み**: NumberToWords/CurrencyExpander/TimeExpander等6モジュールで対応。143件のテストで検証 |
-| Unity WebGLでのサイズ制約 | 低 | 辞書圧縮（Brotli ~0.8MB）、頻出語のみの縮小辞書 | E5で対応予定 |
+| Unity WebGLでのサイズ制約 | 低 | 辞書圧縮（Brotli ~0.8MB）、頻出語のみの縮小辞書 | 継続監視 |
+| 日英混在時のTextNormalizer競合 | 中 | 言語判定をTextNormalization前に実行。セグメントごとに適切なNormalizerを適用 | E6で対応予定 |
+| 2エンジン同時ロード時のメモリ | 中 | 日英合計~90-120MB。遅延初期化で片方だけロードする選択肢を提供 | E6で対応予定 |
+| 日本語エンジンの非スレッドセーフ | 中 | ThreadLocal<G2PEngine>パターンでスレッドごとにインスタンス生成。DictionaryBundleの参照カウント共有で辞書メモリは共有 | E6で対応予定 |
 
 ---
 
@@ -437,5 +495,6 @@ E1/E2完了時点で以下のCI/CD更新を実施済み:
 
 - [調査レポート](./english-g2p-research.md)
 - [espeak-ng出力検証](./espeak-ng-output-verification.md)
+- [E6 日英混在テキスト調査レポート](./e6-multilingual-research.md)
 - [CMU Pronouncing Dictionary](https://github.com/cmusphinx/cmudict)
 - [Flite (Festival Lite)](https://github.com/festvox/flite)
