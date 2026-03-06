@@ -1,0 +1,17 @@
+{
+  "name": "DotNetG2P.Multilingual",
+  "rootNamespace": "DotNetG2P.Multilingual",
+  "references": [
+    "DotNetG2P",
+    "DotNetG2P.English"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

@@ -1,0 +1,194 @@
+#nullable enable
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using DotNetG2P.English;
+using DotNetG2P.MeCab;
+
+namespace DotNetG2P.Multilingual
+{
+    /// <summary>
+    /// 日英混在テキスト対応の多言語G2Pエンジン。
+    /// テキストを言語セグメントに自動分割し、各言語のG2Pエンジンで変換する。
+    /// </summary>
+    /// <remarks>
+    /// 英語エンジンはスレッドセーフ（共有）。日本語エンジンはスレッドセーフでないためlockで保護。
+    /// </remarks>
+    public sealed class MultilingualG2PEngine : IDisposable
+    {
+        private readonly G2PEngine _japaneseEngine;
+        private readonly EnglishG2PEngine _englishEngine;
+        private readonly MultilingualG2POptions _options;
+        private readonly object _japaneseLock = new object();
+        private int _disposed;
+
+        /// <summary>
+        /// 日本語辞書パスを指定して多言語G2Pエンジンを初期化する（デフォルトオプション）。
+        /// </summary>
+        /// <param name="japaneseDictPath">naist-jdic辞書ディレクトリのパス</param>
+        /// <exception cref="DirectoryNotFoundException">辞書パスが存在しない場合</exception>
+        public MultilingualG2PEngine(string japaneseDictPath)
+            : this(japaneseDictPath, MultilingualG2POptions.Default)
+        {
+        }
+
+        /// <summary>
+        /// 日本語辞書パスとオプションを指定して多言語G2Pエンジンを初期化する。
+        /// </summary>
+        /// <param name="japaneseDictPath">naist-jdic辞書ディレクトリのパス</param>
+        /// <param name="options">多言語G2Pオプション</param>
+        /// <exception cref="DirectoryNotFoundException">辞書パスが存在しない場合</exception>
+        /// <exception cref="ArgumentNullException">引数がnullの場合</exception>
+        public MultilingualG2PEngine(string japaneseDictPath, MultilingualG2POptions options)
+        {
+            if (japaneseDictPath == null)
+                throw new ArgumentNullException(nameof(japaneseDictPath));
+            if (!Directory.Exists(japaneseDictPath))
+                throw new DirectoryNotFoundException($"辞書ディレクトリが見つかりません: {japaneseDictPath}");
+
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+
+            _japaneseEngine = new G2PEngine(
+                new MeCabTokenizer(japaneseDictPath),
+                options.JapaneseOptions ?? G2POptions.Default);
+
+            _englishEngine = new EnglishG2PEngine(
+                options.EnglishOptions ?? EnglishG2POptions.Default);
+        }
+
+        /// <summary>
+        /// 日英混在テキストを音素文字列に変換する。
+        /// テキストを自動的に言語セグメントに分割し、各言語のG2Pエンジンで変換後、結合して返す。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>スペース区切りの音素文字列</returns>
+        /// <exception cref="ObjectDisposedException">Dispose済みの場合</exception>
+        public string ToPhonemes(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrEmpty(text))
+                return "";
+
+            var segments = TextSegmenter.Segment(text);
+            if (segments.Count == 0)
+                return "";
+
+            var parts = new List<string>(segments.Count);
+            for (int i = 0; i < segments.Count; i++)
+            {
+                var phonemes = ConvertSegment(segments[i]);
+                if (phonemes.Length > 0)
+                    parts.Add(phonemes);
+            }
+
+            return string.Join(_options.SegmentSeparator, parts);
+        }
+
+        /// <summary>
+        /// 日英混在テキストを言語タグ付きG2Pセグメントのリストとして変換する。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>G2Pセグメントのリスト</returns>
+        /// <exception cref="ObjectDisposedException">Dispose済みの場合</exception>
+        public IReadOnlyList<G2PSegment> ToSegments(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrEmpty(text))
+                return Array.Empty<G2PSegment>();
+
+            var segments = TextSegmenter.Segment(text);
+            if (segments.Count == 0)
+                return Array.Empty<G2PSegment>();
+
+            var result = new List<G2PSegment>(segments.Count);
+            for (int i = 0; i < segments.Count; i++)
+            {
+                var seg = segments[i];
+                var phonemes = ConvertSegment(seg);
+                result.Add(new G2PSegment(seg.Language, seg.Text, phonemes));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で音素文字列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのコレクション</param>
+        /// <returns>各テキストに対応する音素文字列のリスト</returns>
+        /// <exception cref="ArgumentNullException">textsがnullの場合</exception>
+        /// <exception cref="ObjectDisposedException">Dispose済みの場合</exception>
+        public IReadOnlyList<string> ToPhonemesBatch(IEnumerable<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<string>();
+            foreach (var text in texts)
+                results.Add(ToPhonemes(text));
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括でG2Pセグメントリストに変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのコレクション</param>
+        /// <returns>各テキストに対応するG2Pセグメントリストのリスト</returns>
+        /// <exception cref="ArgumentNullException">textsがnullの場合</exception>
+        /// <exception cref="ObjectDisposedException">Dispose済みの場合</exception>
+        public IReadOnlyList<IReadOnlyList<G2PSegment>> ToSegmentsBatch(IEnumerable<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new List<IReadOnlyList<G2PSegment>>();
+            foreach (var text in texts)
+                results.Add(ToSegments(text));
+            return results;
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
+                return;
+
+            _japaneseEngine.Dispose();
+            _englishEngine.Dispose();
+        }
+
+        /// <summary>
+        /// セグメントを対応する言語のG2Pエンジンで変換する。
+        /// </summary>
+        private string ConvertSegment(TextSegment segment)
+        {
+            switch (segment.Language)
+            {
+                case Language.Japanese:
+                    lock (_japaneseLock)
+                    {
+                        return _japaneseEngine.ToPhonemes(segment.Text);
+                    }
+
+                case Language.English:
+                    return _englishEngine.ToPhonemes(segment.Text);
+
+                default:
+                    return "";
+            }
+        }
+
+        /// <summary>
+        /// Dispose済みの場合にObjectDisposedExceptionをスローする。
+        /// </summary>
+        private void ThrowIfDisposed()
+        {
+            if (_disposed != 0)
+                throw new ObjectDisposedException(nameof(MultilingualG2PEngine));
+        }
+    }
+}

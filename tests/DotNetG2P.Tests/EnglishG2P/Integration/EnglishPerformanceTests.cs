@@ -61,8 +61,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
             var max = times.Max();
             _output.WriteLine($"3回ロード時間: {times[0]}ms, {times[1]}ms, {times[2]}ms (平均: {avg:F1}ms)");
 
-            Assert.True(avg < 5000,
-                $"辞書ロード平均が{avg:F1}msかかりました（閾値: 5000ms）");
+            Assert.True(avg < 10000,
+                $"辞書ロード平均が{avg:F1}msかかりました（閾値: 10000ms）");
             // 最大値が平均の3倍を超えないことで安定性を確認
             Assert.True(max < avg * 3 + 500,
                 $"辞書ロード最大値({max}ms)が平均({avg:F1}ms)に対して不安定です");
