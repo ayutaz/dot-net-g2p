@@ -169,6 +169,25 @@ namespace DotNetG2P.Tests.EnglishG2P.Homograph
             Assert.Equal(PosTag.Adjective, result);
         }
 
+        // ===== 前置詞文脈テスト =====
+
+        [Theory]
+        [InlineData("of")]
+        [InlineData("in")]
+        [InlineData("on")]
+        [InlineData("at")]
+        [InlineData("for")]
+        [InlineData("with")]
+        [InlineData("from")]
+        [InlineData("by")]
+        [InlineData("about")]
+        [InlineData("between")]
+        public void Context_AfterPreposition_ReturnsNoun(string preposition)
+        {
+            var result = PosGuesser.Guess(new[] { preposition, "lead" }, 1);
+            Assert.Equal(PosTag.Noun, result);
+        }
+
         // ===== 文脈優先テスト =====
 
         [Fact]

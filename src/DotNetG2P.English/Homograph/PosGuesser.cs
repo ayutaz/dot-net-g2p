@@ -35,6 +35,8 @@ namespace DotNetG2P.English.Homograph
             "this", "that", "these", "those",
             // 数量詞
             "some", "any", "no", "every", "each", "many", "few", "several", "all", "both",
+            // 前置詞
+            "of", "in", "on", "at", "for", "with", "from", "by", "about", "between",
             // 形容詞的修飾
             "new", "old", "big", "small", "good", "bad", "great", "long", "short",
             "high", "low", "large", "little", "young"

@@ -143,5 +143,39 @@ namespace DotNetG2P.Tests.Multilingual
         {
             Assert.Null(LanguageDetector.ToLanguage(ScriptKind.Other));
         }
+
+        // ===== Classify: 全角記号はPunctuation =====
+
+        [Theory]
+        [InlineData('\uFF01', 4)]  // 全角感嘆符 '！' → Punctuation
+        [InlineData('\uFF1F', 4)]  // 全角疑問符 '？' → Punctuation
+        [InlineData('\uFF0C', 4)]  // 全角コンマ '，' → Punctuation
+        [InlineData('\uFF3B', 4)]  // 全角左角括弧 '［' → Punctuation
+        [InlineData('\uFF5E', 4)]  // 全角チルダ '～' → Punctuation
+        public void Classify_全角記号_Punctuationを返す(char c, int expected)
+        {
+            Assert.Equal((ScriptKind)expected, LanguageDetector.Classify(c));
+        }
+
+        // ===== Classify(string, int): サロゲートペア =====
+
+        [Fact]
+        public void Classify_サロゲートペア_Otherを返しcharCount2()
+        {
+            // U+1F600 (笑顔絵文字) はサロゲートペア
+            string emoji = "\U0001F600";
+            var kind = LanguageDetector.Classify(emoji, 0, out int charCount);
+            Assert.Equal(ScriptKind.Other, kind);
+            Assert.Equal(2, charCount);
+        }
+
+        [Fact]
+        public void Classify_BMP文字_charCount1()
+        {
+            string text = "あ";
+            var kind = LanguageDetector.Classify(text, 0, out int charCount);
+            Assert.Equal(ScriptKind.Japanese, kind);
+            Assert.Equal(1, charCount);
+        }
     }
 }

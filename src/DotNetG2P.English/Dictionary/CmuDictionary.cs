@@ -92,6 +92,14 @@ namespace DotNetG2P.English
         }
 
         /// <summary>
+        /// 内部辞書データを解放する。Dispose時に呼び出される。
+        /// </summary>
+        internal void Clear()
+        {
+            _entries.Clear();
+        }
+
+        /// <summary>
         /// StreamReaderからCMU辞書をパースする。
         /// </summary>
         private static CmuDictionary ParseFromReader(StreamReader reader)
@@ -138,22 +146,39 @@ namespace DotNetG2P.English
                     baseWord = rawWord.Substring(0, parenIdx);
                 }
 
-                // 音素トークンをパース
-                var tokens = phonemesPart.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                var phonemes = new EnglishPhoneme[tokens.Length];
+                // 音素トークンをパース（Split回避: 手動でスペース区切りを走査）
+                var phonemeList = new List<EnglishPhoneme>(8); // 平均的な音素数に合わせた初期容量
                 var valid = true;
-                for (var i = 0; i < tokens.Length; i++)
+                var scanPos = 0;
+                var partLen = phonemesPart.Length;
+
+                while (scanPos < partLen)
                 {
-                    if (!ArpabetParser.TryParse(tokens[i], out phonemes[i]))
+                    // 先頭のスペースをスキップ
+                    while (scanPos < partLen && phonemesPart[scanPos] == ' ')
+                        scanPos++;
+
+                    if (scanPos >= partLen)
+                        break;
+
+                    // トークン終端を探す
+                    var tokenStart = scanPos;
+                    while (scanPos < partLen && phonemesPart[scanPos] != ' ')
+                        scanPos++;
+
+                    var tokenStr = phonemesPart.Substring(tokenStart, scanPos - tokenStart);
+                    if (!ArpabetParser.TryParse(tokenStr, out var parsed))
                     {
                         valid = false;
                         break;
                     }
+                    phonemeList.Add(parsed);
                 }
 
-                if (!valid)
+                if (!valid || phonemeList.Count == 0)
                     continue;
 
+                var phonemes = phonemeList.ToArray();
                 var pronunciation = new EnglishPronunciation(phonemes);
 
                 if (tempDict.TryGetValue(baseWord, out var list))

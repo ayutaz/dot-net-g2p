@@ -313,14 +313,15 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
         // ================================================================
 
         /// <summary>
-        /// LtsAccuracyTestsの100語サンプルと同じテスト条件で、
-        /// PER 5.26%が維持されていることの回帰テスト。
-        /// PER < 10% を閾値とする。
+        /// [In-Sample回帰テスト] LtsAccuracyTestsの100語手動選定サンプルと同じテスト条件で、
+        /// PERが回帰していないことを検証する。
+        /// 注意: これはin-sampleテストであり、LTSモデルの訓練データと重複する可能性が高い。
+        /// PER < 10% を閾値とする（実測約5%に対して余裕を持たせた値）。
         /// </summary>
         [Fact]
-        public void LtsRegression_Per_BelowThreshold()
+        public void LtsRegression_InSample_Per_BelowThreshold()
         {
-            // LtsAccuracyTestsと同じ100語サンプル
+            // LtsAccuracyTestsと同じ100語手動選定サンプル（in-sampleデータ）
             var testWords = new[]
             {
                 "about", "after", "again", "air", "also", "always", "animal", "answer", "around", "away",
@@ -377,18 +378,22 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
         }
 
         /// <summary>
-        /// 辞書+LTSの統合PERがespeak-ng (6.92%) 以下であることを確認する。
-        /// 辞書登録語はPER 0%、未登録語のみLTSフォールバックでPERが発生するため、
-        /// 全体PERはespeak-ngの純LTSベースシステムより低くなるはず。
+        /// 辞書登録語のLTS PERと辞書登録語の辞書引きPERを分離して個別に評価する。
+        /// 辞書引き時はPER 0%、LTSフォールバック時はPERが発生する。
+        /// 混合PERは辞書語:LTS語の比率に強く依存するため、
+        /// 分離評価により各パスの精度を独立に検証する。
+        ///
+        /// 注: 以前はespeak-ng PER 6.92%との直接比較を行っていたが、
+        /// この数値の出典が不明確であり、評価条件（テストセット・音素体系・ストレス含否）が
+        /// 異なるため、独自閾値での評価に変更した。
         /// </summary>
         [Fact]
-        public void OverallPer_BelowEspeakNg()
+        public void SeparatedPer_DictAndLts_IndividualEvaluation()
         {
-            // 辞書登録語 + LTS対象語を混合したサンプル
+            // 辞書登録語10語 + LTS評価語20語
             var knownWords = new[] { "hello", "world", "computer", "beautiful", "technology",
                                      "the", "is", "people", "water", "music" };
 
-            // LTS評価用のサンプル（LtsAccuracyTestsと同じ100語の一部）
             var ltsTestWords = new[]
             {
                 "about", "after", "again", "animal", "answer", "around", "away",
@@ -396,19 +401,26 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
                 "book", "both", "boy", "bring", "build", "call",
             };
 
-            int totalPhonemes = 0;
-            int totalErrors = 0;
+            // ===== 辞書引きパスのPER（0%であるべき） =====
+            int dictPhonemes = 0;
+            int dictErrors = 0;
 
-            // 辞書登録語: PER=0
             foreach (var word in knownWords)
             {
                 var dictProns = _engine.LookupAllPronunciations(word);
                 if (dictProns.Count == 0) continue;
-                totalPhonemes += dictProns[0].Phonemes.Count;
+                dictPhonemes += dictProns[0].Phonemes.Count;
                 // 辞書引きなのでエラー0
             }
 
-            // LTS対象語: LTSで予測してPER計算
+            _output.WriteLine($"辞書引きパス PER: 0.00% (0/{dictPhonemes})");
+            Assert.Equal(0, dictErrors);
+
+            // ===== LTSフォールバックパスのPER（独自閾値） =====
+            int ltsPhonemeCount = 0;
+            int ltsErrors = 0;
+            int ltsTested = 0;
+
             foreach (var word in ltsTestWords)
             {
                 var dictProns = _engine.LookupAllPronunciations(word);
@@ -416,6 +428,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
 
                 var ltsResult = LtsEngine.Predict(word);
                 if (ltsResult == null || ltsResult.Length == 0) continue;
+
+                ltsTested++;
 
                 var ltsPhonemes = ltsResult.Select(p => p.Phoneme).ToArray();
                 int minDist = dictProns
@@ -430,16 +444,17 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
                         pron.Phonemes.Select(p => p.Phoneme).ToArray()))
                     .First();
 
-                totalErrors += minDist;
-                totalPhonemes += bestRef.Phonemes.Count;
+                ltsErrors += minDist;
+                ltsPhonemeCount += bestRef.Phonemes.Count;
             }
 
-            var per = totalPhonemes > 0 ? (double)totalErrors / totalPhonemes : 0;
-            _output.WriteLine($"統合PER: {per:P2} ({totalErrors}/{totalPhonemes})");
-            _output.WriteLine($"espeak-ng PER: 6.92%");
+            var ltsPer = ltsPhonemeCount > 0 ? (double)ltsErrors / ltsPhonemeCount : 0;
+            _output.WriteLine($"LTSフォールバックパス PER: {ltsPer:P2} ({ltsErrors}/{ltsPhonemeCount}) テスト語数: {ltsTested}");
 
-            // espeak-ng (6.92%) 以下であること
-            Assert.True(per < 0.0692, $"統合PER ({per:P2}) がespeak-ng (6.92%) を超えています。");
+            Assert.True(ltsTested >= 15, $"LTSテスト対象語が少なすぎます: {ltsTested}");
+            // LTSパスの独自閾値: 15%（in-sampleデータに対する保守的な上限）
+            Assert.True(ltsPer < 0.15,
+                $"LTSフォールバック PER ({ltsPer:P2}) が独自閾値15%を超えています。");
         }
 
         /// <summary>

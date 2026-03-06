@@ -94,22 +94,8 @@ namespace DotNetG2P.English
             if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<EnglishPhoneme>();
 
-            if (_options.EnableNormalization)
-                text = EnglishNormalizer.Normalize(text);
-
-            var words = Tokenize(text);
-            var wordsArray = words.ToArray();
             var result = new List<EnglishPhoneme>();
-
-            for (var i = 0; i < wordsArray.Length; i++)
-            {
-                var phonemes = LookupWordWithContext(wordsArray, i);
-                if (phonemes != null)
-                {
-                    result.AddRange(phonemes);
-                }
-            }
-
+            ProcessPipelineCore(text, phonemes => result.AddRange(phonemes));
             return result;
         }
 
@@ -128,7 +114,7 @@ namespace DotNetG2P.English
 
             var phonemes = LookupWordInternal(word);
             if (phonemes != null)
-                return phonemes;
+                return Array.AsReadOnly(phonemes);
 
             return Array.Empty<EnglishPhoneme>();
         }
@@ -146,7 +132,7 @@ namespace DotNetG2P.English
                 return Array.Empty<EnglishPronunciation>();
 
             if (_dictionary.TryLookup(word, out var pronunciations))
-                return pronunciations;
+                return Array.AsReadOnly(pronunciations);
 
             return Array.Empty<EnglishPronunciation>();
         }
@@ -288,7 +274,10 @@ namespace DotNetG2P.English
         /// <inheritdoc />
         public void Dispose()
         {
-            Interlocked.CompareExchange(ref _disposed, 1, 0);
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
+            {
+                _dictionary.Clear();
+            }
         }
 
         /// <summary>
@@ -302,30 +291,44 @@ namespace DotNetG2P.English
             if (string.IsNullOrWhiteSpace(text))
                 return "";
 
+            var parts = new List<string>();
+            ProcessPipelineCore(text, phonemes =>
+            {
+                var formatted = formatter(phonemes);
+                if (formatted != null)
+                    parts.Add(formatted);
+            });
+
+            return string.Join(" ", parts);
+        }
+
+        /// <summary>
+        /// パイプラインの共通コア処理: Normalize→Tokenize→LookupWithContext。
+        /// 各単語の音素配列をactionに渡す。
+        /// </summary>
+        private void ProcessPipelineCore(string text, Action<EnglishPhoneme[]> action)
+        {
             if (_options.EnableNormalization)
                 text = EnglishNormalizer.Normalize(text);
 
-            var words = Tokenize(text);
-            var wordsArray = words.ToArray();
-            var parts = new List<string>(wordsArray.Length);
+            var wordsArray = Tokenize(text);
 
             for (var i = 0; i < wordsArray.Length; i++)
             {
                 var phonemes = LookupWordWithContext(wordsArray, i);
                 if (phonemes != null && phonemes.Length > 0)
                 {
-                    var formatted = formatter(phonemes);
-                    if (formatted != null)
-                        parts.Add(formatted);
+                    action(phonemes);
                 }
             }
-
-            return string.Join(" ", parts);
         }
 
         /// <summary>
         /// 文脈を考慮して単語の音素列を検索する内部メソッド。
         /// 同綴異音語の場合は前後の単語から品詞を推定し、適切なバリアントを選択する。
+        /// 辞書に未登録の場合はLTSフォールバックを使用する。
+        /// LTS予測結果にはSecondary stress (2) が含まれない点に注意
+        /// （Flite LTSモデルはPrimary stress (1) と No stress (0) のみ出力）。
         /// </summary>
         private EnglishPhoneme[]? LookupWordWithContext(string[] words, int index)
         {
@@ -360,6 +363,7 @@ namespace DotNetG2P.English
         /// <summary>
         /// 単語の音素列を検索する内部メソッド。
         /// OOV時はLTSフォールバック→オプションに従って処理する。
+        /// LTSフォールバック時はSecondary stress (2) が出力されない。
         /// </summary>
         private EnglishPhoneme[]? LookupWordInternal(string word)
         {
@@ -413,10 +417,10 @@ namespace DotNetG2P.English
         }
 
         /// <summary>
-        /// テキストを単語リストにトークン化する。
+        /// テキストを単語配列にトークン化する。
         /// 句読点を除去し、アルファベットとアポストロフィのみの単語を抽出する。
         /// </summary>
-        private static List<string> Tokenize(string text)
+        private static string[] Tokenize(string text)
         {
             var words = new List<string>();
             var start = -1;
@@ -447,7 +451,7 @@ namespace DotNetG2P.English
                 }
             }
 
-            return words;
+            return words.ToArray();
         }
 
         /// <summary>

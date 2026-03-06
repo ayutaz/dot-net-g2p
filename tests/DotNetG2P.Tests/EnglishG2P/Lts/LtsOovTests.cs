@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using DotNetG2P.English;
 using DotNetG2P.English.LTS;
 using Xunit;
@@ -282,6 +285,127 @@ namespace DotNetG2P.Tests.EnglishG2P.Lts
                 {
                     Assert.True(Enum.IsDefined(typeof(ArpabetPhoneme), p.Phoneme));
                 }
+            }
+        }
+
+        // ===== ハイフン語のLTS処理テスト =====
+
+        [Theory]
+        [InlineData("well-known")]
+        [InlineData("self-driving")]
+        [InlineData("twenty-one")]
+        public void Predict_HyphenatedWords_ReturnsNull(string word)
+        {
+            // LtsEngine.Predictは英字以外の文字（ハイフン含む）を含む単語にはnullを返す
+            var result = LtsEngine.Predict(word);
+            Assert.Null(result);
+        }
+
+        [Theory]
+        [InlineData("well-known")]
+        [InlineData("self-driving")]
+        [InlineData("twenty-one")]
+        public void ToPhonemes_HyphenatedWords_ProcessedViaTokenizer(string word)
+        {
+            // EnglishG2PEngineのTokenizerがハイフンで単語を分割し、各パーツを個別に処理する
+            var result = _engine.ToPhonemes(word);
+            // ハイフン語の各パーツが辞書に存在すればトークナイザ経由で処理されるため、結果は空でない
+            Assert.NotEmpty(result);
+        }
+
+        [Fact]
+        public void ToPhonemes_HyphenatedOovParts_ProcessedByLts()
+        {
+            // 辞書にない造語パーツを含むハイフン語でもLTS経由で処理される
+            var result = _engine.ToPhonemes("blurfington-snorkelwax");
+            Assert.NotEmpty(result);
+        }
+
+        // ===== Secondary stressの不存在確認テスト =====
+
+        [Theory]
+        [InlineData("blurfington")]
+        [InlineData("unmicrowaveable")]
+        [InlineData("googleapis")]
+        [InlineData("tensorflow")]
+        [InlineData("kubernetes")]
+        [InlineData("stackoverflow")]
+        [InlineData("supercalifragilisticexpialidocious")]
+        public void Predict_NeverProducesSecondaryStress(string word)
+        {
+            // Flite LTSモデルはPrimary stress (1) と No stress (0) のみ出力し、
+            // Secondary stress (2) は生成されない
+            var result = LtsEngine.Predict(word);
+            Assert.NotNull(result);
+
+            foreach (var phoneme in result!)
+            {
+                Assert.NotEqual(Stress.Secondary, phoneme.Stress);
+            }
+        }
+
+        [Fact]
+        public void Predict_AllPhoneTableEntries_NoSecondaryStress()
+        {
+            // LtsPhoneMappingの全エントリにSecondary stressが含まれないことを確認
+            var phoneToArpabet = LtsPhoneMapping.PhoneToArpabet;
+            for (var i = 0; i < phoneToArpabet.Length; i++)
+            {
+                var mapped = phoneToArpabet[i];
+                if (mapped == null) continue; // epsilon
+
+                foreach (var phoneme in mapped)
+                {
+                    Assert.NotEqual(Stress.Secondary, phoneme.Stress);
+                }
+            }
+        }
+
+        // ===== バイナリモデル整合性テスト =====
+
+        [Fact]
+        public void LtsModel_BinarySize_MatchesExpectedNodeCount()
+        {
+            // LtsData.LetterIndexの最大ノードインデックス + 実際のツリーサイズから
+            // cmu_lts_model.binのサイズが25505ノード * 6バイト = 153030バイトであることを検証
+            var expectedNodeCount = 25505;
+            var expectedSize = expectedNodeCount * LtsData.NodeSize; // 25505 * 6 = 153030
+
+            var modelData = LtsData.LoadModelData();
+            Assert.Equal(expectedSize, modelData.Length);
+        }
+
+        [Fact]
+        public void LtsModel_NodeSize_IsConsistent()
+        {
+            // ノードサイズ定数が6バイトであること
+            Assert.Equal(6, LtsData.NodeSize);
+        }
+
+        [Fact]
+        public void LtsModel_LetterIndex_AllWithinRange()
+        {
+            // 全文字(a-z)のツリー開始ノードインデックスがモデルデータ範囲内であることを検証
+            var modelData = LtsData.LoadModelData();
+            var maxNodeIdx = modelData.Length / LtsData.NodeSize;
+
+            Assert.Equal(26, LtsData.LetterIndex.Length);
+            for (var i = 0; i < LtsData.LetterIndex.Length; i++)
+            {
+                Assert.True(LtsData.LetterIndex[i] < maxNodeIdx,
+                    $"文字'{(char)('a' + i)}'のツリー開始インデックス({LtsData.LetterIndex[i]})がモデルの範囲外({maxNodeIdx})");
+            }
+        }
+
+        [Fact]
+        public void LtsModel_EmbeddedResourceExists()
+        {
+            // 埋め込みリソースが正しく読み込めることを検証
+            var assembly = typeof(LtsData).Assembly;
+            using (var stream = assembly.GetManifestResourceStream("DotNetG2P.English.LTS.cmu_lts_model.bin"))
+            {
+                Assert.NotNull(stream);
+                Assert.True(stream!.Length > 0, "埋め込みリソースが空です");
             }
         }
     }

@@ -140,5 +140,50 @@ namespace DotNetG2P.Tests.EnglishG2P.Models
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ArpabetParser.PhonemeToString((ArpabetPhoneme)255));
         }
+
+        // ===== Parse: 境界値テスト =====
+
+        [Fact]
+        public void Parse_StressThreeOrAbove_ThrowsArgumentException()
+        {
+            // ストレス番号3は0-2の範囲外 → ストレスとして認識されない
+            // "AH3" → nameLen=3 → 1でも2でもないためパース失敗
+            Assert.Throws<ArgumentException>(() => ArpabetParser.Parse("AH3"));
+        }
+
+        [Fact]
+        public void TryParse_StressThreeOrAbove_ReturnsFalse()
+        {
+            // "AH3" → TryParseでもfalseになる
+            Assert.False(ArpabetParser.TryParse("AH3", out _));
+        }
+
+        [Fact]
+        public void Parse_LowercaseToken_ThrowsArgumentException()
+        {
+            // 小文字トークン "ah0" → パーサーは大文字のみ対応
+            Assert.Throws<ArgumentException>(() => ArpabetParser.Parse("ah0"));
+        }
+
+        [Fact]
+        public void TryParse_LowercaseToken_ReturnsFalse()
+        {
+            // 小文字トークン "ah0" → false
+            Assert.False(ArpabetParser.TryParse("ah0", out _));
+        }
+
+        [Fact]
+        public void Parse_SingleCharVowel_ThrowsArgumentException()
+        {
+            // "A" は母音の1文字名だが TryParseSingle には 'A' のcase が無い → 失敗
+            Assert.Throws<ArgumentException>(() => ArpabetParser.Parse("A"));
+        }
+
+        [Fact]
+        public void TryParse_ThreeCharConsonant_ReturnsFalse()
+        {
+            // "CHH" → nameLen=3（ストレスなし） → 範囲外
+            Assert.False(ArpabetParser.TryParse("CHH", out _));
+        }
     }
 }

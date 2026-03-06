@@ -85,5 +85,35 @@ namespace DotNetG2P.Tests.EnglishG2P.Normalization
             // 25:00 → 範囲外（時間0-23）
             Assert.Null(TimeExpander.TryExpand("25:00"));
         }
+
+        // ===== 追加エッジケース =====
+
+        [Fact]
+        public void TryExpand_TwentyFourHour_FourteenOhFive()
+        {
+            // 14:05 → 24時制: "fourteen oh five"
+            Assert.Equal("fourteen oh five", TimeExpander.TryExpand("14:05"));
+        }
+
+        [Fact]
+        public void TryExpand_InvalidMinute_SixtyReturnsNull()
+        {
+            // 12:60 → 分が60で範囲外 → null
+            Assert.Null(TimeExpander.TryExpand("12:60"));
+        }
+
+        [Fact]
+        public void TryExpand_Noon()
+        {
+            // 12:00 → "twelve o'clock"
+            Assert.Equal("twelve o'clock", TimeExpander.TryExpand("12:00"));
+        }
+
+        [Fact]
+        public void TryExpand_ThreeDigitHour_ReturnsNull()
+        {
+            // 123:00 → 時間部分が3桁 → null
+            Assert.Null(TimeExpander.TryExpand("123:00"));
+        }
     }
 }

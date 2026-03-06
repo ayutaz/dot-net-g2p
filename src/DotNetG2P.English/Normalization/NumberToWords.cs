@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.Text;
 
 namespace DotNetG2P.English.Normalization
 {
@@ -82,16 +83,17 @@ namespace DotNetG2P.English.Normalization
             if (!long.TryParse(intPart, out long intValue))
                 return intPart + "." + fracPart;
 
-            var result = Cardinal(intValue) + " point";
+            var sb = new StringBuilder(Cardinal(intValue));
+            sb.Append(" point");
 
             // 小数部は各桁を個別に読み上げ
             for (int i = 0; i < fracPart.Length; i++)
             {
                 int digit = fracPart[i] - '0';
-                result += " " + DigitWords[digit];
+                sb.Append(' ').Append(DigitWords[digit]);
             }
 
-            return result;
+            return sb.ToString();
         }
 
         /// <summary>
@@ -130,21 +132,21 @@ namespace DotNetG2P.English.Normalization
                 groupIndex++;
             }
 
-            // 上位グループから結合
-            string result = "";
+            // 上位グループから結合（StringBuilderで効率化）
+            var sb = new StringBuilder();
             for (int i = parts.Length - 1; i >= 0; i--)
             {
                 if (parts[i] != null)
                 {
-                    if (result.Length > 0)
+                    if (sb.Length > 0)
                     {
-                        result += " ";
+                        sb.Append(' ');
                     }
-                    result += parts[i];
+                    sb.Append(parts[i]);
                 }
             }
 
-            return result;
+            return sb.ToString();
         }
 
         /// <summary>

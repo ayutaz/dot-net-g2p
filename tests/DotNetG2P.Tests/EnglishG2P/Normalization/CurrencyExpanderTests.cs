@@ -89,5 +89,30 @@ namespace DotNetG2P.Tests.EnglishG2P.Normalization
         {
             Assert.Null(CurrencyExpander.TryExpand(""));
         }
+
+        // ===== 追加エッジケース =====
+
+        [Fact]
+        public void TryExpand_YenWithDecimal_ReturnsNull()
+        {
+            // 円は小数部なし → ExpandYenで "100.50" はlong.TryParseに失敗するためnull
+            Assert.Null(CurrencyExpander.TryExpand("¥100.50"));
+        }
+
+        [Fact]
+        public void TryExpand_Dollar_ZeroDollarsZeroCents()
+        {
+            // $0.00 → 整数部0、小数部0 → 整数部が0で小数部も0なので "zero dollars" になる
+            var result = CurrencyExpander.TryExpand("$0.00");
+            Assert.NotNull(result);
+            Assert.Equal("zero dollars", result);
+        }
+
+        [Fact]
+        public void TryExpand_Dollar_OneDollarFiftyCents_SingleDecimalDigit()
+        {
+            // $1.5 → 小数部1桁 "5" → 50に正規化 → "one dollar fifty cents"
+            Assert.Equal("one dollar fifty cents", CurrencyExpander.TryExpand("$1.5"));
+        }
     }
 }

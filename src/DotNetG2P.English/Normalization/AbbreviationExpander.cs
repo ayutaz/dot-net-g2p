@@ -16,7 +16,7 @@ namespace DotNetG2P.English.Normalization
             ["dr"] = "Doctor",
             ["mr"] = "Mister",
             ["mrs"] = "Misses",
-            ["ms"] = "Miss",
+            ["ms"] = "Miz",
             ["prof"] = "Professor",
             ["rev"] = "Reverend",
 

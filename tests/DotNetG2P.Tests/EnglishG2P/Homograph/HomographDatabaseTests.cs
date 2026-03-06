@@ -197,7 +197,35 @@ namespace DotNetG2P.Tests.EnglishG2P.Homograph
         [Fact]
         public void Database_HasExpected60Entries()
         {
-            Assert.Equal(61, HomographDatabase.Count);
+            Assert.Equal(62, HomographDatabase.Count);
+        }
+
+        // ===== wound エントリの中身検証 =====
+
+        [Fact]
+        public void WoundEntry_NounUsesVariant1_VerbUsesVariant0()
+        {
+            // wound: [0]=W AW1 N D (windの過去形/巻いた), [1]=W UW1 N D (名詞:傷)
+            bool found = HomographDatabase.TryGetEntry("wound", out var entry);
+
+            Assert.True(found);
+            Assert.Equal(1, entry.DefaultVariantIndex);
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Noun));
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Verb));
+        }
+
+        // ===== dove エントリの中身検証 =====
+
+        [Fact]
+        public void DoveEntry_VerbUsesVariant0_NounUsesVariant1()
+        {
+            // dove: [0]=D AH1 V (diveの過去形), [1]=D OW1 V (鳩)
+            bool found = HomographDatabase.TryGetEntry("dove", out var entry);
+
+            Assert.True(found);
+            Assert.Equal(1, entry.DefaultVariantIndex);
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Verb));
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Noun));
         }
 
         // ===== null および空文字列で false を返す =====

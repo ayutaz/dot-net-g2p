@@ -109,6 +109,25 @@ namespace DotNetG2P.Tests.EnglishG2P.Normalization
             Assert.Equal("   ", result);
         }
 
+        [Theory]
+        [InlineData("-5", "negative five")]
+        [InlineData("-100", "negative one hundred")]
+        [InlineData("-1000", "negative one thousand")]
+        public void Normalize_NegativeInteger_ConvertsToWords(string input, string expected)
+        {
+            // 負数のトークンが "negative ..." に正規化される
+            var result = EnglishNormalizer.Normalize(input);
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void Normalize_MsAbbreviation_ExpandsToMiz()
+        {
+            // "Ms. Smith" → "Miz Smith"
+            var result = EnglishNormalizer.Normalize("Ms. Smith");
+            Assert.Equal("Miz Smith", result);
+        }
+
         // --- EnglishG2PEngine パイプライン統合テスト ---
 
         [Fact]

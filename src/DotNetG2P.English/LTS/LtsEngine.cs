@@ -8,8 +8,15 @@ namespace DotNetG2P.English.LTS
     /// 英単語のスペルから音素列を予測する。CMU辞書に未登録の単語に対するフォールバックとして使用。
     /// </summary>
     /// <remarks>
+    /// <para>
     /// このクラスはスレッドセーフです。ツリーデータは遅延初期化後、読み取り専用で使用されます。
     /// Flite (https://github.com/festvox/flite) の cst_lts.c / lts_apply を参考に実装。
+    /// </para>
+    /// <para>
+    /// ストレス制約: Flite LTSモデルはPrimary stress (1) と No stress (0) のみ出力します。
+    /// Secondary stress (2) は生成されません。CMU辞書のSecondary stressを含む発音が必要な場合は
+    /// 辞書ルックアップを使用してください。
+    /// </para>
     /// </remarks>
     internal static class LtsEngine
     {
@@ -52,9 +59,13 @@ namespace DotNetG2P.English.LTS
         /// <summary>
         /// 英単語のスペルからARPAbet音素列を予測する。
         /// アポストロフィを含む単語は分割して各部分をLTS処理し結合する。
+        /// ハイフンなど英字以外の文字を含む単語はnullを返す。
         /// </summary>
         /// <param name="word">入力単語（英字のみ、小文字推奨）</param>
-        /// <returns>予測された音素配列。予測不可の場合はnull。</returns>
+        /// <returns>
+        /// 予測された音素配列。予測不可の場合はnull。
+        /// ストレスはPrimary (1) と NoStress (0) のみ。Secondary (2) は生成されない。
+        /// </returns>
         internal static EnglishPhoneme[]? Predict(string word)
         {
             if (string.IsNullOrEmpty(word))
@@ -79,13 +90,22 @@ namespace DotNetG2P.English.LTS
             var modelData = ModelData;
             var result = new List<EnglishPhoneme>();
 
-            // パディング付き文字列を構築: "000#word#000"
-            var padded = string.Concat(Padding, lowerWord, "#000");
+            // パディング付き文字配列を構築: "000#word#000"（string.Concatによるアロケーション回避）
+            var paddedLen = Padding.Length + lowerWord.Length + 4; // "000#" + word + "#000"
+            var padded = new char[paddedLen];
+            padded[0] = '0'; padded[1] = '0'; padded[2] = '0'; padded[3] = '#';
+            lowerWord.CopyTo(0, padded, Padding.Length, lowerWord.Length);
+            var suffixStart = Padding.Length + lowerWord.Length;
+            padded[suffixStart] = '#'; padded[suffixStart + 1] = '0';
+            padded[suffixStart + 2] = '0'; padded[suffixStart + 3] = '0';
 
             // 各文字を順方向に処理（先頭→末尾）
             // パディング後の文字列中、単語部分のインデックスは [4, 4+len-1]
             var wordStart = Padding.Length; // 4
             var wordEnd = wordStart + lowerWord.Length - 1;
+
+            // コンテキスト窓バッファをループ外に配置し再利用
+            var fvalBuff = new byte[ContextSize];
 
             for (var pos = wordStart; pos <= wordEnd; pos++)
             {
@@ -101,9 +121,7 @@ namespace DotNetG2P.English.LTS
 
                 var treeStart = LtsData.LetterIndex[letterIdx];
 
-                // コンテキスト窓を構築
-                var fvalBuff = new byte[ContextSize];
-
+                // コンテキスト窓を構築（バッファ再利用）
                 // 左コンテキスト: pos-4, pos-3, pos-2, pos-1
                 for (var j = 0; j < LtsData.ContextWindowSize; j++)
                 {
@@ -116,7 +134,7 @@ namespace DotNetG2P.English.LTS
                 {
                     var contextPos = pos + 1 + j;
                     fvalBuff[LtsData.ContextWindowSize + j] =
-                        contextPos < padded.Length ? (byte)padded[contextPos] : (byte)'0';
+                        contextPos < paddedLen ? (byte)padded[contextPos] : (byte)'0';
                 }
 
                 // 追加特徴（POS: デフォルト "0"）

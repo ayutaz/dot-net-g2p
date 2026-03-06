@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using DotNetG2P.English;
 using Xunit;
 
@@ -348,6 +350,53 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
                 Assert.NotEmpty(result);
                 Assert.Contains("S M IH1 TH", result); // "Smith" は変換される
             }
+        }
+
+        // ===== 並行テスト =====
+
+        [Fact]
+        public void ConcurrentDispose_NoException()
+        {
+            // 複数スレッドから同時にDispose()を呼び出しても例外が発生しないこと
+            var engine = new EnglishG2PEngine();
+            var tasks = new Task[10];
+            var barrier = new Barrier(10);
+
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                tasks[i] = Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    var ex = Record.Exception(() => engine.Dispose());
+                    Assert.Null(ex);
+                });
+            }
+
+            Task.WaitAll(tasks);
+        }
+
+        [Fact]
+        public void ConcurrentAccess_NoException()
+        {
+            // 複数スレッドから同時にToPhonemes()を呼び出しても例外が発生しないこと
+            // （辞書は読み取り専用のためスレッドセーフ）
+            var tasks = new Task[8];
+            var barrier = new Barrier(8);
+
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                tasks[i] = Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    for (int j = 0; j < 50; j++)
+                    {
+                        var result = _engine.ToPhonemes("hello world");
+                        Assert.Equal("HH AH0 L OW1 W ER1 L D", result);
+                    }
+                });
+            }
+
+            Task.WaitAll(tasks);
         }
     }
 }

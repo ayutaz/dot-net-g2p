@@ -48,11 +48,29 @@ namespace DotNetG2P.Multilingual
             // 12. 全角数字 U+FF10-FF19
             if (c >= '\uFF10' && c <= '\uFF19') return ScriptKind.Digit;
 
-            // 13. 全角英数字 U+FF01-FF5E (全角数字を除く)
-            if (c >= '\uFF01' && c <= '\uFF5E') return ScriptKind.English;
+            // 13. 全角英字 U+FF21-FF3A (A-Z), U+FF41-FF5A (a-z)
+            if ((c >= '\uFF21' && c <= '\uFF3A') || (c >= '\uFF41' && c <= '\uFF5A'))
+                return ScriptKind.English;
 
-            // 14. 上記以外
+            // 14. 全角記号 U+FF01-FF0F, U+FF1A-FF20, U+FF3B-FF40, U+FF5B-FF5E
+            if (c >= '\uFF01' && c <= '\uFF5E') return ScriptKind.Punctuation;
+
+            // 15. 上記以外
             return ScriptKind.Other;
+        }
+
+        /// <summary>サロゲートペアかどうかを判定し、サロゲートペアならOtherを返す。BMP文字ならClassify(char)に委譲する。</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ScriptKind Classify(string text, int index, out int charCount)
+        {
+            if (char.IsHighSurrogate(text[index]) && index + 1 < text.Length && char.IsLowSurrogate(text[index + 1]))
+            {
+                // サロゲートペア（絵文字、CJK拡張B以降等）はOther扱い
+                charCount = 2;
+                return ScriptKind.Other;
+            }
+            charCount = 1;
+            return Classify(text[index]);
         }
 
         /// <summary>ScriptKindからLanguageへの変換。Digit/Punctuation/Whitespace/Otherはnullを返す。</summary>

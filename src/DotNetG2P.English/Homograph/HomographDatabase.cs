@@ -91,7 +91,12 @@ namespace DotNetG2P.English.Homograph
             // wound: [0]=W AW1 N D (windの過去形), [1]=W UW1 N D (名詞:傷)
             Add("wound", 1,
                 new HomographRule(PosTag.Noun, 1),
-                new HomographRule(PosTag.Verb, 1));
+                new HomographRule(PosTag.Verb, 0));
+
+            // dove: [0]=D AH1 V (diveの過去形), [1]=D OW1 V (鳩)
+            Add("dove", 1,
+                new HomographRule(PosTag.Verb, 0),
+                new HomographRule(PosTag.Noun, 1));
 
             // ================================================================
             // カテゴリ2: ストレスシフト型 (名詞=第1音節、動詞=第2音節)

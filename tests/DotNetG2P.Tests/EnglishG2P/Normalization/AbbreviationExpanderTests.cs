@@ -82,5 +82,52 @@ namespace DotNetG2P.Tests.EnglishG2P.Normalization
         {
             Assert.Equal(expected, AbbreviationExpander.TryExpand(input));
         }
+
+        [Theory]
+        [InlineData("Ms.", "Miz")]
+        [InlineData("ms.", "Miz")]
+        [InlineData("Ms", "Miz")]
+        public void TryExpand_Ms_ReturnsMiz(string input, string expected)
+        {
+            // "Ms." は発音 "Miz" に展開される（"Miss" ではない）
+            Assert.Equal(expected, AbbreviationExpander.TryExpand(input));
+        }
+
+        // ===== 追加エッジケース =====
+
+        [Fact]
+        public void TryExpand_NoPeriod_ReturnsNumber()
+        {
+            // "No." → 大文字始まりなので "Number"
+            Assert.Equal("Number", AbbreviationExpander.TryExpand("No."));
+        }
+
+        [Fact]
+        public void TryExpand_NoWithoutPeriod_ReturnsNumber()
+        {
+            // "No" → 大文字始まりなので "Number"
+            Assert.Equal("Number", AbbreviationExpander.TryExpand("No"));
+        }
+
+        [Fact]
+        public void TryExpand_LowercaseNo_ReturnsNull()
+        {
+            // "no" → 小文字始まりなのでnull（"no"は一般単語として扱う）
+            Assert.Null(AbbreviationExpander.TryExpand("no"));
+        }
+
+        [Fact]
+        public void TryExpand_St_ReturnsStreet()
+        {
+            // "St" → "Street"
+            Assert.Equal("Street", AbbreviationExpander.TryExpand("St"));
+        }
+
+        [Fact]
+        public void TryExpand_StWithPeriod_ReturnsStreet()
+        {
+            // "St." → "Street"
+            Assert.Equal("Street", AbbreviationExpander.TryExpand("St."));
+        }
     }
 }

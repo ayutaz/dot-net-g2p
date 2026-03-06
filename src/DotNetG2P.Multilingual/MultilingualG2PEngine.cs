@@ -199,7 +199,7 @@ namespace DotNetG2P.Multilingual
         /// </summary>
         private void ThrowIfDisposed()
         {
-            if (_disposed != 0)
+            if (Volatile.Read(ref _disposed) != 0)
                 throw new ObjectDisposedException(nameof(MultilingualG2PEngine));
         }
     }

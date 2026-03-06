@@ -23,9 +23,9 @@ namespace DotNetG2P.English.Normalization
             @"^(\d+)\.(\d+)$",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        // 整数パターン: "123", "1,000,000" 等（先頭が数字、以降は数字かカンマ）
+        // 整数パターン: "123", "-5", "1,000,000" 等（オプションのマイナス記号 + 数字/カンマ）
         private static readonly Regex s_integerRegex = new Regex(
-            @"^\d[\d,]*$",
+            @"^-?\d[\d,]*$",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         // ピリオド区切り頭字語パターン: "U.S.A.", "U.S." 等
@@ -120,12 +120,12 @@ namespace DotNetG2P.English.Normalization
                 return NumberToWords.ExpandDecimal(decimalMatch.Groups[1].Value, decimalMatch.Groups[2].Value);
             }
 
-            // (f) 整数パターン: "123", "1,000" 等
+            // (f) 整数パターン: "123", "-5", "1,000" 等
             var integerMatch = s_integerRegex.Match(core);
             if (integerMatch.Success)
             {
                 string cleaned = core.Replace(",", "");
-                if (long.TryParse(cleaned, NumberStyles.None, CultureInfo.InvariantCulture, out long intVal))
+                if (long.TryParse(cleaned, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out long intVal))
                 {
                     return NumberToWords.Cardinal(intVal);
                 }

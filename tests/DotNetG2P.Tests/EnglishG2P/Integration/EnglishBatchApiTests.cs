@@ -182,5 +182,48 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
                 Assert.Equal(individual, batchResult[i]);
             }
         }
+
+        // ===== Dispose後のバッチAPI呼び出し =====
+
+        [Fact]
+        public void ToPhonemesBatch_AfterDispose_ThrowsObjectDisposedException()
+        {
+            // Dispose済みエンジンでバッチAPIを呼び出すとObjectDisposedException
+            var engine = new EnglishG2PEngine();
+            engine.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(
+                () => engine.ToPhonemesBatch(new[] { "hello" }));
+        }
+
+        [Fact]
+        public void ToIPABatch_AfterDispose_ThrowsObjectDisposedException()
+        {
+            var engine = new EnglishG2PEngine();
+            engine.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(
+                () => engine.ToIPABatch(new[] { "hello" }));
+        }
+
+        [Fact]
+        public void ToXSampaBatch_AfterDispose_ThrowsObjectDisposedException()
+        {
+            var engine = new EnglishG2PEngine();
+            engine.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(
+                () => engine.ToXSampaBatch(new[] { "hello" }));
+        }
+
+        [Fact]
+        public void ToPhonemeListBatch_AfterDispose_ThrowsObjectDisposedException()
+        {
+            var engine = new EnglishG2PEngine();
+            engine.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(
+                () => engine.ToPhonemeListBatch(new[] { "hello" }));
+        }
     }
 }

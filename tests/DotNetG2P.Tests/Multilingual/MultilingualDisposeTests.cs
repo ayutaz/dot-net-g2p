@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using DotNetG2P.Multilingual;
 
 namespace DotNetG2P.Tests.Multilingual
@@ -353,6 +355,83 @@ namespace DotNetG2P.Tests.Multilingual
                 () => engine.ToPhonemesBatch(new[] { "テスト" }));
             Assert.Throws<ObjectDisposedException>(
                 () => engine.ToSegmentsBatch(new[] { "テスト" }));
+        }
+
+        // =====================================================================
+        // 16. 並行Dispose_例外なし
+        // =====================================================================
+
+        [SkippableFact]
+        public void 並行Dispose_例外なし()
+        {
+            var dictPath = FindDictPath();
+            SkipIfNoDictionary(dictPath);
+
+            var engine = new MultilingualG2PEngine(dictPath!);
+
+            // 複数スレッドから同時にDispose()を呼び出しても例外が発生しないこと
+            var tasks = new Task[8];
+            var barrier = new Barrier(8);
+
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                tasks[i] = Task.Run(() =>
+                {
+                    barrier.SignalAndWait();
+                    var ex = Record.Exception(() => engine.Dispose());
+                    Assert.Null(ex);
+                });
+            }
+
+            Task.WaitAll(tasks);
+        }
+
+        // =====================================================================
+        // 17. 並行アクセス中のDispose_安全
+        // =====================================================================
+
+        [SkippableFact]
+        public void 並行アクセス中のDispose_安全()
+        {
+            var dictPath = FindDictPath();
+            SkipIfNoDictionary(dictPath);
+
+            var engine = new MultilingualG2PEngine(dictPath!);
+
+            // ウォームアップ
+            engine.ToPhonemes("テストtest");
+
+            // 複数スレッドで変換を実行しながらDisposeしても安全であること
+            // ObjectDisposedExceptionは正常な振る舞い
+            var tasks = new Task[4];
+            for (int i = 0; i < tasks.Length - 1; i++)
+            {
+                tasks[i] = Task.Run(() =>
+                {
+                    for (int j = 0; j < 20; j++)
+                    {
+                        try
+                        {
+                            engine.ToPhonemes("テストtest");
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Dispose後のObjectDisposedExceptionは正常
+                            break;
+                        }
+                    }
+                });
+            }
+            // 最後のタスクでDispose実行
+            tasks[tasks.Length - 1] = Task.Run(() =>
+            {
+                Thread.Sleep(5);
+                engine.Dispose();
+            });
+
+            // 全タスクが例外なく完了すること
+            var ex = Record.Exception(() => Task.WaitAll(tasks));
+            Assert.Null(ex);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Linq;
 using DotNetG2P.Multilingual;
 
 namespace DotNetG2P.Tests.Multilingual
@@ -339,6 +340,62 @@ namespace DotNetG2P.Tests.Multilingual
             var result = TextSegmenter.Segment("hello   world");
             Assert.Single(result);
             AssertSegment(result, 0, "hello   world", Language.English);
+        }
+
+        // ===== サロゲートペア（テスト31-33） =====
+
+        /// <summary>31. サロゲートペア（絵文字）を含む日本語 → クラッシュせず全テキストが復元される</summary>
+        [Fact]
+        public void Segment_サロゲートペア含み日本語_正しく処理()
+        {
+            var input = "東京\U0001F60Aタワー";
+            var result = TextSegmenter.Segment(input);
+            // セグメント結合後が元テキストと一致
+            var combined = string.Concat(result.Select(s => s.Text));
+            Assert.Equal(input, combined);
+            Assert.True(result.Count >= 1, "セグメントが1つ以上生成される");
+        }
+
+        /// <summary>32. 絵文字含み英語 → セグメントが壊れない</summary>
+        [Fact]
+        public void Segment_絵文字含み英語_セグメント壊れない()
+        {
+            var input = "hello\U0001F30Dworld";
+            var result = TextSegmenter.Segment(input);
+            var combined = string.Concat(result.Select(s => s.Text));
+            Assert.Equal(input, combined);
+            Assert.True(result.Count >= 1, "セグメントが1つ以上生成される");
+        }
+
+        /// <summary>33. サロゲートペアのみ → クラッシュしない</summary>
+        [Fact]
+        public void Segment_サロゲートペアのみ_クラッシュしない()
+        {
+            var input = "\U0001F600\U0001F601\U0001F602";
+            var result = TextSegmenter.Segment(input);
+            var combined = string.Concat(result.Select(s => s.Text));
+            Assert.Equal(input, combined);
+        }
+
+        // ===== 全角記号（テスト34-35） =====
+
+        /// <summary>34. 全角感嘆符が日本語セグメントに含まれる</summary>
+        [Fact]
+        public void Segment_全角感嘆符_日本語セグメントに含まれる()
+        {
+            // '！'(U+FF01)はPunctuation → 前方の日本語に付属
+            var result = TextSegmenter.Segment("こんにちは！");
+            Assert.Single(result);
+            AssertSegment(result, 0, "こんにちは！", Language.Japanese);
+        }
+
+        /// <summary>35. 全角疑問符が日本語セグメントに含まれる</summary>
+        [Fact]
+        public void Segment_全角疑問符_日本語セグメントに含まれる()
+        {
+            var result = TextSegmenter.Segment("元気？");
+            Assert.Single(result);
+            AssertSegment(result, 0, "元気？", Language.Japanese);
         }
     }
 }

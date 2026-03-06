@@ -17,12 +17,21 @@ namespace DotNetG2P.Multilingual
             if (string.IsNullOrEmpty(text))
                 return new List<TextSegment>();
 
-            // 1パス目: 各文字のScriptKindを分類
+            // 1パス目: 各文字のScriptKindを分類（サロゲートペア考慮）
             Span<ScriptKind> kinds = text.Length <= 256
                 ? stackalloc ScriptKind[text.Length]
                 : new ScriptKind[text.Length];
-            for (int i = 0; i < text.Length; i++)
-                kinds[i] = LanguageDetector.Classify(text[i]);
+            for (int i = 0; i < text.Length;)
+            {
+                var kind = LanguageDetector.Classify(text, i, out int charCount);
+                kinds[i] = kind;
+                if (charCount == 2)
+                {
+                    // サロゲートペアの後半も同じScriptKindを割り当て
+                    kinds[i + 1] = kind;
+                }
+                i += charCount;
+            }
 
             // 2パス目: 各文字に確定した言語を割り当てる
             var languages = new Language?[text.Length];

@@ -187,6 +187,82 @@ namespace DotNetG2P.Tests.EnglishG2P.Homograph
             Assert.Equal(0, result);
         }
 
+        // ===== wound: 動詞文脈 =====
+
+        [Fact]
+        public void Wound_AfterWill_ReturnsVerbVariant0()
+        {
+            // "will wound" → wound は動詞(windの過去形), wound: Verb→0
+            var words = new[] { "will", "wound" };
+
+            int result = HomographResolver.ResolveVariantIndex(words, 1);
+
+            Assert.Equal(0, result);
+        }
+
+        // ===== wound: 名詞文脈 =====
+
+        [Fact]
+        public void Wound_AfterThe_ReturnsNounVariant1()
+        {
+            // "the wound" → wound は名詞(傷), wound: Noun→1
+            var words = new[] { "the", "wound" };
+
+            int result = HomographResolver.ResolveVariantIndex(words, 1);
+
+            Assert.Equal(1, result);
+        }
+
+        // ===== dove: 動詞文脈 =====
+
+        [Fact]
+        public void Dove_AfterHe_ReturnsVerbVariant0()
+        {
+            // "he dove" → dove は動詞(diveの過去形), dove: Verb→0
+            var words = new[] { "he", "dove" };
+
+            int result = HomographResolver.ResolveVariantIndex(words, 1);
+
+            Assert.Equal(0, result);
+        }
+
+        // ===== dove: 名詞文脈 =====
+
+        [Fact]
+        public void Dove_AfterThe_ReturnsNounVariant1()
+        {
+            // "the dove" → dove は名詞(鳩), dove: Noun→1
+            var words = new[] { "the", "dove" };
+
+            int result = HomographResolver.ResolveVariantIndex(words, 1);
+
+            Assert.Equal(1, result);
+        }
+
+        // ===== 前置詞文脈テスト =====
+
+        [Fact]
+        public void Lead_AfterOf_ReturnsNounVariant0()
+        {
+            // "of lead" → lead は名詞(鉛), lead: Noun→0
+            var words = new[] { "made", "of", "lead" };
+
+            int result = HomographResolver.ResolveVariantIndex(words, 2);
+
+            Assert.Equal(0, result);
+        }
+
+        [Fact]
+        public void Desert_AfterIn_ReturnsNounVariant0()
+        {
+            // "in the desert" → desert は名詞(砂漠), desert: Noun→0
+            var words = new[] { "in", "the", "desert" };
+
+            int result = HomographResolver.ResolveVariantIndex(words, 2);
+
+            Assert.Equal(0, result);
+        }
+
         // ===== 追加の文脈テスト: ストレスシフト型 =====
 
         [Fact]
