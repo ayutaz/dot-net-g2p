@@ -116,8 +116,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
             _output.WriteLine($"音素出力なし(空): {emptyCount} ({100.0 * emptyCount / totalCount:F1}%)");
             _output.WriteLine($"展開形が辞書に存在: {expandedExistsCount} / {totalCount}");
 
-            // 常にパス
-            Assert.True(true);
+            // 少なくとも1つ以上の縮約形が音素生成に成功することを確認
+            Assert.True(nonEmptyCount > 0, "縮約形の音素生成が全て失敗");
         }
 
         // =====================================================================
@@ -262,8 +262,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
                 }
             }
 
-            // 常にパス
-            Assert.True(true);
+            // 少なくとも1つ以上のホモグラフが正しく解決されることを確認
+            Assert.True(correctCount > 0, "ホモグラフの文脈解決が全て失敗");
         }
 
         /// <summary>

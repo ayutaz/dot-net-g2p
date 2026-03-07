@@ -134,7 +134,7 @@ namespace DotNetG2P.Tests.ChineseG2P
                 $"バッチ({swBatch.ElapsedMilliseconds}ms)がループ({swLoop.ElapsedMilliseconds}ms)の3倍以上遅い");
 
             // 結果が同一であることも確認
-            Assert.Equal(batchResults.Length, loopResults.Length);
+            Assert.Equal(batchResults.Count, loopResults.Length);
         }
 
         [Fact]
@@ -150,7 +150,7 @@ namespace DotNetG2P.Tests.ChineseG2P
             sw.Stop();
 
             _output.WriteLine($"バッチ5000件: {sw.ElapsedMilliseconds}ms");
-            Assert.Equal(5000, results.Length);
+            Assert.Equal(5000, results.Count);
             Assert.True(sw.ElapsedMilliseconds < 10000, $"バッチ5000件が10秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
@@ -178,7 +178,7 @@ namespace DotNetG2P.Tests.ChineseG2P
 
             var avg = times.Average();
             _output.WriteLine($"初期化時間(5回): {string.Join(", ", times.Select(t => $"{t}ms"))}  平均: {avg:F1}ms");
-            Assert.True(avg < 15000, $"平均初期化時間が15秒を超過: {avg:F1}ms");
+            Assert.True(avg < 5000, $"平均初期化時間が5秒を超過: {avg:F1}ms");
         }
 
         [Fact]
@@ -234,8 +234,8 @@ namespace DotNetG2P.Tests.ChineseG2P
 
             _output.WriteLine($"処理前: {beforeMemory / (1024.0 * 1024.0):F2}MB, 処理後: {afterMemory / (1024.0 * 1024.0):F2}MB, 差分: {diffMb:F2}MB");
 
-            // 10000回処理後のメモリ増加が100MBを超えないこと
-            Assert.True(diffMb < 100, $"メモリ増加が100MBを超過: {diffMb:F2}MB");
+            // 10000回処理後のメモリ増加が50MBを超えないこと
+            Assert.True(diffMb < 50, $"メモリ増加が50MBを超過: {diffMb:F2}MB");
         }
 
         [Fact]

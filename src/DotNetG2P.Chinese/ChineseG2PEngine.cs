@@ -130,7 +130,7 @@ namespace DotNetG2P.Chinese
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrWhiteSpace(text))
                 return "";
 
             // Step 1: ピンイン収集
@@ -198,7 +198,7 @@ namespace DotNetG2P.Chinese
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<string>();
 
             // Step 1: ピンイン収集
@@ -277,7 +277,7 @@ namespace DotNetG2P.Chinese
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrWhiteSpace(text))
                 return "";
 
             var entries = CollectPinyins(text);
@@ -343,7 +343,7 @@ namespace DotNetG2P.Chinese
         {
             ThrowIfDisposed();
 
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrWhiteSpace(text))
                 return "";
 
             var entries = CollectPinyins(text);
@@ -393,15 +393,15 @@ namespace DotNetG2P.Chinese
         /// 複数テキストを一括でピンインに変換する（デフォルトスタイル使用）。
         /// </summary>
         /// <param name="texts">入力テキストの配列</param>
-        /// <returns>各テキストに対応するピンイン文字列の配列</returns>
-        public string[] ToPinyinBatch(string[] texts)
+        /// <returns>各テキストに対応するピンイン文字列のリスト</returns>
+        public IReadOnlyList<string> ToPinyinBatch(string[] texts)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new string[texts.Length];
+            var results = new List<string>(texts.Length);
             for (var i = 0; i < texts.Length; i++)
-                results[i] = ToPinyin(texts[i]);
+                results.Add(ToPinyin(texts[i]));
             return results;
         }
 
@@ -410,15 +410,15 @@ namespace DotNetG2P.Chinese
         /// </summary>
         /// <param name="texts">入力テキストの配列</param>
         /// <param name="style">ピンインスタイル</param>
-        /// <returns>各テキストに対応するピンイン文字列の配列</returns>
-        public string[] ToPinyinBatch(string[] texts, PinyinStyle style)
+        /// <returns>各テキストに対応するピンイン文字列のリスト</returns>
+        public IReadOnlyList<string> ToPinyinBatch(string[] texts, PinyinStyle style)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new string[texts.Length];
+            var results = new List<string>(texts.Length);
             for (var i = 0; i < texts.Length; i++)
-                results[i] = ToPinyin(texts[i], style);
+                results.Add(ToPinyin(texts[i], style));
             return results;
         }
 
@@ -426,15 +426,15 @@ namespace DotNetG2P.Chinese
         /// 複数テキストを一括で各文字ごとのピンイン配列に変換する（デフォルトスタイル使用）。
         /// </summary>
         /// <param name="texts">入力テキストの配列</param>
-        /// <returns>各テキストに対応するピンイン配列の配列</returns>
-        public string[][] ToPinyinListBatch(string[] texts)
+        /// <returns>各テキストに対応するピンイン配列のリスト</returns>
+        public IReadOnlyList<string[]> ToPinyinListBatch(string[] texts)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new string[texts.Length][];
+            var results = new List<string[]>(texts.Length);
             for (var i = 0; i < texts.Length; i++)
-                results[i] = ToPinyinList(texts[i]);
+                results.Add(ToPinyinList(texts[i]));
             return results;
         }
 
@@ -443,15 +443,15 @@ namespace DotNetG2P.Chinese
         /// </summary>
         /// <param name="texts">入力テキストの配列</param>
         /// <param name="style">ピンインスタイル</param>
-        /// <returns>各テキストに対応するピンイン配列の配列</returns>
-        public string[][] ToPinyinListBatch(string[] texts, PinyinStyle style)
+        /// <returns>各テキストに対応するピンイン配列のリスト</returns>
+        public IReadOnlyList<string[]> ToPinyinListBatch(string[] texts, PinyinStyle style)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new string[texts.Length][];
+            var results = new List<string[]>(texts.Length);
             for (var i = 0; i < texts.Length; i++)
-                results[i] = ToPinyinList(texts[i], style);
+                results.Add(ToPinyinList(texts[i], style));
             return results;
         }
 
@@ -459,15 +459,15 @@ namespace DotNetG2P.Chinese
         /// 複数テキストを一括でIPA表記に変換する（声調マーカー付き）。
         /// </summary>
         /// <param name="texts">入力テキストの配列</param>
-        /// <returns>各テキストに対応するIPA文字列の配列</returns>
-        public string[] ToIPABatch(string[] texts)
+        /// <returns>各テキストに対応するIPA文字列のリスト</returns>
+        public IReadOnlyList<string> ToIPABatch(string[] texts)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new string[texts.Length];
+            var results = new List<string>(texts.Length);
             for (var i = 0; i < texts.Length; i++)
-                results[i] = ToIPA(texts[i]);
+                results.Add(ToIPA(texts[i]));
             return results;
         }
 
@@ -476,15 +476,15 @@ namespace DotNetG2P.Chinese
         /// </summary>
         /// <param name="texts">入力テキストの配列</param>
         /// <param name="includeTones">声調マーカーを含めるかどうか</param>
-        /// <returns>各テキストに対応するIPA文字列の配列</returns>
-        public string[] ToIPABatch(string[] texts, bool includeTones)
+        /// <returns>各テキストに対応するIPA文字列のリスト</returns>
+        public IReadOnlyList<string> ToIPABatch(string[] texts, bool includeTones)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new string[texts.Length];
+            var results = new List<string>(texts.Length);
             for (var i = 0; i < texts.Length; i++)
-                results[i] = ToIPA(texts[i], includeTones);
+                results.Add(ToIPA(texts[i], includeTones));
             return results;
         }
 
@@ -492,15 +492,15 @@ namespace DotNetG2P.Chinese
         /// 複数テキストを一括で注音符号に変換する（声調マーカー付き）。
         /// </summary>
         /// <param name="texts">入力テキストの配列</param>
-        /// <returns>各テキストに対応する注音符号文字列の配列</returns>
-        public string[] ToZhuyinBatch(string[] texts)
+        /// <returns>各テキストに対応する注音符号文字列のリスト</returns>
+        public IReadOnlyList<string> ToZhuyinBatch(string[] texts)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new string[texts.Length];
+            var results = new List<string>(texts.Length);
             for (var i = 0; i < texts.Length; i++)
-                results[i] = ToZhuyin(texts[i]);
+                results.Add(ToZhuyin(texts[i]));
             return results;
         }
 
@@ -509,26 +509,22 @@ namespace DotNetG2P.Chinese
         /// </summary>
         /// <param name="texts">入力テキストの配列</param>
         /// <param name="includeTones">声調マーカーを含めるかどうか</param>
-        /// <returns>各テキストに対応する注音符号文字列の配列</returns>
-        public string[] ToZhuyinBatch(string[] texts, bool includeTones)
+        /// <returns>各テキストに対応する注音符号文字列のリスト</returns>
+        public IReadOnlyList<string> ToZhuyinBatch(string[] texts, bool includeTones)
         {
             ThrowIfDisposed();
             if (texts == null) throw new ArgumentNullException(nameof(texts));
 
-            var results = new string[texts.Length];
+            var results = new List<string>(texts.Length);
             for (var i = 0; i < texts.Length; i++)
-                results[i] = ToZhuyin(texts[i], includeTones);
+                results.Add(ToZhuyin(texts[i], includeTones));
             return results;
         }
 
         /// <inheritdoc />
         public void Dispose()
         {
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
-            {
-                _charDictionary.Clear();
-                _phraseDictionary?.Clear();
-            }
+            Interlocked.CompareExchange(ref _disposed, 1, 0);
         }
 
         // =====================================================================
@@ -545,6 +541,20 @@ namespace DotNetG2P.Chinese
             for (var i = 0; i < text.Length; i++)
             {
                 var c = text[i];
+
+                // サロゲートペアの検出（絵文字、CJK拡張B以降等）
+                if (char.IsHighSurrogate(c) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+                {
+                    entries.Add(new PinyinEntry
+                    {
+                        Pinyin = null,
+                        OriginalChar = c,
+                        IsSeparator = false,
+                        RawText = text.Substring(i, 2)
+                    });
+                    i++; // ローサロゲートをスキップ
+                    continue;
+                }
 
                 if (IsCjkUnifiedIdeograph(c))
                 {

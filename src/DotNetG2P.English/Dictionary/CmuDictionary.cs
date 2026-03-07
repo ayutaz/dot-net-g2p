@@ -92,14 +92,6 @@ namespace DotNetG2P.English
         }
 
         /// <summary>
-        /// 内部辞書データを解放する。Dispose時に呼び出される。
-        /// </summary>
-        internal void Clear()
-        {
-            _entries.Clear();
-        }
-
-        /// <summary>
         /// StreamReaderからCMU辞書をパースする。
         /// </summary>
         private static CmuDictionary ParseFromReader(StreamReader reader)

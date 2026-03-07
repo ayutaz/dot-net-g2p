@@ -18,6 +18,7 @@ namespace DotNetG2P.English
         /// EnglishPronunciationを初期化する。
         /// </summary>
         /// <param name="phonemes">音素列</param>
+        /// <remarks>渡された配列は防御コピーされません。呼び出し元は配列を変更しないでください。</remarks>
         public EnglishPronunciation(EnglishPhoneme[] phonemes)
         {
             PhonemesInternal = phonemes ?? throw new ArgumentNullException(nameof(phonemes));

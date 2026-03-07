@@ -214,30 +214,6 @@ namespace DotNetG2P.Tests.ChineseG2P
         // Clear テスト
         // =====================================================================
 
-        [Fact]
-        public void Clear_Count0になる()
-        {
-            // Clearテスト用に別インスタンスを作成
-            var dict = PinyinPhraseDictionary.LoadEmbedded();
-            Assert.True(dict.Count > 0);
-
-            dict.Clear();
-
-            Assert.Equal(0, dict.Count);
-        }
-
-        [Fact]
-        public void Clear_後にTryLookupがfalse()
-        {
-            var dict = PinyinPhraseDictionary.LoadEmbedded();
-            Assert.True(dict.TryLookup("中国", out _));
-
-            dict.Clear();
-
-            Assert.False(dict.TryLookup("中国", out var pinyins));
-            Assert.Empty(pinyins);
-        }
-
         // =====================================================================
         // LoadFromFile テスト
         // =====================================================================

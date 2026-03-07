@@ -53,6 +53,7 @@ namespace DotNetG2P.Multilingual
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
             G2PEngine japaneseEngine = null;
+            EnglishG2PEngine englishEngine = null;
             ChineseG2PEngine chineseEngine = null;
             try
             {
@@ -60,18 +61,20 @@ namespace DotNetG2P.Multilingual
                     new MeCabTokenizer(japaneseDictPath),
                     options.JapaneseOptions ?? G2POptions.Default);
 
-                _englishEngine = new EnglishG2PEngine(
+                englishEngine = new EnglishG2PEngine(
                     options.EnglishOptions ?? EnglishG2POptions.Default);
 
                 chineseEngine = new ChineseG2PEngine(
                     options.ChineseOptions ?? ChineseG2POptions.Default);
 
                 _japaneseEngine = japaneseEngine;
+                _englishEngine = englishEngine;
                 _chineseEngine = chineseEngine;
             }
             catch
             {
                 japaneseEngine?.Dispose();
+                englishEngine?.Dispose();
                 chineseEngine?.Dispose();
                 throw;
             }

@@ -356,7 +356,7 @@ namespace DotNetG2P.NJD
 
             // ChainRuleをパースし、前ノードの品詞に対応するルールを取得（キャッシュ利用）
             var rules = ChainRules.GetOrCreate(current.ChainRule);
-            var rule = rules.GetRule(prev.Details.PartOfSpeech);
+            var rule = rules.GetRule(prev.PartOfSpeech);
 
             if (rule == null)
                 return topNodeAcc;
@@ -511,7 +511,7 @@ namespace DotNetG2P.NJD
         /// </summary>
         private static bool IsKazu(NjdNode node)
         {
-            return node.Details != null && node.Details.PartOfSpeech != null && node.Details.PartOfSpeech.IsMeishiSuu;
+            return node.PartOfSpeech.IsMeishiSuu;
         }
     }
 }

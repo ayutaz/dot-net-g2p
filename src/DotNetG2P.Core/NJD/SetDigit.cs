@@ -485,10 +485,10 @@ namespace DotNetG2P.NJD
                 {
                     // 読みと発音を更新
                     node.Details = new WordDetails(
-                        node.Details.PartOfSpeech,
-                        node.Details.ConjugationType,
-                        node.Details.ConjugationForm,
-                        node.Details.OriginalForm,
+                        node.PartOfSpeech,
+                        node.ConjugationType,
+                        node.ConjugationForm,
+                        node.OriginalForm,
                         class3Pron.ToKatakana(),
                         class3Pron
                     );

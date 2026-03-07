@@ -349,7 +349,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToPinyinBatch_声調変調適用()
         {
             var result = _engine.ToPinyinBatch(new[] { "你好", "一个", "不要" });
-            Assert.Equal(3, result.Length);
+            Assert.Equal(3, result.Count);
             Assert.Equal("ní hǎo", result[0]);
             Assert.Equal("yí gè", result[1]);
             Assert.Equal("bú yào", result[2]);

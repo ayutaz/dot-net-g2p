@@ -248,7 +248,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToPinyinBatch_WithStyle_ToneNumber()
         {
             var result = _engine.ToPinyinBatch(new[] { "你好", "中国" }, PinyinStyle.ToneNumber);
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.Equal("ni2 hao3", result[0]);
             Assert.Equal("zhong1 guo2", result[1]);
         }
@@ -264,7 +264,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToPinyinListBatch_デフォルトスタイル()
         {
             var result = _engine.ToPinyinListBatch(new[] { "你好", "中" });
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.Equal(2, result[0].Length); // ní, hǎo
             Assert.Single(result[1]); // zhōng
         }
@@ -280,7 +280,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToIPABatch_基本()
         {
             var result = _engine.ToIPABatch(new[] { "妈", "麻" });
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.Equal("ma\u02E5\u02E5", result[0]);
             Assert.Equal("ma\u02E7\u02E5", result[1]);
         }
@@ -289,7 +289,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToIPABatch_IncludeTonesFalse()
         {
             var result = _engine.ToIPABatch(new[] { "妈", "麻" }, false);
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.Equal("ma", result[0]);
             Assert.Equal("ma", result[1]);
         }
@@ -298,7 +298,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToZhuyinBatch_基本()
         {
             var result = _engine.ToZhuyinBatch(new[] { "妈", "麻" });
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.Equal("\u3107\u311A", result[0]); // ㄇㄚ（1声省略）
             Assert.Equal("\u3107\u311A\u02CA", result[1]); // ㄇㄚˊ
         }
@@ -307,7 +307,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToZhuyinBatch_IncludeTonesFalse()
         {
             var result = _engine.ToZhuyinBatch(new[] { "妈", "麻" }, false);
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.Equal("\u3107\u311A", result[0]); // ㄇㄚ
             Assert.Equal("\u3107\u311A", result[1]); // ㄇㄚ
         }

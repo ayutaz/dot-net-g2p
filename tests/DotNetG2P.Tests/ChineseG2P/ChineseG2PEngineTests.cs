@@ -217,7 +217,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToPinyinBatch_複数テキスト_各テキスト変換()
         {
             var result = _engine.ToPinyinBatch(new[] { "你好", "世界" });
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.Equal("nǐ hǎo", result[0]);
             Assert.Equal("shì jiè", result[1]);
         }

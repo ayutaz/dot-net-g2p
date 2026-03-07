@@ -563,7 +563,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToPinyinBatch_非漢字混在テキスト_正しく変換()
         {
             var result = _engine.ToPinyinBatch(new[] { "Hello你好", "123世界" });
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.Contains("nǐ", result[0]);
             Assert.Contains("shì", result[1]);
         }
@@ -572,7 +572,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToPinyinBatch_句読点含むテキスト_句読点除去()
         {
             var result = _engine.ToPinyinBatch(new[] { "你好，世界", "中国！" });
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.DoesNotContain("，", result[0]);
             Assert.DoesNotContain("！", result[1]);
         }
@@ -581,7 +581,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToPinyinBatch_フレーズ辞書対象テキスト_フレーズ辞書使用()
         {
             var result = _engine.ToPinyinBatch(new[] { "重要", "中国" });
-            Assert.Equal(2, result.Length);
+            Assert.Equal(2, result.Count);
             Assert.Contains("zhòng", result[0]);
             Assert.Contains("zhōng", result[1]);
         }
@@ -590,7 +590,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void ToPinyinBatch_空文字列含む_正しく処理()
         {
             var result = _engine.ToPinyinBatch(new[] { "", "你好", "" });
-            Assert.Equal(3, result.Length);
+            Assert.Equal(3, result.Count);
             Assert.Equal("", result[0]);
             Assert.Equal("nǐ hǎo", result[1]);
             Assert.Equal("", result[2]);
@@ -604,7 +604,7 @@ namespace DotNetG2P.Tests.ChineseG2P
                 texts[i] = "你好世界";
 
             var result = _engine.ToPinyinBatch(texts);
-            Assert.Equal(100, result.Length);
+            Assert.Equal(100, result.Count);
             foreach (var r in result)
                 Assert.Equal("nǐ hǎo shì jiè", r);
         }

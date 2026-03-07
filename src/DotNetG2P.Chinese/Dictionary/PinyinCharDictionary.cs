@@ -93,14 +93,6 @@ namespace DotNetG2P.Chinese
         }
 
         /// <summary>
-        /// 内部辞書データを解放する。Dispose時に呼び出される。
-        /// </summary>
-        internal void Clear()
-        {
-            _entries.Clear();
-        }
-
-        /// <summary>
         /// StreamReaderからピンイン辞書をパースする。
         /// 行形式: {16進コードポイント} {ピンイン1},{ピンイン2},...
         /// </summary>

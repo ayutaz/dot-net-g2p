@@ -27,8 +27,9 @@ namespace DotNetG2P.Multilingual
             // 5. 半角カナ U+FF65-FF9F
             if (c >= '\uFF65' && c <= '\uFF9F') return ScriptKind.Japanese;
 
-            // 6. CJK記号・句読点 U+3000-303F
-            if (c >= '\u3000' && c <= '\u303F') return ScriptKind.Japanese;
+            // 6. CJK記号・句読点 U+3000-303F（U+3000 イデオグラフィックスペースはWhitespace扱い）
+            if (c == '\u3000') return ScriptKind.Whitespace;
+            if (c >= '\u3001' && c <= '\u303F') return ScriptKind.Japanese;
 
             // 7. ASCII英字 A-Z, a-z
             if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return ScriptKind.English;
