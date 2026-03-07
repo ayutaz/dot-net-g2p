@@ -10,7 +10,10 @@
     "tts",
     "phoneme",
     "pinyin",
-    "mandarin"
+    "mandarin",
+    "ipa",
+    "zhuyin",
+    "bopomofo"
   ],
   "license": "Apache-2.0",
   "dependencies": {},

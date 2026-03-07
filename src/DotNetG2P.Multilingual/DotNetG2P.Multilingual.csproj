@@ -6,15 +6,16 @@
     <PackageId>DotNetG2P.Multilingual</PackageId>
     <AssemblyName>DotNetG2P.Multilingual</AssemblyName>
     <RootNamespace>DotNetG2P.Multilingual</RootNamespace>
-    <Description>Multilingual G2P engine combining Japanese and English grapheme-to-phoneme support with automatic language detection.</Description>
+    <Description>Multilingual G2P engine combining Japanese, English, and Chinese grapheme-to-phoneme support with automatic language detection.</Description>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageTags>g2p;multilingual;japanese;english;tts;phoneme;text-to-speech;unity</PackageTags>
+    <PackageTags>g2p;multilingual;japanese;english;chinese;pinyin;mandarin;tts;phoneme;text-to-speech;unity</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DotNetG2P.Core\DotNetG2P.Core.csproj" />
     <ProjectReference Include="..\DotNetG2P.MeCab\DotNetG2P.MeCab.csproj" />
     <ProjectReference Include="..\DotNetG2P.English\DotNetG2P.English.csproj" />
+    <ProjectReference Include="..\DotNetG2P.Chinese\DotNetG2P.Chinese.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />

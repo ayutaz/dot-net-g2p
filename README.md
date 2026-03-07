@@ -49,8 +49,8 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、UPMパッケージ提供
 - **拡張可能な設計** — `ITokenizer`インターフェースにより形態素解析エンジンを差し替え可能
 - **英語G2P対応** — CMU辞書（135,000語）+ Flite LTSルールによるOOV推定、IPA/X-SAMPA出力、テキスト正規化、同綴異音語解決
-- **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル
-- **日英混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割により、日英が混在するテキストをシームレスに処理
+- **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力
+- **日英中混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割により、日英中が混在するテキストをシームレスに処理
 
 ## インストール
 
@@ -67,7 +67,7 @@ dotnet add package DotNetG2P.English
 # 中国語G2P（ピンイン変換）
 dotnet add package DotNetG2P.Chinese
 
-# 日英混在テキスト対応
+# 日英中混在テキスト対応
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -79,7 +79,7 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.MeCab` | Apache-2.0 | 独自MeCabエンジン（外部依存なし） |
 | `DotNetG2P.English` | Apache-2.0 | 英語G2Pエンジン（CMU辞書 + LTSルール） |
 | `DotNetG2P.Chinese` | Apache-2.0 | 中国語G2Pエンジン（pinyin-data辞書 + 声調変調） |
-| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英混在テキスト対応） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中混在テキスト対応） |
 
 ### Unity (UPM)
 
@@ -149,6 +149,14 @@ string[] list = zhEngine.ToPinyinList("中国");
 string bank = zhEngine.ToPinyin("银行");  // => "yín háng"（háng = 銀行）
 string act = zhEngine.ToPinyin("行为");   // => "xíng wéi"（xíng = 行為）
 
+// IPA（国際音声記号）出力
+string ipa = zhEngine.ToIPA("你好");
+// => IPA表記
+
+// 注音符号（ボポモフォ）出力
+string zhuyin = zhEngine.ToZhuyin("你好");
+// => 注音符号表記
+
 // === 英語G2P ===
 using DotNetG2P.English;
 
@@ -156,7 +164,7 @@ using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
 
-// === 日英混在テキスト ===
+// === 日英中混在テキスト ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
@@ -165,6 +173,12 @@ string mixed = multiEngine.ToPhonemes("今日はgood dayです");
 
 var segments = multiEngine.ToSegments("今日はgood dayです");
 // 言語タグ付きセグメントリスト
+
+// 中国語テキストを含む場合
+var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
+using var multiZhEngine = new MultilingualG2PEngine("/path/to/naist-jdic", zhOptions);
+multiZhEngine.ToPhonemes("你好hello");
+// 中国語部分→ピンイン、英語部分→ARPAbet音素
 ```
 
 ## API リファレンス
@@ -205,13 +219,20 @@ var segments = multiEngine.ToSegments("今日はgood dayです");
 | `ToPinyinList(text)` | `string[]` | 各文字ごとのピンイン配列 |
 | `ContainsChar(c)` | `bool` | 辞書存在確認 |
 | `LookupChar(c)` | `string[]` | 全ピンイン候補取得 |
-| `ToPinyinBatch(texts)` | `string[]` | バッチ変換 |
+| `ToIPA(text)` | `string` | IPA（国際音声記号）表記 |
+| `ToIPA(text, includeTones)` | `string` | 声調制御付きIPA表記 |
+| `ToZhuyin(text)` | `string` | 注音符号（ボポモフォ）表記 |
+| `ToZhuyin(text, includeTones)` | `string` | 声調制御付き注音表記 |
+| `ToPinyinBatch(texts)` | `string[]` | バッチピンイン変換 |
+| `ToPinyinListBatch(texts)` | `string[][]` | バッチピンインリスト変換 |
+| `ToIPABatch(texts)` | `string[]` | バッチIPA変換 |
+| `ToZhuyinBatch(texts)` | `string[]` | バッチ注音変換 |
 
 ### MultilingualG2PEngine
 
 | メソッド | 戻り値型 | 説明 |
 |---------|---------|------|
-| `ToPhonemes(text)` | `string` | 日英混在音素列 |
+| `ToPhonemes(text)` | `string` | 日英中混在音素列 |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 言語タグ付きセグメント |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | バッチセグメント変換 |
@@ -331,7 +352,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 独自MeCabエンジン |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | 英語G2Pエンジン |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | 中国語G2Pエンジン |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中対応） |
 
 全コンポーネントが**Apache-2.0ライセンス**で利用可能です。
 サードパーティコンポーネントのライセンスについては [NOTICE](NOTICE) ファイルを参照してください。

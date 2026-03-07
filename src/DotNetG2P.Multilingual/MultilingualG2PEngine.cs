@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using DotNetG2P.Chinese;
 using DotNetG2P.English;
 using DotNetG2P.MeCab;
 
@@ -20,6 +21,7 @@ namespace DotNetG2P.Multilingual
     {
         private readonly G2PEngine _japaneseEngine;
         private readonly EnglishG2PEngine _englishEngine;
+        private readonly ChineseG2PEngine _chineseEngine;
         private readonly MultilingualG2POptions _options;
         private readonly object _japaneseLock = new object();
         private int _disposed;
@@ -51,6 +53,7 @@ namespace DotNetG2P.Multilingual
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
             G2PEngine japaneseEngine = null;
+            ChineseG2PEngine chineseEngine = null;
             try
             {
                 japaneseEngine = new G2PEngine(
@@ -60,11 +63,16 @@ namespace DotNetG2P.Multilingual
                 _englishEngine = new EnglishG2PEngine(
                     options.EnglishOptions ?? EnglishG2POptions.Default);
 
+                chineseEngine = new ChineseG2PEngine(
+                    options.ChineseOptions ?? ChineseG2POptions.Default);
+
                 _japaneseEngine = japaneseEngine;
+                _chineseEngine = chineseEngine;
             }
             catch
             {
                 japaneseEngine?.Dispose();
+                chineseEngine?.Dispose();
                 throw;
             }
         }
@@ -83,7 +91,7 @@ namespace DotNetG2P.Multilingual
             if (string.IsNullOrWhiteSpace(text))
                 return "";
 
-            var segments = TextSegmenter.Segment(text);
+            var segments = TextSegmenter.Segment(text, _options.DefaultCjkLanguage);
             if (segments.Count == 0)
                 return "";
 
@@ -99,7 +107,7 @@ namespace DotNetG2P.Multilingual
         }
 
         /// <summary>
-        /// 日英混在テキストを言語タグ付きG2Pセグメントのリストとして変換する。
+        /// 多言語混在テキストを言語タグ付きG2Pセグメントのリストとして変換する。
         /// </summary>
         /// <param name="text">入力テキスト</param>
         /// <returns>G2Pセグメントのリスト</returns>
@@ -111,7 +119,7 @@ namespace DotNetG2P.Multilingual
             if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<G2PSegment>();
 
-            var segments = TextSegmenter.Segment(text);
+            var segments = TextSegmenter.Segment(text, _options.DefaultCjkLanguage);
             if (segments.Count == 0)
                 return Array.Empty<G2PSegment>();
 
@@ -171,6 +179,7 @@ namespace DotNetG2P.Multilingual
 
             _japaneseEngine.Dispose();
             _englishEngine.Dispose();
+            _chineseEngine.Dispose();
         }
 
         /// <summary>
@@ -188,6 +197,9 @@ namespace DotNetG2P.Multilingual
 
                 case Language.English:
                     return _englishEngine.ToPhonemes(segment.Text);
+
+                case Language.Chinese:
+                    return _chineseEngine.ToPinyin(segment.Text);
 
                 default:
                     return "";

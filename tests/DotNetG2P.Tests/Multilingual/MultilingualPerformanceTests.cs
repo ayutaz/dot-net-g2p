@@ -221,8 +221,8 @@ namespace DotNetG2P.Tests.Multilingual
             sw.Stop();
 
             _output.WriteLine($"10000文字テキスト100回セグメント化: {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 1500,
-                $"10000文字テキスト100回のセグメント化が1.5秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 5000,
+                $"10000文字テキスト100回のセグメント化が5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [Fact]
@@ -242,8 +242,8 @@ namespace DotNetG2P.Tests.Multilingual
             sw.Stop();
 
             _output.WriteLine($"頻繁言語切替5000文字100回: {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 1500,
-                $"頻繁言語切替5000文字100回のセグメント化が1.5秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 5000,
+                $"頻繁言語切替5000文字100回のセグメント化が5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [Fact]

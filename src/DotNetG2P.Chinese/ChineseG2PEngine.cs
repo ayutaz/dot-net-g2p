@@ -254,6 +254,138 @@ namespace DotNetG2P.Chinese
         }
 
         // =====================================================================
+        // IPA出力
+        // =====================================================================
+
+        /// <summary>
+        /// テキストをIPA（国際音声記号）表記に変換する（声調マーカー付き）。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>IPA表記文字列</returns>
+        public string ToIPA(string text)
+        {
+            return ToIPA(text, true);
+        }
+
+        /// <summary>
+        /// テキストをIPA（国際音声記号）表記に変換する。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <param name="includeTones">声調マーカーを含めるかどうか</param>
+        /// <returns>IPA表記文字列</returns>
+        public string ToIPA(string text, bool includeTones)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrEmpty(text))
+                return "";
+
+            var entries = CollectPinyins(text);
+
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            var separator = _options.Separator;
+            var sb = new StringBuilder();
+            var needsSeparator = false;
+
+            foreach (var entry in entries)
+            {
+                if (entry.IsSeparator)
+                {
+                    needsSeparator = false;
+                }
+                else if (entry.Pinyin != null)
+                {
+                    if (needsSeparator && sb.Length > 0)
+                        sb.Append(separator);
+                    sb.Append(PinyinToIpa.Convert(entry.Pinyin, includeTones));
+                    needsSeparator = true;
+                }
+                else if (entry.IsUnknownHanzi)
+                {
+                    if (needsSeparator && sb.Length > 0)
+                        sb.Append(separator);
+                    sb.Append(entry.OriginalChar);
+                    needsSeparator = true;
+                }
+                else if (entry.RawText != null)
+                {
+                    sb.Append(entry.RawText);
+                    needsSeparator = false;
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        // =====================================================================
+        // 注音出力
+        // =====================================================================
+
+        /// <summary>
+        /// テキストを注音符号（ボポモフォ）に変換する（声調マーカー付き）。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>注音符号文字列</returns>
+        public string ToZhuyin(string text)
+        {
+            return ToZhuyin(text, true);
+        }
+
+        /// <summary>
+        /// テキストを注音符号（ボポモフォ）に変換する。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <param name="includeTones">声調マーカーを含めるかどうか</param>
+        /// <returns>注音符号文字列</returns>
+        public string ToZhuyin(string text, bool includeTones)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrEmpty(text))
+                return "";
+
+            var entries = CollectPinyins(text);
+
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            var separator = _options.Separator;
+            var sb = new StringBuilder();
+            var needsSeparator = false;
+
+            foreach (var entry in entries)
+            {
+                if (entry.IsSeparator)
+                {
+                    needsSeparator = false;
+                }
+                else if (entry.Pinyin != null)
+                {
+                    if (needsSeparator && sb.Length > 0)
+                        sb.Append(separator);
+                    sb.Append(PinyinToZhuyin.Convert(entry.Pinyin, includeTones));
+                    needsSeparator = true;
+                }
+                else if (entry.IsUnknownHanzi)
+                {
+                    if (needsSeparator && sb.Length > 0)
+                        sb.Append(separator);
+                    sb.Append(entry.OriginalChar);
+                    needsSeparator = true;
+                }
+                else if (entry.RawText != null)
+                {
+                    sb.Append(entry.RawText);
+                    needsSeparator = false;
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        // =====================================================================
         // バッチAPI
         // =====================================================================
 
@@ -270,6 +402,122 @@ namespace DotNetG2P.Chinese
             var results = new string[texts.Length];
             for (var i = 0; i < texts.Length; i++)
                 results[i] = ToPinyin(texts[i]);
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で指定スタイルのピンインに変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <param name="style">ピンインスタイル</param>
+        /// <returns>各テキストに対応するピンイン文字列の配列</returns>
+        public string[] ToPinyinBatch(string[] texts, PinyinStyle style)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new string[texts.Length];
+            for (var i = 0; i < texts.Length; i++)
+                results[i] = ToPinyin(texts[i], style);
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で各文字ごとのピンイン配列に変換する（デフォルトスタイル使用）。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <returns>各テキストに対応するピンイン配列の配列</returns>
+        public string[][] ToPinyinListBatch(string[] texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new string[texts.Length][];
+            for (var i = 0; i < texts.Length; i++)
+                results[i] = ToPinyinList(texts[i]);
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で各文字ごとの指定スタイルのピンイン配列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <param name="style">ピンインスタイル</param>
+        /// <returns>各テキストに対応するピンイン配列の配列</returns>
+        public string[][] ToPinyinListBatch(string[] texts, PinyinStyle style)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new string[texts.Length][];
+            for (var i = 0; i < texts.Length; i++)
+                results[i] = ToPinyinList(texts[i], style);
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括でIPA表記に変換する（声調マーカー付き）。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <returns>各テキストに対応するIPA文字列の配列</returns>
+        public string[] ToIPABatch(string[] texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new string[texts.Length];
+            for (var i = 0; i < texts.Length; i++)
+                results[i] = ToIPA(texts[i]);
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括でIPA表記に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <param name="includeTones">声調マーカーを含めるかどうか</param>
+        /// <returns>各テキストに対応するIPA文字列の配列</returns>
+        public string[] ToIPABatch(string[] texts, bool includeTones)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new string[texts.Length];
+            for (var i = 0; i < texts.Length; i++)
+                results[i] = ToIPA(texts[i], includeTones);
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で注音符号に変換する（声調マーカー付き）。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <returns>各テキストに対応する注音符号文字列の配列</returns>
+        public string[] ToZhuyinBatch(string[] texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new string[texts.Length];
+            for (var i = 0; i < texts.Length; i++)
+                results[i] = ToZhuyin(texts[i]);
+            return results;
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で注音符号に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <param name="includeTones">声調マーカーを含めるかどうか</param>
+        /// <returns>各テキストに対応する注音符号文字列の配列</returns>
+        public string[] ToZhuyinBatch(string[] texts, bool includeTones)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new string[texts.Length];
+            for (var i = 0; i < texts.Length; i++)
+                results[i] = ToZhuyin(texts[i], includeTones);
             return results;
         }
 

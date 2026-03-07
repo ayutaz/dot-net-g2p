@@ -9,7 +9,7 @@
     <Description>中国語（普通話）ピンイン変換ライブラリ。辞書ベースの多音字解決、声調変調、IPA/注音出力対応。</Description>
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageTags>chinese;pinyin;g2p;mandarin;tts;phoneme</PackageTags>
+    <PackageTags>chinese;pinyin;g2p;mandarin;tts;phoneme;ipa;zhuyin;bopomofo</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Dictionary\Data\pinyin_char.txt" LogicalName="pinyin_char.txt" />

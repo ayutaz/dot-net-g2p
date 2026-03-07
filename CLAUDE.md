@@ -47,7 +47,7 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - DictionaryBundle WeakReferenceキャッシュ + スレッドセーフDispose
   - バッチ処理API追加（ToPhonemesBatch等5メソッド）
   - 10エージェントレビュー + ポストレビュー修正完了
-- **中国語G2P (DotNetG2P.Chinese)**: C3完了（feature/chinese-g2p ブランチ）
+- **中国語G2P (DotNetG2P.Chinese)**: C6完了（feature/chinese-g2p ブランチ）
   - **C1（基本ピンイン変換MVP）**: 完了
     - pinyin-data 44,435エントリの単字辞書 + phrase-pinyin-data 411,958エントリのフレーズ辞書を埋め込み
     - ChineseG2PEngine メインAPI、3種の出力スタイル（ToneMarked/ToneNumber/Normal）
@@ -62,6 +62,19 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
     - ToneSandhiProcessor（三声連読変調、"一"変調、"不"変調）
     - ChineseG2PEngine 3段階パイプライン（収集→声調変調→スタイル変換）
     - テスト72件追加（合計494件）
+  - **C4（出力形式拡張）**: 完了
+    - IPA（国際音声記号）変換 PinyinToIpa（声母22種+韻母36種の完全マッピング、声調マーカー対応）
+    - 注音符号（ボポモフォ）変換 PinyinToZhuyin（声母21種+全韻母マッピング、声調記号対応）
+    - ChineseG2PEngine API拡張: ToIPA(), ToZhuyin(), バッチAPI 9メソッド追加
+    - テスト288件追加（IPA 125件 + Zhuyin 112件 + C4統合 51件）
+  - **C5（テスト・品質保証）**: 完了
+    - エッジケーステスト（61件）: 空/null/特殊文字/句読点/長文/混在テキスト/辞書境界/声調変調/オプション/Dispose
+    - パフォーマンステスト（15件）: スループット/バッチ比較/辞書初期化/メモリ/フレーズ辞書/声調変調/スタイル変換
+    - 精度・回帰テスト（78件）: 高頻度多音字20語/声調変調正確性/一般フレーズ/スタイル一貫性/回帰
+  - **C6（多言語統合・パッケージング）**: 完了
+    - DotNetG2P.Multilingual に中国語G2P統合（Language.Chinese、ScriptKind.CJKIdeograph、DefaultCjkLanguage オプション）
+    - LanguageDetector/TextSegmenter のCJK漢字分離判定（ひらがな/カタカナ近接→日本語、それ以外→DefaultCjkLanguage）
+    - Multilingualテスト43件追加
 - **英語G2P (DotNetG2P.English)**: E6完了（feature/english-g2p ブランチ）
   - **E1（CMU辞書ルックアップMVP）**: 完了
     - 135,166エントリのCMU辞書埋め込み、`EnglishG2PEngine` メインAPI、ARPAbet音素体系（39音素）
@@ -79,9 +92,9 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
     - IPA/X-SAMPA変換、バッチAPI（8メソッド追加）、エッジケース・パフォーマンス・精度テスト
     - テスト197件追加
   - **E6（日英混在テキスト対応）**: 完了
-    - `DotNetG2P.Multilingual` パッケージ新規作成（Core + MeCab + English依存）
+    - `DotNetG2P.Multilingual` パッケージ新規作成（Core + MeCab + English + Chinese依存）
     - LanguageDetector（Unicode文字種ベース言語判定）、TextSegmenter（2パスセグメント分割）
-    - MultilingualG2PEngine（日英G2Pファサード、IDisposable、lock保護）
+    - MultilingualG2PEngine（日英中G2Pファサード、IDisposable、lock保護）
     - テスト162件追加
 
 ## ビルド・実行
@@ -195,7 +208,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │       └── pinyin_phrase.txt    # フレーズ辞書 (EmbeddedResource)
 │   │   ├── Conversion/
 │   │   │   ├── PinyinParser.cs          # ピンイン文字列パーサ
-│   │   │   └── ToneConverter.cs         # 声調記号⇔数字変換
+│   │   │   ├── ToneConverter.cs         # 声調変換ユーティリティ
+│   │   │   ├── PinyinToIpa.cs           # ピンイン→IPA変換 (C4)
+│   │   │   └── PinyinToZhuyin.cs        # ピンイン→注音符号変換 (C4)
 │   │   ├── ToneSandhi/
 │   │   │   └── ToneSandhiProcessor.cs   # 声調変調（三声連読、一/不変調）
 │   │   ├── package.json                 # UPM (com.dotnetg2p.chinese)
@@ -236,16 +251,16 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       ├── package.json                 # UPM (com.dotnetg2p.english)
 │       └── DotNetG2P.English.asmdef     # Unity Assembly Definition
 │
-│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English依存）
+│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese依存）
 │       ├── DotNetG2P.Multilingual.csproj # .NET Standard 2.1
-│       ├── Language.cs                  # Language enum (Japanese/English)
-│       ├── ScriptKind.cs               # ScriptKind enum (6種分類、internal)
+│       ├── Language.cs                  # Language enum (Japanese/English/Chinese)
+│       ├── ScriptKind.cs               # ScriptKind enum (8種分類、internal)
 │       ├── TextSegment.cs              # 言語タグ付きテキストセグメント
 │       ├── G2PSegment.cs               # G2P結果セグメント
 │       ├── MultilingualG2POptions.cs   # 多言語G2Pオプション
 │       ├── LanguageDetector.cs         # Unicode文字種ベース言語判定
 │       ├── TextSegmenter.cs            # テキストセグメント分割
-│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（ファサード）
+│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中ファサード）
 │       ├── package.json                # UPM (com.dotnetg2p.multilingual)
 │       └── DotNetG2P.Multilingual.asmdef # Unity Assembly Definition
 │
@@ -253,7 +268,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   ├── TestData/                        # テストデータ
 │   │   ├── expected_phonemes.json       # pyopenjtalk期待値データ（18件）
 │   │   └── generate_expected.py         # テストデータ生成スクリプト
-│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 2318テスト)
+│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 2903テスト)
 │       ├── DotNetG2P.Tests.csproj
 │       ├── G2PEngineApiTests.cs         # G2PEngine API統合テスト
 │       ├── Models/                      # モデルテスト
@@ -287,10 +302,11 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── DictionaryErrorTests.cs  # エラーハンドリングテスト
 │       │   ├── MeCabIndependentTests.cs # 独立仕様検証テスト（21件）
 │       │   └── PerformanceTests.cs      # パフォーマンステスト（5件）
-│       ├── ChineseG2P/                  # 中国語G2Pテスト (494件)
+│       ├── ChineseG2P/                  # 中国語G2Pテスト (936件)
 │       │   ├── ChineseG2PEngineTests.cs  # C1エンジン統合テスト
 │       │   ├── ChineseG2PEngineC2Tests.cs # C2エンジン統合テスト (78件)
 │       │   ├── ChineseG2PEngineC3Tests.cs # C3エンジン統合テスト (42件)
+│       │   ├── ChineseG2PEngineC4Tests.cs # C4統合テスト (51件)
 │       │   ├── ToneSandhiProcessorTests.cs # 声調変調テスト (30件)
 │       │   ├── PolyphoneResolutionTests.cs # 多音字解決テスト (54件)
 │       │   ├── PinyinPhraseDictionaryTests.cs # フレーズ辞書テスト (23件)
@@ -300,7 +316,12 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── ToneTests.cs             # 声調テスト
 │       │   ├── InitialTests.cs          # 声母テスト
 │       │   ├── FinalTests.cs            # 韻母テスト
-│       │   └── PinyinSyllableTests.cs   # 音節テスト
+│       │   ├── PinyinSyllableTests.cs   # 音節テスト
+│       │   ├── IpaConversionTests.cs     # IPA変換テスト (125件)
+│       │   ├── ZhuyinConversionTests.cs  # 注音変換テスト (112件)
+│       │   ├── ChineseEdgeCaseTests.cs   # エッジケーステスト (61件)
+│       │   ├── ChinesePerformanceTests.cs # パフォーマンステスト (15件)
+│       │   └── ChineseAccuracyTests.cs   # 精度・回帰テスト (78件)
 │       ├── EnglishG2P/                  # 英語G2Pテスト (511件)
 │       │   ├── Dictionary/              # 辞書テスト (~29件)
 │       │   ├── Models/                  # モデルテスト (~31件)
@@ -308,14 +329,15 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── Normalization/           # 正規化テスト (143件)
 │       │   ├── Homograph/              # 同綴異音語テスト (154件)
 │       │   └── Integration/            # 統合テスト (~42件)
-│       ├── Multilingual/               # 多言語G2Pテスト (162件)
+│       ├── Multilingual/               # 多言語G2Pテスト (205件)
 │       │   ├── LanguageDetectorTests.cs  # 言語判定テスト (29件)
 │       │   ├── TextSegmenterTests.cs     # セグメント分割テスト (30件)
 │       │   ├── MultilingualEngineTests.cs # エンジン統合テスト (28件)
 │       │   ├── MultilingualEdgeCaseTests.cs # エッジケーステスト (25件)
 │       │   ├── MultilingualDisposeTests.cs # Disposeテスト (15件)
 │       │   ├── MultilingualPerformanceTests.cs # パフォーマンステスト (8件)
-│       │   └── LanguageConsistencyTests.cs # 言語検出一貫性テスト (27件)
+│       │   ├── LanguageConsistencyTests.cs # 言語検出一貫性テスト (27件)
+│       │   └── MultilingualChineseTests.cs # 中国語統合テスト (43件)
 │       └── Integration/                # 統合テスト
 │           ├── G2PPipelineTests.cs
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）

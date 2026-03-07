@@ -18,11 +18,11 @@ namespace DotNetG2P.Multilingual
             // 2. カタカナ U+30A0-30FF
             if (c >= '\u30A0' && c <= '\u30FF') return ScriptKind.Japanese;
 
-            // 3. CJK統合漢字 U+4E00-9FFF
-            if (c >= '\u4E00' && c <= '\u9FFF') return ScriptKind.Japanese;
+            // 3. CJK統合漢字 U+4E00-9FFF（日中共用、文脈で判定）
+            if (c >= '\u4E00' && c <= '\u9FFF') return ScriptKind.CJKIdeograph;
 
-            // 4. CJK拡張A U+3400-4DBF
-            if (c >= '\u3400' && c <= '\u4DBF') return ScriptKind.Japanese;
+            // 4. CJK拡張A U+3400-4DBF（日中共用、文脈で判定）
+            if (c >= '\u3400' && c <= '\u4DBF') return ScriptKind.CJKIdeograph;
 
             // 5. 半角カナ U+FF65-FF9F
             if (c >= '\uFF65' && c <= '\uFF9F') return ScriptKind.Japanese;
@@ -84,6 +84,9 @@ namespace DotNetG2P.Multilingual
                 case ScriptKind.English:
                 case ScriptKind.Latin:
                     return Language.English;
+                case ScriptKind.CJKIdeograph:
+                    // CJK漢字は日中共用のため、文脈で判定（TextSegmenterに委譲）
+                    return null;
                 default:
                     return null;
             }
