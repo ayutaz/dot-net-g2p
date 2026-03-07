@@ -362,11 +362,10 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
             var verbResult = _engine.ToPhonemes("I live here");
             Assert.Contains("L IH1 V", verbResult);
 
-            // "a live concert" → 形容詞/デフォルト
-            // live: default=1 → L IH1 V (動詞発音がデフォルト)
-            // 冠詞"a"はNounContextだが、live: Nounルールなし → default=1
+            // "a live concert" → Phase 2: 冠詞+形容詞+名詞パターン → Adjective → variant 0
+            // live: 形容詞 → L AY1 V（ライブの）
             var adjResult = _engine.ToPhonemes("a live concert");
-            Assert.Contains("L IH1 V", adjResult);
+            Assert.Contains("L AY1 V", adjResult);
         }
 
         // --- present: 名詞/動詞 ---

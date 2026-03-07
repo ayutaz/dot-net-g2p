@@ -242,5 +242,55 @@ namespace DotNetG2P.Tests.EnglishG2P.Homograph
             var result = PosGuesser.Guess(new[] { "" }, 0);
             Assert.Equal(PosTag.Unknown, result);
         }
+
+        // ===== Phase 1A: 文頭＋後続語チェック =====
+
+        [Fact]
+        public void Guess_文頭_後続が句動詞小辞_ReturnsVerb()
+        {
+            // "Wind up the clock" → Wind は Verb
+            var result = PosGuesser.Guess(new[] { "Wind", "up", "the", "clock" }, 0);
+            Assert.Equal(PosTag.Verb, result);
+        }
+
+        [Fact]
+        public void Guess_文頭_後続が冠詞_ReturnsVerb()
+        {
+            // "Record the song" → Record は Verb
+            var result = PosGuesser.Guess(new[] { "Record", "the", "song" }, 0);
+            Assert.Equal(PosTag.Verb, result);
+        }
+
+        [Fact]
+        public void Guess_文頭_後続が代名詞_ReturnsVerb()
+        {
+            // "Close it" → Close は Verb
+            var result = PosGuesser.Guess(new[] { "Close", "it" }, 0);
+            Assert.Equal(PosTag.Verb, result);
+        }
+
+        // ===== Phase 1B: リンキング動詞後 =====
+
+        [Fact]
+        public void Guess_リンキング動詞後_ReturnsAdjective()
+        {
+            // "Stay close" → close は Adjective
+            var result = PosGuesser.Guess(new[] { "Stay", "close" }, 1);
+            Assert.Equal(PosTag.Adjective, result);
+        }
+
+        [Fact]
+        public void Guess_リンキング動詞remain後_ReturnsAdjective()
+        {
+            var result = PosGuesser.Guess(new[] { "remain", "close" }, 1);
+            Assert.Equal(PosTag.Adjective, result);
+        }
+
+        [Fact]
+        public void Guess_リンキング動詞feel後_ReturnsAdjective()
+        {
+            var result = PosGuesser.Guess(new[] { "feel", "close" }, 1);
+            Assert.Equal(PosTag.Adjective, result);
+        }
     }
 }

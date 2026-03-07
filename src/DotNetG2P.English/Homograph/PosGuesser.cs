@@ -23,6 +23,28 @@ namespace DotNetG2P.English.Homograph
             "lighting", "cutting", "surfing", "spelling"
         };
 
+        // 句動詞小辞リスト（後続にこれがあれば対象語は動詞）
+        private static readonly HashSet<string> PhrasalVerbParticles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "up", "down", "out", "away", "off", "on", "in", "over", "back", "around"
+        };
+
+        // 冠詞・代名詞リスト（後続にこれがあれば対象語は動詞）
+        private static readonly HashSet<string> DeterminerOrPronounWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "the", "a", "an", "my", "your", "his", "her", "its", "our", "their",
+            "this", "that", "these", "those",
+            "me", "him", "her", "us", "them", "it"
+        };
+
+        // リンキング動詞リスト（前の単語がこれに該当すれば対象語は形容詞）
+        private static readonly HashSet<string> LinkingVerbWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "stay", "remain", "keep", "get", "become", "seem", "appear", "feel",
+            "look", "sound", "smell", "taste", "grow", "turn", "go", "come",
+            "be", "am", "is", "are", "was", "were"
+        };
+
         // 文脈ルール: 前の単語 → 推定POS
         // 冠詞・所有格・指示詞・数量詞・形容詞的修飾 → Noun
         private static readonly HashSet<string> NounContextWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -80,23 +102,42 @@ namespace DotNetG2P.English.Homograph
         }
 
         /// <summary>
-        /// 前の単語から文脈ベースでPOSを推定する。
+        /// 前後の単語から文脈ベースでPOSを推定する。
         /// </summary>
         private static PosTag GuessByContext(string[] words, int index)
         {
-            if (index == 0)
-                return PosTag.Unknown;
+            // 前方文脈チェック（index > 0 の場合）
+            if (index > 0)
+            {
+                var prev = words[index - 1];
 
-            var prev = words[index - 1];
+                if (NounContextWords.Contains(prev))
+                    return PosTag.Noun;
 
-            if (NounContextWords.Contains(prev))
-                return PosTag.Noun;
+                if (VerbContextWords.Contains(prev))
+                    return PosTag.Verb;
 
-            if (VerbContextWords.Contains(prev))
-                return PosTag.Verb;
+                if (AdjectiveContextWords.Contains(prev))
+                    return PosTag.Adjective;
 
-            if (AdjectiveContextWords.Contains(prev))
-                return PosTag.Adjective;
+                // リンキング動詞の後 → Adjective
+                if (LinkingVerbWords.Contains(prev))
+                    return PosTag.Adjective;
+            }
+
+            // 後続語チェック（文頭や前方文脈で判定できなかった場合）
+            if (index + 1 < words.Length)
+            {
+                var next = words[index + 1];
+
+                // 後続が句動詞小辞 → Verb（例: "close down", "read out"）
+                if (PhrasalVerbParticles.Contains(next))
+                    return PosTag.Verb;
+
+                // 後続が冠詞/代名詞 → Verb（例: "close the door", "read it"）
+                if (DeterminerOrPronounWords.Contains(next))
+                    return PosTag.Verb;
+            }
 
             return PosTag.Unknown;
         }

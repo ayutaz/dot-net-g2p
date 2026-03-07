@@ -51,15 +51,15 @@ namespace DotNetG2P.Tests.EnglishG2P.Homograph
         // ===== live: 冠詞の後（名詞文脈）→デフォルト =====
 
         [Fact]
-        public void Live_AfterArticle_ReturnsDefault1()
+        public void Live_AfterArticle_ReturnsAdjective0()
         {
-            // "a live concert" → 前の単語"a"はNounContext → PosTag.Noun
-            // live: Nounルールなし → DefaultVariantIndex=1
+            // "a live concert" → Phase 2: 冠詞+形容詞+名詞パターンを検出し
+            // HasAdjectiveRule=trueのliveを形容詞(variant 0)として解決する
             var words = new[] { "a", "live", "concert" };
 
             int result = HomographResolver.ResolveVariantIndex(words, 1);
 
-            Assert.Equal(1, result);
+            Assert.Equal(0, result);
         }
 
         // ===== live: 動詞文脈 =====
@@ -284,6 +284,86 @@ namespace DotNetG2P.Tests.EnglishG2P.Homograph
 
             int result = HomographResolver.ResolveVariantIndex(words, 1);
 
+            Assert.Equal(0, result);
+        }
+
+        // ===== Phase 1A: 文頭の動詞解決 =====
+
+        [Fact]
+        public void Wind_文頭_後続up_ReturnsVerbVariant()
+        {
+            // "Wind up the clock" → 動詞(巻く) variant 0
+            var words = new[] { "Wind", "up", "the", "clock" };
+            int result = HomographResolver.ResolveVariantIndex(words, 0);
+            Assert.Equal(0, result);
+        }
+
+        [Fact]
+        public void Record_文頭_後続the_ReturnsVerbVariant()
+        {
+            // "Record the song" → 動詞 variant 0
+            var words = new[] { "Record", "the", "song" };
+            int result = HomographResolver.ResolveVariantIndex(words, 0);
+            Assert.Equal(0, result);
+        }
+
+        // ===== Phase 1B: リンキング動詞 =====
+
+        [Fact]
+        public void Close_AfterStay_ReturnsAdjectiveVariant()
+        {
+            // "Stay close" → 形容詞(近い) variant 0
+            var words = new[] { "Stay", "close" };
+            int result = HomographResolver.ResolveVariantIndex(words, 1);
+            Assert.Equal(0, result);
+        }
+
+        // ===== Phase 2: 冠詞+形容詞+名詞 =====
+
+        [Fact]
+        public void Live_AfterArticle_BeforeNoun_ReturnsAdjectiveVariant()
+        {
+            // "a live concert" → 形容詞 variant 0
+            var words = new[] { "a", "live", "concert" };
+            int result = HomographResolver.ResolveVariantIndex(words, 1);
+            Assert.Equal(0, result);
+        }
+
+        // ===== Phase 3: ContextRule =====
+
+        [Fact]
+        public void Read_AfterHave_ReturnsPastParticipleVariant()
+        {
+            // "I have read the book" → 過去分詞 variant 0
+            var words = new[] { "I", "have", "read", "the", "book" };
+            int result = HomographResolver.ResolveVariantIndex(words, 2);
+            Assert.Equal(0, result);
+        }
+
+        [Fact]
+        public void Read_AfterHad_ReturnsPastParticipleVariant()
+        {
+            // "She had read it" → 過去分詞 variant 0
+            var words = new[] { "She", "had", "read", "it" };
+            int result = HomographResolver.ResolveVariantIndex(words, 2);
+            Assert.Equal(0, result);
+        }
+
+        [Fact]
+        public void Read_WithYesterday_ReturnsPastVariant()
+        {
+            // "I read that yesterday" → 過去形 variant 0
+            var words = new[] { "I", "read", "that", "yesterday" };
+            int result = HomographResolver.ResolveVariantIndex(words, 1);
+            Assert.Equal(0, result);
+        }
+
+        [Fact]
+        public void Bow_AfterTake_ReturnsOjigi()
+        {
+            // "take a bow" → お辞儀 variant 0
+            var words = new[] { "take", "a", "bow" };
+            int result = HomographResolver.ResolveVariantIndex(words, 2);
             Assert.Equal(0, result);
         }
     }

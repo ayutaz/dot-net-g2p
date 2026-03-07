@@ -30,7 +30,13 @@ namespace DotNetG2P.English.Homograph
                 new HomographRule(PosTag.Adjective, 1));
 
             // bow: [0]=B AW1 (お辞儀/動詞), [1]=B OW1 (弓/名詞)
-            Add("bow", 0,
+            // 文脈ルール: "take"が前方3単語以内 → お辞儀(0), 後続が"down" → お辞儀(0)
+            AddWithContext("bow", 0,
+                new ContextRule[]
+                {
+                    new ContextRule(0, precedingWords: new[] { "take", "takes", "took", "taken", "taking" }),
+                    new ContextRule(0, followingWords: new[] { "down" }),
+                },
                 new HomographRule(PosTag.Verb, 0),
                 new HomographRule(PosTag.Noun, 1));
 
@@ -64,7 +70,14 @@ namespace DotNetG2P.English.Homograph
 
             // read: [0]=R EH1 D (過去形), [1]=R IY1 D (現在形)
             // デフォルトは現在形（より一般的な文脈）
-            Add("read", 1,
+            // 文脈ルール: have/has/had/havingが前方3単語以内 → 過去分詞(0)
+            //            yesterday/ago/already/last/earlier/previouslyが文中に含まれる → 過去形(0)
+            AddWithContext("read", 1,
+                new ContextRule[]
+                {
+                    new ContextRule(0, precedingWords: new[] { "have", "has", "had", "having" }),
+                    new ContextRule(0, containsAny: new[] { "yesterday", "ago", "already", "last", "earlier", "previously" }),
+                },
                 new HomographRule(PosTag.Verb, 1),
                 new HomographRule(PosTag.Noun, 1));
 
@@ -378,6 +391,11 @@ namespace DotNetG2P.English.Homograph
         private static void Add(string word, int defaultVariant, params HomographRule[] rules)
         {
             _entries[word.ToUpperInvariant()] = new HomographEntry(word, defaultVariant, rules);
+        }
+
+        private static void AddWithContext(string word, int defaultVariant, ContextRule[] contextRules, params HomographRule[] rules)
+        {
+            _entries[word.ToUpperInvariant()] = new HomographEntry(word, defaultVariant, contextRules, rules);
         }
     }
 }

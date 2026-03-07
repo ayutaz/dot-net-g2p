@@ -30,8 +30,17 @@ namespace DotNetG2P.English.Homograph
             // PosGuesserでPOSを推定
             var pos = PosGuesser.Guess(words, index);
 
-            // エントリからバリアントインデックスを取得
-            return entry.GetVariantIndex(pos);
+            // Phase 2: 冠詞+X+名詞パターンの補正
+            // PosGuesserがNounと判定し、エントリにAdjectiveルールがあり、
+            // 後続に単語がある場合 → Adjective に変更
+            // （例: "the close friend" → close は形容詞）
+            if (pos == PosTag.Noun && entry.HasAdjectiveRule && index + 1 < words.Length)
+            {
+                pos = PosTag.Adjective;
+            }
+
+            // 文脈ルール + POSルールでバリアントインデックスを取得
+            return entry.GetVariantIndex(pos, words, index);
         }
     }
 }

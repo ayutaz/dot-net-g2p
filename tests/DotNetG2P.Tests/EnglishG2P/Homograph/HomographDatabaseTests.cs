@@ -245,5 +245,35 @@ namespace DotNetG2P.Tests.EnglishG2P.Homograph
 
             Assert.False(found);
         }
+
+        // ===== Phase 3: ContextRule 関連の間接テスト =====
+        // ContextRule は HomographResolver レベルで実装されるため、
+        // ここでは read エントリに過去形バリアント(variant 0)が存在することを確認する。
+
+        [Fact]
+        public void ReadEntry_HasPastTenseVariant0()
+        {
+            // read: [0]=R EH1 D (過去形), [1]=R IY1 D (現在形)
+            // Phase 3 の ContextRule は HomographResolver で "have/had" や "yesterday" を検出し
+            // variant 0 を返す。ここではエントリが正しく設定されていることを確認。
+            bool found = HomographDatabase.TryGetEntry("read", out var entry);
+            Assert.True(found);
+            // デフォルトは現在形（variant 1）
+            Assert.Equal(1, entry.DefaultVariantIndex);
+            // 過去形は variant 0 であり、ContextRule が variant 0 を返すことで過去形が選択される
+            // （Verb → variant 1 だが、ContextRule は Resolver 側で variant 0 をオーバーライドする）
+        }
+
+        [Fact]
+        public void BowEntry_HasOjigiVariant0()
+        {
+            // bow: [0]=B AW1 (お辞儀/動詞), [1]=B OW1 (弓/名詞)
+            // Phase 3 の ContextRule は "take a bow" パターンで variant 0 を返す。
+            bool found = HomographDatabase.TryGetEntry("bow", out var entry);
+            Assert.True(found);
+            Assert.Equal(0, entry.DefaultVariantIndex);
+            Assert.Equal(0, entry.GetVariantIndex(PosTag.Verb));
+            Assert.Equal(1, entry.GetVariantIndex(PosTag.Noun));
+        }
     }
 }
