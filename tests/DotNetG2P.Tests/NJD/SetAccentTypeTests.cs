@@ -641,6 +641,41 @@ namespace DotNetG2P.Tests.NJD
             Assert.Equal(2, node3.AccentType); // C3: moraSize(2)
         }
 
+        // ===== アクセント核位置クランプテスト =====
+
+        [Fact]
+        public void Process_C1_nodeAccが後部モーラ数を超える場合_totalMoraCountにクランプ()
+        {
+            // 「猫」(2モーラ, acc=1) + 「犬」(2モーラ, nodeAcc=5, C1)
+            // CalcTopNodeAcc: C1 → moraSize(2) + nodeAcc(5) = 7
+            // totalMoraCount = moraSize(2) + current.MoraCount(2) = 4
+            // Math.Min(4, 7) = 4 → クランプ発動
+            var node1 = CreateNode("猫", "ネコ", accentType: 1);
+            var node2 = CreateNode("犬", "イヌ", accentType: 5, chainFlag: true, chainRule: "C1");
+
+            var nodes = new List<NjdNode> { node1, node2 };
+            SetAccentType.Process(nodes);
+
+            // moraSize(2) + nodeAcc(5) = 7 → Min(4, 7) = 4
+            Assert.Equal(4, node1.AccentType);
+        }
+
+        [Fact]
+        public void Process_C1_負のnodeAccの場合_ゼロにクランプ()
+        {
+            // 「ア」(1モーラ, acc=1) + 「イ」(1モーラ, nodeAcc=-5, C1)
+            // CalcTopNodeAcc: C1 → moraSize(1) + nodeAcc(-5) = -4
+            // Math.Max(0, -4) = 0 → ゼロクランプ発動
+            var node1 = CreateNode("あ", "ア", accentType: 1);
+            var node2 = CreateNode("い", "イ", accentType: -5, chainFlag: true, chainRule: "C1");
+
+            var nodes = new List<NjdNode> { node1, node2 };
+            SetAccentType.Process(nodes);
+
+            // moraSize(1) + nodeAcc(-5) = -4 → Max(0, -4) = 0
+            Assert.Equal(0, node1.AccentType);
+        }
+
         // ===== 特殊助動詞がルールとしてパースされないことの確認 =====
 
         [Fact]

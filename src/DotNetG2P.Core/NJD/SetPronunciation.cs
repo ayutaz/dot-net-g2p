@@ -192,7 +192,10 @@ namespace DotNetG2P.NJD
                                 head.Reading += node.Reading;
                             }
 
-                            head.Pronunciation.TransferFrom(node.Pronunciation);
+                            if (head.Pronunciation != null && node.Pronunciation != null)
+                            {
+                                head.Pronunciation.TransferFrom(node.Pronunciation);
+                            }
 
                             // 統合元ノードをリセット（後で除去される）
                             node.Reset();

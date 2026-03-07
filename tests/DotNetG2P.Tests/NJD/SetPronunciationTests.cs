@@ -94,24 +94,19 @@ namespace DotNetG2P.Tests.NJD
         }
 
         [Fact]
-        public void Process_ひらがな表層形はToutenセグメントに変換される()
+        public void Process_ひらがな表層形はカタカナに変換されてモーラ解析される()
         {
-            // ひらがなはカタカナモーラ辞書に存在しないため、
-            // 各文字がToutenセグメントとして認識される。
-            // ToutenはMoraCount=0だがIsEmpty=falseなのでノードとして残る。
-            // (実際のG2Pパイプラインでは辞書がカタカナ読みを提供するため
-            //  ひらがな表層形が直接来ることはない)
+            // ひらがな表層形は内部でカタカナに変換され、モーラ解析される。
+            // 「こんにちは」→カタカナ「コンニチハ」→モーラ解析→音素列
             var node = ノード作成_発音なし("こんにちは");
             var nodes = new List<NjdNode> { node };
 
             SetPronunciation.Process(nodes);
 
-            // ひらがな各文字がToutenセグメントに変換され、ノードとして残る
+            // ひらがながカタカナに変換されて正しくモーラ解析される
             Assert.NotEmpty(nodes);
-            foreach (var n in nodes)
-            {
-                Assert.True(n.Pronunciation.Moras.Count > 0);
-            }
+            Assert.True(nodes[0].Pronunciation.MoraCount > 0,
+                "ひらがな表層形がカタカナに変換されてモーラ解析されるべき");
         }
 
         // =====================================================================
@@ -543,6 +538,41 @@ namespace DotNetG2P.Tests.NJD
 
             Assert.Single(nodes);
             Assert.True(nodes[0].PartOfSpeech.IsFiller);
+        }
+
+        // =====================================================================
+        // ひらがな→カタカナ変換の直接検証テスト
+        // =====================================================================
+
+        [Fact]
+        public void Process_ひらがな表層形_Readingがアスタリスクの場合に正しい音素が得られる()
+        {
+            // 発音なし・Readingが「*」で表層形がひらがなの場合、
+            // 内部でカタカナに変換されてモーラ解析される
+            // 「あいう」→「アイウ」→ a, i, u
+            var node = ノード作成_発音なし("あいう", reading: "*");
+            var nodes = new List<NjdNode> { node };
+
+            SetPronunciation.Process(nodes);
+
+            Assert.Single(nodes);
+            Assert.Equal(3, nodes[0].Pronunciation.MoraCount);
+            Assert.Equal("a i u", nodes[0].Pronunciation.ToPhonemeString());
+        }
+
+        [Fact]
+        public void Process_ひらがな表層形_撥音促音長音を含む場合も正しく変換される()
+        {
+            // 「がっこう」→「ガッコウ」→ g a, cl, k o, u
+            var node = ノード作成_発音なし("がっこう", reading: "*");
+            var nodes = new List<NjdNode> { node };
+
+            SetPronunciation.Process(nodes);
+
+            Assert.Single(nodes);
+            Assert.True(nodes[0].Pronunciation.MoraCount >= 3,
+                "「がっこう」が正しくモーラ解析されるべき");
+            Assert.Contains("g a", nodes[0].Pronunciation.ToPhonemeString());
         }
 
         // =====================================================================

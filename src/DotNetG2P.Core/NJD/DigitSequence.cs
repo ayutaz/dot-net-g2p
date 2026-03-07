@@ -266,7 +266,7 @@ namespace DotNetG2P.NJD
                     if (i % 2 == 0)
                     {
                         node.ChainFlag = false;
-                        if (i != Digits.Count - 1)
+                        if (i != Digits.Count - 1 && node.Pronunciation != null)
                         {
                             // 最後の桁でなければアクセント位置を3に設定
                             node.Pronunciation = new Pronunciation(

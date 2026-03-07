@@ -279,6 +279,14 @@ namespace DotNetG2P.Tests
             }
         }
 
+        [SkippableFact]
+        public void ToProsodyFeatures_WhitespaceOnly_ReturnsEmptyFeatures()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            var result = _engine!.ToProsodyFeatures(" ");
+            Assert.Equal(0, result.Count);
+        }
+
         // ===== Disposed後のメソッド呼び出し =====
 
         [SkippableFact]
