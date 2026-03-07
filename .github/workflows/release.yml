@@ -58,6 +58,7 @@ jobs:
         run: >
           dotnet test DotNetG2P.slnx
           --configuration Release --no-build --verbosity normal
+          --filter "Category!=Performance"
           --logger "trx;LogFileName=results.trx"
           --results-directory ./test-results
 

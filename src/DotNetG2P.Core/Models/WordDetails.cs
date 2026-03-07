@@ -75,7 +75,6 @@ namespace DotNetG2P.Models
                 }
                 catch (ArgumentException ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Pronunciation parse failed: {ex.Message}");
                     // 発音フィールドのパース失敗 → Readingフィールドからリトライ
                     string readingStr = token.Reading;
                     if (!string.IsNullOrEmpty(readingStr) && readingStr != "*" && readingStr != pronStr)
