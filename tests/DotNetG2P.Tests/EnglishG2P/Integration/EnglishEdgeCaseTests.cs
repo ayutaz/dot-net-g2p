@@ -147,11 +147,11 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
         }
 
         [Fact]
-        public void ToPhonemes_FullWidthChars_Skipped()
+        public void ToPhonemes_FullWidthChars_NormalizedToHalfWidth()
         {
-            // 全角英字はIsWordCharが半角英字のみ対応のためスキップ
-            var result = _engine.ToPhonemes("\uFF28\uFF25\uFF2C\uFF2C\uFF2F");
-            Assert.Equal("", result);
+            // 全角英字は正規化で半角に変換され、通常どおり音素変換される
+            var result = _engine.ToPhonemes("\uFF28\uFF25\uFF2C\uFF2C\uFF2F"); // ＨＥＬＬＯ
+            Assert.Equal("HH AH0 L OW1", result);
         }
 
         [Fact]

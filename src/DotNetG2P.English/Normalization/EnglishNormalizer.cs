@@ -25,6 +25,9 @@ namespace DotNetG2P.English.Normalization
             if (string.IsNullOrWhiteSpace(text))
                 return text ?? string.Empty;
 
+            // 全角ASCII→半角ASCII正規化（全角英数字・記号を半角に変換）
+            text = NormalizeFullWidthAscii(text);
+
             // 空白文字でトークン分割
             var tokens = text.Split(s_whitespace, StringSplitOptions.RemoveEmptyEntries);
             var results = new string[tokens.Length];
@@ -299,6 +302,42 @@ namespace DotNetG2P.English.Normalization
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 全角ASCII文字（U+FF01〜U+FF5E）を対応する半角ASCII文字（U+0021〜U+007E）に変換する。
+        /// 全角スペース（U+3000）は半角スペースに変換する。
+        /// </summary>
+        private static string NormalizeFullWidthAscii(string text)
+        {
+            // 全角ASCII文字が含まれるか事前チェック（大半のケースで早期リターン）
+            bool hasFullWidth = false;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if ((c >= '\uFF01' && c <= '\uFF5E') || c == '\u3000')
+                {
+                    hasFullWidth = true;
+                    break;
+                }
+            }
+
+            if (!hasFullWidth)
+                return text;
+
+            var chars = new char[text.Length];
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (c >= '\uFF01' && c <= '\uFF5E')
+                    chars[i] = (char)(c - 0xFEE0); // 全角→半角オフセット
+                else if (c == '\u3000')
+                    chars[i] = ' '; // 全角スペース→半角スペース
+                else
+                    chars[i] = c;
+            }
+
+            return new string(chars);
         }
 
         /// <summary>
