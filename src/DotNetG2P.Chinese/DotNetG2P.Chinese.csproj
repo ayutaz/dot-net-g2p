@@ -13,6 +13,7 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Dictionary\Data\pinyin_char.txt" LogicalName="pinyin_char.txt" />
+    <EmbeddedResource Include="Dictionary\Data\pinyin_phrase.txt" LogicalName="pinyin_phrase.txt" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />

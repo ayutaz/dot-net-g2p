@@ -15,58 +15,81 @@ namespace DotNetG2P.Chinese
     public sealed class ChineseG2PEngine : IDisposable
     {
         private readonly PinyinCharDictionary _charDictionary;
+        private readonly PinyinPhraseDictionary? _phraseDictionary;
         private readonly ChineseG2POptions _options;
         private int _disposed;
 
         /// <summary>
-        /// 埋め込み辞書とデフォルトオプションでエンジンを初期化する。
+        /// 埋め込み辞書（単字+フレーズ）とデフォルトオプションでエンジンを初期化する。
         /// </summary>
         public ChineseG2PEngine()
-            : this(PinyinCharDictionary.LoadEmbedded(), ChineseG2POptions.Default)
+            : this(PinyinCharDictionary.LoadEmbedded(), PinyinPhraseDictionary.LoadEmbedded(), ChineseG2POptions.Default)
         {
         }
 
         /// <summary>
-        /// 埋め込み辞書とオプションを指定してエンジンを初期化する。
+        /// 埋め込み辞書（単字+フレーズ）とオプションを指定してエンジンを初期化する。
         /// </summary>
         /// <param name="options">処理オプション</param>
         public ChineseG2PEngine(ChineseG2POptions options)
-            : this(PinyinCharDictionary.LoadEmbedded(), options)
+            : this(PinyinCharDictionary.LoadEmbedded(), PinyinPhraseDictionary.LoadEmbedded(), options)
         {
         }
 
         /// <summary>
-        /// 外部辞書ファイルを使用してエンジンを初期化する。
+        /// 外部単字辞書ファイルを使用してエンジンを初期化する（フレーズ辞書なし）。
         /// </summary>
         /// <param name="charDictPath">単字ピンイン辞書ファイルパス</param>
         public ChineseG2PEngine(string charDictPath)
-            : this(PinyinCharDictionary.LoadFromFile(charDictPath), ChineseG2POptions.Default)
+            : this(PinyinCharDictionary.LoadFromFile(charDictPath), null, ChineseG2POptions.Default)
         {
         }
 
         /// <summary>
-        /// 外部辞書ファイルとオプションを指定してエンジンを初期化する。
+        /// 外部単字辞書ファイルとオプションを指定してエンジンを初期化する（フレーズ辞書なし）。
         /// </summary>
         /// <param name="charDictPath">単字ピンイン辞書ファイルパス</param>
         /// <param name="options">処理オプション</param>
         public ChineseG2PEngine(string charDictPath, ChineseG2POptions options)
-            : this(PinyinCharDictionary.LoadFromFile(charDictPath), options)
+            : this(PinyinCharDictionary.LoadFromFile(charDictPath), null, options)
         {
         }
 
         /// <summary>
-        /// PinyinCharDictionaryインスタンスとオプションを指定してエンジンを初期化する（内部用）。
+        /// 外部辞書ファイル（単字+フレーズ）を使用してエンジンを初期化する。
         /// </summary>
-        internal ChineseG2PEngine(PinyinCharDictionary charDictionary, ChineseG2POptions options)
+        /// <param name="charDictPath">単字ピンイン辞書ファイルパス</param>
+        /// <param name="phraseDictPath">フレーズピンイン辞書ファイルパス</param>
+        public ChineseG2PEngine(string charDictPath, string phraseDictPath)
+            : this(PinyinCharDictionary.LoadFromFile(charDictPath), PinyinPhraseDictionary.LoadFromFile(phraseDictPath), ChineseG2POptions.Default)
+        {
+        }
+
+        /// <summary>
+        /// 外部辞書ファイル（単字+フレーズ）とオプションを指定してエンジンを初期化する。
+        /// </summary>
+        /// <param name="charDictPath">単字ピンイン辞書ファイルパス</param>
+        /// <param name="phraseDictPath">フレーズピンイン辞書ファイルパス</param>
+        /// <param name="options">処理オプション</param>
+        public ChineseG2PEngine(string charDictPath, string phraseDictPath, ChineseG2POptions options)
+            : this(PinyinCharDictionary.LoadFromFile(charDictPath), PinyinPhraseDictionary.LoadFromFile(phraseDictPath), options)
+        {
+        }
+
+        /// <summary>
+        /// PinyinCharDictionaryとPinyinPhraseDictionaryを指定してエンジンを初期化する（内部用）。
+        /// </summary>
+        internal ChineseG2PEngine(PinyinCharDictionary charDictionary, PinyinPhraseDictionary? phraseDictionary, ChineseG2POptions options)
         {
             _charDictionary = charDictionary ?? throw new ArgumentNullException(nameof(charDictionary));
+            _phraseDictionary = phraseDictionary;
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         /// <summary>
         /// テキストをピンイン文字列に変換する（デフォルトスタイル使用）。
-        /// CJK統合漢字（U+4E00-U+9FFF）を辞書検索してピンインに変換し、
-        /// 非漢字はそのまま出力する。
+        /// CJK統合漢字を辞書検索してピンインに変換し、
+        /// 句読点は区切りとして扱い、ASCII英数字はそのまま出力する。
         /// 例: "你好" → "nǐ hǎo"（ToneMarkedスタイル時）
         /// </summary>
         /// <param name="text">入力テキスト</param>
@@ -99,12 +122,31 @@ namespace DotNetG2P.Chinese
 
                 if (IsCjkUnifiedIdeograph(c))
                 {
+                    // フレーズ辞書で最長一致検索
+                    if (_phraseDictionary != null && _options.HandleHeteronyms)
+                    {
+                        var matchLen = _phraseDictionary.FindLongestMatch(text, i, out var phrasePinyins);
+                        if (matchLen > 0)
+                        {
+                            foreach (var pinyin in phrasePinyins)
+                            {
+                                if (needsSeparator && sb.Length > 0)
+                                    sb.Append(separator);
+                                sb.Append(ApplyStyle(pinyin, style));
+                                needsSeparator = true;
+                            }
+                            i += matchLen - 1; // ループincrement分を考慮
+                            continue;
+                        }
+                    }
+
+                    // 単字辞書フォールバック
                     var codePoint = (int)c;
-                    if (_charDictionary.TryLookup(codePoint, out var pinyin))
+                    if (_charDictionary.TryLookup(codePoint, out var singlePinyin))
                     {
                         if (needsSeparator && sb.Length > 0)
                             sb.Append(separator);
-                        sb.Append(ApplyStyle(pinyin, style));
+                        sb.Append(ApplyStyle(singlePinyin, style));
                         needsSeparator = true;
                     }
                     else
@@ -115,9 +157,19 @@ namespace DotNetG2P.Chinese
                         needsSeparator = true;
                     }
                 }
+                else if (IsCjkPunctuation(c) || IsAsciiPunctuation(c))
+                {
+                    // 句読点は区切りとして扱い、出力には含めない
+                    needsSeparator = false;
+                }
+                else if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+                {
+                    // スペース・改行は区切りとして処理
+                    needsSeparator = false;
+                }
                 else
                 {
-                    // 非漢字はそのまま出力
+                    // ASCII英数字等はそのまま出力
                     sb.Append(c);
                     needsSeparator = false;
                 }
@@ -158,10 +210,26 @@ namespace DotNetG2P.Chinese
 
                 if (IsCjkUnifiedIdeograph(c))
                 {
-                    var codePoint = (int)c;
-                    if (_charDictionary.TryLookup(codePoint, out var pinyin))
+                    // フレーズ辞書で最長一致検索
+                    if (_phraseDictionary != null && _options.HandleHeteronyms)
                     {
-                        result.Add(ApplyStyle(pinyin, style));
+                        var matchLen = _phraseDictionary.FindLongestMatch(text, i, out var phrasePinyins);
+                        if (matchLen > 0)
+                        {
+                            foreach (var pinyin in phrasePinyins)
+                            {
+                                result.Add(ApplyStyle(pinyin, style));
+                            }
+                            i += matchLen - 1; // ループincrement分を考慮
+                            continue;
+                        }
+                    }
+
+                    // 単字辞書フォールバック
+                    var codePoint = (int)c;
+                    if (_charDictionary.TryLookup(codePoint, out var singlePinyin))
+                    {
+                        result.Add(ApplyStyle(singlePinyin, style));
                     }
                     else
                     {
@@ -197,8 +265,8 @@ namespace DotNetG2P.Chinese
         {
             ThrowIfDisposed();
 
-            if (_charDictionary.TryLookup((int)c, out var pinyin))
-                return new[] { pinyin };
+            if (_charDictionary.TryLookupAll((int)c, out var pinyins))
+                return pinyins;
 
             return Array.Empty<string>();
         }
@@ -229,6 +297,7 @@ namespace DotNetG2P.Chinese
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
             {
                 _charDictionary.Clear();
+                _phraseDictionary?.Clear();
             }
         }
 
@@ -251,11 +320,70 @@ namespace DotNetG2P.Chinese
         }
 
         /// <summary>
-        /// CJK統合漢字（U+4E00〜U+9FFF）であるかを判定する。
+        /// CJK統合漢字であるかを判定する。
+        /// CJK Unified Ideographs (U+4E00-U+9FFF)、Extension A (U+3400-U+4DBF)、
+        /// Compatibility Ideographs (U+F900-U+FAFF) を含む。
         /// </summary>
         private static bool IsCjkUnifiedIdeograph(char c)
         {
-            return c >= '\u4E00' && c <= '\u9FFF';
+            return (c >= '\u4E00' && c <= '\u9FFF')    // CJK Unified Ideographs
+                || (c >= '\u3400' && c <= '\u4DBF')    // CJK Extension A
+                || (c >= '\uF900' && c <= '\uFAFF');   // CJK Compatibility
+        }
+
+        /// <summary>
+        /// CJK句読点であるかを判定する。
+        /// </summary>
+        private static bool IsCjkPunctuation(char c)
+        {
+            switch (c)
+            {
+                case '\u3002': // 。
+                case '\uFF0C': // ，
+                case '\uFF01': // ！
+                case '\uFF1F': // ？
+                case '\u3001': // 、
+                case '\uFF1B': // ；
+                case '\uFF1A': // ：
+                case '\uFF08': // （
+                case '\uFF09': // ）
+                case '\u300A': // 《
+                case '\u300B': // 》
+                case '\u300C': // 「
+                case '\u300D': // 」
+                case '\u3010': // 【
+                case '\u3011': // 】
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// ASCII句読点であるかを判定する。
+        /// </summary>
+        private static bool IsAsciiPunctuation(char c)
+        {
+            switch (c)
+            {
+                case '.':
+                case ',':
+                case '!':
+                case '?':
+                case ';':
+                case ':':
+                case '(':
+                case ')':
+                case '[':
+                case ']':
+                case '{':
+                case '}':
+                case '"':
+                case '\'':
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private void ThrowIfDisposed()
