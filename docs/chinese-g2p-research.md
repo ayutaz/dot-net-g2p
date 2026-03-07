@@ -25,10 +25,10 @@
 
 | ライブラリ | 言語 | アーキテクチャ | 精度(CPP) | ライセンス | GitHub Stars | 依存の重さ |
 |-----------|------|---------------|-----------|-----------|-------------|-----------|
-| **pypinyin** | Python | 辞書+フレーズマッチ | ~86-87% | MIT | ~5,200 | なし（純Python） |
-| **g2pM** | Python | Bi-LSTM | 97.31% | Apache-2.0 | ~350 | NumPyのみ |
-| **g2pW** | Python | BERT+Weighted Softmax | 99.07% | Apache-2.0 | - | transformers, onnxruntime |
-| **g2pC** | Python | CRF | 84.84% | Apache-2.0 | ~206 | pkuseg, sklearn |
+| **pypinyin** | Python | 辞書+フレーズマッチ | 86.13% (v0.36.0) | MIT | ~5,100 | なし（純Python） |
+| **g2pM** | Python | Bi-LSTM | 97.31% | Apache-2.0 | ~227 | NumPyのみ |
+| **g2pW** | Python | BERT+Weighted Softmax | 99.08% | Apache-2.0 | ~352 | transformers, onnxruntime |
+| **g2pC** | Python | CRF | 84.84% | Apache-2.0 | ~243 | pkuseg, sklearn |
 | **xpinyin** | Python | 単純辞書 | 最低 | MIT | ~830 | なし |
 | **phonemizer** | Python | espeak-ngラッパー | 低 | GPL-3.0 | - | espeak-ng |
 | **csharp-pinyin** | C# | 辞書マッチ最適化 | 90.3% | Apache-2.0 | ~7 | なし |
@@ -63,12 +63,13 @@
 
 #### csharp-pinyin (wolfgitpr) ★注目
 - **リポジトリ**: [wolfgitpr/csharp-pinyin](https://github.com/wolfgitpr/csharp-pinyin)
-- **ライセンス**: Apache-2.0
+- **ライセンス**: Apache-2.0（コード/アルゴリズム）
 - C#ネイティブ実装、外部依存なし
-- **精度**: 90.3%（with-tone）、99.9%（without-tone）
+- **精度**: 90.3%（with-tone、CPP_Dataset ~79k文）、99.9%（without-tone）
 - **速度**: 約50万字/秒
 - 広東語対応、声調スタイル複数、繁→簡変換
-- **DotNetG2P.Chineseの参考・統合候補として最も有力**
+- **DotNetG2P.Chineseのアルゴリズム参考として最も有力**
+- **注意**: 辞書データにCC-CEDICT由来のデータが含まれている可能性あり。コード/アルゴリズムの参考のみとし、辞書データはMITライセンスのpinyin-data/phrase-pinyin-dataから独自構築すること
 
 ---
 
@@ -78,13 +79,13 @@
 
 | ライブラリ | With-Tone精度 | Without-Tone精度 | アーキテクチャ |
 |-----------|-------------|-----------------|---------------|
-| LLM-based (最新研究) | 99.29% | - | LLM |
-| **g2pW** | **99.07%** | - | BERT |
+| LLM-based (arXiv:2312.11920) | 99.29% | - | LLM |
+| **g2pW** | **99.08%** | - | BERT |
 | Chinese BERT | ~97.85% | - | BERT |
 | **g2pM** | **97.31%** | - | Bi-LSTM |
 | **csharp-pinyin** | **90.3%** | **99.9%** | 辞書マッチ |
 | Majority vote | 92.08% | - | 統計 |
-| **pypinyin** | **~86-87%** | - | フレーズ辞書 |
+| **pypinyin** | **86.13%** (v0.36.0) | - | フレーズ辞書 |
 | g2pC | 84.84% | - | CRF |
 | xpinyin | 78.56% | - | 単純辞書 |
 
@@ -104,12 +105,12 @@
 | **pinyin-data** (mozillazg) | ~42,000字 | MIT | 互換 | 単字ピンイン |
 | **phrase-pinyin-data** (mozillazg) | 数万フレーズ | MIT | 互換 | フレーズピンイン（多音字解決） |
 | **Unicode Unihan** | kHanyuPinyin: ~34,131字 | Unicode License | 互換 | 漢字→ピンイン（最も網羅的） |
-| **CC-CEDICT** | ~124,000語句 | CC BY-SA 4.0 | 要注意（帰属表示+SA） | 語句レベルピンイン |
+| **CC-CEDICT** | ~124,000語句 | CC BY-SA 4.0 | **非互換**（ShareAlike条項） | 語句レベルピンイン |
 
 ### 推奨データソース
 - **メイン**: pinyin-data + phrase-pinyin-data（共にMIT、pypinyinと同一ソース）
-- **補完**: Unicode Unihan（レア漢字カバー）
-- **CC-CEDICT**: 使用する場合はNOTICEに帰属表示が必要（CC BY-SA 4.0）
+- **補完**: Unicode Unihan（レア漢字カバー、Unicode License = Category A互換）
+- **CC-CEDICT**: **使用回避推奨**。CC BY-SA 4.0のShareAlike条項により、データを組み込んだ派生物はCC BY-SA 4.0で配布する義務が生じる可能性があり、Apache-2.0プロジェクトにとってライセンス汚染リスクとなる。参考情報としての閲覧のみに留めること
 
 ### データフォーマット
 
@@ -128,14 +129,16 @@
 
 ### 4.1 多音字（Polyphone）解決
 
-中国語G2Pの最大の技術課題。約982字の多音字が存在（新華字典で734字、全体の約10%）。
+中国語G2Pの最大の技術課題。多音字の総数はソースにより異なる（標準化漢字で約747字、辞海では2,641字）。
 
 #### アプローチ比較
 
-| 手法 | 精度 | ML依存 | 実装難易度 | C#実装 |
+※精度はCPPベンチマークでの**多音字解決精度（With-Tone）**。セクション4.2の分詞精度とは異なる指標。
+
+| 手法 | 多音字解決精度 | ML依存 | 実装難易度 | C#実装 |
 |------|------|--------|-----------|--------|
 | 最頻出読み選択 | 92% | なし | 極低 | 容易 |
-| 前方最長一致（pypinyin） | 86-87% | なし | 中 | 容易 |
+| 前方最長一致（pypinyin v0.36.0） | 86.13% | なし | 中 | 容易 |
 | 最適化辞書マッチ（csharp-pinyin） | 90.3% | なし | 中 | 既存実装あり |
 | Bi-LSTM（g2pM） | 97.3% | あり | 高 | 可能だが重い |
 | BERT（g2pW） | 99.1% | あり | 極高 | ONNX経由で可能 |
@@ -149,7 +152,7 @@
 
 | 手法 | 精度 | 実装コスト | 備考 |
 |------|------|-----------|------|
-| 前方最長一致 | ~95% | 低 | pypinyinのmmsegモジュールが採用 |
+| 前方最長一致 | ~95%（※分詞精度） | 低 | pypinyinのmmsegモジュールが採用 |
 | jieba（DAG+DP+HMM） | ~97% | 高 | フル実装は複雑 |
 | pkuseg | ~97%+ | 極高 | ニューラルモデル |
 
@@ -157,13 +160,14 @@
 
 ### 4.3 声調サンディ（Tone Sandhi）
 
-ルールベースで100%正確に実装可能。
+ルールベースで実装可能。
 
 | ルール | 条件 | 変化 | 例 |
 |--------|------|------|-----|
 | **三声変調** | 3声+3声 | → 2声+3声 | 你好 nǐhǎo → níhǎo |
 | **"一"変調** | 一+4声 | → 2声 | 一次 yīcì → yícì |
 | **"一"変調** | 一+1/2/3声 | → 4声 | 一般 yībān → yìbān |
+| **"一"例外** | 序数（第一等） | 変調しない | 第一 dìyī（そのまま） |
 | **"一"軽声** | 動詞+一+動詞 | → 軽声 | 看一看 kàn yi kàn |
 | **"不"変調** | 不+4声 | → 2声 | 不是 bùshì → búshì |
 | **"不"軽声** | 動詞+不+動詞 | → 軽声 | 走不走 zǒu bu zǒu |
@@ -182,10 +186,20 @@
 
 ### 4.5 儿化音（Erhua）
 
-辞書ベースで処理可能。CC-CEDICTは儿化語彙を含む。
+辞書ベースで処理可能。フレーズ辞書（phrase-pinyin-data）に儿化語彙を含む。
 
 - ピンイン末尾に `-r` を付加（例: 花儿 huār）
 - テキスト中の「儿」が接尾辞か独立字かの判別が必要（辞書マッチングで対応）
+
+### 4.6 テキスト正規化
+
+TTS前処理として数字・記号の読み展開が必要（pypinyinだけではカバーしない領域）。
+
+- **数字読み**: 123 → yī bǎi èr shí sān
+- **日付**: 2024年3月 → èr líng èr sì nián sān yuè
+- **金額**: ¥100 → yī bǎi yuán
+- **英数字混在**: iPhone15 → iPhone shí wǔ
+- 参考: WeTextProcessing / FunTextProcessing（中国語テキスト正規化ライブラリ）
 
 ---
 
@@ -287,14 +301,21 @@ src/DotNetG2P.Chinese/
 ```
 
 ### 設計方針
-- **DotNetG2P.Englishと同じパターン**: Core参照なし（独立パッケージ）
+- **DotNetG2P.Englishと同じパターン**: Core参照なし（独立パッケージ）。将来的に構造化出力（AccentPhrases等）をMultilingualで統合する場合はCore参照を検討
 - **辞書埋め込み**: EmbeddedResource（合計~2.5MB）
-- **IDisposable**: 辞書メモリ解放
+- **IDisposable**: 辞書メモリ解放（既存パッケージとのAPI一貫性のため）
 - **.NET Standard 2.1**: Unity 2021.2+互換
+- **フレーズ辞書のデータ構造**: pypinyinのPrefixSet方式（全接頭辞をHashSetに格納）はメモリ消費が大きい（~30MB推定）。Trie構造（既存`DotNetG2P.MeCab`の`DoubleArrayTrie`を参考）またはソート済み配列+バイナリサーチを推奨
+- **PinyinSyllable**: readonly struct（Initial: byte enum 22種、Final: byte enum 39種、Tone: byte enum 5種）で値型のメリットを活かす
 
 ### Multilingualパッケージへの統合
 - `Language` enumに `Chinese = 2` を追加
-- `LanguageDetector`: 漢字のみの場合の判定ロジック改修（ひらがな/カタカナ併存→Japanese、それ以外→Chinese or 設定依存）
+- `ScriptKind` に `CJKIdeograph` を新設し、CJK統合漢字を独立分類
+- `TextSegmenter` レベルで文脈ベース判定:
+  - 周囲にひらがな/カタカナがある → Japanese
+  - 中国語特有の句読点（、。「」→ ，。""）がある → Chinese
+  - 漢字のみでヒントなし → デフォルト言語設定に従う（`MultilingualG2POptions.DefaultCjkLanguage`）
+- 既存テストの修正が必要（現在は漢字=Japanese前提）
 - 日中英混在テキスト対応
 
 ---
@@ -312,23 +333,23 @@ src/DotNetG2P.Chinese/
 ### C2: フレーズ辞書と多音字解決
 **目標**: `g2p("重要")` → `"zhòng yào"` (×`chóng yào`)
 - フレーズ辞書（phrase-pinyin-dataベース）の埋め込み
-- PhraseDictionary: 前方最長一致フレーズ検索
+- PhraseDictionary: Trie or ソート済み配列による前方最長一致フレーズ検索
 - 多音字解決: フレーズ辞書→単字辞書のフォールバック
 - テスト: 多音字テスト50件
 
-### C3: 出力形式の充実
+### C3: 声調変調（Tone Sandhi）
+**目標**: 自然な声調処理（精度検証をC4より先に行うため順序変更）
+- 三声連読変調、"一"/"不"の変調ルール（序数例外含む）
+- 軽声処理、儿化音処理
+- テスト: 声調変調30件
+
+### C4: 出力形式の充実
 **目標**: 7+出力スタイル対応
 - INITIALS/FINALS/FINALS_TONE: 声母・韻母分離
 - BOPOMOFO: 注音符号変換
 - FIRST_LETTER: 頭文字抽出
 - IPA: 国際音声記号変換
 - テスト: 全スタイル検証
-
-### C4: 声調変調（Tone Sandhi）
-**目標**: 自然な声調処理
-- 三声連読変調、"一"/"不"の変調ルール
-- 軽声処理、儿化音処理
-- テスト: 声調変調30件
 
 ### C5: テスト・品質保証
 **目標**: pypinyinとの比較検証
@@ -342,7 +363,7 @@ src/DotNetG2P.Chinese/
 **目標**: NuGet + UPM + Multilingual対応
 - NuGet: DotNetG2P.Chinese
 - UPM: com.dotnetg2p.chinese
-- DotNetG2P.Multilingual: Language.Chinese追加、LanguageDetector改修
+- DotNetG2P.Multilingual: Language.Chinese追加、ScriptKind.CJKIdeograph新設、LanguageDetector/TextSegmenter改修
 - 日中英混在テキスト対応
 
 ---
@@ -360,18 +381,22 @@ src/DotNetG2P.Chinese/
 | 課題 | 対策 |
 |------|------|
 | 辞書データサイズ（~2.5MB） | バイナリ圧縮、遅延読み込み |
-| 漢字の日中判別（Multilingual統合時） | 文脈ヒューリスティック + デフォルト設定 |
+| フレーズ辞書のメモリ効率 | PrefixSet方式は~30MB消費。Trie or ソート済み配列を採用 |
+| 漢字の日中判別（Multilingual統合時） | ScriptKind.CJKIdeograph新設 + 文脈ベース判定 + デフォルト言語設定 |
+| テキスト正規化（数字・記号読み） | 中国語数字読み展開モジュールの実装が必要 |
 | .NET Standard 2.1制約 | Span<T>等の制限を考慮した設計 |
 
 ### ライセンスリスク
 | データ | ライセンス | リスク | 対策 |
 |--------|-----------|--------|------|
-| pinyin-data / phrase-pinyin-data | MIT | なし | メインデータソースとして使用 |
-| CC-CEDICT | CC BY-SA 4.0 | ShareAlike条項 | 使用する場合はNOTICE記載、またはMITデータのみで構築 |
-| Unicode Unihan | Unicode License | 低 | 帰属表示 |
-| csharp-pinyin | Apache-2.0 | なし | 参考実装として活用可能 |
+| pinyin-data / phrase-pinyin-data | MIT | なし | メインデータソースとして使用。NOTICEに著作権表示を記載 |
+| Unicode Unihan | Unicode License (Category A) | なし | 互換。帰属表示を記載 |
+| CC-CEDICT | CC BY-SA 4.0 | **高（非互換）** | **使用回避**。ShareAlike条項によりApache-2.0との共存不可。参考閲覧のみ |
+| csharp-pinyin コード | Apache-2.0 | なし | アルゴリズム参考として活用可能 |
+| csharp-pinyin 辞書データ | CC-CEDICT由来の可能性 | **高** | **辞書データは流用せず**、MIT辞書から独自構築 |
+| pypinyin コード | MIT | なし | 参考にする場合はNOTICEに帰属表示を追加 |
 
 ### 推奨戦略
-1. **Phase 1（C1-C2）**: pypinyin方式（MIT辞書 + 前方最長一致）で ~87-90% 精度を達成
-2. **Phase 2（C3-C6）**: csharp-pinyin のアルゴリズム参考で最適化、90%+ を目指す
+1. **Phase 1（C1-C3）**: pypinyin方式（MIT辞書 + 前方最長一致 + 声調変調）で ~87-90% 精度を達成
+2. **Phase 2（C4-C6）**: csharp-pinyin のアルゴリズム参考で最適化、90%+ を目指す
 3. **Phase 3（将来）**: g2pMのBi-LSTMモデル統合オプション（97%精度、オプトイン）
