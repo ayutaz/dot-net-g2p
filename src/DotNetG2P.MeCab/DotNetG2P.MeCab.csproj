@@ -10,7 +10,6 @@
 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>mecab;morphological-analysis;japanese;tokenizer;trie;viterbi;g2p;unity</PackageTags>
   </PropertyGroup>
   <ItemGroup>

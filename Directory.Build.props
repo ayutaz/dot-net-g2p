@@ -17,7 +17,7 @@
     <PackageProjectUrl>https://github.com/ayutaz/dot-net-g2p</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ayutaz/dot-net-g2p</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <Copyright>Copyright (c) 2026 ayutaz</Copyright>
 
