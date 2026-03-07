@@ -11,7 +11,7 @@
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageLicenseFile />
+    <PackageTags>g2p;japanese;tts;phoneme;openjtalk;text-to-speech;unity</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

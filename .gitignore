@@ -9,6 +9,7 @@ obj/
 
 ## NuGet
 *.nupkg
+*.snupkg
 packages/
 
 ## IDE

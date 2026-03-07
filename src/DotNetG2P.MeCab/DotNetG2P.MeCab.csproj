@@ -11,7 +11,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageLicenseFile />
+    <PackageTags>mecab;morphological-analysis;japanese;tokenizer;trie;viterbi;g2p;unity</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DotNetG2P.Core\DotNetG2P.Core.csproj" />

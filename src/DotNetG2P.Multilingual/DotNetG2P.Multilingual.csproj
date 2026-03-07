@@ -10,7 +10,6 @@
 
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageLicenseFile />
     <PackageTags>g2p;multilingual;japanese;english;tts;phoneme;text-to-speech;unity</PackageTags>
   </PropertyGroup>
   <ItemGroup>
