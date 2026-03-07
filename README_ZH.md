@@ -291,3 +291,4 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎 |
 
 所有组件均以 **Apache-2.0 许可证** 提供。
+有关第三方组件的许可证信息，请参阅 [NOTICE](NOTICE) 文件。

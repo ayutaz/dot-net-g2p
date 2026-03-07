@@ -291,3 +291,4 @@ so creating multiple instances incurs minimal memory overhead.
 | **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine |
 
 All components are available under the **Apache-2.0 License**.
+For third-party component licenses, see the [NOTICE](NOTICE) file.

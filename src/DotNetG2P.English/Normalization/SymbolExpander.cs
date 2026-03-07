@@ -1,5 +1,5 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// Licensed under the Apache-2.0 license.
+// Copyright (c) 2026 DotNetG2P Contributors
+// SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
