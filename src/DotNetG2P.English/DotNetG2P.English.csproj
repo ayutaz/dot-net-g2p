@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>DotNetG2P.English</PackageId>
+    <AssemblyName>DotNetG2P.English</AssemblyName>
+    <RootNamespace>DotNetG2P.English</RootNamespace>
+    <Description>English Grapheme-to-Phoneme (G2P) library for .NET and Unity. CMU Pronouncing Dictionary based ARPAbet phoneme lookup with stress marking support.</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseFile />
+    <PackageTags>g2p;english;tts;phoneme;arpabet;cmu;text-to-speech;unity</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\cmudict.dict" LogicalName="DotNetG2P.English.cmudict.dict" />
+    <EmbeddedResource Include="LTS\cmu_lts_model.bin" LogicalName="DotNetG2P.English.LTS.cmu_lts_model.bin" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,26 @@
+{
+  "name": "com.dotnetg2p.english",
+  "displayName": "DotNetG2P.English",
+  "version": "1.0.0",
+  "unity": "2021.2",
+  "description": "English Grapheme-to-Phoneme (G2P) library for Unity. CMU Pronouncing Dictionary based ARPAbet phoneme lookup with stress marking support.",
+  "keywords": [
+    "g2p",
+    "english",
+    "tts",
+    "phoneme",
+    "arpabet",
+    "cmu"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "author": {
+    "name": "ayutaz"
+  },
+  "documentationUrl": "https://github.com/ayutaz/dot-net-g2p#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ayutaz/dot-net-g2p.git",
+    "directory": "src/DotNetG2P.English"
+  }
+}

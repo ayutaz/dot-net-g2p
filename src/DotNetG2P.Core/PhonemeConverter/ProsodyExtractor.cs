@@ -39,6 +39,12 @@ namespace DotNetG2P.PhonemeConverter
                 if (node.IsEmpty)
                     continue;
 
+                // 新しいアクセント句の開始（ChainFlag==false）ではafterFallをリセット
+                if (node.ChainFlag == false)
+                {
+                    afterFall = false;
+                }
+
                 var pron = node.Pronunciation;
                 if (pron == null || pron.IsEmpty)
                     continue;

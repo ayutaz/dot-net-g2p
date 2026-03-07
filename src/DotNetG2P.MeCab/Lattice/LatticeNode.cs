@@ -34,8 +34,11 @@ namespace DotNetG2P.MeCab.Lattice
         /// <summary>単語生起コスト</summary>
         public short WordCost { get; set; }
 
-        /// <summary>素性文字列 (カンマ区切り)</summary>
+        /// <summary>素性文字列 (カンマ区切り)。遅延デコード時はベストパス選択後に設定される。</summary>
         public string Feature { get; set; } = "";
+
+        /// <summary>素性バッファ内のオフセット (遅延デコード用)</summary>
+        internal uint FeatureOffset { get; set; }
 
         /// <summary>Viterbi: 累積最小コスト</summary>
         public long BestCost { get; set; } = long.MaxValue;

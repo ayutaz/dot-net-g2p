@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - DotNetG2P.English
+
+### Added
+- **英語G2Pパッケージ `DotNetG2P.English` 新規追加**（`feature/english-g2p` ブランチ）
+  - DotNetG2P.Coreに依存しない独立パッケージ（.NET Standard 2.1）
+- E1: CMU辞書ルックアップMVP
+  - CMU Pronouncing Dictionary（135,166エントリ）をEmbeddedResourceとして埋め込み
+  - `EnglishG2PEngine` クラス: `ToPhonemes()`, `ToPhonemeList()`, `LookupWord()`, `LookupAllPronunciations()`, `ContainsWord()`
+  - ARPAbet音素体系（39音素 + ストレス4段階）、`ArpabetPhoneme` enum (byte基底)
+  - `EnglishG2POptions`: `IncludeStress`, `UnknownWordHandling`, `EnableLts`
+  - UPMパッケージ設定（com.dotnetg2p.english）
+  - NOTICEファイルにCMU辞書ライセンス表記追加
+- E2: Flite LTS CARTツリーによるOOV音素推定
+  - Fliteプロジェクトから25,505ノードのCARTツリーを移植
+  - OOV（辞書未登録語）に対するLTSフォールバック（PER 5.26%）
+  - `tools/extract_lts.js` 抽出スクリプト（Fliteソース→バイナリ+C#自動生成）
+  - NOTICEファイルにFliteライセンス表記追加
+- E3: テキスト正規化
+  - `EnglishNormalizer` ファサード + 6サブモジュール
+  - 数字→英語読み（基数・序数・小数・負数）、通貨展開（$, £, €, ¥）
+  - 時刻展開、略語展開（Dr./Mr./Mrs.等）、頭字語判別（NASA vs API）
+  - 記号→名前変換（@→at, #→number等）
+  - `EnglishG2POptions.EnableNormalization` 追加
+- E4: 同綴異音語解決
+  - `HomographResolver`（PosGuesser + HomographDatabase）による品詞ルールベース判別
+  - 30+語の同綴異音語データベース（母音変化型・ストレス移動型・-ate語尾型）
+  - 軽量品詞推定: 接尾辞ルール（-ing→動詞, -tion→名詞等）+ 文脈ルール（冠詞後→名詞等）
+  - `EnglishG2POptions.EnableHomographResolution` 追加
+- 英語G2Pテスト511件追加（プロジェクト全体テスト数: 1,465件）
+- CI/CD更新: DotNetG2P.Englishのpackステップ追加
+
 ## [1.1.0] - 2026-03-05
 
 ### Added

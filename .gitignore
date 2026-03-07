@@ -1,6 +1,7 @@
 ## .NET
 bin/
 obj/
+.build/
 *.user
 *.suo
 *.cache
@@ -21,6 +22,17 @@ ehthumbs.db
 Desktop.ini
 .DS_Store
 
+## Unity
+*.meta
+
 ## Temp
 nul
 temp_*
+test_output.txt
+
+## Dictionary (large binary)
+open_jtalk_dic_utf_8-*/
+open_jtalk_dic*.tar.gz
+
+## Claude Code
+.claude/settings.local.json

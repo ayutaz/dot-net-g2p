@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>DotNetG2P.Multilingual</PackageId>
+    <AssemblyName>DotNetG2P.Multilingual</AssemblyName>
+    <RootNamespace>DotNetG2P.Multilingual</RootNamespace>
+    <Description>Multilingual G2P engine combining Japanese and English grapheme-to-phoneme support with automatic language detection.</Description>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseFile />
+    <PackageTags>g2p;multilingual;japanese;english;tts;phoneme;text-to-speech;unity</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DotNetG2P.Core\DotNetG2P.Core.csproj" />
+    <ProjectReference Include="..\DotNetG2P.MeCab\DotNetG2P.MeCab.csproj" />
+    <ProjectReference Include="..\DotNetG2P.English\DotNetG2P.English.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+</Project>

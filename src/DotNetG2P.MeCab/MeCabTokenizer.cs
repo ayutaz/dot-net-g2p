@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using DotNetG2P.MeCab.Dictionary;
 using DotNetG2P.MeCab.Lattice;
 
@@ -21,7 +22,7 @@ namespace DotNetG2P.MeCab
         private readonly DictionaryBundle _dic;
         private readonly Lazy<LatticeBuilder> _lazyBuilder;
         private readonly Lazy<ViterbiDecoder> _lazyDecoder;
-        private volatile bool _disposed;
+        private int _disposed;
 
         /// <param name="dictionaryPath">naist-jdic辞書ディレクトリのパス</param>
         public MeCabTokenizer(string dictionaryPath)
@@ -50,6 +51,12 @@ namespace DotNetG2P.MeCab
             for (int i = 0; i < bestPath.Count; i++)
             {
                 var node = bestPath[i];
+                // システム辞書ノードはFeatureが遅延デコードされている（Feature==""のまま）
+                // ベストパスに選ばれたノードのみGetFeatureでUTF-8→stringデコードする
+                if (!node.IsUnknown && node.Feature.Length == 0)
+                {
+                    node.Feature = _dic.SystemDic.GetFeature(node.FeatureOffset);
+                }
                 tokens.Add(new MeCabToken(node.Surface, node.Feature));
             }
             return tokens;
@@ -58,17 +65,14 @@ namespace DotNetG2P.MeCab
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (!_disposed)
-            {
-                _disposed = true;
-                _dic.Dispose();
-            }
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0) return;
+            _dic?.Dispose();
         }
 
         private void ThrowIfDisposed()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(MeCabTokenizer));
+            if (Volatile.Read(ref _disposed) != 0)
+                throw new ObjectDisposedException(GetType().FullName);
         }
 
         /// <summary>

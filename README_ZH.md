@@ -6,14 +6,22 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-面向 C#/.NET 的日语 G2P（Grapheme-to-Phoneme：字素到音素转换）库。
-以纯 C# 原生实现了兼容 OpenJTalk 的基于规则的 G2P 处理管线，无需依赖 Python 或原生二进制文件即可将日语文本转换为音素序列。
+面向 C#/.NET 的日英多语言 G2P（Grapheme-to-Phoneme：字素到音素转换）库。
+以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线和基于 CMU 词典的英语 G2P，无需依赖 Python 或原生二进制文件即可将日英混合文本转换为音素序列。
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
 
 engine.ToPhonemes("こんにちは");  // => "k o N n i ch i w a"
 engine.ToKana("音声合成");        // => "オンセーゴーセー"
+
+// 英语 G2P
+using var enEngine = new EnglishG2PEngine();
+enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
+
+// 日英混合文本
+using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音素，英语部分 => ARPAbet
 ```
 
 ## 目录
@@ -36,15 +44,23 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 - **多种输出格式** — 音素序列 / 片假名 / ESPnet 韵律符号 / VOICEVOX 兼容 AccentPhrase / HTS 全上下文标签 / 韵律特征量（A1/A2/A3）
 - **支持 Unity** — 目标框架为 .NET Standard 2.1（Unity 2021.2+），提供 UPM 包
 - **可扩展设计** — 通过 `ITokenizer` 接口可替换形态素分析引擎
+- **支持英语 G2P** — CMU 词典（135,000 词）+ Flite LTS 规则进行 OOV 推测、IPA/X-SAMPA 输出、文本规范化、同形异音词解析
+- **支持日英混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，无缝处理日英混合文本
 
 ## 安装
 
 ### NuGet
 
 ```bash
-# 核心库 + 自研 MeCab 引擎
+# 核心库 + 自研 MeCab 引擎（日语 G2P）
 dotnet add package DotNetG2P
 dotnet add package DotNetG2P.MeCab
+
+# 英语 G2P
+dotnet add package DotNetG2P.English
+
+# 日英混合文本支持
+dotnet add package DotNetG2P.Multilingual
 ```
 
 ### 包组成
@@ -53,6 +69,8 @@ dotnet add package DotNetG2P.MeCab
 |---|--------|------|
 | `DotNetG2P` | Apache-2.0 | 核心库（G2P 引擎、NJD 处理、音素转换） |
 | `DotNetG2P.MeCab` | Apache-2.0 | 自研 MeCab 引擎（无外部依赖） |
+| `DotNetG2P.English` | Apache-2.0 | 英语 G2P 引擎（CMU 词典 + LTS 规则） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英混合文本支持） |
 
 ### Unity (UPM)
 
@@ -61,6 +79,8 @@ dotnet add package DotNetG2P.MeCab
 ```
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
 > **注意：** 需要另行准备 naist-jdic 词典。详情请参阅[词典准备](#词典准备)。
@@ -97,6 +117,23 @@ var labels = engine.ToFullContextLabels("こんにちは");
 var features = engine.ToProsodyFeatures("こんにちは");
 // features.Phonemes: ["sil","k","o","N","n","i","ch","i","w","a","sil"]
 // features.A1, A2, A3: 各音素的重音位置信息
+
+// === 英语 G2P ===
+using DotNetG2P.English;
+
+using var enEngine = new EnglishG2PEngine();
+string enPhonemes = enEngine.ToPhonemes("hello world");
+// => "HH AH0 L OW1 W ER1 L D"
+
+// === 日英混合文本 ===
+using DotNetG2P.Multilingual;
+
+using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+string mixed = multiEngine.ToPhonemes("今日はgood dayです");
+// 日语部分 => 日语音素，英语部分 => ARPAbet 音素
+
+var segments = multiEngine.ToSegments("今日はgood dayです");
+// 带语言标签的分段列表
 ```
 
 ## API 参考
@@ -117,6 +154,25 @@ var features = engine.ToProsodyFeatures("こんにちは");
 | `ToProsodyBatch(texts)` | `IReadOnlyList<string>` | 批量将多段文本转换为带韵律符号格式 |
 | `ToFullContextLabelsBatch(texts)` | `IReadOnlyList<IReadOnlyList<string>>` | 批量将多段文本转换为 HTS 标签 |
 | `ToProsodyFeaturesBatch(texts)` | `IReadOnlyList<ProsodyFeatures>` | 批量将多段文本转换为韵律特征量 |
+
+### EnglishG2PEngine
+
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `ToPhonemes(text)` | `string` | ARPAbet 音素序列 (`"HH AH0 L OW1"`) |
+| `ToIPA(text)` | `string` | IPA 表记 |
+| `ToPhonemeList(text)` | `IReadOnlyList<EnglishPhoneme>` | 结构化音素列表 |
+| `LookupWord(word)` | `IReadOnlyList<EnglishPhoneme>` | 单词查询 |
+| `ContainsWord(word)` | `bool` | 词典存在性确认 |
+
+### MultilingualG2PEngine
+
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `ToPhonemes(text)` | `string` | 日英混合音素序列 |
+| `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 带语言标签的分段 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
+| `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | 批量分段转换 |
 
 ### 日语音素体系
 
@@ -231,5 +287,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 |---|--------|------|
 | **DotNetG2P** | [Apache-2.0](LICENSE) | 核心库 |
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 自研 MeCab 引擎 |
+| **DotNetG2P.English** | [Apache-2.0](LICENSE) | 英语 G2P 引擎 |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎 |
 
 所有组件均以 **Apache-2.0 许可证** 提供。

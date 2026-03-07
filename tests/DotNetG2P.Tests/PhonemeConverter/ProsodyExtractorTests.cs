@@ -232,6 +232,62 @@ namespace DotNetG2P.Tests.PhonemeConverter
             Assert.Equal("^ s e [ N _ s e ] e $", result);
         }
 
+        // ===== 尾高型 + ChainFlag=false afterFallリセットテスト =====
+
+        [Fact]
+        public void Extract_Odaka_FollowedByNewAccentPhrase_AfterFallIsReset()
+        {
+            // 尾高型アクセント句（最終モーラでアクセント下降）の直後に
+            // ChainFlag=false の新しいアクセント句が続く場合、
+            // afterFallがリセットされ、新アクセント句の先頭で _ が正しく出力される。
+            //
+            // ハシ (accent=2, 尾高型) → "h a [ sh i ]"
+            // デス (accent=1, 頭高型, ChainFlag=false) → "[ d e ] s u"
+            //
+            // もしafterFallがリセットされないと、] の直後の [ の前に _ が
+            // 不要にスキップされる可能性がある。
+            // ChainFlag=false により afterFall がリセットされるため、
+            // 新アクセント句の先頭で [ が正しく挿入される。
+
+            var node1 = CreateNode("ハシ", 2); // 尾高型: h a [ sh i ]
+            var node2 = CreateNode("デス", 1); // 頭高型: [ d e ] s u
+            node2.ChainFlag = false; // 新アクセント句開始
+
+            var nodes = new List<NjdNode> { node1, node2 };
+            var result = ProsodyExtractor.Extract(nodes);
+
+            // 期待値: "^ h a [ sh i ] [ d e ] s u $"
+            // ハシ(尾高): h a [ sh i ] → ] でafterFall=true
+            // デス(頭高, ChainFlag=false): afterFallリセット → [ d e ] s u
+            // ] の直後に [ が来る（afterFallリセット後なので _ は不要で [ がセパレータ）
+            Assert.Equal("^ h a [ sh i ] [ d e ] s u $", result);
+        }
+
+        [Fact]
+        public void Extract_Odaka_FollowedByHeibanNewAccentPhrase_AfterFallIsReset()
+        {
+            // 尾高型の後に平板型（ChainFlag=false）が続くケース。
+            // afterFallリセットにより、新アクセント句の第1モーラの前に _ が出力され、
+            // 第2モーラの前に [ が出力される。
+            //
+            // ハシ (accent=2, 尾高型) → "h a [ sh i ]"
+            // コレ (accent=0, 平板型, ChainFlag=false) → "_ k o [ r e"
+
+            var node1 = CreateNode("ハシ", 2); // 尾高型
+            var node2 = CreateNode("コレ", 0); // 平板型
+            node2.ChainFlag = false; // 新アクセント句開始
+
+            var nodes = new List<NjdNode> { node1, node2 };
+            var result = ProsodyExtractor.Extract(nodes);
+
+            // 期待値: "^ h a [ sh i ] _ k o [ r e $"
+            // ハシ(尾高): h a [ sh i ] → afterFall=true
+            // コレ(平板, ChainFlag=false): afterFallリセット
+            //   第1モーラ(k o): hasPrevMora=true, afterFall=false, needRise=false → _ k o
+            //   第2モーラ(r e): needRise=true → [ r e
+            Assert.Equal("^ h a [ sh i ] _ k o [ r e $", result);
+        }
+
         // ===== ExpandLongVowels=false テスト =====
 
         [Fact]

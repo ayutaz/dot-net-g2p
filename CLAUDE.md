@@ -47,6 +47,27 @@ OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実
   - DictionaryBundle WeakReferenceキャッシュ + スレッドセーフDispose
   - バッチ処理API追加（ToPhonemesBatch等5メソッド）
   - 10エージェントレビュー + ポストレビュー修正完了
+- **英語G2P (DotNetG2P.English)**: E6完了（feature/english-g2p ブランチ）
+  - **E1（CMU辞書ルックアップMVP）**: 完了
+    - 135,166エントリのCMU辞書埋め込み、`EnglishG2PEngine` メインAPI、ARPAbet音素体系（39音素）
+    - テスト約214件
+  - **E2（Flite LTS CARTツリー）**: 完了
+    - 25,505ノードのCARTツリーによるOOV音素推定、PER 5.26%（espeak-ng 6.92%を上回る）
+    - `LtsEngine` スレッドセーフ遅延初期化、`tools/extract_lts.js` 抽出ツール
+  - **E3（テキスト正規化）**: 完了
+    - `EnglishNormalizer` + 6サブモジュール（NumberToWords, CurrencyExpander, TimeExpander, AbbreviationExpander, AcronymDetector, SymbolExpander）
+    - 数字・通貨・時刻・略語・頭字語・記号の英語読み展開、テスト143件
+  - **E4（同綴異音語解決）**: 完了
+    - `HomographResolver`（PosGuesser + HomographDatabase）による品詞ルールベース判別
+    - 30+語の同綴異音語データベース（母音変化型・ストレス移動型・-ate語尾型）、テスト154件
+  - **E5（IPA/X-SAMPA出力・テスト充実）**: 完了
+    - IPA/X-SAMPA変換、バッチAPI（8メソッド追加）、エッジケース・パフォーマンス・精度テスト
+    - テスト197件追加
+  - **E6（日英混在テキスト対応）**: 完了
+    - `DotNetG2P.Multilingual` パッケージ新規作成（Core + MeCab + English依存）
+    - LanguageDetector（Unicode文字種ベース言語判定）、TextSegmenter（2パスセグメント分割）
+    - MultilingualG2PEngine（日英G2Pファサード、IDisposable、lock保護）
+    - テスト162件追加
 
 ## ビルド・実行
 
@@ -139,12 +160,60 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   └── ViterbiDecoder.cs        # 前向きパス+後ろ向きトレース
 │       ├── DotNetG2P.MeCab.asmdef       # Unity Assembly Definition
 │       └── package.json                 # UPM パッケージ定義 (com.dotnetg2p.mecab)
+│   │
+│   └── DotNetG2P.English/              # 英語G2Pパッケージ（独立、Core参照なし）
+│       ├── DotNetG2P.English.csproj     # .NET Standard 2.1
+│       ├── EnglishG2PEngine.cs          # メインAPI (ToPhonemes, ToPhonemeList, LookupWord等)
+│       ├── EnglishG2POptions.cs         # オプション (IncludeStress, EnableLts, EnableNormalization, EnableHomographResolution)
+│       ├── Models/
+│       │   ├── ArpabetPhoneme.cs        # ARPAbet音素enum (39音素, byte基底)
+│       │   ├── Stress.cs                # ストレスenum (None/NoStress/Primary/Secondary)
+│       │   ├── EnglishPhoneme.cs        # ストレス付き音素 readonly struct
+│       │   ├── EnglishPronunciation.cs  # 発音クラス (音素配列)
+│       │   └── ArpabetParser.cs         # ARPAbetパーサー
+│       ├── Dictionary/
+│       │   ├── CmuDictionary.cs         # CMU辞書ルックアップ (135,166エントリ)
+│       │   └── Data/cmudict.dict        # CMU辞書 (EmbeddedResource)
+│       ├── LTS/
+│       │   ├── LtsEngine.cs             # Flite CARTツリーLTSエンジン
+│       │   ├── LtsData.cs               # CARTツリーデータ定義
+│       │   ├── LtsPhoneMapping.cs       # LTS→ARPAbetマッピング
+│       │   └── cmu_lts_model.bin        # CARTツリーバイナリ (EmbeddedResource)
+│       ├── Normalization/               # テキスト正規化 (E3)
+│       │   ├── EnglishNormalizer.cs     # ファサード
+│       │   ├── NumberToWords.cs         # 数字→英語読み
+│       │   ├── CurrencyExpander.cs      # 通貨展開
+│       │   ├── TimeExpander.cs          # 時刻展開
+│       │   ├── AbbreviationExpander.cs  # 略語展開
+│       │   ├── AcronymDetector.cs       # 頭字語判別
+│       │   └── SymbolExpander.cs        # 記号→名前変換
+│       ├── Homograph/                   # 同綴異音語解決 (E4)
+│       │   ├── HomographResolver.cs     # 解決ファサード
+│       │   ├── HomographDatabase.cs     # 30+語データベース
+│       │   ├── HomographEntry.cs        # エントリ・ルールモデル
+│       │   ├── PosGuesser.cs            # 軽量品詞推定
+│       │   └── PosTag.cs               # 品詞タグenum
+│       ├── package.json                 # UPM (com.dotnetg2p.english)
+│       └── DotNetG2P.English.asmdef     # Unity Assembly Definition
+│
+│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English依存）
+│       ├── DotNetG2P.Multilingual.csproj # .NET Standard 2.1
+│       ├── Language.cs                  # Language enum (Japanese/English)
+│       ├── ScriptKind.cs               # ScriptKind enum (6種分類、internal)
+│       ├── TextSegment.cs              # 言語タグ付きテキストセグメント
+│       ├── G2PSegment.cs               # G2P結果セグメント
+│       ├── MultilingualG2POptions.cs   # 多言語G2Pオプション
+│       ├── LanguageDetector.cs         # Unicode文字種ベース言語判定
+│       ├── TextSegmenter.cs            # テキストセグメント分割
+│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（ファサード）
+│       ├── package.json                # UPM (com.dotnetg2p.multilingual)
+│       └── DotNetG2P.Multilingual.asmdef # Unity Assembly Definition
 │
 ├── tests/
 │   ├── TestData/                        # テストデータ
 │   │   ├── expected_phonemes.json       # pyopenjtalk期待値データ（18件）
 │   │   └── generate_expected.py         # テストデータ生成スクリプト
-│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 950超テスト)
+│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 1824テスト)
 │       ├── DotNetG2P.Tests.csproj
 │       ├── G2PEngineApiTests.cs         # G2PEngine API統合テスト
 │       ├── Models/                      # モデルテスト
@@ -178,6 +247,21 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── DictionaryErrorTests.cs  # エラーハンドリングテスト
 │       │   ├── MeCabIndependentTests.cs # 独立仕様検証テスト（21件）
 │       │   └── PerformanceTests.cs      # パフォーマンステスト（5件）
+│       ├── EnglishG2P/                  # 英語G2Pテスト (511件)
+│       │   ├── Dictionary/              # 辞書テスト (~29件)
+│       │   ├── Models/                  # モデルテスト (~31件)
+│       │   ├── Lts/                     # LTSテスト (~95件)
+│       │   ├── Normalization/           # 正規化テスト (143件)
+│       │   ├── Homograph/              # 同綴異音語テスト (154件)
+│       │   └── Integration/            # 統合テスト (~42件)
+│       ├── Multilingual/               # 多言語G2Pテスト (162件)
+│       │   ├── LanguageDetectorTests.cs  # 言語判定テスト (29件)
+│       │   ├── TextSegmenterTests.cs     # セグメント分割テスト (30件)
+│       │   ├── MultilingualEngineTests.cs # エンジン統合テスト (28件)
+│       │   ├── MultilingualEdgeCaseTests.cs # エッジケーステスト (25件)
+│       │   ├── MultilingualDisposeTests.cs # Disposeテスト (15件)
+│       │   ├── MultilingualPerformanceTests.cs # パフォーマンステスト (8件)
+│       │   └── LanguageConsistencyTests.cs # 言語検出一貫性テスト (27件)
 │       └── Integration/                # 統合テスト
 │           ├── G2PPipelineTests.cs
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）
@@ -227,7 +311,7 @@ OpenJTalk用のnaist-jdic辞書フォーマット（IPADIC + アクセント情�
 - **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、Apache-2.0、外部依存なし）
 - **辞書**: naist-jdic（BSD License）
 - **テスト**: xUnit 2.5.3 (net8.0)
-- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`)
+- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.English`, `DotNetG2P.Multilingual`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`, `com.dotnetg2p.english`, `com.dotnetg2p.multilingual`)
 - **CI/CD**: GitHub Actions (ci.yml, release.yml)
 - **ソリューション形式**: .slnx（.NET 10）
 

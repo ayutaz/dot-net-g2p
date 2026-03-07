@@ -1,5 +1,14 @@
 <Project>
   <PropertyGroup>
+    <!--
+      Redirect obj/ and bin/ to a centralized .build/ directory at the repo root.
+      This prevents dotnet build from creating obj/bin inside src/ package directories,
+      which would cause Unity to pick up auto-generated .cs files (AssemblyInfo.cs etc.)
+      and fail compilation when these packages are used as UPM local packages.
+    -->
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory).build\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory).build\bin\$(MSBuildProjectName)\</BaseOutputPath>
+
     <IsPackable>false</IsPackable>
     <Version>0.0.0-local</Version>
     <PackageVersion>$(Version)</PackageVersion>

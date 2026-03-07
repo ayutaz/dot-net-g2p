@@ -15,6 +15,7 @@
 
 # Binary files
 *.dic binary
+*.dict binary
 *.bin binary
 *.nupkg binary
 *.dll binary

@@ -23,6 +23,13 @@ namespace DotNetG2P.Internal
             _pos = 0;
         }
 
+        public ValueStringBuilder(Span<char> initialBuffer)
+        {
+            _arrayToReturnToPool = null;
+            _chars = initialBuffer;
+            _pos = 0;
+        }
+
         public int Length => _pos;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

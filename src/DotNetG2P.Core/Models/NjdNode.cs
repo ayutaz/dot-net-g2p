@@ -17,7 +17,7 @@ namespace DotNetG2P.Models
         public WordDetails Details { get; set; }
 
         /// <summary>発音情報</summary>
-        public Pronunciation Pronunciation { get; set; }
+        public Pronunciation? Pronunciation { get; set; }
 
         /// <summary>アクセント型番号（0=平板型、1以上=アクセント核位置）</summary>
         public int AccentType { get; set; }

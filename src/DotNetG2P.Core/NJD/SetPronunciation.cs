@@ -103,7 +103,13 @@ namespace DotNetG2P.NJD
                 }
 
                 // 表層形からモーラセグメントを取得
-                var segments = Pronunciation.ParseMoraSegments(node.Surface);
+                // ひらがな文字をカタカナに変換してからマッピングを試みる
+                string surface = node.Surface;
+                if (IsAllHiragana(surface))
+                {
+                    surface = HiraganaToKatakana(surface);
+                }
+                var segments = Pronunciation.ParseMoraSegments(surface);
                 if (segments.Count == 0)
                 {
                     // セグメントが取れない場合はスキップ（後でremove_silent_nodeで除去）
@@ -186,7 +192,10 @@ namespace DotNetG2P.NJD
                                 head.Reading += node.Reading;
                             }
 
-                            head.Pronunciation.TransferFrom(node.Pronunciation);
+                            if (head.Pronunciation != null && node.Pronunciation != null)
+                            {
+                                head.Pronunciation.TransferFrom(node.Pronunciation);
+                            }
 
                             // 統合元ノードをリセット（後で除去される）
                             node.Reset();
@@ -296,6 +305,38 @@ namespace DotNetG2P.NJD
                 ChainRule = source.ChainRule,
                 Reading = source.Reading
             };
+        }
+
+        /// <summary>
+        /// 文字列がすべてひらがな(U+3041-U+3096)かどうかを判定する。
+        /// </summary>
+        private static bool IsAllHiragana(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return false;
+            for (int i = 0; i < s.Length; i++)
+            {
+                char c = s[i];
+                if (c < '\u3041' || c > '\u3096')
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// ひらがな文字列をカタカナに変換する（各文字に0x60を加算）。
+        /// </summary>
+        private static string HiraganaToKatakana(string s)
+        {
+            var chars = new char[s.Length];
+            for (int i = 0; i < s.Length; i++)
+            {
+                char c = s[i];
+                if (c >= '\u3041' && c <= '\u3096')
+                    chars[i] = (char)(c + 0x60);
+                else
+                    chars[i] = c;
+            }
+            return new string(chars);
         }
 
         /// <summary>

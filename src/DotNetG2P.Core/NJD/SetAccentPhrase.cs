@@ -65,7 +65,7 @@ namespace DotNetG2P.NJD
             // ※ Rule 13（名詞+動詞→非結合）の例外として先にチェックする必要がある
             if (IsDoushiHijiritsu(currPos))
             {
-                if (prevPos.IsDoushi && IsRenyou(prev))
+                if (prevPos.IsDoushi && prev.IsRenyou)
                     return true;
                 if (IsMeishiSahenSetsuzoku(prevPos))
                     return true;
@@ -81,10 +81,10 @@ namespace DotNetG2P.NJD
 
             // --- Rule 11: 形容詞-非自立は特定パターンで前にくっつける ---
             // 動詞-連用形 + 形容詞-非自立
-            if (prevPos.IsDoushi && IsKeiyoushiHijiritsu(currPos) && IsRenyou(prev))
+            if (prevPos.IsDoushi && IsKeiyoushiHijiritsu(currPos) && prev.IsRenyou)
                 return true;
             // 形容詞-連用形 + 形容詞-非自立
-            if (prevPos.IsKeiyoushi && IsKeiyoushiHijiritsu(currPos) && IsRenyou(prev))
+            if (prevPos.IsKeiyoushi && IsKeiyoushiHijiritsu(currPos) && prev.IsRenyou)
                 return true;
             // 助詞-接続助詞「て」「で」 + 形容詞-非自立
             if (IsJoshiSetsuzokuJoshi(prevPos) && IsKeiyoushiHijiritsu(currPos)
@@ -205,26 +205,6 @@ namespace DotNetG2P.NJD
             return pos.Type == POSType.Fukushi
                 || pos.Type == POSType.Setsuzokushi
                 || pos.Type == POSType.Rentaishi;
-        }
-
-        /// <summary>
-        /// 活用形が連用形かどうかを判定する。
-        /// jpreprocess の CForm::is_renyou() に準拠。
-        /// 活用形フィールドが「連用形」「連用タ接続」「連用テ接続」「連用デ接続」
-        /// 「連用ニ接続」「連用ゴザイ接続」のいずれかであれば true。
-        /// </summary>
-        private static bool IsRenyou(NjdNode node)
-        {
-            var cform = node.Details.ConjugationForm;
-            if (string.IsNullOrEmpty(cform) || cform == "*")
-                return false;
-
-            return cform == "連用形"
-                || cform == "連用タ接続"
-                || cform == "連用テ接続"
-                || cform == "連用デ接続"
-                || cform == "連用ニ接続"
-                || cform == "連用ゴザイ接続";
         }
 
         /// <summary>

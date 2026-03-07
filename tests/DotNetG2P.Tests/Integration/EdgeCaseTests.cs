@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using DotNetG2P;
 using DotNetG2P.Models;
 using DotNetG2P.MeCab;
@@ -42,6 +43,21 @@ namespace DotNetG2P.Tests.Integration
             Skip.If(!DictionaryExists, "naist-jdic辞書が見つかりません（環境変数 NAIST_JDIC_PATH を設定してください）");
         }
 
+        /// <summary>
+        /// 音素文字列がスペース区切りの有効な音素列であることを検証する。
+        /// 空でない場合、日本語音素（a-z, A-Z, -, cl, N等）のスペース区切りパターンに合致するか。
+        /// </summary>
+        private static void AssertValidPhonemeString(string phonemes)
+        {
+            if (string.IsNullOrEmpty(phonemes)) return;
+            // 音素列は英字(大小)、ハイフン、スペースのみで構成される
+            Assert.Matches(@"^[a-zA-Z\- ]+$", phonemes);
+            // スペース区切りの各トークンが空でない
+            var tokens = phonemes.Split(' ');
+            foreach (var t in tokens)
+                Assert.NotEmpty(t);
+        }
+
         // =====================================================================
         // 1. 記号のみ
         // =====================================================================
@@ -59,6 +75,8 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToPhonemes(input);
 
             Assert.NotNull(result);
+            // 記号のみの場合、空文字列か有効な音素列
+            AssertValidPhonemeString(result);
         }
 
         // =====================================================================
@@ -78,6 +96,7 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToPhonemes(input);
 
             Assert.NotNull(result);
+            AssertValidPhonemeString(result);
         }
 
         // =====================================================================
@@ -156,6 +175,7 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToPhonemes(input);
 
             Assert.NotNull(result);
+            AssertValidPhonemeString(result);
         }
 
         // =====================================================================
@@ -192,6 +212,9 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToPhonemes(input);
 
             Assert.NotNull(result);
+            // 日本語部分が含まれているため、何らかの音素が出力されるはず
+            Assert.NotEmpty(result);
+            AssertValidPhonemeString(result);
         }
 
         // =====================================================================
@@ -208,6 +231,8 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToPhonemes(input);
 
             Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            AssertValidPhonemeString(result);
         }
 
         // =====================================================================
@@ -225,6 +250,7 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToPhonemes(input);
 
             Assert.NotNull(result);
+            AssertValidPhonemeString(result);
         }
 
         // =====================================================================
@@ -244,6 +270,7 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToPhonemes(input);
 
             Assert.NotNull(result);
+            AssertValidPhonemeString(result);
         }
 
         // =====================================================================
@@ -261,6 +288,10 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToPhonemes(input);
 
             Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            AssertValidPhonemeString(result);
+            // 代表入力は複数音素を含むはず
+            Assert.Contains(" ", result);
         }
 
         [SkippableTheory]
@@ -274,6 +305,9 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToKana(input);
 
             Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // カタカナ文字列であることを検証
+            Assert.Matches(@"^[\u30A0-\u30FF\u30FC]+$", result);
         }
 
         [SkippableTheory]
@@ -287,6 +321,10 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToProsody(input);
 
             Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 韻律記号付き出力は ^ で始まり $ で終わる
+            Assert.StartsWith("^", result);
+            Assert.EndsWith("$", result);
         }
 
         [SkippableTheory]
@@ -300,6 +338,9 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToAccentPhrases(input);
 
             Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 少なくとも1つのアクセント句があり、モーラを持つ
+            Assert.True(result[0].Moras.Count > 0);
         }
 
         [SkippableTheory]
@@ -313,6 +354,13 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.ToFullContextLabels(input);
 
             Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 先頭ラベルはsilを含む
+            Assert.Contains("sil", result[0]);
+            // 末尾ラベルもsilを含む
+            Assert.Contains("sil", result[result.Count - 1]);
+            // Kフィールドが存在する
+            Assert.Contains("/K:", result[0]);
         }
 
         [SkippableTheory]
@@ -326,6 +374,9 @@ namespace DotNetG2P.Tests.Integration
             var result = _engine!.Analyze(input);
 
             Assert.NotNull(result);
+            Assert.NotEmpty(result);
+            // 少なくとも1つのNjdNodeが発音を持つ
+            Assert.True(result.Any(n => n.Pronunciation != null && n.Pronunciation.MoraCount > 0));
         }
 
         // =====================================================================
@@ -342,27 +393,40 @@ namespace DotNetG2P.Tests.Integration
         {
             SkipIfNoDictionary();
 
-            // ToPhonemes
+            // ToPhonemes: 結果が返りnull以外であること
             var phonemes = _engine!.ToPhonemes(input);
             Assert.NotNull(phonemes);
+            // 音素文字列が有効な形式であること（空も許容）
+            AssertValidPhonemeString(phonemes);
 
-            // ToKana
+            // ToKana: 結果がnull以外であること
             var kana = _engine.ToKana(input);
             Assert.NotNull(kana);
 
-            // ToProsody
+            // ToProsody: 結果がnull以外であること。空でなければ ^...$ 形式
             var prosody = _engine.ToProsody(input);
             Assert.NotNull(prosody);
+            if (!string.IsNullOrEmpty(prosody))
+            {
+                Assert.StartsWith("^", prosody);
+                Assert.EndsWith("$", prosody);
+            }
 
-            // ToAccentPhrases
+            // ToAccentPhrases: リストが返ること
             var accentPhrases = _engine.ToAccentPhrases(input);
             Assert.NotNull(accentPhrases);
 
-            // ToFullContextLabels
+            // ToFullContextLabels: リストが返ること
             var labels = _engine.ToFullContextLabels(input);
             Assert.NotNull(labels);
+            // ラベルがあれば先頭/末尾はsil
+            if (labels.Count > 0)
+            {
+                Assert.Contains("sil", labels[0]);
+                Assert.Contains("sil", labels[labels.Count - 1]);
+            }
 
-            // Analyze
+            // Analyze: リストが返ること
             var nodes = _engine.Analyze(input);
             Assert.NotNull(nodes);
         }
