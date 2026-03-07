@@ -86,6 +86,27 @@ namespace DotNetG2P.Chinese
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
+        // =====================================================================
+        // ピンイン収集用内部構造体
+        // =====================================================================
+
+        /// <summary>
+        /// テキストから収集したピンイン情報を保持する構造体。
+        /// </summary>
+        private struct PinyinEntry
+        {
+            /// <summary>声調記号付きピンイン（非漢字の場合はnull）</summary>
+            public string? Pinyin;
+            /// <summary>元の文字</summary>
+            public char OriginalChar;
+            /// <summary>句読点/スペースか</summary>
+            public bool IsSeparator;
+            /// <summary>非漢字のそのまま出力テキスト（ASCII英数字等）</summary>
+            public string? RawText;
+            /// <summary>辞書にない漢字か（ToPinyinでの区切り動作が異なる）</summary>
+            public bool IsUnknownHanzi;
+        }
+
         /// <summary>
         /// テキストをピンイン文字列に変換する（デフォルトスタイル使用）。
         /// CJK統合漢字を辞書検索してピンインに変換し、
@@ -112,65 +133,43 @@ namespace DotNetG2P.Chinese
             if (string.IsNullOrEmpty(text))
                 return "";
 
+            // Step 1: ピンイン収集
+            var entries = CollectPinyins(text);
+
+            // Step 2: 声調変調
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            // Step 3: スタイル変換+出力
             var separator = _options.Separator;
             var sb = new StringBuilder();
             var needsSeparator = false;
 
-            for (var i = 0; i < text.Length; i++)
+            foreach (var entry in entries)
             {
-                var c = text[i];
-
-                if (IsCjkUnifiedIdeograph(c))
+                if (entry.IsSeparator)
                 {
-                    // フレーズ辞書で最長一致検索
-                    if (_phraseDictionary != null && _options.HandleHeteronyms)
-                    {
-                        var matchLen = _phraseDictionary.FindLongestMatch(text, i, out var phrasePinyins);
-                        if (matchLen > 0)
-                        {
-                            foreach (var pinyin in phrasePinyins)
-                            {
-                                if (needsSeparator && sb.Length > 0)
-                                    sb.Append(separator);
-                                sb.Append(ApplyStyle(pinyin, style));
-                                needsSeparator = true;
-                            }
-                            i += matchLen - 1; // ループincrement分を考慮
-                            continue;
-                        }
-                    }
-
-                    // 単字辞書フォールバック
-                    var codePoint = (int)c;
-                    if (_charDictionary.TryLookup(codePoint, out var singlePinyin))
-                    {
-                        if (needsSeparator && sb.Length > 0)
-                            sb.Append(separator);
-                        sb.Append(ApplyStyle(singlePinyin, style));
-                        needsSeparator = true;
-                    }
-                    else
-                    {
-                        if (needsSeparator && sb.Length > 0)
-                            sb.Append(separator);
-                        sb.Append(c);
-                        needsSeparator = true;
-                    }
-                }
-                else if (IsCjkPunctuation(c) || IsAsciiPunctuation(c))
-                {
-                    // 句読点は区切りとして扱い、出力には含めない
                     needsSeparator = false;
                 }
-                else if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+                else if (entry.Pinyin != null)
                 {
-                    // スペース・改行は区切りとして処理
-                    needsSeparator = false;
+                    if (needsSeparator && sb.Length > 0)
+                        sb.Append(separator);
+                    sb.Append(ApplyStyle(entry.Pinyin, style));
+                    needsSeparator = true;
                 }
-                else
+                else if (entry.IsUnknownHanzi)
                 {
-                    // ASCII英数字等はそのまま出力
-                    sb.Append(c);
+                    // 辞書にない漢字: 区切り付きで出力し、次のピンインの前にも区切りを入れる
+                    if (needsSeparator && sb.Length > 0)
+                        sb.Append(separator);
+                    sb.Append(entry.OriginalChar);
+                    needsSeparator = true;
+                }
+                else if (entry.RawText != null)
+                {
+                    // ASCII英数字等: そのまま出力
+                    sb.Append(entry.RawText);
                     needsSeparator = false;
                 }
             }
@@ -202,43 +201,26 @@ namespace DotNetG2P.Chinese
             if (string.IsNullOrEmpty(text))
                 return Array.Empty<string>();
 
-            var result = new List<string>(text.Length);
+            // Step 1: ピンイン収集
+            var entries = CollectPinyins(text);
 
-            for (var i = 0; i < text.Length; i++)
+            // Step 2: 声調変調
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            // Step 3: スタイル変換+出力
+            var result = new List<string>(entries.Count);
+
+            foreach (var entry in entries)
             {
-                var c = text[i];
-
-                if (IsCjkUnifiedIdeograph(c))
+                if (entry.Pinyin != null)
                 {
-                    // フレーズ辞書で最長一致検索
-                    if (_phraseDictionary != null && _options.HandleHeteronyms)
-                    {
-                        var matchLen = _phraseDictionary.FindLongestMatch(text, i, out var phrasePinyins);
-                        if (matchLen > 0)
-                        {
-                            foreach (var pinyin in phrasePinyins)
-                            {
-                                result.Add(ApplyStyle(pinyin, style));
-                            }
-                            i += matchLen - 1; // ループincrement分を考慮
-                            continue;
-                        }
-                    }
-
-                    // 単字辞書フォールバック
-                    var codePoint = (int)c;
-                    if (_charDictionary.TryLookup(codePoint, out var singlePinyin))
-                    {
-                        result.Add(ApplyStyle(singlePinyin, style));
-                    }
-                    else
-                    {
-                        result.Add(c.ToString());
-                    }
+                    result.Add(ApplyStyle(entry.Pinyin, style));
                 }
                 else
                 {
-                    result.Add(c.ToString());
+                    // 非漢字（句読点・スペース・ASCII英数字等）はそのまま文字として出力
+                    result.Add(entry.RawText ?? entry.OriginalChar.ToString());
                 }
             }
 
@@ -298,6 +280,147 @@ namespace DotNetG2P.Chinese
             {
                 _charDictionary.Clear();
                 _phraseDictionary?.Clear();
+            }
+        }
+
+        // =====================================================================
+        // 内部ヘルパー: ピンイン収集・声調変調適用
+        // =====================================================================
+
+        /// <summary>
+        /// テキストからピンイン列と対応する元の文字情報を収集する。
+        /// </summary>
+        private List<PinyinEntry> CollectPinyins(string text)
+        {
+            var entries = new List<PinyinEntry>(text.Length);
+
+            for (var i = 0; i < text.Length; i++)
+            {
+                var c = text[i];
+
+                if (IsCjkUnifiedIdeograph(c))
+                {
+                    // フレーズ辞書で最長一致検索
+                    if (_phraseDictionary != null && _options.HandleHeteronyms)
+                    {
+                        var matchLen = _phraseDictionary.FindLongestMatch(text, i, out var phrasePinyins);
+                        if (matchLen > 0)
+                        {
+                            for (int k = 0; k < phrasePinyins.Length; k++)
+                            {
+                                entries.Add(new PinyinEntry
+                                {
+                                    Pinyin = phrasePinyins[k],
+                                    OriginalChar = text[i + k],
+                                    IsSeparator = false,
+                                    RawText = null
+                                });
+                            }
+                            i += matchLen - 1; // ループincrement分を考慮
+                            continue;
+                        }
+                    }
+
+                    // 単字辞書フォールバック
+                    var codePoint = (int)c;
+                    if (_charDictionary.TryLookup(codePoint, out var singlePinyin))
+                    {
+                        entries.Add(new PinyinEntry
+                        {
+                            Pinyin = singlePinyin,
+                            OriginalChar = c,
+                            IsSeparator = false,
+                            RawText = null
+                        });
+                    }
+                    else
+                    {
+                        // 辞書にない漢字はそのまま出力
+                        entries.Add(new PinyinEntry
+                        {
+                            Pinyin = null,
+                            OriginalChar = c,
+                            IsSeparator = false,
+                            RawText = c.ToString(),
+                            IsUnknownHanzi = true
+                        });
+                    }
+                }
+                else if (IsCjkPunctuation(c) || IsAsciiPunctuation(c))
+                {
+                    // 句読点は区切りマーカー（元の文字は保持）
+                    entries.Add(new PinyinEntry
+                    {
+                        Pinyin = null,
+                        OriginalChar = c,
+                        IsSeparator = true,
+                        RawText = null
+                    });
+                }
+                else if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+                {
+                    // スペース・改行は区切りマーカー（元の文字は保持）
+                    entries.Add(new PinyinEntry
+                    {
+                        Pinyin = null,
+                        OriginalChar = c,
+                        IsSeparator = true,
+                        RawText = null
+                    });
+                }
+                else
+                {
+                    // ASCII英数字等はそのまま出力
+                    entries.Add(new PinyinEntry
+                    {
+                        Pinyin = null,
+                        OriginalChar = c,
+                        IsSeparator = false,
+                        RawText = c.ToString()
+                    });
+                }
+            }
+
+            return entries;
+        }
+
+        /// <summary>
+        /// 収集済みエントリに対して声調変調を適用する。
+        /// 漢字位置のピンインと元の文字を抽出してToneSandhiProcessorに渡し、結果を書き戻す。
+        /// </summary>
+        private static void ApplyToneSandhiToEntries(List<PinyinEntry> entries)
+        {
+            // 漢字（ピンインあり）スロットのインデックスを収集
+            var hanziIndices = new List<int>();
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (entries[i].Pinyin != null)
+                    hanziIndices.Add(i);
+            }
+
+            if (hanziIndices.Count == 0)
+                return;
+
+            // ToneSandhiProcessor用の配列を構築
+            var pinyins = new string[hanziIndices.Count];
+            var originalChars = new char[hanziIndices.Count];
+
+            for (int i = 0; i < hanziIndices.Count; i++)
+            {
+                var entry = entries[hanziIndices[i]];
+                pinyins[i] = entry.Pinyin!;
+                originalChars[i] = entry.OriginalChar;
+            }
+
+            // 声調変調を適用（in-place mutation）
+            ToneSandhiProcessor.Apply(pinyins, originalChars);
+
+            // 結果をエントリに書き戻す
+            for (int i = 0; i < hanziIndices.Count; i++)
+            {
+                var entry = entries[hanziIndices[i]];
+                entry.Pinyin = pinyins[i];
+                entries[hanziIndices[i]] = entry;
             }
         }
 

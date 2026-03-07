@@ -14,7 +14,9 @@ namespace DotNetG2P.Tests.ChineseG2P
 
         public PolyphoneResolutionTests()
         {
-            _engine = new ChineseG2PEngine();
+            // 多音字解決テスト: 声調変調を無効にしてフレーズ辞書の多音字解決のみを検証
+            var options = new ChineseG2POptions(enableToneSandhi: false);
+            _engine = new ChineseG2PEngine(options);
         }
 
         public void Dispose()

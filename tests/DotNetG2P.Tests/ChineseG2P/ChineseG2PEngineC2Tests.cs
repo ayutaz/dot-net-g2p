@@ -16,7 +16,9 @@ namespace DotNetG2P.Tests.ChineseG2P
 
         public ChineseG2PEngineC2Tests()
         {
-            _engine = new ChineseG2PEngine();
+            // C2機能テスト: 声調変調を無効にしてフレーズ辞書・非漢字処理のみを検証
+            var options = new ChineseG2POptions(enableToneSandhi: false);
+            _engine = new ChineseG2PEngine(options);
         }
 
         public void Dispose()
@@ -682,7 +684,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         [Fact]
         public void ToPinyin_セパレータ空文字列_音節連結()
         {
-            var options = new ChineseG2POptions(separator: "");
+            var options = new ChineseG2POptions(separator: "", enableToneSandhi: false);
             using var engine = new ChineseG2PEngine(options);
 
             var result = engine.ToPinyin("你好");

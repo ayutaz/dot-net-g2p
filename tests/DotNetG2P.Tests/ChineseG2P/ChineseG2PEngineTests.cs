@@ -13,7 +13,9 @@ namespace DotNetG2P.Tests.ChineseG2P
 
         public ChineseG2PEngineTests()
         {
-            _engine = new ChineseG2PEngine();
+            // C1基本動作テスト: 声調変調を無効にして基本変換のみを検証
+            var options = new ChineseG2POptions(enableToneSandhi: false);
+            _engine = new ChineseG2PEngine(options);
         }
 
         public void Dispose()
@@ -240,7 +242,8 @@ namespace DotNetG2P.Tests.ChineseG2P
         [Fact]
         public void コンストラクタ_デフォルト_正常動作()
         {
-            using var engine = new ChineseG2PEngine();
+            var options = new ChineseG2POptions(enableToneSandhi: false);
+            using var engine = new ChineseG2PEngine(options);
             var result = engine.ToPinyin("你好");
             Assert.Equal("nǐ hǎo", result);
         }
@@ -248,7 +251,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         [Fact]
         public void コンストラクタ_オプション指定_スタイル変更()
         {
-            var options = new ChineseG2POptions(defaultStyle: PinyinStyle.ToneNumber);
+            var options = new ChineseG2POptions(defaultStyle: PinyinStyle.ToneNumber, enableToneSandhi: false);
             using var engine = new ChineseG2PEngine(options);
             var result = engine.ToPinyin("你好");
             Assert.Equal("ni3 hao3", result);
@@ -257,7 +260,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         [Fact]
         public void コンストラクタ_カスタムセパレータ()
         {
-            var options = new ChineseG2POptions(separator: "-");
+            var options = new ChineseG2POptions(separator: "-", enableToneSandhi: false);
             using var engine = new ChineseG2PEngine(options);
             var result = engine.ToPinyin("你好");
             Assert.Equal("nǐ-hǎo", result);
