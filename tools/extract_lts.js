@@ -202,7 +202,7 @@ function generateCSharpLtsData(phones, letterIndex, binarySize) {
     const lines = [];
     lines.push('// 自動生成ファイル - 手動で編集しないでください');
     lines.push('// Flite (https://github.com/festvox/flite) の cmu_lts_model/cmu_lts_rules から抽出');
-    lines.push('// Flite License: MIT相当 (Carnegie Mellon University)');
+    lines.push('// Flite License: Carnegie Mellon University Free Software License (BSD-like)');
     lines.push('');
     lines.push('using System;');
     lines.push('using System.IO;');

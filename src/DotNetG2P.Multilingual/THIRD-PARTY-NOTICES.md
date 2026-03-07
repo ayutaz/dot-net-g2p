@@ -1,25 +1,26 @@
-DotNetG2P
-Copyright 2026 DotNetG2P Contributors
+# Third-Party Notices
 
-This product includes software and data from the following projects:
+DotNetG2P.Multilingual includes software and data from the following projects
+(via its dependencies on DotNetG2P.Core, DotNetG2P.MeCab, and DotNetG2P.English):
 
-================================================================================
+---
 
-CMU Pronouncing Dictionary
+## CMU Pronouncing Dictionary
+
 Copyright (C) 1993-2015 Carnegie Mellon University. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
 
-  1. Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the following disclaimer.
-     The contents of this file are deemed to be source code.
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+   The contents of this file are deemed to be source code.
 
-  2. Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the following disclaimer in
-     the documentation and/or other materials provided with the
-     distribution.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in
+   the documentation and/or other materials provided with the
+   distribution.
 
 THIS SOFTWARE IS PROVIDED BY CARNEGIE MELLON UNIVERSITY ``AS IS'' AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -33,11 +34,14 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-  https://github.com/cmusphinx/cmudict
+- https://github.com/cmusphinx/cmudict
 
-================================================================================
+---
 
-Flite (Festival Lite) - a small run-time speech synthesis engine
+## Flite (Festival Lite)
+
+A small run-time speech synthesis engine.
+
 Copyright (c) 1999-2017 Language Technologies Institute,
 Carnegie Mellon University. All Rights Reserved.
 
@@ -48,13 +52,13 @@ distribute, sublicense, and/or sell copies of this work, and to
 permit persons to whom this work is furnished to do so, subject to
 the following conditions:
 
-  1. The code must retain the above copyright notice, this list of
-     conditions and the following disclaimer.
-  2. Any modifications must be clearly marked as such.
-  3. Original authors' names are not deleted.
-  4. The authors' names are not used to endorse or promote products
-     derived from this software without specific prior written
-     permission.
+1. The code must retain the above copyright notice, this list of
+   conditions and the following disclaimer.
+2. Any modifications must be clearly marked as such.
+3. Original authors' names are not deleted.
+4. The authors' names are not used to endorse or promote products
+   derived from this software without specific prior written
+   permission.
 
 CARNEGIE MELLON UNIVERSITY AND THE CONTRIBUTORS TO THIS WORK
 DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
@@ -66,11 +70,12 @@ AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
 ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 
-  https://github.com/festvox/flite
+- https://github.com/festvox/flite
 
-================================================================================
+---
 
-naist-jdic (NAIST Japanese Dictionary)
+## naist-jdic (NAIST Japanese Dictionary)
+
 Copyright (c) 2009, Nara Institute of Science and Technology, Japan.
 All rights reserved.
 
@@ -79,17 +84,17 @@ Licensed under the BSD-3-Clause License.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
-  1. Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
 
-  2. Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
 
-  3. Neither the name of the Nara Institute of Science and Technology (NAIST)
-     nor the names of its contributors may be used to endorse or promote
-     products derived from this software without specific prior written
-     permission.
+3. Neither the name of the Nara Institute of Science and Technology (NAIST)
+   nor the names of its contributors may be used to endorse or promote
+   products derived from this software without specific prior written
+   permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -103,11 +108,12 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
-  https://github.com/NAIST-SE/naist-jdic
+- https://github.com/NAIST-SE/naist-jdic
 
-================================================================================
+---
 
-Open JTalk
+## Open JTalk
+
 Copyright (c) 2008-2024 Nagoya Institute of Technology,
 Department of Computer Science. All rights reserved.
 
@@ -116,16 +122,16 @@ Licensed under the Modified BSD License.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
-  1. Redistributions of source code must retain the above copyright notice,
-     this list of conditions and the following disclaimer.
+1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
 
-  2. Redistributions in binary form must reproduce the above copyright notice,
-     this list of conditions and the following disclaimer in the documentation
-     and/or other materials provided with the distribution.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
 
-  3. Neither the name of the Nagoya Institute of Technology nor the names of
-     its contributors may be used to endorse or promote products derived from
-     this software without specific prior written permission.
+3. Neither the name of the Nagoya Institute of Technology nor the names of
+   its contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -142,11 +148,12 @@ POSSIBILITY OF SUCH DAMAGE.
 This product implements algorithms based on the Open JTalk NJD
 (Natural language processing for Japanese TTS Dictionary) module.
 
-  https://open-jtalk.sourceforge.net/
+- https://open-jtalk.sourceforge.net/
 
-================================================================================
+---
 
-jpreprocess
+## jpreprocess
+
 Copyright (c) jpreprocess contributors.
 
 Licensed under the MIT License.
@@ -172,6 +179,4 @@ SOFTWARE.
 This product references algorithms from jpreprocess, a Rust reimplementation
 of the OpenJTalk text processing pipeline.
 
-  https://github.com/jpreprocess/jpreprocess
-
-================================================================================
+- https://github.com/jpreprocess/jpreprocess
