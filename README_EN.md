@@ -206,9 +206,17 @@ multiZhEngine.ToPhonemes("你好hello");
 |--------|-------------|-------------|
 | `ToPhonemes(text)` | `string` | ARPAbet phoneme sequence (`"HH AH0 L OW1"`) |
 | `ToIPA(text)` | `string` | IPA transcription |
+| `ToIPAWithoutStress(text)` | `string` | IPA transcription without stress marks |
+| `ToXSampa(text)` | `string` | X-SAMPA transcription |
+| `ToXSampaWithoutStress(text)` | `string` | X-SAMPA transcription without stress marks |
 | `ToPhonemeList(text)` | `IReadOnlyList<EnglishPhoneme>` | Structured phoneme list |
 | `LookupWord(word)` | `IReadOnlyList<EnglishPhoneme>` | Single-word lookup |
+| `LookupAllPronunciations(word)` | `IReadOnlyList<EnglishPronunciation>` | Get all pronunciation variants |
 | `ContainsWord(word)` | `bool` | Dictionary existence check |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch ARPAbet conversion |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | Batch IPA conversion |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | Batch X-SAMPA conversion |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<EnglishPhoneme>>` | Batch structured phoneme list conversion |
 
 ### ChineseG2PEngine
 
@@ -217,6 +225,7 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToPinyin(text)` | `string` | Tone-marked pinyin string (`"nǐ hǎo"`) |
 | `ToPinyin(text, style)` | `string` | Pinyin string with specified style |
 | `ToPinyinList(text)` | `string[]` | Per-character pinyin array |
+| `ToPinyinList(text, style)` | `string[]` | Per-character pinyin array with specified style |
 | `ContainsChar(c)` | `bool` | Dictionary existence check |
 | `LookupChar(c)` | `string[]` | Get all pinyin candidates |
 | `ToIPA(text)` | `string` | IPA (International Phonetic Alphabet) transcription |
@@ -224,9 +233,13 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToZhuyin(text)` | `string` | Zhuyin (Bopomofo) transcription |
 | `ToZhuyin(text, includeTones)` | `string` | Zhuyin transcription with tone control |
 | `ToPinyinBatch(texts)` | `string[]` | Batch pinyin conversion |
+| `ToPinyinBatch(texts, style)` | `string[]` | Batch pinyin conversion (with style) |
 | `ToPinyinListBatch(texts)` | `string[][]` | Batch per-character pinyin conversion |
+| `ToPinyinListBatch(texts, style)` | `string[][]` | Batch per-character pinyin conversion (with style) |
 | `ToIPABatch(texts)` | `string[]` | Batch IPA conversion |
+| `ToIPABatch(texts, includeTones)` | `string[]` | Batch IPA conversion (tone control) |
 | `ToZhuyinBatch(texts)` | `string[]` | Batch Zhuyin conversion |
+| `ToZhuyinBatch(texts, includeTones)` | `string[]` | Batch Zhuyin conversion (tone control) |
 
 ### MultilingualG2PEngine
 

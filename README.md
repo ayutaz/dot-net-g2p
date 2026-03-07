@@ -206,9 +206,17 @@ multiZhEngine.ToPhonemes("你好hello");
 |---------|---------|------|
 | `ToPhonemes(text)` | `string` | ARPAbet音素列 (`"HH AH0 L OW1"`) |
 | `ToIPA(text)` | `string` | IPA表記 |
+| `ToIPAWithoutStress(text)` | `string` | ストレスマークなしIPA表記 |
+| `ToXSampa(text)` | `string` | X-SAMPA表記 |
+| `ToXSampaWithoutStress(text)` | `string` | ストレスマークなしX-SAMPA表記 |
 | `ToPhonemeList(text)` | `IReadOnlyList<EnglishPhoneme>` | 構造化音素リスト |
 | `LookupWord(word)` | `IReadOnlyList<EnglishPhoneme>` | 単語ルックアップ |
+| `LookupAllPronunciations(word)` | `IReadOnlyList<EnglishPronunciation>` | 全発音バリアント取得 |
 | `ContainsWord(word)` | `bool` | 辞書存在確認 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチARPAbet変換 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<EnglishPhoneme>>` | バッチ構造化音素リスト変換 |
 
 ### ChineseG2PEngine
 
@@ -217,6 +225,7 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToPinyin(text)` | `string` | 声調記号付きピンイン文字列 (`"nǐ hǎo"`) |
 | `ToPinyin(text, style)` | `string` | 指定スタイルのピンイン文字列 |
 | `ToPinyinList(text)` | `string[]` | 各文字ごとのピンイン配列 |
+| `ToPinyinList(text, style)` | `string[]` | 指定スタイルの各文字ごとピンイン配列 |
 | `ContainsChar(c)` | `bool` | 辞書存在確認 |
 | `LookupChar(c)` | `string[]` | 全ピンイン候補取得 |
 | `ToIPA(text)` | `string` | IPA（国際音声記号）表記 |
@@ -224,9 +233,13 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToZhuyin(text)` | `string` | 注音符号（ボポモフォ）表記 |
 | `ToZhuyin(text, includeTones)` | `string` | 声調制御付き注音表記 |
 | `ToPinyinBatch(texts)` | `string[]` | バッチピンイン変換 |
+| `ToPinyinBatch(texts, style)` | `string[]` | バッチピンイン変換（スタイル指定） |
 | `ToPinyinListBatch(texts)` | `string[][]` | バッチピンインリスト変換 |
+| `ToPinyinListBatch(texts, style)` | `string[][]` | バッチピンインリスト変換（スタイル指定） |
 | `ToIPABatch(texts)` | `string[]` | バッチIPA変換 |
+| `ToIPABatch(texts, includeTones)` | `string[]` | バッチIPA変換（声調制御） |
 | `ToZhuyinBatch(texts)` | `string[]` | バッチ注音変換 |
+| `ToZhuyinBatch(texts, includeTones)` | `string[]` | バッチ注音変換（声調制御） |
 
 ### MultilingualG2PEngine
 

@@ -211,9 +211,17 @@ multiZhEngine.ToPhonemes("你好hello");
 |------|---------|------|
 | `ToPhonemes(text)` | `string` | ARPAbet 音素序列 (`"HH AH0 L OW1"`) |
 | `ToIPA(text)` | `string` | IPA 表记 |
+| `ToIPAWithoutStress(text)` | `string` | 无重音标记的 IPA 表记 |
+| `ToXSampa(text)` | `string` | X-SAMPA 表记 |
+| `ToXSampaWithoutStress(text)` | `string` | 无重音标记的 X-SAMPA 表记 |
 | `ToPhonemeList(text)` | `IReadOnlyList<EnglishPhoneme>` | 结构化音素列表 |
 | `LookupWord(word)` | `IReadOnlyList<EnglishPhoneme>` | 单词查询 |
+| `LookupAllPronunciations(word)` | `IReadOnlyList<EnglishPronunciation>` | 获取全部发音变体 |
 | `ContainsWord(word)` | `bool` | 词典存在性确认 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量 ARPAbet 转换 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | 批量 IPA 转换 |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | 批量 X-SAMPA 转换 |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<EnglishPhoneme>>` | 批量结构化音素列表转换 |
 
 ### ChineseG2PEngine
 
@@ -222,6 +230,7 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToPinyin(text)` | `string` | 带声调符号的拼音字符串 (`"nǐ hǎo"`) |
 | `ToPinyin(text, style)` | `string` | 指定风格的拼音字符串 |
 | `ToPinyinList(text)` | `string[]` | 逐字拼音数组 |
+| `ToPinyinList(text, style)` | `string[]` | 指定风格的逐字拼音数组 |
 | `ContainsChar(c)` | `bool` | 词典存在性确认 |
 | `LookupChar(c)` | `string[]` | 获取全部拼音候选 |
 | `ToIPA(text)` | `string` | IPA（国际音标）表记 |
@@ -229,9 +238,13 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToZhuyin(text)` | `string` | 注音符号（ㄅㄆㄇㄈ）表记 |
 | `ToZhuyin(text, includeTones)` | `string` | 声调控制的注音表记 |
 | `ToPinyinBatch(texts)` | `string[]` | 批量拼音转换 |
+| `ToPinyinBatch(texts, style)` | `string[]` | 批量拼音转换（指定风格） |
 | `ToPinyinListBatch(texts)` | `string[][]` | 批量逐字拼音转换 |
+| `ToPinyinListBatch(texts, style)` | `string[][]` | 批量逐字拼音转换（指定风格） |
 | `ToIPABatch(texts)` | `string[]` | 批量 IPA 转换 |
+| `ToIPABatch(texts, includeTones)` | `string[]` | 批量 IPA 转换（声调控制） |
 | `ToZhuyinBatch(texts)` | `string[]` | 批量注音转换 |
+| `ToZhuyinBatch(texts, includeTones)` | `string[]` | 批量注音转换（声调控制） |
 
 ### MultilingualG2PEngine
 

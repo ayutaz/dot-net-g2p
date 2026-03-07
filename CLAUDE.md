@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-C#/.NET（Unity対応）向けの日本語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk/pyopenjtalkの処理パイプラインをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
+C#/.NET（Unity対応）向けの日英中多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換をC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
 
 ## 進捗状況
 
@@ -119,7 +119,7 @@ dotnet run --project samples/DotNetG2P.Console/DotNetG2P.Console.csproj -- <nais
 DotNetG2P.slnx                          # ソリューションファイル（.NET 10 .slnx形式）
 ├── Directory.Build.props                # NuGet共通メタデータ
 ├── LICENSE                              # Apache-2.0 License
-├── README.md                            # プロジェクトREADME（126行）
+├── README.md                            # プロジェクトREADME（358行）
 ├── .editorconfig                        # コーディング規約
 ├── .gitattributes                       # Git属性設定
 ├── .github/workflows/                   # GitHub Actions
@@ -268,7 +268,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   ├── TestData/                        # テストデータ
 │   │   ├── expected_phonemes.json       # pyopenjtalk期待値データ（18件）
 │   │   └── generate_expected.py         # テストデータ生成スクリプト
-│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 2903テスト)
+│   └── DotNetG2P.Tests/                 # xUnit テストプロジェクト (net8.0, 3469テスト)
 │       ├── DotNetG2P.Tests.csproj
 │       ├── G2PEngineApiTests.cs         # G2PEngine API統合テスト
 │       ├── Models/                      # モデルテスト
@@ -329,7 +329,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── Normalization/           # 正規化テスト (143件)
 │       │   ├── Homograph/              # 同綴異音語テスト (154件)
 │       │   └── Integration/            # 統合テスト (~42件)
-│       ├── Multilingual/               # 多言語G2Pテスト (205件)
+│       ├── Multilingual/               # 多言語G2Pテスト (308件)
 │       │   ├── LanguageDetectorTests.cs  # 言語判定テスト (29件)
 │       │   ├── TextSegmenterTests.cs     # セグメント分割テスト (30件)
 │       │   ├── MultilingualEngineTests.cs # エンジン統合テスト (28件)
@@ -337,12 +337,18 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── MultilingualDisposeTests.cs # Disposeテスト (15件)
 │       │   ├── MultilingualPerformanceTests.cs # パフォーマンステスト (8件)
 │       │   ├── LanguageConsistencyTests.cs # 言語検出一貫性テスト (27件)
-│       │   └── MultilingualChineseTests.cs # 中国語統合テスト (43件)
+│       │   ├── MultilingualChineseTests.cs # 中国語統合テスト (43件)
+│       │   ├── MixedTextBasicTests.cs    # 混在テキスト基本テスト (54件)
+│       │   └── MixedTextAdvancedTests.cs # 混在テキスト応用テスト (35件)
 │       └── Integration/                # 統合テスト
 │           ├── G2PPipelineTests.cs
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）
 │           ├── PiperPlusTests.cs        # piper-plus移植テスト（87件）
 │           └── PyOpenJTalkComparisonTests.cs  # pyopenjtalk比較テスト（20件）
+│
+├── docs/                                # 技術ドキュメント
+│   ├── chinese-g2p-research.md           # 中国語G2P技術調査
+│   └── chinese-g2p-implementation-plan.md # 中国語G2P実装計画
 │
 └── samples/
     └── DotNetG2P.Console/               # コンソールサンプル (net8.0)

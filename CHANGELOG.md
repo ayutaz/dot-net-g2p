@@ -5,10 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - DotNetG2P.English
+## [Unreleased] - DotNetG2P.Chinese
 
 ### Added
-- **英語G2Pパッケージ `DotNetG2P.English` 新規追加**（`feature/english-g2p` ブランチ）
+- **中国語G2Pパッケージ `DotNetG2P.Chinese` 新規追加**（`feature/chinese-g2p` ブランチ）
+  - DotNetG2P.Coreに依存しない独立パッケージ（.NET Standard 2.1）
+- C1: 基本ピンイン変換MVP
+  - pinyin-data 44,435エントリの単字辞書をEmbeddedResourceとして埋め込み
+  - phrase-pinyin-data 411,958エントリのフレーズ辞書をEmbeddedResourceとして埋め込み
+  - `ChineseG2PEngine` クラス: `ToPinyin()`, `ToPinyinList()`, `LookupChar()` 等
+  - 3種の出力スタイル（ToneMarked/ToneNumber/Normal）、`PinyinStyle` enum
+  - UPMパッケージ設定（com.dotnetg2p.chinese）
+- C2: フレーズ辞書と多音字解決
+  - `PinyinPhraseDictionary`（411,958エントリ、最長一致検索）
+  - 多音字の文脈依存読み分け（pypinyin方式フレーズルックアップ）
+  - 非漢字処理（CJK/ASCII句読点は区切り、英数字はパススルー）
+- C3: 声調変調
+  - `ToneSandhiProcessor`（三声連読変調、"一"変調、"不"変調）
+  - `ChineseG2PEngine` 3段階パイプライン（収集→声調変調→スタイル変換）
+- C4: IPA/注音変換・バッチAPI
+  - IPA変換（`PinyinToIpa`）、注音変換（`PinyinToZhuyin`）
+  - バッチAPI 11メソッド追加
+- C5: テスト充実
+  - エッジケーステスト61件、パフォーマンステスト15件、精度テスト78件追加
+- C6: Multilingual中国語統合
+  - `Language.Chinese` 追加、`ScriptKind.CJKIdeograph` 追加
+  - `MultilingualG2POptions.DefaultCjkLanguage` 追加
+  - 日中英混在テキスト対応（MultilingualG2PEngine中国語統合）
+  - Multilingualテスト43件追加
+- 中国語G2Pテスト合計約936件追加
+- CI/CD更新: DotNetG2P.Chineseのpackステップ追加
+
+## [1.2.0] - 2026-03-07
+
+### Added
+- **英語G2Pパッケージ `DotNetG2P.English` 新規追加**
   - DotNetG2P.Coreに依存しない独立パッケージ（.NET Standard 2.1）
 - E1: CMU辞書ルックアップMVP
   - CMU Pronouncing Dictionary（135,166エントリ）をEmbeddedResourceとして埋め込み
@@ -33,8 +64,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 30+語の同綴異音語データベース（母音変化型・ストレス移動型・-ate語尾型）
   - 軽量品詞推定: 接尾辞ルール（-ing→動詞, -tion→名詞等）+ 文脈ルール（冠詞後→名詞等）
   - `EnglishG2POptions.EnableHomographResolution` 追加
-- 英語G2Pテスト511件追加（プロジェクト全体テスト数: 1,465件）
-- CI/CD更新: DotNetG2P.Englishのpackステップ追加
+- 英語G2Pテスト511件追加
+- **多言語G2Pパッケージ `DotNetG2P.Multilingual` 新規追加**
+  - DotNetG2P.Core + DotNetG2P.MeCab + DotNetG2P.English依存（.NET Standard 2.1）
+  - `LanguageDetector`（Unicode文字種ベース言語判定）
+  - `TextSegmenter`（2パスセグメント分割）
+  - `MultilingualG2PEngine`（日英G2Pファサード、IDisposable、lock保護）
+  - UPMパッケージ設定（com.dotnetg2p.multilingual）
+  - テスト162件追加
+- CI/CD更新: DotNetG2P.English・DotNetG2P.Multilingualのpackステップ追加
+
+### Changed
+- `Directory.Build.props` に `PackageLicenseExpression` を集約
+- プロジェクト全体テスト数: 2,318件
 
 ## [1.1.0] - 2026-03-05
 
@@ -92,5 +134,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - LibNMeCab依存を削除
 
+[1.2.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ayutaz/dot-net-g2p/releases/tag/v1.0.0
