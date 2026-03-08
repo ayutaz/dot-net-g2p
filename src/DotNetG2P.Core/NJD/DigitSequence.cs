@@ -15,7 +15,7 @@ namespace DotNetG2P.NJD
     {
         // ====== 数字正規化テーブル（NUMERAL_LIST1相当） ======
         // 全角数字・漢数字・ひらがな読み等を漢数字一文字に統一
-        private static readonly Dictionary<string, string> DigitNormalize = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> DigitNormalize = new Dictionary<string, string>(30)
         {
             { "○", "〇" },
             { "１", "一" }, { "２", "二" }, { "３", "三" }, { "４", "四" },

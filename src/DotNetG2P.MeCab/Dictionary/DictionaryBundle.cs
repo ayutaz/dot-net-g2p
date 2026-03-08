@@ -22,6 +22,7 @@ namespace DotNetG2P.MeCab.Dictionary
         private static readonly object _cacheLock = new object();
 
         private int _refCount;
+        private bool _disposed;
         private readonly string _path;
 
         /// <summary>システム辞書</summary>
@@ -73,15 +74,15 @@ namespace DotNetG2P.MeCab.Dictionary
             {
                 if (_cache.TryGetValue(fullPath, out var weakRef))
                 {
-                    if (weakRef.TryGetTarget(out var cached))
+                    if (weakRef.TryGetTarget(out var cached) && !cached._disposed)
                     {
-                        // キャッシュヒット: 参照カウント増加
-                        Interlocked.Increment(ref cached._refCount);
+                        // キャッシュヒット: 参照カウント増加（lock内なのでDisposeと競合しない）
+                        cached._refCount++;
                         return cached;
                     }
                     else
                     {
-                        // GCによりターゲットがクリアされたゾンビエントリを除去
+                        // GCによりターゲットがクリアされた、またはDispose済みのエントリを除去
                         _cache.Remove(fullPath);
                     }
                 }
@@ -112,21 +113,18 @@ namespace DotNetG2P.MeCab.Dictionary
         /// <inheritdoc/>
         public void Dispose()
         {
-            int remaining = Interlocked.Decrement(ref _refCount);
-            if (remaining < 0)
+            lock (_cacheLock)
             {
-                // 既にrefCount==0だった（二重Dispose）→元に戻す
-                Interlocked.Increment(ref _refCount);
-                return;
-            }
-            if (remaining == 0)
-            {
-                // 最後の参照者 → キャッシュから除去してリソース解放
-                lock (_cacheLock)
+                if (_disposed) return;
+
+                _refCount--;
+                if (_refCount <= 0)
                 {
+                    _disposed = true;
                     _cache.Remove(_path);
                 }
             }
+            GC.SuppressFinalize(this);
         }
     }
 }

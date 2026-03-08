@@ -11,7 +11,7 @@ namespace DotNetG2P.English.Normalization
     internal static class AbbreviationExpander
     {
         // キーは小文字・ピリオドなしで正規化済み
-        private static readonly Dictionary<string, string> s_abbreviations = new Dictionary<string, string>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, string> s_abbreviations = new Dictionary<string, string>(40, StringComparer.Ordinal)
         {
             // 敬称
             ["dr"] = "Doctor",

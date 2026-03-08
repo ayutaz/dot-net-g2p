@@ -83,7 +83,8 @@ namespace DotNetG2P.Chinese
             for (int i = 0; i < s_initials.Length; i++)
             {
                 var (text, init) = s_initials[i];
-                if (bare.StartsWith(text, StringComparison.Ordinal))
+                if (bare.Length >= text.Length
+                    && string.CompareOrdinal(bare, 0, text, 0, text.Length) == 0)
                 {
                     initial = init;
                     initialLen = text.Length;
@@ -92,12 +93,16 @@ namespace DotNetG2P.Chinese
             }
 
             // 3. 残りを韻母として判別
-            string remainder = bare.Substring(initialLen);
+            string remainder;
 
             // j/q/x/y 後の "u" は "ü" として扱う
-            if (IsJqxy(initial) && remainder.Length > 0 && remainder[0] == 'u')
+            if (IsJqxy(initial) && initialLen < bare.Length && bare[initialLen] == 'u')
             {
-                remainder = "v" + remainder.Substring(1);
+                remainder = "v" + bare.Substring(initialLen + 1);
+            }
+            else
+            {
+                remainder = bare.Substring(initialLen);
             }
 
             // "v" 入力 → "ü" 系韻母として扱う（ü を v に正規化）
@@ -161,7 +166,7 @@ namespace DotNetG2P.Chinese
         /// <summary>韻母文字列→Final enumのマッピングを構築。</summary>
         private static Dictionary<string, Final> BuildFinalMap()
         {
-            return new Dictionary<string, Final>(StringComparer.Ordinal)
+            return new Dictionary<string, Final>(36, StringComparer.Ordinal)
             {
                 // ── 開口呼 (a/o/e系) ──
                 ["a"] = Final.A,
@@ -214,7 +219,7 @@ namespace DotNetG2P.Chinese
         /// <summary>韻母文字列を長い順に並べた配列を構築（最長一致用）。</summary>
         private static string[] BuildFinalsByLength()
         {
-            var keys = new List<string>
+            var keys = new List<string>(36)
             {
                 // 4文字韻母
                 "iang", "iong", "uang", "ueng",

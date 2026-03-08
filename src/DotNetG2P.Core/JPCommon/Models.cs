@@ -51,7 +51,7 @@ namespace DotNetG2P.JPCommon
 
         public JPMora()
         {
-            Phonemes = new List<JPPhoneme>();
+            Phonemes = new List<JPPhoneme>(2);
         }
 
         public override string ToString()
@@ -98,7 +98,7 @@ namespace DotNetG2P.JPCommon
 
         public JPWord()
         {
-            Moras = new List<JPMora>();
+            Moras = new List<JPMora>(4);
         }
 
         public override string ToString()
@@ -146,7 +146,7 @@ namespace DotNetG2P.JPCommon
 
         public JPAccentPhrase()
         {
-            Words = new List<JPWord>();
+            Words = new List<JPWord>(2);
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace DotNetG2P.JPCommon
         /// </summary>
         public List<JPMora> AllMoras()
         {
-            var result = new List<JPMora>();
+            var result = new List<JPMora>(MoraCount);
             for (int i = 0; i < Words.Count; i++)
             {
                 var moras = Words[i].Moras;
@@ -202,7 +202,7 @@ namespace DotNetG2P.JPCommon
 
         public JPBreathGroup()
         {
-            AccentPhrases = new List<JPAccentPhrase>();
+            AccentPhrases = new List<JPAccentPhrase>(4);
         }
 
         public override string ToString()
@@ -248,7 +248,7 @@ namespace DotNetG2P.JPCommon
 
         public JPUtterance()
         {
-            BreathGroups = new List<JPBreathGroup>();
+            BreathGroups = new List<JPBreathGroup>(2);
         }
 
         public override string ToString()

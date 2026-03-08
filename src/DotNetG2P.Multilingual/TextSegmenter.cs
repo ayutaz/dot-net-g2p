@@ -294,7 +294,7 @@ namespace DotNetG2P.Multilingual
                     return Array.Empty<TextSegment>();
 
                 // セグメント構築: 同一言語の連続文字をグループ化
-                var result = new List<TextSegment>();
+                var result = new List<TextSegment>(4);
                 var sb = new StringBuilder();
                 byte currentLangByte = languages[0];
                 sb.Append(text[0]);

@@ -524,7 +524,8 @@ namespace DotNetG2P.Chinese
         /// <inheritdoc />
         public void Dispose()
         {
-            Interlocked.CompareExchange(ref _disposed, 1, 0);
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
+                GC.SuppressFinalize(this);
         }
 
         // =====================================================================
@@ -649,7 +650,7 @@ namespace DotNetG2P.Chinese
         private static void ApplyToneSandhiToEntries(List<PinyinEntry> entries)
         {
             // 漢字（ピンインあり）スロットのインデックスを収集
-            var hanziIndices = new List<int>();
+            var hanziIndices = new List<int>(entries.Count);
             for (int i = 0; i < entries.Count; i++)
             {
                 if (entries[i].Pinyin != null)

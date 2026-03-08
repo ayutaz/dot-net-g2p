@@ -103,21 +103,21 @@ namespace DotNetG2P.English.Normalization
             if (integerPart == 0 && fractionalPart > 0)
             {
                 string subUnit = fractionalPart == 1 ? singularSub : pluralSub;
-                return NumberToWords.Cardinal(fractionalPart) + " " + subUnit;
+                return string.Concat(NumberToWords.Cardinal(fractionalPart), " ", subUnit);
             }
 
             // 整数部の出力
             string mainUnit = integerPart == 1 ? singularMain : pluralMain;
-            string result = NumberToWords.Cardinal(integerPart) + " " + mainUnit;
+            var mainText = NumberToWords.Cardinal(integerPart);
 
             // 小数部の出力（0より大きい場合のみ）
             if (fractionalPart > 0)
             {
                 string subUnit = fractionalPart == 1 ? singularSub : pluralSub;
-                result += " " + NumberToWords.Cardinal(fractionalPart) + " " + subUnit;
+                return string.Concat(mainText, " ", mainUnit, " ", NumberToWords.Cardinal(fractionalPart), " ", subUnit);
             }
 
-            return result;
+            return string.Concat(mainText, " ", mainUnit);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace DotNetG2P.English.Normalization
                 return null;
             }
 
-            return NumberToWords.Cardinal(value) + " yen";
+            return string.Concat(NumberToWords.Cardinal(value), " yen");
         }
     }
 }

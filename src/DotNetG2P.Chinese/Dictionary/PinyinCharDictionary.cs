@@ -11,12 +11,14 @@ namespace DotNetG2P.Chinese
     /// </summary>
     public sealed class PinyinCharDictionary
     {
-        private readonly Dictionary<int, string[]> _entries;
+        // 単一発音の漢字はstringを直接保持、複数発音の漢字はstring[]を保持
+        // これにより大多数（約90%）の単一発音エントリで配列アロケーションを削減
+        private readonly Dictionary<int, object> _entries;
 
         /// <summary>辞書エントリ数（ユニークな漢字数）</summary>
         public int Count => _entries.Count;
 
-        private PinyinCharDictionary(Dictionary<int, string[]> entries)
+        private PinyinCharDictionary(Dictionary<int, object> entries)
         {
             _entries = entries;
         }
@@ -67,9 +69,9 @@ namespace DotNetG2P.Chinese
         /// <returns>辞書に登録されている場合 true</returns>
         public bool TryLookup(int codePoint, out string pinyin)
         {
-            if (_entries.TryGetValue(codePoint, out var pinyins))
+            if (_entries.TryGetValue(codePoint, out var entry))
             {
-                pinyin = pinyins[0];
+                pinyin = entry is string s ? s : ((string[])entry)[0];
                 return true;
             }
 
@@ -85,8 +87,11 @@ namespace DotNetG2P.Chinese
         /// <returns>辞書に登録されている場合 true</returns>
         public bool TryLookupAll(int codePoint, out string[] pinyins)
         {
-            if (_entries.TryGetValue(codePoint, out pinyins!))
+            if (_entries.TryGetValue(codePoint, out var entry))
+            {
+                pinyins = entry is string s ? new[] { s } : (string[])entry;
                 return true;
+            }
 
             pinyins = Array.Empty<string>();
             return false;
@@ -98,7 +103,7 @@ namespace DotNetG2P.Chinese
         /// </summary>
         private static PinyinCharDictionary ParseFromReader(StreamReader reader)
         {
-            var entries = new Dictionary<int, string[]>(50000);
+            var entries = new Dictionary<int, object>(45000);
 
             string? line;
             while ((line = reader.ReadLine()) != null)
@@ -136,7 +141,8 @@ namespace DotNetG2P.Chinese
                 if (pinyins.Length == 0)
                     continue;
 
-                entries[codePoint] = pinyins;
+                // 単一発音はstringを直接保持、複数発音はstring[]を保持
+                entries[codePoint] = pinyins.Length == 1 ? (object)pinyins[0] : pinyins;
             }
 
             return new PinyinCharDictionary(entries);

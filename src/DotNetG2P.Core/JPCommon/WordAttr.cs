@@ -12,7 +12,7 @@ namespace DotNetG2P.JPCommon
     {
         // ====== POS → ID ======
 
-        private static readonly Dictionary<string, int> PosTable = new Dictionary<string, int>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, int> PosTable = new Dictionary<string, int>(70, StringComparer.Ordinal)
         {
             // jpreprocess jpcommon/label/word_attr.rs 準拠
             { "その他,間投,*,*", 1 },
@@ -88,7 +88,7 @@ namespace DotNetG2P.JPCommon
 
         // ====== CType → ID ======
 
-        private static readonly Dictionary<string, int> CTypeTable = new Dictionary<string, int>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, int> CTypeTable = new Dictionary<string, int>(57, StringComparer.Ordinal)
         {
             { "カ変・クル", 1 },
             { "カ変・来ル", 2 },
@@ -151,7 +151,7 @@ namespace DotNetG2P.JPCommon
 
         // ====== CForm → ID ======
 
-        private static readonly Dictionary<string, int> CFormTable = new Dictionary<string, int>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, int> CFormTable = new Dictionary<string, int>(26, StringComparer.Ordinal)
         {
             { "ガル接続", 1 },
             { "仮定形", 2 },

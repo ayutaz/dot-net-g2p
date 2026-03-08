@@ -104,7 +104,7 @@ namespace DotNetG2P.Chinese
         /// </summary>
         private static PinyinPhraseDictionary ParseFromReader(StreamReader reader)
         {
-            var entries = new Dictionary<string, string[]>(300000);
+            var entries = new Dictionary<string, string[]>(420000);
             var maxPhraseLength = 0;
 
             string? line;

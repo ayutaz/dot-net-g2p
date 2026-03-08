@@ -22,7 +22,7 @@ namespace DotNetG2P.Models
 
         public AccentPhrase()
         {
-            Moras = new List<Mora>();
+            Moras = new List<Mora>(4);
             Accent = 0;
             PauseMora = null;
             IsInterrogative = false;

@@ -72,13 +72,13 @@ namespace DotNetG2P.English.Normalization
                 string hourWord = NumberToWords.Cardinal(hour);
                 if (minute == 0)
                 {
-                    return hourWord + " hundred";
+                    return string.Concat(hourWord, " hundred");
                 }
                 if (minute >= 1 && minute <= 9)
                 {
-                    return hourWord + " oh " + NumberToWords.Cardinal(minute);
+                    return string.Concat(hourWord, " oh ", NumberToWords.Cardinal(minute));
                 }
-                return hourWord + " " + NumberToWords.Cardinal(minute);
+                return string.Concat(hourWord, " ", NumberToWords.Cardinal(minute));
             }
 
             // 0時 → 12として読む（midnight = twelve o'clock）
@@ -88,17 +88,17 @@ namespace DotNetG2P.English.Normalization
             // 分が0 → "時間 o'clock"
             if (minute == 0)
             {
-                return displayHourWord + " o'clock";
+                return string.Concat(displayHourWord, " o'clock");
             }
 
             // 分が1-9 → "時間 oh 分の読み"
             if (minute >= 1 && minute <= 9)
             {
-                return displayHourWord + " oh " + NumberToWords.Cardinal(minute);
+                return string.Concat(displayHourWord, " oh ", NumberToWords.Cardinal(minute));
             }
 
             // 分が10-59 → "時間 分の読み"
-            return displayHourWord + " " + NumberToWords.Cardinal(minute);
+            return string.Concat(displayHourWord, " ", NumberToWords.Cardinal(minute));
         }
 
         /// <summary>

@@ -67,6 +67,7 @@ namespace DotNetG2P.MeCab
         {
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0) return;
             _dic?.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         private void ThrowIfDisposed()
@@ -83,6 +84,38 @@ namespace DotNetG2P.MeCab
         {
             private const int ExpectedFieldCount = 15;
             private const string DefaultValue = "*";
+
+            // 頻出品詞・活用文字列のホワイトリスト（インターン対象を限定しGen2肥大化を防止）
+            private static readonly HashSet<string> InternWhitelist = new HashSet<string>
+            {
+                // 品詞
+                "名詞", "動詞", "形容詞", "副詞", "助詞", "助動詞", "接続詞", "感動詞",
+                "連体詞", "接頭詞", "記号", "フィラー", "その他", "BOS/EOS",
+                // 品詞細分類
+                "一般", "固有名詞", "数", "接尾", "非自立", "代名詞", "自立",
+                "サ変接続", "形容動詞語幹", "副詞可能", "ナイ形容詞語幹",
+                "格助詞", "係助詞", "副助詞", "接続助詞", "終助詞", "並立助詞",
+                "連体化", "副詞化", "特殊", "句点", "読点", "空白",
+                "地域", "人名", "組織", "姓", "名", "国",
+                "助数詞", "引用", "連語",
+                // 活用型
+                "五段・カ行イ音便", "五段・サ行", "五段・タ行", "五段・ナ行", "五段・バ行",
+                "五段・マ行", "五段・ラ行", "五段・ワ行促音便", "五段・ガ行",
+                "五段・ラ行特殊", "五段・ワ行ウ音便", "五段・カ行促音便",
+                "一段", "サ変・スル", "サ変・−スル", "カ変・クル", "カ変・来ル",
+                "形容詞・アウオ段", "形容詞・イ段", "形容詞・イイ",
+                "特殊・タ", "特殊・ナイ", "特殊・タイ", "特殊・デス", "特殊・マス",
+                "特殊・ダ", "特殊・ジャ", "特殊・ヌ", "不変化型",
+                "文語・ル", "文語・リ", "文語・ゴトシ",
+                "下二・タ行", "下二・ダ行", "下二・ハ行", "下二・マ行",
+                // 活用形
+                "基本形", "連用形", "未然形", "仮定形", "命令ｅ", "連用タ接続",
+                "体言接続", "仮定縮約１", "未然ウ接続", "未然レル接続",
+                "ガル接続", "命令ｉ", "命令ｒｏ", "連用ゴザイ接続",
+                "命令ｙｏ", "音便基本形", "文語基本形",
+                // 共通
+                "*",
+            };
 
             private readonly string _rawFeature;
             private readonly int[] _commaPositions;
@@ -122,8 +155,8 @@ namespace DotNetG2P.MeCab
                 int end = index < _commaPositions.Length ? _commaPositions[index] : _rawFeature.Length;
                 string value = _rawFeature.Substring(start, end - start);
 
-                // 品詞（0-3）、活用型（4）、活用形（5）は頻出文字列なのでintern
-                if (index <= 5)
+                // 品詞（0-3）、活用型（4）、活用形（5）はホワイトリストに含まれる場合のみintern
+                if (index <= 5 && InternWhitelist.Contains(value))
                     return string.Intern(value);
 
                 return value;

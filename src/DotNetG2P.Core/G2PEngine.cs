@@ -124,7 +124,8 @@ namespace DotNetG2P
             var nodes = RunPipeline(text);
 
             // 各ノードの発音を音素文字列に変換して結合
-            var parts = new List<string>(nodes.Count);
+            var sb = new ValueStringBuilder(nodes.Count * 8);
+            bool first = true;
             foreach (var node in nodes)
             {
                 if (node.Pronunciation != null && node.Pronunciation.MoraCount > 0)
@@ -132,12 +133,14 @@ namespace DotNetG2P
                     var phonemes = MoraMapping.MorasToPhonemeString(node.Pronunciation.Moras, _options.ExpandLongVowels);
                     if (!string.IsNullOrEmpty(phonemes))
                     {
-                        parts.Add(phonemes);
+                        if (!first) sb.Append(' ');
+                        sb.Append(phonemes);
+                        first = false;
                     }
                 }
             }
 
-            return string.Join(" ", parts);
+            return sb.ToStringAndDispose();
         }
 
         /// <summary>

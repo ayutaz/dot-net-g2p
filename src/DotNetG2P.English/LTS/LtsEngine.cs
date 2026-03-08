@@ -193,7 +193,7 @@ namespace DotNetG2P.English.LTS
             if (parts.Length == 0)
                 return null;
 
-            var result = new List<EnglishPhoneme>();
+            var result = new List<EnglishPhoneme>(8);
             foreach (var part in parts)
             {
                 // 各部分を個別にPredict（再帰呼び出しだが、アポストロフィは除去済みなので通常パスに入る）

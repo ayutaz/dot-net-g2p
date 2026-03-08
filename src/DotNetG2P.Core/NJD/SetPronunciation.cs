@@ -90,7 +90,7 @@ namespace DotNetG2P.NJD
                         if (hasRealMora)
                         {
                             // 全セグメントのモーラを結合してPronunciationを構築
-                            var allMoras = new List<Mora>();
+                            var allMoras = new List<Mora>(8);
                             foreach (var (text, moras) in readingSegments)
                             {
                                 allMoras.AddRange(moras);
@@ -327,16 +327,19 @@ namespace DotNetG2P.NJD
         /// </summary>
         private static string HiraganaToKatakana(string s)
         {
-            var chars = new char[s.Length];
+            const int StackAllocThreshold = 128;
+            Span<char> buffer = s.Length <= StackAllocThreshold
+                ? stackalloc char[s.Length]
+                : new char[s.Length];
             for (int i = 0; i < s.Length; i++)
             {
                 char c = s[i];
                 if (c >= '\u3041' && c <= '\u3096')
-                    chars[i] = (char)(c + 0x60);
+                    buffer[i] = (char)(c + 0x60);
                 else
-                    chars[i] = c;
+                    buffer[i] = c;
             }
-            return new string(chars);
+            return new string(buffer);
         }
 
         /// <summary>

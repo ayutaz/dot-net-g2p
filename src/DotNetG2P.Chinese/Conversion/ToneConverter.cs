@@ -58,8 +58,28 @@ namespace DotNetG2P.Chinese
             if (string.IsNullOrEmpty(pinyin))
                 return pinyin ?? string.Empty;
 
-            var sb = new StringBuilder(pinyin.Length);
+            // まず声調記号を含む文字のインデックスを探す
+            int toneIndex = -1;
             for (int i = 0; i < pinyin.Length; i++)
+            {
+                if (GetBaseVowel(pinyin[i]) != '\0')
+                {
+                    toneIndex = i;
+                    break;
+                }
+            }
+
+            // 声調記号がなければ元の文字列をそのまま返す（アロケーション不要）
+            if (toneIndex < 0)
+                return pinyin;
+
+            // StringBuilderで声調記号を置換
+            var sb = new StringBuilder(pinyin.Length);
+            // toneIndex より前はそのままコピー
+            if (toneIndex > 0)
+                sb.Append(pinyin, 0, toneIndex);
+
+            for (int i = toneIndex; i < pinyin.Length; i++)
             {
                 char c = pinyin[i];
                 char baseChar = GetBaseVowel(c);
@@ -99,75 +119,90 @@ namespace DotNetG2P.Chinese
                 return pinyin;
 
             int toneNumber = lastChar - '0';
-            string bare = pinyin.Substring(0, pinyin.Length - 1);
+            int bareLen = pinyin.Length - 1;
 
-            if (bare.Length == 0)
+            if (bareLen == 0)
                 return pinyin;
 
-            // 声調記号の配置位置を決定
-            int placeIndex = FindTonePlacement(bare);
+            // 声調記号の配置位置を決定（bareはpinyinの先頭からbareLen文字分）
+            int placeIndex = FindTonePlacement(pinyin, bareLen);
             if (placeIndex < 0)
                 return pinyin;
 
-            var sb = new StringBuilder(bare.Length);
-            for (int i = 0; i < bare.Length; i++)
-            {
-                if (i == placeIndex)
-                {
-                    int vowelIndex = GetVowelIndex(bare[i]);
-                    if (vowelIndex >= 0)
-                    {
-                        sb.Append(ToneMarks[vowelIndex, toneNumber - 1]);
-                    }
-                    else
-                    {
-                        sb.Append(bare[i]);
-                    }
-                }
-                else
-                {
-                    sb.Append(bare[i]);
-                }
-            }
+            var sb = new StringBuilder(bareLen);
+            // placeIndex前をまとめてコピー
+            if (placeIndex > 0)
+                sb.Append(pinyin, 0, placeIndex);
+
+            // 声調記号を配置
+            int vowelIndex = GetVowelIndex(pinyin[placeIndex]);
+            sb.Append(vowelIndex >= 0 ? ToneMarks[vowelIndex, toneNumber - 1] : pinyin[placeIndex]);
+
+            // placeIndex後をまとめてコピー
+            if (placeIndex + 1 < bareLen)
+                sb.Append(pinyin, placeIndex + 1, bareLen - placeIndex - 1);
+
             return sb.ToString();
         }
 
         /// <summary>声調記号付き文字から声調番号を取得する。</summary>
         private static Tone GetToneFromChar(char c)
         {
-            int idx;
-
-            idx = TonedA.IndexOf(c);
-            if (idx >= 0) return (Tone)(idx + 1);
-
-            idx = TonedE.IndexOf(c);
-            if (idx >= 0) return (Tone)(idx + 1);
-
-            idx = TonedI.IndexOf(c);
-            if (idx >= 0) return (Tone)(idx + 1);
-
-            idx = TonedO.IndexOf(c);
-            if (idx >= 0) return (Tone)(idx + 1);
-
-            idx = TonedU.IndexOf(c);
-            if (idx >= 0) return (Tone)(idx + 1);
-
-            idx = TonedV.IndexOf(c);
-            if (idx >= 0) return (Tone)(idx + 1);
-
-            return Tone.Neutral;
+            switch (c)
+            {
+                // a系: ā á ǎ à
+                case '\u0101': return Tone.First;
+                case '\u00E1': return Tone.Second;
+                case '\u01CE': return Tone.Third;
+                case '\u00E0': return Tone.Fourth;
+                // e系: ē é ě è
+                case '\u0113': return Tone.First;
+                case '\u00E9': return Tone.Second;
+                case '\u011B': return Tone.Third;
+                case '\u00E8': return Tone.Fourth;
+                // i系: ī í ǐ ì
+                case '\u012B': return Tone.First;
+                case '\u00ED': return Tone.Second;
+                case '\u01D0': return Tone.Third;
+                case '\u00EC': return Tone.Fourth;
+                // o系: ō ó ǒ ò
+                case '\u014D': return Tone.First;
+                case '\u00F3': return Tone.Second;
+                case '\u01D2': return Tone.Third;
+                case '\u00F2': return Tone.Fourth;
+                // u系: ū ú ǔ ù
+                case '\u016B': return Tone.First;
+                case '\u00FA': return Tone.Second;
+                case '\u01D4': return Tone.Third;
+                case '\u00F9': return Tone.Fourth;
+                // ü系: ǖ ǘ ǚ ǜ
+                case '\u01D6': return Tone.First;
+                case '\u01D8': return Tone.Second;
+                case '\u01DA': return Tone.Third;
+                case '\u01DC': return Tone.Fourth;
+                default: return Tone.Neutral;
+            }
         }
 
         /// <summary>声調記号付き文字を基本母音に変換する。声調記号なしなら '\0' を返す。</summary>
         private static char GetBaseVowel(char c)
         {
-            if (TonedA.IndexOf(c) >= 0) return 'a';
-            if (TonedE.IndexOf(c) >= 0) return 'e';
-            if (TonedI.IndexOf(c) >= 0) return 'i';
-            if (TonedO.IndexOf(c) >= 0) return 'o';
-            if (TonedU.IndexOf(c) >= 0) return 'u';
-            if (TonedV.IndexOf(c) >= 0) return '\u00fc'; // ü
-            return '\0';
+            switch (c)
+            {
+                // a系: ā á ǎ à
+                case '\u0101': case '\u00E1': case '\u01CE': case '\u00E0': return 'a';
+                // e系: ē é ě è
+                case '\u0113': case '\u00E9': case '\u011B': case '\u00E8': return 'e';
+                // i系: ī í ǐ ì
+                case '\u012B': case '\u00ED': case '\u01D0': case '\u00EC': return 'i';
+                // o系: ō ó ǒ ò
+                case '\u014D': case '\u00F3': case '\u01D2': case '\u00F2': return 'o';
+                // u系: ū ú ǔ ù
+                case '\u016B': case '\u00FA': case '\u01D4': case '\u00F9': return 'u';
+                // ü系: ǖ ǘ ǚ ǜ
+                case '\u01D6': case '\u01D8': case '\u01DA': case '\u01DC': return '\u00fc';
+                default: return '\0';
+            }
         }
 
         /// <summary>母音文字のインデックスを返す（a=0, e=1, i=2, o=3, u=4, ü=5）。母音でなければ -1。</summary>
@@ -194,30 +229,32 @@ namespace DotNetG2P.Chinese
         /// 2. ou の場合は o に付ける
         /// 3. それ以外は最後の母音に付ける
         /// </summary>
-        private static int FindTonePlacement(string bare)
+        /// <param name="pinyin">元の文字列（末尾の数字を除く先頭bareLen文字を対象）</param>
+        /// <param name="bareLen">対象文字数</param>
+        private static int FindTonePlacement(string pinyin, int bareLen)
         {
             // ルール1: a または e があればそこに配置
-            for (int i = 0; i < bare.Length; i++)
+            for (int i = 0; i < bareLen; i++)
             {
-                char lower = char.ToLowerInvariant(bare[i]);
+                char lower = char.ToLowerInvariant(pinyin[i]);
                 if (lower == 'a' || lower == 'e')
                     return i;
             }
 
             // ルール2: ou の場合は o に配置
-            for (int i = 0; i < bare.Length - 1; i++)
+            for (int i = 0; i < bareLen - 1; i++)
             {
-                char lower = char.ToLowerInvariant(bare[i]);
-                char nextLower = char.ToLowerInvariant(bare[i + 1]);
+                char lower = char.ToLowerInvariant(pinyin[i]);
+                char nextLower = char.ToLowerInvariant(pinyin[i + 1]);
                 if (lower == 'o' && nextLower == 'u')
                     return i;
             }
 
             // ルール3: 最後の母音に配置
             int lastVowel = -1;
-            for (int i = 0; i < bare.Length; i++)
+            for (int i = 0; i < bareLen; i++)
             {
-                if (GetVowelIndex(bare[i]) >= 0)
+                if (GetVowelIndex(pinyin[i]) >= 0)
                     lastVowel = i;
             }
             return lastVowel;

@@ -14,7 +14,7 @@ namespace DotNetG2P.English.Normalization
     {
         // 記号→英語名の変換テーブル
         // ! や ? は文末句読点として頻出するため対象外
-        private static readonly Dictionary<char, string> s_symbolTable = new Dictionary<char, string>
+        private static readonly Dictionary<char, string> s_symbolTable = new Dictionary<char, string>(14)
         {
             ['@'] = "at",
             ['#'] = "hash",

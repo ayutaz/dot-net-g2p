@@ -480,10 +480,34 @@ namespace DotNetG2P.JPCommon
                 sb.Append(XX); sb.Append(sep1); sb.Append(XX); sb.Append(sep2); sb.Append(XX);
                 return;
             }
-            string posStr = word.PosId.HasValue ? word.PosId.Value.ToString("D2") : XX;
-            string ctypeStr = word.CTypeId.HasValue ? word.CTypeId.Value.ToString() : XX;
-            string cformStr = word.CFormId.HasValue ? word.CFormId.Value.ToString() : XX;
-            sb.Append(posStr); sb.Append(sep1); sb.Append(ctypeStr); sb.Append(sep2); sb.Append(cformStr);
+            if (word.PosId.HasValue)
+                AppendD2(ref sb, word.PosId.Value);
+            else
+                sb.Append(XX);
+            sb.Append(sep1);
+            if (word.CTypeId.HasValue)
+                sb.Append(word.CTypeId.Value);
+            else
+                sb.Append(XX);
+            sb.Append(sep2);
+            if (word.CFormId.HasValue)
+                sb.Append(word.CFormId.Value);
+            else
+                sb.Append(XX);
+        }
+
+        /// <summary>0-99の値を2桁ゼロ埋め形式でAppendする。</summary>
+        private static void AppendD2(ref ValueStringBuilder sb, int value)
+        {
+            if (value < 10)
+            {
+                sb.Append('0');
+                sb.Append(value);
+            }
+            else
+            {
+                sb.Append(value);
+            }
         }
 
         /// <summary>E: 前アクセント句情報を出力する。形式: {e1}_{e2}!{e3}_{e4}-{e5}</summary>

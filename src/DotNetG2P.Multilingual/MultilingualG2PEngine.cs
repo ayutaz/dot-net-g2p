@@ -183,6 +183,8 @@ namespace DotNetG2P.Multilingual
             _japaneseEngine.Dispose();
             _englishEngine.Dispose();
             _chineseEngine.Dispose();
+
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>

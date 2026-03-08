@@ -244,7 +244,7 @@ namespace DotNetG2P.TextNormalization
         }
 
         // ----- 濁点結合テーブル（カタカナ・ひらがな） -----
-        private static readonly Dictionary<char, char> s_voicedMap = new Dictionary<char, char>
+        private static readonly Dictionary<char, char> s_voicedMap = new Dictionary<char, char>(52)
         {
             // カタカナ
             { '\u30AB', '\u30AC' },   // カ → ガ
@@ -298,7 +298,7 @@ namespace DotNetG2P.TextNormalization
         };
 
         // ----- 半濁点結合テーブル（カタカナ・ひらがな） -----
-        private static readonly Dictionary<char, char> s_semivoicedMap = new Dictionary<char, char>
+        private static readonly Dictionary<char, char> s_semivoicedMap = new Dictionary<char, char>(10)
         {
             // カタカナ
             { '\u30CF', '\u30D1' },   // ハ → パ

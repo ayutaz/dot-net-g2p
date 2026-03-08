@@ -8,7 +8,7 @@ namespace DotNetG2P.Chinese
     internal static class PinyinToIpa
     {
         // 声母→IPAマッピング
-        private static readonly Dictionary<Initial, string> s_initialIpa = new Dictionary<Initial, string>
+        private static readonly Dictionary<Initial, string> s_initialIpa = new Dictionary<Initial, string>(22)
         {
             [Initial.B] = "p",
             [Initial.P] = "p\u02B0",    // pʰ
@@ -36,7 +36,7 @@ namespace DotNetG2P.Chinese
         };
 
         // 韻母→IPAマッピング
-        private static readonly Dictionary<Final, string> s_finalIpa = new Dictionary<Final, string>
+        private static readonly Dictionary<Final, string> s_finalIpa = new Dictionary<Final, string>(36)
         {
             [Final.A] = "a",
             [Final.O] = "o",

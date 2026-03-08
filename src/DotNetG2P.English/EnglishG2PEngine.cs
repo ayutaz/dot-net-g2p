@@ -96,7 +96,7 @@ namespace DotNetG2P.English
             if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<EnglishPhoneme>();
 
-            var result = new List<EnglishPhoneme>();
+            var result = new List<EnglishPhoneme>(16);
             ProcessPipelineCore(text, phonemes => result.AddRange(phonemes));
             return result;
         }
@@ -276,7 +276,10 @@ namespace DotNetG2P.English
         /// <inheritdoc />
         public void Dispose()
         {
-            Interlocked.CompareExchange(ref _disposed, 1, 0);
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
+            {
+                GC.SuppressFinalize(this);
+            }
         }
 
         /// <summary>
@@ -290,7 +293,7 @@ namespace DotNetG2P.English
             if (string.IsNullOrWhiteSpace(text))
                 return "";
 
-            var parts = new List<string>();
+            var parts = new List<string>(8);
             ProcessPipelineCore(text, phonemes =>
             {
                 var formatted = formatter(phonemes);
@@ -422,7 +425,7 @@ namespace DotNetG2P.English
         /// </summary>
         private static string[] Tokenize(string text)
         {
-            var words = new List<string>();
+            var words = new List<string>(8);
             var start = -1;
 
             for (var i = 0; i <= text.Length; i++)

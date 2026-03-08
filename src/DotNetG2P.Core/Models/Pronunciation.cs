@@ -17,7 +17,7 @@ namespace DotNetG2P.Models
 
         public Pronunciation()
         {
-            Moras = new List<Mora>();
+            Moras = new List<Mora>(4);
             AccentPosition = 0;
         }
 
@@ -188,9 +188,9 @@ namespace DotNetG2P.Models
                 };
             }
 
-            var result = new List<(string text, List<Mora> moras)>();
+            var result = new List<(string text, List<Mora> moras)>(4);
             int segmentStart = 0;
-            var currentMoras = new List<Mora>();
+            var currentMoras = new List<Mora>(8);
             int currentPos = 0;
 
             while (currentPos < s.Length)
@@ -231,7 +231,7 @@ namespace DotNetG2P.Models
                     if (currentMoras.Count > 0)
                     {
                         result.Add((s.Substring(segmentStart, currentPos - segmentStart), currentMoras));
-                        currentMoras = new List<Mora>();
+                        currentMoras = new List<Mora>(8);
                         segmentStart = currentPos;
                     }
 
@@ -278,7 +278,7 @@ namespace DotNetG2P.Models
         /// MoraKind → (子音?, 母音?) のマッピングテーブル。
         /// </summary>
         internal static readonly Dictionary<MoraKind, (Consonant? consonant, Vowel? vowel)> MoraPhonemeMap
-            = new Dictionary<MoraKind, (Consonant?, Vowel?)>
+            = new Dictionary<MoraKind, (Consonant?, Vowel?)>(170)
         {
             // ア行
             { MoraKind.A,    (null, Vowel.A) },
@@ -481,7 +481,7 @@ namespace DotNetG2P.Models
         /// </summary>
         static Pronunciation()
         {
-            var keys = new List<(string katakana, MoraKind kind)>();
+            var keys = new List<(string katakana, MoraKind kind)>(170);
             foreach (MoraKind kind in Enum.GetValues(typeof(MoraKind)))
             {
                 string katakana = kind.ToKatakana();
@@ -492,14 +492,14 @@ namespace DotNetG2P.Models
             _sortedKatakanaKeys = keys;
 
             // 先頭文字でグループ化（各グループ内もキー長降順を維持）
-            _katakanaKeysByFirstChar = new Dictionary<char, List<(string katakana, MoraKind kind)>>();
+            _katakanaKeysByFirstChar = new Dictionary<char, List<(string katakana, MoraKind kind)>>(50);
             foreach (var entry in keys)
             {
                 if (entry.katakana.Length == 0) continue;
                 char firstChar = entry.katakana[0];
                 if (!_katakanaKeysByFirstChar.TryGetValue(firstChar, out var list))
                 {
-                    list = new List<(string katakana, MoraKind kind)>();
+                    list = new List<(string katakana, MoraKind kind)>(4);
                     _katakanaKeysByFirstChar[firstChar] = list;
                 }
                 list.Add(entry);
@@ -513,7 +513,7 @@ namespace DotNetG2P.Models
         /// </summary>
         private static List<Mora> ParseKatakanaToMoras(string katakana)
         {
-            var moras = new List<Mora>();
+            var moras = new List<Mora>(8);
             int pos = 0;
 
             while (pos < katakana.Length)

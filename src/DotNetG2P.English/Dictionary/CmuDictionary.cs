@@ -93,11 +93,14 @@ namespace DotNetG2P.English
 
         /// <summary>
         /// StreamReaderからCMU辞書をパースする。
+        /// 大半の単語は発音1つのため、単一発音は直接配列に格納し、
+        /// 複数発音のみListを使用して中間オーバーヘッドを削減する。
         /// </summary>
         private static CmuDictionary ParseFromReader(StreamReader reader)
         {
-            // 一時的に List で蓄積し、後で配列に変換
-            var tempDict = new Dictionary<string, List<EnglishPronunciation>>(150000, StringComparer.OrdinalIgnoreCase);
+            var entries = new Dictionary<string, EnglishPronunciation[]>(150000, StringComparer.OrdinalIgnoreCase);
+            // 複数発音を持つ単語のみ一時Listで管理
+            var multiEntries = new Dictionary<string, List<EnglishPronunciation>>(4096, StringComparer.OrdinalIgnoreCase);
 
             string? line;
             while ((line = reader.ReadLine()) != null)
@@ -179,19 +182,27 @@ namespace DotNetG2P.English
                 var phonemes = phonemeList.ToArray();
                 var pronunciation = new EnglishPronunciation(phonemes);
 
-                if (tempDict.TryGetValue(baseWord, out var list))
+                // 既にmultiEntriesで管理されている単語
+                if (multiEntries.TryGetValue(baseWord, out var multiList))
                 {
-                    list.Add(pronunciation);
+                    multiList.Add(pronunciation);
                 }
+                // 既にentriesに1つ登録されている場合 → multiEntriesへ昇格
+                else if (entries.TryGetValue(baseWord, out var existing))
+                {
+                    var list = new List<EnglishPronunciation>(4) { existing[0], pronunciation };
+                    multiEntries[baseWord] = list;
+                    entries.Remove(baseWord);
+                }
+                // 新規単語 → 単一発音として直接配列格納
                 else
                 {
-                    tempDict[baseWord] = new List<EnglishPronunciation> { pronunciation };
+                    entries[baseWord] = new[] { pronunciation };
                 }
             }
 
-            // List → 配列に変換
-            var entries = new Dictionary<string, EnglishPronunciation[]>(tempDict.Count, StringComparer.OrdinalIgnoreCase);
-            foreach (var kv in tempDict)
+            // multiEntriesを配列化してentriesに統合
+            foreach (var kv in multiEntries)
             {
                 entries[kv.Key] = kv.Value.ToArray();
             }

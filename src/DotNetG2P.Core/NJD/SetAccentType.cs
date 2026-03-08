@@ -112,9 +112,21 @@ namespace DotNetG2P.NJD
         /// </summary>
         private ChainRules(string ruleStr)
         {
-            var parts = ruleStr.Split('/');
-            foreach (var part in parts)
+            var span = ruleStr.AsSpan();
+            while (span.Length > 0)
             {
+                int slashIdx = span.IndexOf('/');
+                ReadOnlySpan<char> part;
+                if (slashIdx >= 0)
+                {
+                    part = span.Slice(0, slashIdx);
+                    span = span.Slice(slashIdx + 1);
+                }
+                else
+                {
+                    part = span;
+                    span = ReadOnlySpan<char>.Empty;
+                }
                 PushRule(part);
             }
         }
@@ -151,19 +163,19 @@ namespace DotNetG2P.NJD
         /// パターン: (品詞%)?アクセントタイプ(@加算値)?
         /// 例: "C3", "動詞%F1", "形容詞%F2@-1"
         /// </summary>
-        private void PushRule(string rule)
+        private void PushRule(ReadOnlySpan<char> rule)
         {
-            if (string.IsNullOrEmpty(rule))
+            if (rule.IsEmpty)
                 return;
 
             int pos = 0;
 
             // 1. 品詞接頭辞の検出（"動詞%", "名詞%", "形容詞%", "助詞%"）
-            string? posStr = null;
+            ReadOnlySpan<char> posSpan = ReadOnlySpan<char>.Empty;
             int percentIdx = rule.IndexOf('%');
             if (percentIdx > 0)
             {
-                posStr = rule.Substring(0, percentIdx);
+                posSpan = rule.Slice(0, percentIdx);
                 pos = percentIdx + 1;
             }
 
@@ -175,16 +187,15 @@ namespace DotNetG2P.NJD
                 if (first == 'C' || first == 'F' || first == 'P')
                 {
                     // @の位置、またはルール末尾までをアクセントタイプ文字列とする
-                    int atIdx = rule.IndexOf('@', pos);
-                    int end = atIdx >= 0 ? atIdx : rule.Length;
-                    string accentStr = rule.Substring(pos, end - pos);
-                    accentType = ParseAccentType(accentStr);
+                    int atIdx = rule.Slice(pos).IndexOf('@');
+                    int end = atIdx >= 0 ? pos + atIdx : rule.Length;
+                    accentType = ParseAccentType(rule.Slice(pos, end - pos));
                     pos = end;
                 }
             }
 
             // アクセントタイプも品詞も検出できなかった場合は無効
-            if (accentType == AccentRuleType.None && posStr == null)
+            if (accentType == AccentRuleType.None && posSpan.IsEmpty)
                 return;
 
             // 3. 加算値のパース（@の後の数値）
@@ -192,29 +203,22 @@ namespace DotNetG2P.NJD
             if (pos < rule.Length && rule[pos] == '@')
             {
                 pos++;
-                int.TryParse(rule.AsSpan(pos), out addType);
+                int.TryParse(rule.Slice(pos), out addType);
             }
 
             var chainRule = new AccentChainRule(accentType, addType);
 
             // 品詞による振り分け
-            if (posStr != null)
+            if (!posSpan.IsEmpty)
             {
-                switch (posStr)
-                {
-                    case "動詞":
-                        Doushi = chainRule;
-                        break;
-                    case "助詞":
-                        Joshi = chainRule;
-                        break;
-                    case "形容詞":
-                        Keiyoushi = chainRule;
-                        break;
-                    case "名詞":
-                        Meishi = chainRule;
-                        break;
-                }
+                if (posSpan.SequenceEqual("動詞".AsSpan()))
+                    Doushi = chainRule;
+                else if (posSpan.SequenceEqual("助詞".AsSpan()))
+                    Joshi = chainRule;
+                else if (posSpan.SequenceEqual("形容詞".AsSpan()))
+                    Keiyoushi = chainRule;
+                else if (posSpan.SequenceEqual("名詞".AsSpan()))
+                    Meishi = chainRule;
             }
             else
             {
@@ -225,26 +229,48 @@ namespace DotNetG2P.NJD
         /// <summary>
         /// アクセント結合タイプ文字列をenumに変換する。
         /// </summary>
-        private static AccentRuleType ParseAccentType(string s)
+        private static AccentRuleType ParseAccentType(ReadOnlySpan<char> s)
         {
-            switch (s)
+            if (s.Length == 2)
             {
-                case "F1": return AccentRuleType.F1;
-                case "F2": return AccentRuleType.F2;
-                case "F3": return AccentRuleType.F3;
-                case "F4": return AccentRuleType.F4;
-                case "F5": return AccentRuleType.F5;
-                case "C1": return AccentRuleType.C1;
-                case "C2": return AccentRuleType.C2;
-                case "C3": return AccentRuleType.C3;
-                case "C4": return AccentRuleType.C4;
-                case "C5": return AccentRuleType.C5;
-                case "P1": return AccentRuleType.P1;
-                case "P2": return AccentRuleType.P2;
-                case "P6": return AccentRuleType.P6;
-                case "P14": return AccentRuleType.P14;
-                default: return AccentRuleType.None;
+                char c0 = s[0], c1 = s[1];
+                switch (c0)
+                {
+                    case 'F':
+                        switch (c1)
+                        {
+                            case '1': return AccentRuleType.F1;
+                            case '2': return AccentRuleType.F2;
+                            case '3': return AccentRuleType.F3;
+                            case '4': return AccentRuleType.F4;
+                            case '5': return AccentRuleType.F5;
+                        }
+                        break;
+                    case 'C':
+                        switch (c1)
+                        {
+                            case '1': return AccentRuleType.C1;
+                            case '2': return AccentRuleType.C2;
+                            case '3': return AccentRuleType.C3;
+                            case '4': return AccentRuleType.C4;
+                            case '5': return AccentRuleType.C5;
+                        }
+                        break;
+                    case 'P':
+                        switch (c1)
+                        {
+                            case '1': return AccentRuleType.P1;
+                            case '2': return AccentRuleType.P2;
+                            case '6': return AccentRuleType.P6;
+                        }
+                        break;
+                }
             }
+            else if (s.Length == 3 && s[0] == 'P' && s[1] == '1' && s[2] == '4')
+            {
+                return AccentRuleType.P14;
+            }
+            return AccentRuleType.None;
         }
     }
 

@@ -57,7 +57,7 @@ namespace DotNetG2P.English.Normalization
                 ulong abs = number == long.MinValue
                     ? ((ulong)long.MaxValue) + 1
                     : (ulong)(-number);
-                return "negative " + ConvertPositiveUnsigned(abs);
+                return string.Concat("negative ", ConvertPositiveUnsigned(abs));
             }
 
             return ConvertPositiveUnsigned((ulong)number);
@@ -121,7 +121,7 @@ namespace DotNetG2P.English.Normalization
                     var groupText = ConvertBelowThousand(group);
                     if (groupIndex > 0)
                     {
-                        parts[groupIndex] = groupText + " " + ScaleWords[groupIndex];
+                        parts[groupIndex] = string.Concat(groupText, " ", ScaleWords[groupIndex]);
                     }
                     else
                     {
@@ -159,34 +159,34 @@ namespace DotNetG2P.English.Normalization
                 return "";
             }
 
-            string result = "";
+            var sb = new StringBuilder(32);
 
             // 百の位
             if (number >= 100)
             {
-                result = Ones[number / 100] + " hundred";
+                sb.Append(Ones[number / 100]).Append(" hundred");
                 number %= 100;
                 if (number > 0)
                 {
-                    result += " ";
+                    sb.Append(' ');
                 }
             }
 
             // 十の位と一の位
             if (number >= 20)
             {
-                result += Tens[number / 10];
+                sb.Append(Tens[number / 10]);
                 if (number % 10 > 0)
                 {
-                    result += " " + Ones[number % 10];
+                    sb.Append(' ').Append(Ones[number % 10]);
                 }
             }
             else if (number > 0)
             {
-                result += Ones[number];
+                sb.Append(Ones[number]);
             }
 
-            return result;
+            return sb.ToString();
         }
 
         /// <summary>

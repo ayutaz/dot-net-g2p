@@ -48,16 +48,20 @@ namespace DotNetG2P.MeCab.Lattice
             {
                 _endNodes = new List<LatticeNode>[requiredEndNodesLen];
                 for (int i = 0; i < _endNodes.Length; i++)
-                    _endNodes[i] = new List<LatticeNode>();
+                    _endNodes[i] = new List<LatticeNode>(4);
             }
             else
             {
                 for (int i = 0; i < requiredEndNodesLen; i++)
                 {
                     if (_endNodes[i] == null)
-                        _endNodes[i] = new List<LatticeNode>();
+                        _endNodes[i] = new List<LatticeNode>(4);
                     else
+                    {
                         _endNodes[i].Clear();
+                        if (_endNodes[i].Capacity > 1024)
+                            _endNodes[i].TrimExcess();
+                    }
                 }
             }
 

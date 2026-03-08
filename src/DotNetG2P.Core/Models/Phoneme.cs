@@ -117,7 +117,7 @@ namespace DotNetG2P.Models
     {
         // ====== Consonant → 文字列 ======
 
-        private static readonly Dictionary<Consonant, string> ConsonantToSymbol = new Dictionary<Consonant, string>
+        private static readonly Dictionary<Consonant, string> ConsonantToSymbol = new Dictionary<Consonant, string>(35)
         {
             { Consonant.V,    "v" },
             { Consonant.W,    "w" },
@@ -158,11 +158,11 @@ namespace DotNetG2P.Models
 
         // ====== 文字列 → Consonant ======
 
-        private static readonly Dictionary<string, Consonant> SymbolToConsonant = new Dictionary<string, Consonant>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, Consonant> SymbolToConsonant = new Dictionary<string, Consonant>(35, StringComparer.Ordinal);
 
         // ====== Vowel → 文字列 ======
 
-        private static readonly Dictionary<Vowel, string> VowelToSymbol = new Dictionary<Vowel, string>
+        private static readonly Dictionary<Vowel, string> VowelToSymbol = new Dictionary<Vowel, string>(10)
         {
             { Vowel.A, "a" },
             { Vowel.I, "i" },
@@ -178,7 +178,7 @@ namespace DotNetG2P.Models
 
         // ====== 文字列 → Vowel ======
 
-        private static readonly Dictionary<string, Vowel> SymbolToVowel = new Dictionary<string, Vowel>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, Vowel> SymbolToVowel = new Dictionary<string, Vowel>(10, StringComparer.Ordinal);
 
         /// <summary>
         /// 静的コンストラクタ。逆引き辞書を構築する。

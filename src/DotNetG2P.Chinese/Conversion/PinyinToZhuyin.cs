@@ -15,7 +15,7 @@ namespace DotNetG2P.Chinese
         private const char NeutralMark = '\u02D9'; // ˙
 
         // 声母→注音マッピング
-        private static readonly Dictionary<string, string> s_initialMap = new Dictionary<string, string>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, string> s_initialMap = new Dictionary<string, string>(21, StringComparer.Ordinal)
         {
             ["b"] = "\u3105",   // ㄅ
             ["p"] = "\u3106",   // ㄆ
@@ -41,7 +41,7 @@ namespace DotNetG2P.Chinese
         };
 
         // 韻母→注音マッピング
-        private static readonly Dictionary<string, string> s_finalMap = new Dictionary<string, string>(StringComparer.Ordinal)
+        private static readonly Dictionary<string, string> s_finalMap = new Dictionary<string, string>(36, StringComparer.Ordinal)
         {
             // 単韻母
             ["a"] = "\u311A",       // ㄚ

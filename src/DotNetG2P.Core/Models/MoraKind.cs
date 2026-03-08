@@ -385,7 +385,7 @@ namespace DotNetG2P.Models
         /// <summary>
         /// MoraKindからカタカナ文字列への変換テーブル。
         /// </summary>
-        private static readonly Dictionary<MoraKind, string> _toKatakana = new Dictionary<MoraKind, string>
+        private static readonly Dictionary<MoraKind, string> _toKatakana = new Dictionary<MoraKind, string>(170)
         {
             // ア行
             { MoraKind.A, "ア" },
@@ -583,7 +583,7 @@ namespace DotNetG2P.Models
         /// </summary>
         static MoraKindExtensions()
         {
-            _fromKatakana = new Dictionary<string, MoraKind>();
+            _fromKatakana = new Dictionary<string, MoraKind>(170);
             foreach (var pair in _toKatakana)
             {
                 _fromKatakana[pair.Value] = pair.Key;

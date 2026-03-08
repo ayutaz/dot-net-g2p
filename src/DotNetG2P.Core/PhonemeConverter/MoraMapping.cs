@@ -24,7 +24,7 @@ namespace DotNetG2P.PhonemeConverter
         static MoraMapping()
         {
             // jpreprocess の phoneme.rs / mora_dict.rs に完全準拠したマッピングテーブル
-            var list = new List<(string, Consonant?, Vowel?, MoraKind)>
+            var list = new List<(string, Consonant?, Vowel?, MoraKind)>(170)
             {
                 // === 2文字モーラ（拗音・外来音等、最長一致のため先に定義） ===
 
@@ -268,20 +268,20 @@ namespace DotNetG2P.PhonemeConverter
             _mapping = list.ToArray();
 
             // 先頭文字→候補リストの索引テーブルを構築（キー長降順を維持）
-            _firstCharIndex = new Dictionary<char, List<(string, Consonant?, Vowel?, MoraKind)>>();
+            _firstCharIndex = new Dictionary<char, List<(string, Consonant?, Vowel?, MoraKind)>>(50);
             foreach (var entry in _mapping)
             {
                 char firstChar = entry.Katakana[0];
                 if (!_firstCharIndex.TryGetValue(firstChar, out var candidates))
                 {
-                    candidates = new List<(string, Consonant?, Vowel?, MoraKind)>();
+                    candidates = new List<(string, Consonant?, Vowel?, MoraKind)>(4);
                     _firstCharIndex[firstChar] = candidates;
                 }
                 candidates.Add((entry.Katakana, entry.Consonant, entry.Vowel, entry.Kind));
             }
 
             // MoraKind → (Consonant?, Vowel?) テーブルの構築
-            _moraToPhoneme = new Dictionary<MoraKind, (Consonant?, Vowel?)>();
+            _moraToPhoneme = new Dictionary<MoraKind, (Consonant?, Vowel?)>(170);
             foreach (var entry in list)
             {
                 // 同一MoraKindが複数のカタカナ表記を持つことはないが、
@@ -334,7 +334,7 @@ namespace DotNetG2P.PhonemeConverter
             if (katakana.Length == 0)
                 return new List<Mora>();
 
-            var moras = new List<Mora>();
+            var moras = new List<Mora>(8);
             int i = 0;
 
             while (i < katakana.Length)
