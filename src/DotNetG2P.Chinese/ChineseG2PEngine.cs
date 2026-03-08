@@ -128,53 +128,7 @@ namespace DotNetG2P.Chinese
         /// <returns>ピンイン文字列</returns>
         public string ToPinyin(string text, PinyinStyle style)
         {
-            ThrowIfDisposed();
-
-            if (string.IsNullOrWhiteSpace(text))
-                return "";
-
-            // Step 1: ピンイン収集
-            var entries = CollectPinyins(text);
-
-            // Step 2: 声調変調
-            if (_options.EnableToneSandhi)
-                ApplyToneSandhiToEntries(entries);
-
-            // Step 3: スタイル変換+出力
-            var separator = _options.Separator;
-            var sb = new StringBuilder();
-            var needsSeparator = false;
-
-            foreach (var entry in entries)
-            {
-                if (entry.IsSeparator)
-                {
-                    needsSeparator = false;
-                }
-                else if (entry.Pinyin != null)
-                {
-                    if (needsSeparator && sb.Length > 0)
-                        sb.Append(separator);
-                    sb.Append(ApplyStyle(entry.Pinyin, style));
-                    needsSeparator = true;
-                }
-                else if (entry.IsUnknownHanzi)
-                {
-                    // 辞書にない漢字: 区切り付きで出力し、次のピンインの前にも区切りを入れる
-                    if (needsSeparator && sb.Length > 0)
-                        sb.Append(separator);
-                    sb.Append(entry.OriginalChar);
-                    needsSeparator = true;
-                }
-                else if (entry.RawText != null)
-                {
-                    // ASCII英数字等: そのまま出力
-                    sb.Append(entry.RawText);
-                    needsSeparator = false;
-                }
-            }
-
-            return sb.ToString();
+            return RunPipeline(text, p => ApplyStyle(p, style));
         }
 
         /// <summary>
@@ -196,35 +150,7 @@ namespace DotNetG2P.Chinese
         /// <returns>各文字に対応するピンイン文字列の配列</returns>
         public string[] ToPinyinList(string text, PinyinStyle style)
         {
-            ThrowIfDisposed();
-
-            if (string.IsNullOrWhiteSpace(text))
-                return Array.Empty<string>();
-
-            // Step 1: ピンイン収集
-            var entries = CollectPinyins(text);
-
-            // Step 2: 声調変調
-            if (_options.EnableToneSandhi)
-                ApplyToneSandhiToEntries(entries);
-
-            // Step 3: スタイル変換+出力
-            var result = new List<string>(entries.Count);
-
-            foreach (var entry in entries)
-            {
-                if (entry.Pinyin != null)
-                {
-                    result.Add(ApplyStyle(entry.Pinyin, style));
-                }
-                else
-                {
-                    // 非漢字（句読点・スペース・ASCII英数字等）はそのまま文字として出力
-                    result.Add(entry.RawText ?? entry.OriginalChar.ToString());
-                }
-            }
-
-            return result.ToArray();
+            return RunPipelineList(text, p => ApplyStyle(p, style));
         }
 
         /// <summary>
@@ -275,48 +201,7 @@ namespace DotNetG2P.Chinese
         /// <returns>IPA表記文字列</returns>
         public string ToIPA(string text, bool includeTones)
         {
-            ThrowIfDisposed();
-
-            if (string.IsNullOrWhiteSpace(text))
-                return "";
-
-            var entries = CollectPinyins(text);
-
-            if (_options.EnableToneSandhi)
-                ApplyToneSandhiToEntries(entries);
-
-            var separator = _options.Separator;
-            var sb = new StringBuilder();
-            var needsSeparator = false;
-
-            foreach (var entry in entries)
-            {
-                if (entry.IsSeparator)
-                {
-                    needsSeparator = false;
-                }
-                else if (entry.Pinyin != null)
-                {
-                    if (needsSeparator && sb.Length > 0)
-                        sb.Append(separator);
-                    sb.Append(PinyinToIpa.Convert(entry.Pinyin, includeTones));
-                    needsSeparator = true;
-                }
-                else if (entry.IsUnknownHanzi)
-                {
-                    if (needsSeparator && sb.Length > 0)
-                        sb.Append(separator);
-                    sb.Append(entry.OriginalChar);
-                    needsSeparator = true;
-                }
-                else if (entry.RawText != null)
-                {
-                    sb.Append(entry.RawText);
-                    needsSeparator = false;
-                }
-            }
-
-            return sb.ToString();
+            return RunPipeline(text, p => PinyinToIpa.Convert(p, includeTones));
         }
 
         // =====================================================================
@@ -341,48 +226,7 @@ namespace DotNetG2P.Chinese
         /// <returns>注音符号文字列</returns>
         public string ToZhuyin(string text, bool includeTones)
         {
-            ThrowIfDisposed();
-
-            if (string.IsNullOrWhiteSpace(text))
-                return "";
-
-            var entries = CollectPinyins(text);
-
-            if (_options.EnableToneSandhi)
-                ApplyToneSandhiToEntries(entries);
-
-            var separator = _options.Separator;
-            var sb = new StringBuilder();
-            var needsSeparator = false;
-
-            foreach (var entry in entries)
-            {
-                if (entry.IsSeparator)
-                {
-                    needsSeparator = false;
-                }
-                else if (entry.Pinyin != null)
-                {
-                    if (needsSeparator && sb.Length > 0)
-                        sb.Append(separator);
-                    sb.Append(PinyinToZhuyin.Convert(entry.Pinyin, includeTones));
-                    needsSeparator = true;
-                }
-                else if (entry.IsUnknownHanzi)
-                {
-                    if (needsSeparator && sb.Length > 0)
-                        sb.Append(separator);
-                    sb.Append(entry.OriginalChar);
-                    needsSeparator = true;
-                }
-                else if (entry.RawText != null)
-                {
-                    sb.Append(entry.RawText);
-                    needsSeparator = false;
-                }
-            }
-
-            return sb.ToString();
+            return RunPipeline(text, p => PinyinToZhuyin.Convert(p, includeTones));
         }
 
         // =====================================================================
@@ -526,6 +370,102 @@ namespace DotNetG2P.Chinese
         {
             if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
                 GC.SuppressFinalize(this);
+        }
+
+        // =====================================================================
+        // 内部ヘルパー: パイプライン共通処理
+        // =====================================================================
+
+        /// <summary>
+        /// 共通パイプライン: 入力テキストに対してピンイン収集→声調変調→文字列出力を行う。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <param name="converter">各ピンインに適用する変換関数</param>
+        /// <returns>変換結果文字列</returns>
+        private string RunPipeline(string text, Func<string, string> converter)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return "";
+
+            var entries = CollectPinyins(text);
+
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            return FormatOutput(entries, converter);
+        }
+
+        /// <summary>
+        /// 共通パイプライン: 入力テキストに対してピンイン収集→声調変調→配列出力を行う。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <param name="converter">各ピンインに適用する変換関数</param>
+        /// <returns>各文字に対応する変換結果文字列の配列</returns>
+        private string[] RunPipelineList(string text, Func<string, string> converter)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return Array.Empty<string>();
+
+            var entries = CollectPinyins(text);
+
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            var result = new List<string>(entries.Count);
+            foreach (var entry in entries)
+            {
+                if (entry.Pinyin != null)
+                    result.Add(converter(entry.Pinyin));
+                else
+                    result.Add(entry.RawText ?? entry.OriginalChar.ToString());
+            }
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// ピンインエントリリストを文字列に整形する。
+        /// </summary>
+        /// <param name="entries">ピンインエントリリスト</param>
+        /// <param name="converter">各ピンインに適用する変換関数</param>
+        /// <returns>整形された出力文字列</returns>
+        private string FormatOutput(List<PinyinEntry> entries, Func<string, string> converter)
+        {
+            var separator = _options.Separator;
+            var sb = new StringBuilder();
+            var needsSeparator = false;
+
+            foreach (var entry in entries)
+            {
+                if (entry.IsSeparator)
+                {
+                    needsSeparator = false;
+                }
+                else if (entry.Pinyin != null)
+                {
+                    if (needsSeparator && sb.Length > 0)
+                        sb.Append(separator);
+                    sb.Append(converter(entry.Pinyin));
+                    needsSeparator = true;
+                }
+                else if (entry.IsUnknownHanzi)
+                {
+                    if (needsSeparator && sb.Length > 0)
+                        sb.Append(separator);
+                    sb.Append(entry.OriginalChar);
+                    needsSeparator = true;
+                }
+                else if (entry.RawText != null)
+                {
+                    sb.Append(entry.RawText);
+                    needsSeparator = false;
+                }
+            }
+
+            return sb.ToString();
         }
 
         // =====================================================================
