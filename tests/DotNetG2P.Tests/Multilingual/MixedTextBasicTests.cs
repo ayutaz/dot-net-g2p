@@ -71,17 +71,17 @@ namespace DotNetG2P.Tests.Multilingual
         // =================================================================
 
         // ScriptKindはinternalなので、Theoryパラメータではint経由でキャストする
-        // ScriptKind: Japanese=0, English=1, Latin=2, Digit=3, Punctuation=4, Whitespace=5, Other=6
+        // ScriptKind: Japanese=0, CJKIdeograph=1, English=2, Latin=3, Digit=4, Punctuation=5, Whitespace=6, Other=7
 
         [Theory]
         [InlineData('こ', 0)]  // Japanese
-        [InlineData('世', 0)]  // Japanese
+        [InlineData('世', 1)]  // CJKIdeograph
         [InlineData('ア', 0)]  // Japanese
-        [InlineData('G', 1)]   // English
-        [InlineData('d', 1)]   // English
-        [InlineData('5', 3)]   // Digit
-        [InlineData(' ', 5)]   // Whitespace
-        [InlineData('.', 4)]   // Punctuation
+        [InlineData('G', 2)]   // English
+        [InlineData('d', 2)]   // English
+        [InlineData('5', 4)]   // Digit
+        [InlineData(' ', 6)]   // Whitespace
+        [InlineData('.', 5)]   // Punctuation
         public void LanguageDetector_Classify_基本文字分類(char c, int expected)
         {
             Assert.Equal((ScriptKind)expected, LanguageDetector.Classify(c));
@@ -89,8 +89,8 @@ namespace DotNetG2P.Tests.Multilingual
 
         [Theory]
         [InlineData(0, 0)]  // Japanese → Language.Japanese
-        [InlineData(1, 1)]  // English → Language.English
-        [InlineData(2, 1)]  // Latin → Language.English
+        [InlineData(2, 1)]  // English → Language.English
+        [InlineData(3, 1)]  // Latin → Language.English
         public void LanguageDetector_ToLanguage_言語文字種は対応Languageを返す(
             int kindInt, int expectedLangInt)
         {
@@ -100,10 +100,11 @@ namespace DotNetG2P.Tests.Multilingual
         }
 
         [Theory]
-        [InlineData(3)]  // Digit
-        [InlineData(4)]  // Punctuation
-        [InlineData(5)]  // Whitespace
-        [InlineData(6)]  // Other
+        [InlineData(1)]  // CJKIdeograph
+        [InlineData(4)]  // Digit
+        [InlineData(5)]  // Punctuation
+        [InlineData(6)]  // Whitespace
+        [InlineData(7)]  // Other
         public void LanguageDetector_ToLanguage_非言語文字種はnullを返す(int kindInt)
         {
             Assert.Null(LanguageDetector.ToLanguage((ScriptKind)kindInt));
@@ -117,9 +118,9 @@ namespace DotNetG2P.Tests.Multilingual
             // H, e, l, l, o → English
             for (int i = 0; i < 5; i++)
                 Assert.Equal(ScriptKind.English, LanguageDetector.Classify(text[i]));
-            // 世, 界 → Japanese
-            Assert.Equal(ScriptKind.Japanese, LanguageDetector.Classify(text[5]));
-            Assert.Equal(ScriptKind.Japanese, LanguageDetector.Classify(text[6]));
+            // 世, 界 → CJKIdeograph
+            Assert.Equal(ScriptKind.CJKIdeograph, LanguageDetector.Classify(text[5]));
+            Assert.Equal(ScriptKind.CJKIdeograph, LanguageDetector.Classify(text[6]));
         }
 
         // =================================================================

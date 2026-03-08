@@ -28,8 +28,8 @@ namespace DotNetG2P.English.LTS
         /// <summary>stackallocの閾値（パディング付き単語バッファ）</summary>
         private const int StackAllocThreshold = 128;
 
-        /// <summary>結果バッファの初期サイズ（各文字から最大2音素、一般的な英単語は20文字未満）</summary>
-        private const int ResultBufSize = 64;
+        /// <summary>結果バッファのサイズ（英語で128音素を超える語は事実上存在しない）</summary>
+        private const int ResultBufSize = 128;
 
         /// <summary>遅延初期化されたモデルデータ</summary>
         private static volatile byte[]? s_modelData;

@@ -72,7 +72,7 @@ namespace DotNetG2P.NJD
             for (int i = 0; i < nodes.Count; i++)
             {
                 var node = nodes[i];
-                if (node.Surface != "*" && node.Details.PartOfSpeech.IsMeishiSuu)
+                if (node.Surface != "*" && node.PartOfSpeech.IsMeishiSuu)
                 {
                     if (DigitNormalize.TryGetValue(node.Surface, out var replace))
                     {
@@ -674,7 +674,7 @@ namespace DotNetG2P.NJD
                 return score;
 
             var p1 = nodes[start - 1];
-            var p1Pos = p1.Details.PartOfSpeech;
+            var p1Pos = p1.PartOfSpeech;
             var p1String = p1.Surface;
 
             // 接頭詞-数接続 → 数値読み寄り
@@ -693,7 +693,7 @@ namespace DotNetG2P.NJD
             if (start > 1)
             {
                 var p2 = nodes[start - 2];
-                p2IsKazu = p2.Details.PartOfSpeech.IsMeishiSuu;
+                p2IsKazu = p2.PartOfSpeech.IsMeishiSuu;
                 p2IsBangou = p2.Surface == Bangou;
             }
 
@@ -732,7 +732,7 @@ namespace DotNetG2P.NJD
                 return score;
 
             var n1 = nodes[end + 1];
-            var n1Pos = n1.Details.PartOfSpeech;
+            var n1Pos = n1.PartOfSpeech;
             var n1String = n1.Surface;
 
             // 名詞-副詞可能 → 数値読み寄り（例: 「5回」）
@@ -750,7 +750,7 @@ namespace DotNetG2P.NJD
             else if (n1String == Kakko2)
             {
                 // 直後が数字なら順序読み寄り
-                if (end + 2 < nodes.Count && nodes[end + 2].Details.PartOfSpeech.IsMeishiSuu)
+                if (end + 2 < nodes.Count && nodes[end + 2].PartOfSpeech.IsMeishiSuu)
                     score -= 2;
             }
             else if (n1String == Bangou)

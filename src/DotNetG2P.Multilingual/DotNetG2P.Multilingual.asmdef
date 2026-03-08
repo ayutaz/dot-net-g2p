@@ -4,7 +4,8 @@
   "references": [
     "DotNetG2P",
     "DotNetG2P.MeCab",
-    "DotNetG2P.English"
+    "DotNetG2P.English",
+    "DotNetG2P.Chinese"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

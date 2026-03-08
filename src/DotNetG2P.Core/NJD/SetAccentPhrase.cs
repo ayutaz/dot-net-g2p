@@ -37,8 +37,8 @@ namespace DotNetG2P.NJD
         /// </summary>
         private static bool DetermineChainFlag(NjdNode prev, NjdNode curr)
         {
-            var prevPos = prev.Details.PartOfSpeech;
-            var currPos = curr.Details.PartOfSpeech;
+            var prevPos = prev.PartOfSpeech;
+            var currPos = curr.PartOfSpeech;
 
             // --- Rule 18: 接尾辞は前にくっつける ---
             // 形容詞-接尾、動詞-接尾、名詞-接尾 は前のノードに結合

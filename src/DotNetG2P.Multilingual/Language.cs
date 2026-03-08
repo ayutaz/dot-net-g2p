@@ -10,5 +10,8 @@ namespace DotNetG2P.Multilingual
 
         /// <summary>英語</summary>
         English = 1,
+
+        /// <summary>中国語</summary>
+        Chinese = 2,
     }
 }

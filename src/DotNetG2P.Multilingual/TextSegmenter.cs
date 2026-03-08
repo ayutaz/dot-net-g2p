@@ -16,9 +16,18 @@ namespace DotNetG2P.Multilingual
         private const byte LangNone = 0;
         private const byte LangJapanese = 1;  // Language.Japanese
         private const byte LangEnglish = 2;   // Language.English
+        private const byte LangChinese = 3;   // Language.Chinese
+
+        /// <summary>テキストを言語セグメントに分割する（後方互換: CJK漢字はJapanese扱い）。</summary>
+        public static IReadOnlyList<TextSegment> Segment(string text)
+        {
+            return Segment(text, Language.Japanese);
+        }
 
         /// <summary>テキストを言語セグメントに分割する。</summary>
-        public static IReadOnlyList<TextSegment> Segment(string text)
+        /// <param name="text">入力テキスト</param>
+        /// <param name="defaultCjkLanguage">CJK漢字のデフォルト言語（周囲にかな文字がない場合に使用）</param>
+        public static IReadOnlyList<TextSegment> Segment(string text, Language defaultCjkLanguage)
         {
             if (string.IsNullOrEmpty(text))
                 return Array.Empty<TextSegment>();
@@ -51,6 +60,11 @@ namespace DotNetG2P.Multilingual
 
             try
             {
+                // defaultCjkLanguageに対応するbyte値
+                byte defaultCjkByte = defaultCjkLanguage == Language.Chinese ? LangChinese
+                                    : defaultCjkLanguage == Language.English ? LangEnglish
+                                    : LangJapanese;
+
                 // まず、言語確定文字(Japanese/English)を直接割り当て
                 // アポストロフィとハイフンは英語文字間では英語に含める
                 for (int i = 0; i < len; i++)
@@ -63,6 +77,49 @@ namespace DotNetG2P.Multilingual
                     else if (kind == ScriptKind.English || kind == ScriptKind.Latin)
                     {
                         languages[i] = LangEnglish;
+                    }
+                }
+
+                // CJKIdeograph文字の言語割り当て:
+                // 前後にかな文字（Japanese確定）がある → Japanese
+                // 周囲にかな文字がない → defaultCjkLanguage
+                {
+                    // 前方パス: 最寄りのJapanese確定文字（かな由来）を探す
+                    byte lastKana = LangNone;
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (kinds[i] == ScriptKind.Japanese) lastKana = LangJapanese;
+                        if (kinds[i] == ScriptKind.CJKIdeograph)
+                        {
+                            if (lastKana == LangJapanese)
+                                languages[i] = LangJapanese;
+                        }
+                        // 英語等の確定文字でかなチェーンをリセット
+                        if (kinds[i] == ScriptKind.English || kinds[i] == ScriptKind.Latin)
+                            lastKana = LangNone;
+                    }
+
+                    // 後方パス: 後方にかな文字がある場合もJapanese
+                    lastKana = LangNone;
+                    for (int i = len - 1; i >= 0; i--)
+                    {
+                        if (kinds[i] == ScriptKind.Japanese) lastKana = LangJapanese;
+                        if (kinds[i] == ScriptKind.CJKIdeograph && languages[i] == LangNone)
+                        {
+                            if (lastKana == LangJapanese)
+                                languages[i] = LangJapanese;
+                        }
+                        if (kinds[i] == ScriptKind.English || kinds[i] == ScriptKind.Latin)
+                            lastKana = LangNone;
+                    }
+
+                    // 残りのCJKIdeograph（前後にかながない）にデフォルト言語を割り当て
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (kinds[i] == ScriptKind.CJKIdeograph && languages[i] == LangNone)
+                        {
+                            languages[i] = defaultCjkByte;
+                        }
                     }
                 }
 
@@ -272,7 +329,12 @@ namespace DotNetG2P.Multilingual
         /// <summary>byte → Language enum 変換。</summary>
         private static Language FromLangByte(byte b)
         {
-            return b == LangJapanese ? Language.Japanese : Language.English;
+            switch (b)
+            {
+                case LangJapanese: return Language.Japanese;
+                case LangChinese: return Language.Chinese;
+                default: return Language.English;
+            }
         }
     }
 }

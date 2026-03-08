@@ -5,8 +5,11 @@ namespace DotNetG2P.Multilingual
     /// <summary>Unicode文字種分類。</summary>
     internal enum ScriptKind : byte
     {
-        /// <summary>ひらがな・カタカナ・漢字・半角カナ・CJK記号</summary>
+        /// <summary>ひらがな・カタカナ・半角カナ・CJK記号</summary>
         Japanese,
+
+        /// <summary>CJK統合漢字（日中共用）</summary>
+        CJKIdeograph,
 
         /// <summary>ASCII英字 (A-Z, a-z)</summary>
         English,

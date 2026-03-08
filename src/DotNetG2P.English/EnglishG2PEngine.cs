@@ -276,10 +276,7 @@ namespace DotNetG2P.English
         /// <inheritdoc />
         public void Dispose()
         {
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 0)
-            {
-                _dictionary.Clear();
-            }
+            Interlocked.CompareExchange(ref _disposed, 1, 0);
         }
 
         /// <summary>

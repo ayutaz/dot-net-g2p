@@ -78,8 +78,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
 
             _output.WriteLine("");
 
-            // テストは常にパス（結果はコンソール出力で確認）
-            Assert.True(true);
+            // 少なくとも1つ以上の複合語が音素生成に成功することを確認
+            Assert.True(successCount > 0, "ハイフン付き複合語の音素生成が全て失敗");
         }
 
         // =====================================================================
@@ -154,8 +154,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
 
             _output.WriteLine("");
 
-            // テストは常にパス（結果はコンソール出力で確認）
-            Assert.True(true);
+            // 少なくとも1つ以上の接頭辞付き複合語が音素生成に成功することを確認
+            Assert.True(dictHitCount + ltsSuccessCount > 0, "接頭辞付き複合語の音素生成が全て失敗");
         }
 
         // =====================================================================
@@ -240,8 +240,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
 
             _output.WriteLine("");
 
-            // テストは常にパス（結果はコンソール出力で確認）
-            Assert.True(true);
+            // 少なくとも1つ以上の活用形が音素生成に成功することを確認
+            Assert.True(dictHitCount + ltsSuccessCount > 0, "活用形・派生語の音素生成が全て失敗");
         }
     }
 }

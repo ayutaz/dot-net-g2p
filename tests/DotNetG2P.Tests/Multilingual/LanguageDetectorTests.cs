@@ -5,14 +5,14 @@ namespace DotNetG2P.Tests.Multilingual
     public class LanguageDetectorTests
     {
         // ScriptKindはinternalなので、Theoryパラメータではint経由でキャストする
-        // ScriptKind: Japanese=0, English=1, Latin=2, Digit=3, Punctuation=4, Whitespace=5, Other=6
+        // ScriptKind: Japanese=0, CJKIdeograph=1, English=2, Latin=3, Digit=4, Punctuation=5, Whitespace=6, Other=7
 
         // ===== Classify: 日本語文字種 =====
 
         [Theory]
         [InlineData('あ', 0)]  // ひらがな → Japanese
         [InlineData('ア', 0)]  // カタカナ → Japanese
-        [InlineData('漢', 0)]  // CJK統合漢字 → Japanese
+        [InlineData('漢', 1)]  // CJK統合漢字 → CJKIdeograph
         [InlineData('ｱ', 0)]   // 半角カナ (U+FF71) → Japanese
         [InlineData('。', 0)]   // CJK記号・句読点 (U+3002) → Japanese
         [InlineData('ー', 0)]   // 長音記号 (U+30FC、カタカナ範囲) → Japanese
@@ -25,9 +25,9 @@ namespace DotNetG2P.Tests.Multilingual
         // ===== Classify: 英字 =====
 
         [Theory]
-        [InlineData('A', 1)]  // ASCII英大文字 → English
-        [InlineData('z', 1)]  // ASCII英小文字 → English
-        [InlineData('\uFF21', 1)]  // 全角英字 'Ａ' (U+FF21) → English
+        [InlineData('A', 2)]  // ASCII英大文字 → English
+        [InlineData('z', 2)]  // ASCII英小文字 → English
+        [InlineData('\uFF21', 2)]  // 全角英字 'Ａ' (U+FF21) → English
         public void Classify_英字_Englishを返す(char c, int expected)
         {
             Assert.Equal((ScriptKind)expected, LanguageDetector.Classify(c));
@@ -52,9 +52,9 @@ namespace DotNetG2P.Tests.Multilingual
         // ===== Classify: 空白文字 =====
 
         [Theory]
-        [InlineData(' ', 5)]   // ASCII空白 → Whitespace
-        [InlineData('\t', 5)]  // タブ → Whitespace
-        [InlineData('\n', 5)]  // 改行 → Whitespace
+        [InlineData(' ', 6)]   // ASCII空白 → Whitespace
+        [InlineData('\t', 6)]  // タブ → Whitespace
+        [InlineData('\n', 6)]  // 改行 → Whitespace
         public void Classify_空白文字_Whitespaceを返す(char c, int expected)
         {
             Assert.Equal((ScriptKind)expected, LanguageDetector.Classify(c));
@@ -63,8 +63,8 @@ namespace DotNetG2P.Tests.Multilingual
         // ===== Classify: ASCII句読点 =====
 
         [Theory]
-        [InlineData('!', 4)]  // Punctuation
-        [InlineData(',', 4)]  // Punctuation
+        [InlineData('!', 5)]  // Punctuation
+        [InlineData(',', 5)]  // Punctuation
         public void Classify_ASCII句読点_Punctuationを返す(char c, int expected)
         {
             Assert.Equal((ScriptKind)expected, LanguageDetector.Classify(c));
@@ -82,10 +82,10 @@ namespace DotNetG2P.Tests.Multilingual
         // ===== Classify: CJK拡張A漢字 =====
 
         [Fact]
-        public void Classify_CJK拡張A漢字_Japaneseを返す()
+        public void Classify_CJK拡張A漢字_CJKIdeographを返す()
         {
             // U+3400 はCJK拡張Aの先頭
-            Assert.Equal(ScriptKind.Japanese, LanguageDetector.Classify('\u3400'));
+            Assert.Equal(ScriptKind.CJKIdeograph, LanguageDetector.Classify('\u3400'));
         }
 
         // ===== Classify: Unicode境界テスト =====
@@ -94,7 +94,7 @@ namespace DotNetG2P.Tests.Multilingual
         [InlineData('\u3040', 0)]  // ひらがな開始 → Japanese
         [InlineData('\u309F', 0)]  // ひらがな終了 → Japanese
         [InlineData('\u30A0', 0)]  // カタカナ開始 → Japanese
-        [InlineData('\u9FFF', 0)]  // CJK統合漢字終了 → Japanese
+        [InlineData('\u9FFF', 1)]  // CJK統合漢字終了 → CJKIdeograph
         public void Classify_Unicode境界値_正しいScriptKindを返す(char c, int expected)
         {
             Assert.Equal((ScriptKind)expected, LanguageDetector.Classify(c));
@@ -147,11 +147,11 @@ namespace DotNetG2P.Tests.Multilingual
         // ===== Classify: 全角記号はPunctuation =====
 
         [Theory]
-        [InlineData('\uFF01', 4)]  // 全角感嘆符 '！' → Punctuation
-        [InlineData('\uFF1F', 4)]  // 全角疑問符 '？' → Punctuation
-        [InlineData('\uFF0C', 4)]  // 全角コンマ '，' → Punctuation
-        [InlineData('\uFF3B', 4)]  // 全角左角括弧 '［' → Punctuation
-        [InlineData('\uFF5E', 4)]  // 全角チルダ '～' → Punctuation
+        [InlineData('\uFF01', 5)]  // 全角感嘆符 '！' → Punctuation
+        [InlineData('\uFF1F', 5)]  // 全角疑問符 '？' → Punctuation
+        [InlineData('\uFF0C', 5)]  // 全角コンマ '，' → Punctuation
+        [InlineData('\uFF3B', 5)]  // 全角左角括弧 '［' → Punctuation
+        [InlineData('\uFF5E', 5)]  // 全角チルダ '～' → Punctuation
         public void Classify_全角記号_Punctuationを返す(char c, int expected)
         {
             Assert.Equal((ScriptKind)expected, LanguageDetector.Classify(c));

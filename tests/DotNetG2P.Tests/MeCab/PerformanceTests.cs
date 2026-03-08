@@ -52,7 +52,7 @@ namespace DotNetG2P.Tests.MeCab
             sw.Stop();
 
             _output.WriteLine($"短文100回: {sw.ElapsedMilliseconds}ms (平均: {sw.ElapsedMilliseconds / 100.0:F2}ms)");
-            Assert.True(sw.ElapsedMilliseconds < 2500, $"短文100回が2.5秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 1000, $"短文100回が1秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [SkippableFact]
@@ -69,7 +69,7 @@ namespace DotNetG2P.Tests.MeCab
             sw.Stop();
 
             _output.WriteLine($"標準文100回: {sw.ElapsedMilliseconds}ms (平均: {sw.ElapsedMilliseconds / 100.0:F2}ms)");
-            Assert.True(sw.ElapsedMilliseconds < 5000, $"標準文100回が5秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 2000, $"標準文100回が2秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [SkippableFact]

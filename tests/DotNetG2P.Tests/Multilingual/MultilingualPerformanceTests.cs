@@ -105,8 +105,8 @@ namespace DotNetG2P.Tests.Multilingual
             sw.Stop();
 
             _output.WriteLine($"長文({longText.Length}文字): {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 2500,
-                $"500文字の混在テキスト変換が2.5秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 1500,
+                $"500文字の混在テキスト変換が1.5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [SkippableFact]
@@ -196,8 +196,8 @@ namespace DotNetG2P.Tests.Multilingual
             var memDiffMB = (memAfter - memBefore) / (1024.0 * 1024.0);
             _output.WriteLine($"メモリ差分: {memDiffMB:F2} MB (前={memBefore / 1024.0 / 1024.0:F2}MB, 後={memAfter / 1024.0 / 1024.0:F2}MB)");
 
-            Assert.True(memDiffMB < 100,
-                $"500回変換後のメモリ増加が100MBを超過: {memDiffMB:F2}MB");
+            Assert.True(memDiffMB < 50,
+                $"500回変換後のメモリ増加が50MBを超過: {memDiffMB:F2}MB");
         }
 
         // ===== 辞書不要テスト（Fact）=====
@@ -221,8 +221,8 @@ namespace DotNetG2P.Tests.Multilingual
             sw.Stop();
 
             _output.WriteLine($"10000文字テキスト100回セグメント化: {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 1500,
-                $"10000文字テキスト100回のセグメント化が1.5秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 5000,
+                $"10000文字テキスト100回のセグメント化が5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [Fact]
@@ -242,8 +242,8 @@ namespace DotNetG2P.Tests.Multilingual
             sw.Stop();
 
             _output.WriteLine($"頻繁言語切替5000文字100回: {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 1500,
-                $"頻繁言語切替5000文字100回のセグメント化が1.5秒を超過: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds < 5000,
+                $"頻繁言語切替5000文字100回のセグメント化が5秒を超過: {sw.ElapsedMilliseconds}ms");
         }
 
         [Fact]

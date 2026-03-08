@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\DotNetG2P.Chinese\DotNetG2P.Chinese.csproj" />
     <ProjectReference Include="..\..\src\DotNetG2P.Core\DotNetG2P.Core.csproj" />
     <ProjectReference Include="..\..\src\DotNetG2P.English\DotNetG2P.English.csproj" />
     <ProjectReference Include="..\..\src\DotNetG2P.MeCab\DotNetG2P.MeCab.csproj" />

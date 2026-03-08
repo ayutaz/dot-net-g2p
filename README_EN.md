@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-A multilingual Japanese-English G2P (Grapheme-to-Phoneme) library for C#/.NET.
-Natively reimplements the OpenJTalk-compatible Japanese G2P pipeline and CMU dictionary-based English G2P in C#, converting mixed Japanese-English text to phoneme sequences without any dependency on Python or native binaries.
+A multilingual Japanese-English-Chinese G2P (Grapheme-to-Phoneme) library for C#/.NET.
+Natively reimplements the OpenJTalk-compatible Japanese G2P pipeline, CMU dictionary-based English G2P, and pinyin-data dictionary-based Chinese pinyin conversion in C#, converting multilingual text to phoneme sequences without any dependency on Python or native binaries.
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
@@ -18,6 +18,10 @@ engine.ToKana("音声合成");        // => "オンセーゴーセー"
 // English G2P
 using var enEngine = new EnglishG2PEngine();
 enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
+
+// Chinese G2P (Pinyin conversion)
+using var zhEngine = new ChineseG2PEngine();
+zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 
 // Mixed Japanese-English text
 using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
@@ -45,7 +49,8 @@ multiEngine.ToPhonemes("私はhelloと言った");  // Japanese => Japanese phon
 - **Unity support** — Targets .NET Standard 2.1 (Unity 2021.2+) with UPM packages available
 - **Extensible design** — Swap out the morphological analysis engine via the `ITokenizer` interface
 - **English G2P support** — CMU dictionary (135,000 words) + Flite LTS rules for OOV estimation, IPA/X-SAMPA output, text normalization, and heteronym resolution
-- **Mixed Japanese-English text support** — Automatic language detection and segment splitting based on Unicode character categories for seamless processing of mixed-language text
+- **Chinese G2P support** — pinyin-data character dictionary (44,000 entries) + phrase-pinyin-data phrase dictionary (411,000 entries) for automatic polyphone resolution, tone sandhi (third tone, 一/不 rules), 3 output styles, IPA (International Phonetic Alphabet) and Zhuyin (Bopomofo) output
+- **Mixed Japanese-English-Chinese text support** — Automatic language detection and segment splitting based on Unicode character categories for seamless processing of mixed-language text
 
 ## Installation
 
@@ -59,7 +64,10 @@ dotnet add package DotNetG2P.MeCab
 # English G2P
 dotnet add package DotNetG2P.English
 
-# Mixed Japanese-English text support
+# Chinese G2P (Pinyin conversion)
+dotnet add package DotNetG2P.Chinese
+
+# Mixed Japanese-English-Chinese text support
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -70,7 +78,8 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P` | Apache-2.0 | Core library (G2P engine, NJD processing, phoneme conversion) |
 | `DotNetG2P.MeCab` | Apache-2.0 | Built-in MeCab engine (no external dependencies) |
 | `DotNetG2P.English` | Apache-2.0 | English G2P engine (CMU dictionary + LTS rules) |
-| `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English text support) |
+| `DotNetG2P.Chinese` | Apache-2.0 | Chinese G2P engine (pinyin-data dictionary + tone sandhi) |
+| `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese text support) |
 
 ### Unity (UPM)
 
@@ -80,6 +89,7 @@ Add the following URLs via Unity Package Manager's **Add package from git URL**:
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -118,6 +128,35 @@ var features = engine.ToProsodyFeatures("こんにちは");
 // features.Phonemes: ["sil","k","o","N","n","i","ch","i","w","a","sil"]
 // features.A1, A2, A3: accent position info for each phoneme
 
+// === Chinese G2P (Pinyin Conversion) ===
+using DotNetG2P.Chinese;
+
+using var zhEngine = new ChineseG2PEngine();
+
+// Basic conversion (with tone marks)
+string pinyin = zhEngine.ToPinyin("你好世界");
+// => "ní hǎo shì jiè"
+
+// Tone number format
+string toneNum = zhEngine.ToPinyin("你好世界", PinyinStyle.ToneNumber);
+// => "ni2 hao3 shi4 jie4"
+
+// Per-character pinyin array
+string[] list = zhEngine.ToPinyinList("中国");
+// => ["zhōng", "guó"]
+
+// Automatic polyphone resolution
+string bank = zhEngine.ToPinyin("银行");  // => "yín háng" (háng = bank)
+string act = zhEngine.ToPinyin("行为");   // => "xíng wéi" (xíng = behavior)
+
+// IPA (International Phonetic Alphabet) output
+string ipa = zhEngine.ToIPA("你好");
+// => IPA transcription
+
+// Zhuyin (Bopomofo) output
+string zhuyin = zhEngine.ToZhuyin("你好");
+// => Zhuyin transcription
+
 // === English G2P ===
 using DotNetG2P.English;
 
@@ -125,7 +164,7 @@ using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
 
-// === Mixed Japanese-English Text ===
+// === Mixed Japanese-English-Chinese Text ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
@@ -134,6 +173,12 @@ string mixed = multiEngine.ToPhonemes("今日はgood dayです");
 
 var segments = multiEngine.ToSegments("今日はgood dayです");
 // List of segments with language tags
+
+// For text containing Chinese
+var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
+using var multiZhEngine = new MultilingualG2PEngine("/path/to/naist-jdic", zhOptions);
+multiZhEngine.ToPhonemes("你好hello");
+// Chinese segments => Pinyin, English segments => ARPAbet phonemes
 ```
 
 ## API Reference
@@ -161,15 +206,46 @@ var segments = multiEngine.ToSegments("今日はgood dayです");
 |--------|-------------|-------------|
 | `ToPhonemes(text)` | `string` | ARPAbet phoneme sequence (`"HH AH0 L OW1"`) |
 | `ToIPA(text)` | `string` | IPA transcription |
+| `ToIPAWithoutStress(text)` | `string` | IPA transcription without stress marks |
+| `ToXSampa(text)` | `string` | X-SAMPA transcription |
+| `ToXSampaWithoutStress(text)` | `string` | X-SAMPA transcription without stress marks |
 | `ToPhonemeList(text)` | `IReadOnlyList<EnglishPhoneme>` | Structured phoneme list |
 | `LookupWord(word)` | `IReadOnlyList<EnglishPhoneme>` | Single-word lookup |
+| `LookupAllPronunciations(word)` | `IReadOnlyList<EnglishPronunciation>` | Get all pronunciation variants |
 | `ContainsWord(word)` | `bool` | Dictionary existence check |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch ARPAbet conversion |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | Batch IPA conversion |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | Batch X-SAMPA conversion |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<EnglishPhoneme>>` | Batch structured phoneme list conversion |
+
+### ChineseG2PEngine
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ToPinyin(text)` | `string` | Tone-marked pinyin string (`"nǐ hǎo"`) |
+| `ToPinyin(text, style)` | `string` | Pinyin string with specified style |
+| `ToPinyinList(text)` | `string[]` | Per-character pinyin array |
+| `ToPinyinList(text, style)` | `string[]` | Per-character pinyin array with specified style |
+| `ContainsChar(c)` | `bool` | Dictionary existence check |
+| `LookupChar(c)` | `string[]` | Get all pinyin candidates |
+| `ToIPA(text)` | `string` | IPA (International Phonetic Alphabet) transcription |
+| `ToIPA(text, includeTones)` | `string` | IPA transcription with tone control |
+| `ToZhuyin(text)` | `string` | Zhuyin (Bopomofo) transcription |
+| `ToZhuyin(text, includeTones)` | `string` | Zhuyin transcription with tone control |
+| `ToPinyinBatch(texts)` | `string[]` | Batch pinyin conversion |
+| `ToPinyinBatch(texts, style)` | `string[]` | Batch pinyin conversion (with style) |
+| `ToPinyinListBatch(texts)` | `string[][]` | Batch per-character pinyin conversion |
+| `ToPinyinListBatch(texts, style)` | `string[][]` | Batch per-character pinyin conversion (with style) |
+| `ToIPABatch(texts)` | `string[]` | Batch IPA conversion |
+| `ToIPABatch(texts, includeTones)` | `string[]` | Batch IPA conversion (tone control) |
+| `ToZhuyinBatch(texts)` | `string[]` | Batch Zhuyin conversion |
+| `ToZhuyinBatch(texts, includeTones)` | `string[]` | Batch Zhuyin conversion (tone control) |
 
 ### MultilingualG2PEngine
 
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `ToPhonemes(text)` | `string` | Mixed Japanese-English phoneme sequence |
+| `ToPhonemes(text)` | `string` | Mixed Japanese-English-Chinese phoneme sequence |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | Language-tagged segments |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | Batch segment conversion |
@@ -288,7 +364,8 @@ so creating multiple instances incurs minimal memory overhead.
 | **DotNetG2P** | [Apache-2.0](LICENSE) | Core library |
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | Built-in MeCab engine |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | English G2P engine |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine |
+| **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | Chinese G2P engine |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine (Japanese-English-Chinese) |
 
 All components are available under the **Apache-2.0 License**.
 For third-party component licenses, see the [NOTICE](NOTICE) file.

@@ -1,0 +1,14 @@
+{
+  "name": "DotNetG2P.Chinese",
+  "rootNamespace": "DotNetG2P.Chinese",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}
