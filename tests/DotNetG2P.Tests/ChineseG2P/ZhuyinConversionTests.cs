@@ -243,6 +243,18 @@ namespace DotNetG2P.Tests.ChineseG2P
             Assert.Equal(expected, PinyinToZhuyin.Convert(pinyin));
         }
 
+        // ===== R1修正: weng韻母テスト =====
+
+        [Theory]
+        [InlineData("wēng", "ㄨㄥ")]        // weng 1声 → ㄨㄥ（一声省略）
+        [InlineData("wéng", "ㄨㄥˊ")]       // weng 2声 → ㄨㄥˊ
+        [InlineData("wěng", "ㄨㄥˇ")]       // weng 3声 → ㄨㄥˇ
+        [InlineData("wèng", "ㄨㄥˋ")]       // weng 4声 → ㄨㄥˋ
+        public void Convert_R1_WengFinal_AllTones(string pinyin, string expected)
+        {
+            Assert.Equal(expected, PinyinToZhuyin.Convert(pinyin));
+        }
+
         // ===== エッジケーステスト =====
 
         [Fact]

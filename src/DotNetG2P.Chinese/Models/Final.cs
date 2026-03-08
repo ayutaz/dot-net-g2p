@@ -23,7 +23,7 @@ namespace DotNetG2P.Chinese
         /// <summary>ei [eɪ] 開口呼複韻母</summary>
         Ei,
 
-        /// <summary>ao [ɑʊ] 開口呼複韻母</summary>
+        /// <summary>ao [aʊ] 開口呼複韻母</summary>
         Ao,
 
         /// <summary>ou [oʊ] 開口呼複韻母</summary>
@@ -35,7 +35,7 @@ namespace DotNetG2P.Chinese
         /// <summary>en [ən] 開口呼鼻韻母</summary>
         En,
 
-        /// <summary>ang [ɑŋ] 開口呼鼻韻母</summary>
+        /// <summary>ang [aŋ] 開口呼鼻韻母</summary>
         Ang,
 
         /// <summary>eng [əŋ] 開口呼鼻韻母</summary>
@@ -55,7 +55,7 @@ namespace DotNetG2P.Chinese
         /// <summary>ie [iɛ] 齊齒呼複韻母</summary>
         Ie,
 
-        /// <summary>iao [iɑʊ] 齊齒呼複韻母</summary>
+        /// <summary>iao [iaʊ] 齊齒呼複韻母</summary>
         Iao,
 
         /// <summary>iu (iou) [ioʊ] 齊齒呼複韻母</summary>
@@ -67,7 +67,7 @@ namespace DotNetG2P.Chinese
         /// <summary>in [in] 齊齒呼鼻韻母</summary>
         In,
 
-        /// <summary>iang [iɑŋ] 齊齒呼鼻韻母</summary>
+        /// <summary>iang [iaŋ] 齊齒呼鼻韻母</summary>
         Iang,
 
         /// <summary>ing [iŋ] 齊齒呼鼻韻母</summary>
@@ -99,7 +99,7 @@ namespace DotNetG2P.Chinese
         /// <summary>un (uen) [uən] 合口呼鼻韻母</summary>
         Un,
 
-        /// <summary>uang [uɑŋ] 合口呼鼻韻母</summary>
+        /// <summary>uang [uaŋ] 合口呼鼻韻母</summary>
         Uang,
 
         /// <summary>ueng [uəŋ] 合口呼鼻韻母</summary>
@@ -121,7 +121,7 @@ namespace DotNetG2P.Chinese
 
         // ── 特殊韻母 ──
 
-        /// <summary>er [ɑɻ] 児化韻（特殊韻母）</summary>
+        /// <summary>er [əɻ] 児化韻（特殊韻母）</summary>
         Er,
     }
 }

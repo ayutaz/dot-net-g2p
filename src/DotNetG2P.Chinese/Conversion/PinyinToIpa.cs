@@ -24,8 +24,8 @@ namespace DotNetG2P.Chinese
             [Initial.J] = "t\u0255",    // tɕ
             [Initial.Q] = "t\u0255\u02B0", // tɕʰ
             [Initial.X] = "\u0255",      // ɕ
-            [Initial.Zh] = "t\u0282",    // tʂ
-            [Initial.Ch] = "t\u0282\u02B0", // tʂʰ
+            [Initial.Zh] = "\u0288\u0282",    // ʈʂ
+            [Initial.Ch] = "\u0288\u0282\u02B0", // ʈʂʰ
             [Initial.Sh] = "\u0282",     // ʂ
             [Initial.R] = "\u027B",      // ɻ
             [Initial.Z] = "ts",
@@ -59,7 +59,7 @@ namespace DotNetG2P.Chinese
             [Final.In] = "in",
             [Final.Iang] = "ia\u014B",  // iaŋ
             [Final.Ing] = "i\u014B",    // iŋ
-            [Final.Iong] = "y\u014B",   // yŋ
+            [Final.Iong] = "i\u028A\u014B",   // iʊŋ
             [Final.U] = "u",
             [Final.Ua] = "ua",
             [Final.Uo] = "uo",
@@ -86,8 +86,11 @@ namespace DotNetG2P.Chinese
             "\u02E5\u02E9",                           // Fourth (4) - ˥˩
         };
 
-        // zhi/chi/shi/ri/zi/ci/si の i は特殊母音 ɨ
-        private static readonly string s_apicalVowel = "\u0268"; // ɨ
+        // zh/ch/sh/r + i のそり舌母音 ɻ̩
+        private static readonly string s_retroflexApical = "\u027B\u0329"; // ɻ̩
+
+        // z/c/s + i の歯茎母音 ɹ̩
+        private static readonly string s_alveolarApical = "\u0279\u0329"; // ɹ̩
 
         /// <summary>
         /// 声調記号付きピンインをIPA表記に変換する（声調マーカー付き）。
@@ -152,11 +155,15 @@ namespace DotNetG2P.Chinese
             // 韻母のIPA
             if (syllable.Final != Final.None)
             {
-                // zhi/chi/shi/ri の i は特殊母音 ɨ
-                // zi/ci/si の i も特殊母音 ɨ
-                if (syllable.Final == Final.I && IsRetroflexOrAlveolar(syllable.Initial))
+                // zhi/chi/shi/ri の i はそり舌母音 ɻ̩
+                if (syllable.Final == Final.I && IsRetroflex(syllable.Initial))
                 {
-                    sb.Append(s_apicalVowel);
+                    sb.Append(s_retroflexApical);
+                }
+                // zi/ci/si の i は歯茎母音 ɹ̩
+                else if (syllable.Final == Final.I && IsAlveolar(syllable.Initial))
+                {
+                    sb.Append(s_alveolarApical);
                 }
                 else
                 {
@@ -173,14 +180,19 @@ namespace DotNetG2P.Chinese
             return sb.ToString();
         }
 
-        /// <summary>zh/ch/sh/r/z/c/s の声母かどうか（i韻母が特殊母音になる声母群）。</summary>
-        private static bool IsRetroflexOrAlveolar(Initial initial)
+        /// <summary>zh/ch/sh/r のそり舌声母かどうか。</summary>
+        private static bool IsRetroflex(Initial initial)
         {
             return initial == Initial.Zh
                 || initial == Initial.Ch
                 || initial == Initial.Sh
-                || initial == Initial.R
-                || initial == Initial.Z
+                || initial == Initial.R;
+        }
+
+        /// <summary>z/c/s の歯茎声母かどうか。</summary>
+        private static bool IsAlveolar(Initial initial)
+        {
+            return initial == Initial.Z
                 || initial == Initial.C
                 || initial == Initial.S;
         }
