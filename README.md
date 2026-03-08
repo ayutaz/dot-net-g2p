@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-C#/.NET向け日英中多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換をC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに多言語テキストを音素列に変換します。
+C#/.NET向け日英中多言語 + スペイン語対応 G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、ルールベースのスペイン語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに音素列へ変換します。
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
@@ -22,6 +22,10 @@ enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
 // 中国語G2P（ピンイン変換）
 using var zhEngine = new ChineseG2PEngine();
 zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
+
+// スペイン語G2P
+using var esEngine = new SpanishG2PEngine();
+esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
 // 日英混在テキスト
 using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
@@ -50,7 +54,9 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - **拡張可能な設計** — `ITokenizer`インターフェースにより形態素解析エンジンを差し替え可能
 - **英語G2P対応** — CMU辞書（135,000語）+ Flite LTSルールによるOOV推定、IPA/X-SAMPA出力、テキスト正規化、同綴異音語解決
 - **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力
+- **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書を実装
 - **日英中混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割により、日英中が混在するテキストをシームレスに処理
+- **注記** — `DotNetG2P.Multilingual` は現時点では日英中対応です。スペイン語の Multilingual 統合は未実装です
 
 ## インストール
 
@@ -67,6 +73,9 @@ dotnet add package DotNetG2P.English
 # 中国語G2P（ピンイン変換）
 dotnet add package DotNetG2P.Chinese
 
+# スペイン語G2P
+dotnet add package DotNetG2P.Spanish
+
 # 日英中混在テキスト対応
 dotnet add package DotNetG2P.Multilingual
 ```
@@ -79,6 +88,7 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.MeCab` | Apache-2.0 | 独自MeCabエンジン（外部依存なし） |
 | `DotNetG2P.English` | Apache-2.0 | 英語G2Pエンジン（CMU辞書 + LTSルール） |
 | `DotNetG2P.Chinese` | Apache-2.0 | 中国語G2Pエンジン（pinyin-data辞書 + 声調変調） |
+| `DotNetG2P.Spanish` | Apache-2.0 | スペイン語G2Pエンジン（ルールベース + 異音処理オプション） |
 | `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中混在テキスト対応） |
 
 ### Unity (UPM)
@@ -90,6 +100,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -163,6 +174,17 @@ using DotNetG2P.English;
 using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
+
+// === スペイン語G2P ===
+using DotNetG2P.Spanish;
+
+using var esEngine = new SpanishG2PEngine();
+string esIpa = esEngine.ToIPA("guion");
+// => "ɡiˈon"
+
+using var esAlloEngine = new SpanishG2PEngine(new SpanishG2POptions(enableAllophones: true));
+string esAllo = esAlloEngine.ToIPA("uva");
+// => "ˈuβa"
 
 // === 日英中混在テキスト ===
 using DotNetG2P.Multilingual;
@@ -240,6 +262,17 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToIPABatch(texts, includeTones)` | `string[]` | バッチIPA変換（声調制御） |
 | `ToZhuyinBatch(texts)` | `string[]` | バッチ注音変換 |
 | `ToZhuyinBatch(texts, includeTones)` | `string[]` | バッチ注音変換（声調制御） |
+
+### SpanishG2PEngine
+
+| メソッド | 戻り値型 | 説明 |
+|---------|---------|------|
+| `ToPhonemes(text)` | `string` | スペース区切りIPA音素列 (`"ˈb e ɾ ˈɡ w e n s a"` のような形式) |
+| `ToIPA(text)` | `string` | IPA表記 |
+| `ToPhonemeList(text)` | `IReadOnlyList<SpanishPhoneme>` | 構造化音素リスト |
+| `ToSyllables(word)` | `IReadOnlyList<SpanishSyllable>` | 音節分割結果 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
 
 ### MultilingualG2PEngine
 
@@ -365,6 +398,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 独自MeCabエンジン |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | 英語G2Pエンジン |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | 中国語G2Pエンジン |
+| **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | スペイン語G2Pエンジン |
 | **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中対応） |
 
 全コンポーネントが**Apache-2.0ライセンス**で利用可能です。

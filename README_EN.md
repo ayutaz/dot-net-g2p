@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-A multilingual Japanese-English-Chinese G2P (Grapheme-to-Phoneme) library for C#/.NET.
-Natively reimplements the OpenJTalk-compatible Japanese G2P pipeline, CMU dictionary-based English G2P, and pinyin-data dictionary-based Chinese pinyin conversion in C#, converting multilingual text to phoneme sequences without any dependency on Python or native binaries.
+A Japanese-English-Chinese multilingual + Spanish G2P (Grapheme-to-Phoneme) library for C#/.NET.
+It natively reimplements the OpenJTalk-compatible Japanese G2P pipeline, CMU dictionary-based English G2P, pinyin-data dictionary-based Chinese pinyin conversion, and rule-based Spanish G2P in C#, without depending on Python or native binaries.
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
@@ -22,6 +22,10 @@ enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
 // Chinese G2P (Pinyin conversion)
 using var zhEngine = new ChineseG2PEngine();
 zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
+
+// Spanish G2P
+using var esEngine = new SpanishG2PEngine();
+esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
 // Mixed Japanese-English text
 using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
@@ -50,7 +54,9 @@ multiEngine.ToPhonemes("私はhelloと言った");  // Japanese => Japanese phon
 - **Extensible design** — Swap out the morphological analysis engine via the `ITokenizer` interface
 - **English G2P support** — CMU dictionary (135,000 words) + Flite LTS rules for OOV estimation, IPA/X-SAMPA output, text normalization, and heteronym resolution
 - **Chinese G2P support** — pinyin-data character dictionary (44,000 entries) + phrase-pinyin-data phrase dictionary (411,000 entries) for automatic polyphone resolution, tone sandhi (third tone, 一/不 rules), 3 output styles, IPA (International Phonetic Alphabet) and Zhuyin (Bopomofo) output
+- **Spanish G2P support** — Rule-based IPA conversion with syllabification, stress assignment, Castilian/Latin American options, optional allophone processing, normalization, and an exception dictionary
 - **Mixed Japanese-English-Chinese text support** — Automatic language detection and segment splitting based on Unicode character categories for seamless processing of mixed-language text
+- **Note** — `DotNetG2P.Multilingual` currently supports Japanese, English, and Chinese. Spanish is available as a standalone package and is not yet integrated into `Multilingual`
 
 ## Installation
 
@@ -67,6 +73,9 @@ dotnet add package DotNetG2P.English
 # Chinese G2P (Pinyin conversion)
 dotnet add package DotNetG2P.Chinese
 
+# Spanish G2P
+dotnet add package DotNetG2P.Spanish
+
 # Mixed Japanese-English-Chinese text support
 dotnet add package DotNetG2P.Multilingual
 ```
@@ -79,6 +88,7 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.MeCab` | Apache-2.0 | Built-in MeCab engine (no external dependencies) |
 | `DotNetG2P.English` | Apache-2.0 | English G2P engine (CMU dictionary + LTS rules) |
 | `DotNetG2P.Chinese` | Apache-2.0 | Chinese G2P engine (pinyin-data dictionary + tone sandhi) |
+| `DotNetG2P.Spanish` | Apache-2.0 | Spanish G2P engine (rule-based + optional allophones) |
 | `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese text support) |
 
 ### Unity (UPM)
@@ -90,6 +100,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -163,6 +174,13 @@ using DotNetG2P.English;
 using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
+
+// === Spanish G2P ===
+using DotNetG2P.Spanish;
+
+using var esEngine = new SpanishG2PEngine();
+string esIpa = esEngine.ToIPA("guion");
+// => "ɡiˈon"
 
 // === Mixed Japanese-English-Chinese Text ===
 using DotNetG2P.Multilingual;
@@ -240,6 +258,17 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToIPABatch(texts, includeTones)` | `string[]` | Batch IPA conversion (tone control) |
 | `ToZhuyinBatch(texts)` | `string[]` | Batch Zhuyin conversion |
 | `ToZhuyinBatch(texts, includeTones)` | `string[]` | Batch Zhuyin conversion (tone control) |
+
+### SpanishG2PEngine
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ToPhonemes(text)` | `string` | Space-separated IPA phoneme sequence |
+| `ToIPA(text)` | `string` | IPA transcription |
+| `ToPhonemeList(text)` | `IReadOnlyList<SpanishPhoneme>` | Structured phoneme list |
+| `ToSyllables(word)` | `IReadOnlyList<SpanishSyllable>` | Syllabification result |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | Batch IPA conversion |
 
 ### MultilingualG2PEngine
 
@@ -365,6 +394,7 @@ so creating multiple instances incurs minimal memory overhead.
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | Built-in MeCab engine |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | English G2P engine |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | Chinese G2P engine |
+| **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | Spanish G2P engine |
 | **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine (Japanese-English-Chinese) |
 
 All components are available under the **Apache-2.0 License**.

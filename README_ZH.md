@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-面向 C#/.NET 的日英中多语言 G2P（Grapheme-to-Phoneme：字素到音素转换）库。
-以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线、基于 CMU 词典的英语 G2P 以及基于 pinyin-data 词典的中文拼音转换，无需依赖 Python 或原生二进制文件即可将多语言文本转换为音素序列。
+面向 C#/.NET 的日英中多语言 + 西班牙语 G2P（Grapheme-to-Phoneme：字素到音素转换）库。
+以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线、基于 CMU 词典的英语 G2P、基于 pinyin-data 词典的中文拼音转换，以及基于规则的西班牙语 G2P，无需依赖 Python 或原生二进制文件即可转换为音素序列。
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
@@ -22,6 +22,10 @@ enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
 // 中文 G2P（拼音转换）
 using var zhEngine = new ChineseG2PEngine();
 zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
+
+// 西班牙语 G2P
+using var esEngine = new SpanishG2PEngine();
+esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
 // 日英混合文本
 using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
@@ -50,7 +54,9 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音
 - **可扩展设计** — 通过 `ITokenizer` 接口可替换形态素分析引擎
 - **支持英语 G2P** — CMU 词典（135,000 词）+ Flite LTS 规则进行 OOV 推测、IPA/X-SAMPA 输出、文本规范化、同形异音词解析
 - **支持中文 G2P** — pinyin-data 单字词典（44,000 条）+ phrase-pinyin-data 短语词典（411,000 条），自动多音字解析、声调变调（三声连读、一/不变调）、3 种输出风格、IPA（国际音标）与注音符号（ㄅㄆㄇㄈ）输出
+- **支持西班牙语 G2P** — 提供基于规则的 IPA 转写、音节划分、重音判定、Castilian/Latin American 切换、异音处理选项、文本规范化与例外词典
 - **支持日英中混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，无缝处理日英中混合文本
+- **说明** — `DotNetG2P.Multilingual` 当前仍为日英中支持，西班牙语尚未集成到多语言引擎
 
 ## 安装
 
@@ -67,6 +73,9 @@ dotnet add package DotNetG2P.English
 # 中文 G2P（拼音转换）
 dotnet add package DotNetG2P.Chinese
 
+# 西班牙语 G2P
+dotnet add package DotNetG2P.Spanish
+
 # 日英中混合文本支持
 dotnet add package DotNetG2P.Multilingual
 ```
@@ -79,6 +88,7 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.MeCab` | Apache-2.0 | 自研 MeCab 引擎（无外部依赖） |
 | `DotNetG2P.English` | Apache-2.0 | 英语 G2P 引擎（CMU 词典 + LTS 规则） |
 | `DotNetG2P.Chinese` | Apache-2.0 | 中文 G2P 引擎（pinyin-data 词典 + 声调变调） |
+| `DotNetG2P.Spanish` | Apache-2.0 | 西班牙语 G2P 引擎（规则驱动 + 可选异音处理） |
 | `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中混合文本支持） |
 
 ### Unity (UPM)
@@ -90,6 +100,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -169,6 +180,13 @@ using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
 
+// === 西班牙语 G2P ===
+using DotNetG2P.Spanish;
+
+using var esEngine = new SpanishG2PEngine();
+string esIpa = esEngine.ToIPA("guion");
+// => "ɡiˈon"
+
 // === 日英中混合文本 ===
 using DotNetG2P.Multilingual;
 
@@ -245,6 +263,17 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToIPABatch(texts, includeTones)` | `string[]` | 批量 IPA 转换（声调控制） |
 | `ToZhuyinBatch(texts)` | `string[]` | 批量注音转换 |
 | `ToZhuyinBatch(texts, includeTones)` | `string[]` | 批量注音转换（声调控制） |
+
+### SpanishG2PEngine
+
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `ToPhonemes(text)` | `string` | 空格分隔的 IPA 音素序列 |
+| `ToIPA(text)` | `string` | IPA 表记 |
+| `ToPhonemeList(text)` | `IReadOnlyList<SpanishPhoneme>` | 结构化音素列表 |
+| `ToSyllables(word)` | `IReadOnlyList<SpanishSyllable>` | 音节划分结果 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | 批量 IPA 转换 |
 
 ### MultilingualG2PEngine
 
@@ -370,6 +399,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 自研 MeCab 引擎 |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | 英语 G2P 引擎 |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | 中文 G2P 引擎 |
+| **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | 西班牙语 G2P 引擎 |
 | **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎（日英中对应） |
 
 所有组件均以 **Apache-2.0 许可证** 提供。

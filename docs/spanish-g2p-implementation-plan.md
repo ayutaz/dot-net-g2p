@@ -5,25 +5,44 @@
 `DotNetG2P.Spanish` パッケージとして、スペイン語のG2P（書記素→音素変換）をC#でネイティブ実装する。
 スペイン語は正書法が非常に規則的なため、**ルールベースアプローチ**を採用し、大規模辞書を不要とする。
 
+## 実装状況（2026-03-09）
+
+- **S1: 完了**
+  - `SpanishG2PEngine`, `SpanishG2POptions`, IPA音素モデル、音節分割、ストレス付与、ラテンアメリカ/カスティーリャ切り替えを実装済み
+  - `ch / ll / rr / qu / gu / gü / c / g / r / x / y / z / h` を含む基本ルールベース変換を実装済み
+  - `DotNetG2P.Spanish` パッケージ、UPMメタデータ、ソリューション接続、Spanish専用テスト群を追加済み
+- **S2: 初版実装済み**
+  - `AllophoneProcessor` による `/b d g/` 弱化、鼻音同化、`/s/` の有声化を実装済み
+  - `SpanishNormalizer` による Unicode正規化、小文字化、句読点除去、略語展開、数値展開、通貨/割合/記号展開を実装済み
+  - 埋め込み例外辞書 `spanish_exceptions.txt` を追加し、`y / guion / truhan / whisky / wifi / show / México / Xochimilco / Wagner` などを補正
+- **検証状況**
+  - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter SpanishG2P`
+  - 結果: **98 passed**
+- **未実装**
+  - X-SAMPA出力、バッチ精度テスト拡充、大規模精度評価、`DotNetG2P.Multilingual` 統合
+
 ---
 
 ## マイルストーン
 
 ### S1: 基本ルールベースG2P（MVP）
+- 状態: **完了**
 - SpanishG2PEngine メインAPI
 - 正書法→IPA音素変換ルール（ダイグラフ、文脈依存、単純対応）
 - 音節分割（Syllabification）
 - ストレス位置決定
 - 方言オプション（seseo/distinción）
-- テスト 200件以上
+- テスト 98件（2026-03-09 時点）
 
 ### S2: 異音規則・テキスト正規化
+- 状態: **初版実装済み**
 - 異音処理（/b,d,g/ 弱化、鼻音同化、摩擦音有声化）
 - テキスト正規化（数字・記号・略語の展開）
 - 外来語例外辞書（少数、EmbeddedResource）
-- テスト 150件追加
+- 今後の残課題: 正規化語彙の拡充、例外辞書の追加、大規模精度評価
 
 ### S3: 出力形式拡張・テスト充実
+- 状態: **未着手**
 - X-SAMPA出力
 - バッチAPI
 - エッジケーステスト、パフォーマンステスト、精度テスト
@@ -31,6 +50,7 @@
 - テスト 150件追加
 
 ### S4: 多言語統合・パッケージング
+- 状態: **未着手**
 - DotNetG2P.Multilingual への統合（Language.Spanish）
 - LanguageDetector/TextSegmenter のスペイン語対応
 - NuGet + UPM パッケージ構成
@@ -44,15 +64,16 @@
 
 ```
 入力テキスト
-  → Normalize (SpanishNormalizer: テキスト正規化)         [S2]
+  → Normalize (SpanishNormalizer: テキスト正規化)         [S2 初版実装済み]
   → Tokenize (単語分割)                                    [S1]
   → RuleConvert (ルールベース: 正書法→音素変換)            [S1]
+      → 例外辞書 lookup（loanword / hiato / 固有名詞）      [S2 初版実装済み]
       → ダイグラフ処理（ch, ll, rr, qu, gu, gü）
       → 文脈依存ルール（c, g, r, x, y, z, h）
       → 単純対応ルール
   → Syllabify (音節分割)                                   [S1]
   → AssignStress (ストレス付与: アクセント記号+デフォルトルール) [S1]
-  → ApplyAllophones (異音規則: β/ð/ɣ, 鼻音同化等)          [S2]
+  → ApplyAllophones (異音規則: β/ð/ɣ, 鼻音同化等)          [S2 初版実装済み]
   → Format (IPA / X-SAMPA)                                 [S1/S3]
 出力
 ```
@@ -78,24 +99,26 @@ src/DotNetG2P.Spanish/
   SpanishG2PEngine.cs                # メインAPI (sealed class, IDisposable)
   SpanishG2POptions.cs               # イミュータブルオプション
   Models/
-    SpanishPhonemeType.cs            # 音素enum : byte (~25種)
+    SpanishIpaPhoneme.cs             # IPA音素enum : byte
     SpanishPhoneme.cs                # readonly struct (音素型+ストレス)
     SpanishPronunciation.cs          # 発音クラス (音素配列ラッパー)
     SpanishDialect.cs                # 方言enum : byte
     SpanishSyllable.cs               # 音節 readonly struct
   Rules/
-    GraphemeToPhonemeRules.cs         # 正書法→音素変換ルールエンジン
+    GraphemeToPhonemeRules.cs        # 正書法→音素変換ルールエンジン
+    SpanishOrthography.cs            # 母音/二重母音/無音u 判定
     SpanishSyllabifier.cs            # 音節分割アルゴリズム
     StressAssigner.cs                # ストレス位置決定
-    AllophoneProcessor.cs            # 異音規則適用 [S2]
+    AllophoneProcessor.cs            # 異音規則適用 [S2 初版実装済み]
   Normalization/
-    SpanishNormalizer.cs             # テキスト正規化 [S2]
-    NumberToWords.cs                 # 数字→スペイン語読み [S2]
+    SpanishNormalizer.cs             # テキスト正規化 [S2 初版実装済み]
+    NumberToWords.cs                 # 数字→スペイン語読み [S2 初版実装済み]
   Conversion/
     IpaConverter.cs                  # 内部表現→IPA文字列変換
     XSampaConverter.cs               # 内部表現→X-SAMPA文字列変換 [S3]
   Data/                              # 例外辞書 [S2]
-    spanish_exceptions.txt           # 外来語等の例外リスト (EmbeddedResource)
+    spanish_exceptions.txt           # 外来語・hiato・固有名詞例外 (EmbeddedResource)
+    SpanishExceptionDictionary.cs    # 埋め込み辞書ローダ
   package.json                       # UPM (com.dotnetg2p.spanish)
   DotNetG2P.Spanish.asmdef           # Unity Assembly Definition
 ```
@@ -118,7 +141,7 @@ tests/DotNetG2P.Tests/SpanishG2P/
   SpanishAccuracyTests.cs           # 精度・回帰テスト [S3]
 ```
 
-目標テスト数: 550件以上
+現行テスト数: 98件（2026-03-09 時点）
 
 ---
 
@@ -180,7 +203,7 @@ G2Pシステムで使用する音素セット。基本はラテンアメリカ�
 
 ## パブリックAPI設計
 
-### SpanishG2PEngine
+### SpanishG2PEngine（実装済み）
 
 ```csharp
 public sealed class SpanishG2PEngine : IDisposable
@@ -197,7 +220,7 @@ public sealed class SpanishG2PEngine : IDisposable
     // 音節分割
     public IReadOnlyList<SpanishSyllable> ToSyllables(string word);
 
-    // バッチ [S3]
+    // バッチ
     public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts);
     public IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts);
 
@@ -210,7 +233,7 @@ public sealed class SpanishG2PEngine : IDisposable
 }
 ```
 
-### SpanishG2POptions
+### SpanishG2POptions（実装済み）
 
 ```csharp
 public sealed class SpanishG2POptions
@@ -219,7 +242,7 @@ public sealed class SpanishG2POptions
 
     public SpanishDialect Dialect { get; }               // Castilian / LatinAmerican（デフォルト: LatinAmerican）
     public bool IncludeStress { get; }                   // ストレスマーク（デフォルト: true）
-    public bool EnableAllophones { get; }                 // 異音規則適用（デフォルト: false）
+    public bool EnableAllophones { get; }                 // 異音規則適用（デフォルト: false、実装済み）
     public bool EnableTextNormalization { get; }          // テキスト正規化（デフォルト: true）
     public string Separator { get; }                     // 音素区切り（デフォルト: " "）
 }
@@ -242,6 +265,8 @@ public enum SpanishDialect : byte
 ### 処理順序
 
 1. **テキスト正規化**: Unicode正規化、全角→半角変換、小文字化
+   - 実装済み: 略語展開 (`Sr.` / `Sra.` / `Dr.` / `Dra.` / `Ud.` / `Uds.`)、数値、通貨、割合、`& + @`
+2. **例外辞書**: 外来語・固有名詞・hiato例外の先行解決
 2. **ダイグラフ展開**: ch, ll, rr, qu+e/i, gu+e/i, gü+e/i を先に処理
 3. **文脈依存ルール**: c, g, r, x, y, z, h のコンテキスト判定
 4. **単純対応**: 残りの文字を1:1で変換
@@ -278,6 +303,17 @@ x (その他) → ks
 y (母音前) → ʝ
 y (語末/単独) → i
 h → ∅ (無音)
+
+[例外辞書で補正]
+y → i
+guion → ɡi.ˈon
+truhan → tɾu.ˈan
+whisky → ˈwiski
+wifi → ˈwifi
+show → ˈʃow
+México / mexico → ˈmexiko / meˈxiko
+Xochimilco → ʃo.tʃi.ˈmil.ko
+Wagner → ˈbaɡner
 
 [単純対応]
 a,á → a    e,é → e    i,í → i    o,ó → o    u,ú,ü → u

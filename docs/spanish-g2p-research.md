@@ -5,6 +5,26 @@
 スペイン語（Español）のG2P（Grapheme-to-Phoneme: 書記素→音素変換）実装に向けた技術調査結果をまとめる。
 スペイン語は正書法が非常に規則的であり、英語・中国語と比較してルールベースアプローチが最も適している。
 
+## 実装反映メモ（2026-03-09）
+
+この調査をもとに、リポジトリでは `DotNetG2P.Spanish` の初版実装が完了している。
+
+- 実装済み
+  - ルールベースG2P本体
+  - 音節分割とストレス付与
+  - ラテンアメリカ / カスティーリャ切り替え
+  - `y / guion / truhan / whisky / wifi / show / México / Xochimilco / Wagner` などの例外辞書
+  - `/b d g/` 弱化、鼻音同化、`/s/` 有声化の初版異音処理
+  - 略語・数値・割合・通貨・記号展開を含む `SpanishNormalizer`
+- 未実装
+  - X-SAMPA
+  - 大規模精度評価（WikiPron / ipa-dict）
+  - Multilingual 統合
+- 検証状況
+  - `SpanishG2P` テスト: **98 passed**
+
+調査本文はルール設計の根拠として維持し、最新の実装状態は [spanish-g2p-implementation-plan.md](spanish-g2p-implementation-plan.md) を正とする。
+
 ---
 
 ## 1. スペイン語音韻体系
@@ -341,6 +361,8 @@ Polyakova & Bonafonte (INTERSPEECH 2006) によると:
 | w（ゲルマン語由来） | /b/ | Wagner |
 | k | /k/ | kilo |
 | 語末 -d | 弱化/脱落傾向 | Madrid [maˈðɾið] or [maˈðɾi] |
+
+実装ではこの方針に基づき、少数の高頻度例外を `spanish_exceptions.txt` で補正している。
 
 ---
 

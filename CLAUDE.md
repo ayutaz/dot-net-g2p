@@ -96,28 +96,30 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - LanguageDetector（Unicode文字種ベース言語判定）、TextSegmenter（2パスセグメント分割）
     - MultilingualG2PEngine（日英中G2Pファサード、IDisposable、lock保護）
     - テスト162件追加
-- **スペイン語G2P (DotNetG2P.Spanish)**: 未実装（feature/spanish-g2p ブランチ）
-  - **S1（コアルールエンジン + 基本G2P MVP）**: 未着手
+- **スペイン語G2P (DotNetG2P.Spanish)**: S2初版実装済み（feature/spanish-g2p ブランチ）
+  - **S1（コアルールエンジン + 基本G2P MVP）**: 完了
     - プロジェクト構成（csproj, package.json, asmdef, slnx更新）
-    - モデル定義（SpanishIpaPhoneme enum 28種, SpanishPhoneme struct, Dialect enum）
+    - モデル定義（SpanishIpaPhoneme enum, SpanishPhoneme struct, Dialect enum）
     - SpanishG2PEngine（sealed class, IDisposable）、SpanishG2POptions
     - GraphemeToPhonemeRules（ダイグラフ→文脈依存→単純対応の3フェーズ）
-    - SyllableParser（音節分割、onset maximization）
+    - SpanishSyllabifier（音節分割、onset maximization）
     - StressAssigner（ストレス位置決定、アクセント記号 or デフォルトルール）
-    - SpanishNormalizer（NFC正規化、小文字化、句読点処理）
-    - IPA出力: ToIPA(), ToPhonemes(), ToPhonemeList()
-    - テスト 150件+
-  - **S2（PER測定・精度向上・バッチAPI）**: 未着手
-    - ipa-dict es_ES/es_MXテストデータ埋込み（MIT License）
-    - PER測定フレームワーク（Levenshtein距離ベース）、目標PER ≤ 0.04%
-    - AllophoneProcessor（/b,d,g/弱化、鼻音同化、オプション）
-    - バッチAPI、X-SAMPA出力
-    - エッジケース・パフォーマンス・精度テスト、テスト 200件+
-  - **S3（Multilingual統合・パッケージング）**: 未着手
+    - IPA出力: ToIPA(), ToPhonemes(), ToPhonemeList(), ToSyllables(), バッチAPI
+    - テスト実装済み
+  - **S2（精度向上・異音規則・テキスト正規化）**: 初版実装済み
+    - AllophoneProcessor（/b,d,g/弱化、鼻音同化、/s/有声化、オプション）
+    - SpanishNormalizer（NFKC、小文字化、句読点処理、略語・数字・通貨・割合・記号展開）
+    - 埋め込み例外辞書 `spanish_exceptions.txt`（`y`, `guion`, `truhan`, `whisky`, `wifi`, `show`, `México`, `Xochimilco`, `Wagner` 等）
+    - SpanishG2P テスト 98件通過
+  - **S3（X-SAMPA・大規模精度評価・拡張テスト）**: 未着手
+    - ipa-dict / WikiPron ベース精度評価
+    - X-SAMPA出力
+    - 精度・回帰・パフォーマンス・エッジケーステスト拡充
+  - **S4（Multilingual統合・パッケージング拡張）**: 未着手
     - Language.Spanish追加、DefaultLatinLanguageオプション
     - LanguageDetector/TextSegmenter拡張（ñ, ¿, ¡検出）
     - MultilingualG2PEngine統合
-    - NuGet + UPM パッケージ構成、テスト 60件+
+    - テスト追加
 
 ## ビルド・実行
 
