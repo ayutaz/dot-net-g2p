@@ -60,6 +60,11 @@ namespace DotNetG2P.Tests.SpanishG2P
         [InlineData("wifi", "ˈwifi")]
         [InlineData("show", "ˈʃow")]
         [InlineData("México", "ˈmexiko")]
+        [InlineData("software", "sofˈweɾ")]
+        [InlineData("shampoo", "ʃamˈpu")]
+        [InlineData("hockey", "ˈxokej")]
+        [InlineData("whatsapp", "waˈsap")]
+        [InlineData("sándwich", "ˈsanwitʃ")]
         public void ToIPA_ExceptionCases_ReturnExpectedOutput(string text, string expected)
         {
             Assert.Equal(expected, _engine.ToIPA(text));

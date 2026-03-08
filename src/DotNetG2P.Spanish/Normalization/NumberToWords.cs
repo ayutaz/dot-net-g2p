@@ -33,6 +33,26 @@ namespace DotNetG2P.Spanish.Normalization
             return Convert(value);
         }
 
+        public static string ConvertDigits(string digits)
+        {
+            if (string.IsNullOrEmpty(digits))
+                return string.Empty;
+
+            var builder = new StringBuilder(digits.Length * 6);
+            for (var i = 0; i < digits.Length; i++)
+            {
+                if (!char.IsDigit(digits[i]))
+                    continue;
+
+                if (builder.Length > 0)
+                    builder.Append(' ');
+
+                builder.Append(s_units[digits[i] - '0']);
+            }
+
+            return builder.ToString();
+        }
+
         public static string Convert(long value)
         {
             if (value == 0)

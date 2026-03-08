@@ -48,6 +48,11 @@ namespace DotNetG2P.Spanish.Rules
                         if (IsVoicedConsonant(next.Phoneme))
                             transformed = SpanishIpaPhoneme.Z;
                         break;
+
+                    case SpanishIpaPhoneme.Y:
+                        if (IsWordInitial(i) || IsNasal(previous.Phoneme))
+                            transformed = SpanishIpaPhoneme.YAffricate;
+                        break;
                 }
 
                 result[i] = new SpanishPhoneme(transformed, current.IsStressed);
@@ -64,7 +69,8 @@ namespace DotNetG2P.Spanish.Rules
                 || phoneme == SpanishIpaPhoneme.N
                 || phoneme == SpanishIpaPhoneme.Ny
                 || phoneme == SpanishIpaPhoneme.NLabiodental
-                || phoneme == SpanishIpaPhoneme.Eng;
+                || phoneme == SpanishIpaPhoneme.Eng
+                || phoneme == SpanishIpaPhoneme.NDental;
         }
 
         private static bool IsVoicedConsonant(SpanishIpaPhoneme phoneme)
@@ -114,10 +120,17 @@ namespace DotNetG2P.Spanish.Rules
 
                 case SpanishIpaPhoneme.Ch:
                 case SpanishIpaPhoneme.Y:
+                case SpanishIpaPhoneme.YAffricate:
                 case SpanishIpaPhoneme.Ll:
                 case SpanishIpaPhoneme.Ny:
                 case SpanishIpaPhoneme.Sh:
                     return SpanishIpaPhoneme.Ny;
+
+                case SpanishIpaPhoneme.T:
+                case SpanishIpaPhoneme.D:
+                case SpanishIpaPhoneme.Dh:
+                case SpanishIpaPhoneme.Th:
+                    return SpanishIpaPhoneme.NDental;
 
                 default:
                     return SpanishIpaPhoneme.N;

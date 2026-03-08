@@ -17,6 +17,8 @@ namespace DotNetG2P.Spanish.Normalization
 
             var normalized = text.Normalize(NormalizationForm.FormKC).ToLowerInvariant();
             normalized = ExpandAbbreviations(normalized);
+            normalized = ExpandTimes(normalized);
+            normalized = ExpandDecimals(normalized);
             normalized = ExpandPercentages(normalized);
             normalized = ExpandCurrencies(normalized);
             normalized = ExpandStandaloneNumbers(normalized);
@@ -72,7 +74,34 @@ namespace DotNetG2P.Spanish.Normalization
             text = Regex.Replace(text, @"\bdr\.", "doctor");
             text = Regex.Replace(text, @"\bdra\.", "doctora");
             text = Regex.Replace(text, @"\buds?\.", m => m.Value == "ud." ? "usted" : "ustedes");
+            text = Regex.Replace(text, @"\btel\.", "teléfono");
+            text = Regex.Replace(text, @"\bav\.", "avenida");
+            text = Regex.Replace(text, @"\b(?:núm|num)\.", "número");
+            text = Regex.Replace(text, @"\bpág\.", "página");
+            text = Regex.Replace(text, @"\bee\.\s*uu\.", "estados unidos");
             return text;
+        }
+
+        private static string ExpandTimes(string text)
+        {
+            return Regex.Replace(text, @"\b(\d{1,2}):(\d{2})\b", m =>
+            {
+                var hours = long.Parse(m.Groups[1].Value);
+                var minutes = long.Parse(m.Groups[2].Value);
+                return minutes == 0
+                    ? NumberToWords.Convert(hours) + " en punto"
+                    : NumberToWords.Convert(hours) + " y " + NumberToWords.Convert(minutes);
+            });
+        }
+
+        private static string ExpandDecimals(string text)
+        {
+            return Regex.Replace(text, @"\b(\d+)([.,])(\d+)\b", m =>
+            {
+                var integerPart = NumberToWords.Convert(m.Groups[1].Value);
+                var fractionalDigits = NumberToWords.ConvertDigits(m.Groups[3].Value);
+                return integerPart + " coma " + fractionalDigits;
+            });
         }
 
         private static string ExpandPercentages(string text)

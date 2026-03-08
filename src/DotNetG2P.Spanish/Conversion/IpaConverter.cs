@@ -95,6 +95,8 @@ namespace DotNetG2P.Spanish.Conversion
                 case SpanishIpaPhoneme.NLabiodental: return "ɱ";
                 case SpanishIpaPhoneme.Eng: return "ŋ";
                 case SpanishIpaPhoneme.Sh: return "ʃ";
+                case SpanishIpaPhoneme.YAffricate: return "ɟʝ";
+                case SpanishIpaPhoneme.NDental: return "n̪";
                 default: throw new ArgumentOutOfRangeException(nameof(phoneme), phoneme, null);
             }
         }

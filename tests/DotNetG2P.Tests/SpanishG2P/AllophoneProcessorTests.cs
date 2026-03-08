@@ -14,6 +14,9 @@ namespace DotNetG2P.Tests.SpanishG2P
         [InlineData("enfasis", "eɱˈfasis")]
         [InlineData("tengo", "ˈteŋɡo")]
         [InlineData("ancho", "ˈaɲtʃo")]
+        [InlineData("yema", "ˈɟʝema")]
+        [InlineData("inyección", "iɲɟʝekˈsjon")]
+        [InlineData("adonde", "aˈðon̪de")]
         public void ToIPA_EnableAllophones_AppliesExpectedVariants(string word, string expected)
         {
             Assert.Equal(expected, _engine.ToIPA(word));

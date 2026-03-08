@@ -98,6 +98,8 @@ namespace DotNetG2P.Spanish.Data
                 case "ɱ": return SpanishIpaPhoneme.NLabiodental;
                 case "ŋ": return SpanishIpaPhoneme.Eng;
                 case "ʃ": return SpanishIpaPhoneme.Sh;
+                case "ɟʝ": return SpanishIpaPhoneme.YAffricate;
+                case "n̪": return SpanishIpaPhoneme.NDental;
                 default:
                     throw new InvalidOperationException("Unknown phoneme token in exception dictionary: " + token);
             }

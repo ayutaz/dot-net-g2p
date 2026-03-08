@@ -9,3 +9,9 @@ méxico	0	m e|x i|k o
 mexico	1	m e|x i|k o
 xochimilco	2	ʃ o|tʃ i|m i l|k o
 wagner	0	b a ɡ|n e r
+software	1	s o f|w e ɾ
+shampoo	1	ʃ a m|p u
+hockey	0	x o|k e j
+whatsapp	1	w a|s a p
+sándwich	0	s a n|w i tʃ
+iceberg	0	i|s e β e r ɡ

@@ -71,5 +71,9 @@ namespace DotNetG2P.Spanish
         Eng = 31,
         /// <summary>/ʃ/</summary>
         Sh = 32,
+        /// <summary>/ɟʝ/</summary>
+        YAffricate = 33,
+        /// <summary>/n̪/</summary>
+        NDental = 34,
     }
 }
