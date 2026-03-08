@@ -22,7 +22,7 @@ namespace DotNetG2P.MeCab.Dictionary
         private static readonly object _cacheLock = new object();
 
         private int _refCount;
-        private readonly string _path;
+        private readonly string? _path;
 
         /// <summary>システム辞書</summary>
         public SystemDictionary SystemDic { get; }
@@ -37,7 +37,7 @@ namespace DotNetG2P.MeCab.Dictionary
         public UnknownDictionary UnknownDic { get; }
 
         private DictionaryBundle(
-            string path,
+            string? path,
             SystemDictionary systemDic,
             ConnectionMatrix matrix,
             CharProperty charProperty,
@@ -93,6 +93,30 @@ namespace DotNetG2P.MeCab.Dictionary
             }
         }
 
+        /// <summary>
+        /// バイト配列から辞書データを一括読み込みする。
+        /// WebGL等ファイルシステムが使えない環境向け。キャッシュは使用しない。
+        /// </summary>
+        /// <param name="sysDic">sys.dic のバイト配列</param>
+        /// <param name="matrix">matrix.bin のバイト配列</param>
+        /// <param name="charBin">char.bin のバイト配列</param>
+        /// <param name="unkDic">unk.dic のバイト配列</param>
+        public static DictionaryBundle Load(byte[] sysDic, byte[] matrix, byte[] charBin, byte[] unkDic)
+        {
+            if (sysDic == null) throw new ArgumentNullException(nameof(sysDic));
+            if (matrix == null) throw new ArgumentNullException(nameof(matrix));
+            if (charBin == null) throw new ArgumentNullException(nameof(charBin));
+            if (unkDic == null) throw new ArgumentNullException(nameof(unkDic));
+
+            // 読み込み順序: CharPropertyはUnknownDictionaryの前に必要
+            var systemDic = SystemDictionary.Load(sysDic);
+            var matrixObj = ConnectionMatrix.Load(matrix);
+            var charProperty = CharProperty.Load(charBin);
+            var unknownDic = UnknownDictionary.Load(unkDic, charProperty);
+
+            return new DictionaryBundle(null, systemDic, matrixObj, charProperty, unknownDic);
+        }
+
         private static DictionaryBundle LoadInternal(string fullPath)
         {
             string sysDicPath = Path.Combine(fullPath, "sys.dic");
@@ -119,7 +143,7 @@ namespace DotNetG2P.MeCab.Dictionary
                 Interlocked.Increment(ref _refCount);
                 return;
             }
-            if (remaining == 0)
+            if (remaining == 0 && _path != null)
             {
                 // 最後の参照者 → キャッシュから除去してリソース解放
                 lock (_cacheLock)

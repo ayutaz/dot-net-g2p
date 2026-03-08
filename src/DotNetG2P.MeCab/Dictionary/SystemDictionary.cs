@@ -86,13 +86,30 @@ namespace DotNetG2P.MeCab.Dictionary
             long fileSize = new FileInfo(filePath).Length;
 
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return LoadFromStream(stream, fileSize);
+        }
+
+        /// <summary>
+        /// バイト配列から辞書を読み込む。WebGL等ファイルシステムが使えない環境向け。
+        /// </summary>
+        /// <param name="data">sys.dic のバイト配列</param>
+        public static SystemDictionary Load(byte[] data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            using var stream = new MemoryStream(data, writable: false);
+            return LoadFromStream(stream, data.Length);
+        }
+
+        private static SystemDictionary LoadFromStream(Stream stream, long dataSize)
+        {
             using var reader = new BinaryReader(stream);
 
             // 1. ヘッダ (72バイト) 読み込み
             var header = DictionaryHeader.Read(reader);
 
             // 2. Magic検証
-            header.ThrowIfInvalidMagic(fileSize);
+            header.ThrowIfInvalidMagic(dataSize);
 
             // 3. 各セクション読み込み
             byte[] trieData = ReadExact(reader, (int)header.DoubleArraySize, "DoubleArray");

@@ -57,6 +57,23 @@ namespace DotNetG2P.MeCab.Dictionary
                 throw new FileNotFoundException($"連接コスト行列ファイルが見つかりません: {filePath}", filePath);
 
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return LoadFromStream(stream);
+        }
+
+        /// <summary>
+        /// バイト配列から連接コスト行列を読み込む。WebGL等ファイルシステムが使えない環境向け。
+        /// </summary>
+        /// <param name="data">matrix.bin のバイト配列</param>
+        public static ConnectionMatrix Load(byte[] data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            using var stream = new MemoryStream(data, writable: false);
+            return LoadFromStream(stream);
+        }
+
+        private static ConnectionMatrix LoadFromStream(Stream stream)
+        {
             using var reader = new BinaryReader(stream);
 
             ushort lSize = reader.ReadUInt16();

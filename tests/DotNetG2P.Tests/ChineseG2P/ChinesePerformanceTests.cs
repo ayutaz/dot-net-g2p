@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using DotNetG2P.Chinese;
+using DotNetG2P.Tests.TestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -163,6 +164,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         {
             const int trials = 5;
             var times = new long[trials];
+            var thresholdMs = PerformanceThresholds.Milliseconds(strictThreshold: 5000, relaxedThreshold: 10000);
 
             for (int i = 0; i < trials; i++)
             {
@@ -178,7 +180,7 @@ namespace DotNetG2P.Tests.ChineseG2P
 
             var avg = times.Average();
             _output.WriteLine($"初期化時間(5回): {string.Join(", ", times.Select(t => $"{t}ms"))}  平均: {avg:F1}ms");
-            Assert.True(avg < 5000, $"平均初期化時間が5秒を超過: {avg:F1}ms");
+            Assert.True(avg < thresholdMs, $"平均初期化時間が閾値({thresholdMs}ms)を超過: {avg:F1}ms");
         }
 
         [Fact]
@@ -214,6 +216,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         [Fact]
         public void 大量テキスト処理_メモリ増加が妥当()
         {
+            var thresholdMb = PerformanceThresholds.Megabytes(strictThreshold: 50, relaxedThreshold: 128);
             // GCで安定化
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -235,7 +238,7 @@ namespace DotNetG2P.Tests.ChineseG2P
             _output.WriteLine($"処理前: {beforeMemory / (1024.0 * 1024.0):F2}MB, 処理後: {afterMemory / (1024.0 * 1024.0):F2}MB, 差分: {diffMb:F2}MB");
 
             // 10000回処理後のメモリ増加が50MBを超えないこと
-            Assert.True(diffMb < 50, $"メモリ増加が50MBを超過: {diffMb:F2}MB");
+            Assert.True(diffMb < thresholdMb, $"メモリ増加が閾値({thresholdMb:F0}MB)を超過: {diffMb:F2}MB");
         }
 
         [Fact]

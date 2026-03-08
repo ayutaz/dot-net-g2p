@@ -99,11 +99,30 @@ namespace DotNetG2P.MeCab.Dictionary
             long fileSize = new FileInfo(filePath).Length;
 
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return LoadFromStream(stream, fileSize, charProperty);
+        }
+
+        /// <summary>
+        /// バイト配列から未知語辞書を読み込む。WebGL等ファイルシステムが使えない環境向け。
+        /// </summary>
+        /// <param name="data">unk.dic のバイト配列</param>
+        /// <param name="charProperty">文字種プロパティ (カテゴリ名取得用)</param>
+        public static UnknownDictionary Load(byte[] data, CharProperty charProperty)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (charProperty == null) throw new ArgumentNullException(nameof(charProperty));
+
+            using var stream = new MemoryStream(data, writable: false);
+            return LoadFromStream(stream, data.Length, charProperty);
+        }
+
+        private static UnknownDictionary LoadFromStream(Stream stream, long dataSize, CharProperty charProperty)
+        {
             using var reader = new BinaryReader(stream);
 
             // 1. ヘッダ読み込み
             var header = DictionaryHeader.Read(reader);
-            header.ThrowIfInvalidMagic(fileSize);
+            header.ThrowIfInvalidMagic(dataSize);
 
             // 2. 各セクション読み込み
             byte[] trieData = ReadExact(reader, (int)header.DoubleArraySize, "DoubleArray");

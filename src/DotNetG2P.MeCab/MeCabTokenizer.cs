@@ -37,6 +37,18 @@ namespace DotNetG2P.MeCab
             _lazyDecoder = new Lazy<ViterbiDecoder>(() => new ViterbiDecoder(_dic.Matrix));
         }
 
+        /// <summary>
+        /// 事前に読み込み済みの辞書バンドルからTokenizerを初期化する。
+        /// WebGL等ファイルシステムが使えない環境向け。
+        /// </summary>
+        /// <param name="dictionaryBundle">読み込み済みの辞書バンドル</param>
+        public MeCabTokenizer(DictionaryBundle dictionaryBundle)
+        {
+            _dic = dictionaryBundle ?? throw new ArgumentNullException(nameof(dictionaryBundle));
+            _lazyBuilder = new Lazy<LatticeBuilder>(() => new LatticeBuilder(_dic));
+            _lazyDecoder = new Lazy<ViterbiDecoder>(() => new ViterbiDecoder(_dic.Matrix));
+        }
+
         /// <inheritdoc/>
         public IReadOnlyList<IToken> Tokenize(string text)
         {
