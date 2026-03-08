@@ -51,8 +51,8 @@ namespace DotNetG2P.Tests.ChineseG2P
         }
 
         [Theory]
-        [InlineData("zhā", "t\u0282a\u02E5\u02E5")]       // zh→tʂ
-        [InlineData("chā", "t\u0282\u02B0a\u02E5\u02E5")] // ch→tʂʰ
+        [InlineData("zhā", "\u0288\u0282a\u02E5\u02E5")]       // zh→ʈʂ
+        [InlineData("chā", "\u0288\u0282\u02B0a\u02E5\u02E5")] // ch→ʈʂʰ
         [InlineData("shā", "\u0282a\u02E5\u02E5")]        // sh→ʂ
         [InlineData("rè", "\u027B\u0264\u02E5\u02E9")]    // r→ɻ, e→ɤ
         public void Convert_RetroflexInitials_ReturnsCorrectIpa(string pinyin, string expected)
@@ -162,13 +162,13 @@ namespace DotNetG2P.Tests.ChineseG2P
         // ===== zhi/chi/shi/ri/zi/ci/si の特殊 i (ɨ) =====
 
         [Theory]
-        [InlineData("zhī", "t\u0282\u0268\u02E5\u02E5")]       // zhi→tʂɨ
-        [InlineData("chī", "t\u0282\u02B0\u0268\u02E5\u02E5")] // chi→tʂʰɨ
-        [InlineData("shī", "\u0282\u0268\u02E5\u02E5")]        // shi→ʂɨ
-        [InlineData("rì", "\u027B\u0268\u02E5\u02E9")]         // ri→ɻɨ
-        [InlineData("zī", "ts\u0268\u02E5\u02E5")]             // zi→tsɨ
-        [InlineData("cī", "ts\u02B0\u0268\u02E5\u02E5")]       // ci→tsʰɨ
-        [InlineData("sī", "s\u0268\u02E5\u02E5")]              // si→sɨ
+        [InlineData("zhī", "\u0288\u0282\u027B\u0329\u02E5\u02E5")]       // zhi→ʈʂɻ̩
+        [InlineData("chī", "\u0288\u0282\u02B0\u027B\u0329\u02E5\u02E5")] // chi→ʈʂʰɻ̩
+        [InlineData("shī", "\u0282\u027B\u0329\u02E5\u02E5")]             // shi→ʂɻ̩
+        [InlineData("rì", "\u027B\u027B\u0329\u02E5\u02E9")]              // ri→ɻɻ̩
+        [InlineData("zī", "ts\u0279\u0329\u02E5\u02E5")]                  // zi→tsɹ̩
+        [InlineData("cī", "ts\u02B0\u0279\u0329\u02E5\u02E5")]            // ci→tsʰɹ̩
+        [InlineData("sī", "s\u0279\u0329\u02E5\u02E5")]                   // si→sɹ̩
         public void Convert_ApicalVowel_ReturnsCorrectIpa(string pinyin, string expected)
         {
             Assert.Equal(expected, PinyinToIpa.Convert(pinyin));
@@ -261,7 +261,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         // ===== iong韻母 =====
 
         [Theory]
-        [InlineData("xiōng", "\u0255y\u014B\u02E5\u02E5")]  // xiong→ɕyŋ
+        [InlineData("xiōng", "\u0255i\u028A\u014B\u02E5\u02E5")]  // xiong→ɕiʊŋ
         public void Convert_IongFinal_ReturnsCorrectIpa(string pinyin, string expected)
         {
             Assert.Equal(expected, PinyinToIpa.Convert(pinyin));
@@ -296,7 +296,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         // ===== 実用的な音節テスト =====
 
         [Theory]
-        [InlineData("zhōng", "t\u0282\u028A\u014B\u02E5\u02E5")]     // zhong→tʂʊŋ
+        [InlineData("zhōng", "\u0288\u0282\u028A\u014B\u02E5\u02E5")]  // zhong→ʈʂʊŋ
         [InlineData("guó", "kuo\u02E7\u02E5")]                       // guo→kuo
         [InlineData("rén", "\u027B\u0259n\u02E7\u02E5")]             // ren→ɻən
         [InlineData("mín", "min\u02E7\u02E5")]                       // min→min
@@ -365,6 +365,48 @@ namespace DotNetG2P.Tests.ChineseG2P
         [InlineData("yuán", "yan\u02E7\u02E5")]          // yuan→yan
         [InlineData("yún", "yn\u02E7\u02E5")]            // yun→yn
         public void Convert_YuSeries_ReturnsCorrectIpa(string pinyin, string expected)
+        {
+            Assert.Equal(expected, PinyinToIpa.Convert(pinyin));
+        }
+
+        // ===== R1修正: そり舌声母ʈʂの追加検証 =====
+
+        [Theory]
+        [InlineData("zhě", "\u0288\u0282\u0264\u02E8\u02E9\u02E6")]  // zhe→ʈʂɤ (3声)
+        [InlineData("chéng", "\u0288\u0282\u02B0\u0259\u014B\u02E7\u02E5")] // cheng→ʈʂʰəŋ (2声)
+        public void Convert_R1_RetroflexWithVowels_ReturnsCorrectIpa(string pinyin, string expected)
+        {
+            Assert.Equal(expected, PinyinToIpa.Convert(pinyin));
+        }
+
+        // ===== R1修正: iong韻母の追加検証 =====
+
+        [Theory]
+        [InlineData("jiōng", "t\u0255i\u028A\u014B\u02E5\u02E5")]  // jiong→tɕiʊŋ
+        [InlineData("qióng", "t\u0255\u02B0i\u028A\u014B\u02E7\u02E5")] // qiong→tɕʰiʊŋ
+        public void Convert_R1_IongWithAllPalatals_ReturnsCorrectIpa(string pinyin, string expected)
+        {
+            Assert.Equal(expected, PinyinToIpa.Convert(pinyin));
+        }
+
+        // ===== R1修正: そり舌母音ɻ̩ の声調バリエーション =====
+
+        [Theory]
+        [InlineData("zhí", "\u0288\u0282\u027B\u0329\u02E7\u02E5")]   // zhi 2声→ʈʂɻ̩˧˥
+        [InlineData("zhǐ", "\u0288\u0282\u027B\u0329\u02E8\u02E9\u02E6")] // zhi 3声→ʈʂɻ̩˨˩˦
+        [InlineData("zhì", "\u0288\u0282\u027B\u0329\u02E5\u02E9")]   // zhi 4声→ʈʂɻ̩˥˩
+        public void Convert_R1_RetroflexApical_ToneVariants(string pinyin, string expected)
+        {
+            Assert.Equal(expected, PinyinToIpa.Convert(pinyin));
+        }
+
+        // ===== R1修正: 歯茎母音ɹ̩ の声調バリエーション =====
+
+        [Theory]
+        [InlineData("zí", "ts\u0279\u0329\u02E7\u02E5")]              // zi 2声→tsɹ̩˧˥
+        [InlineData("cì", "ts\u02B0\u0279\u0329\u02E5\u02E9")]        // ci 4声→tsʰɹ̩˥˩
+        [InlineData("sì", "s\u0279\u0329\u02E5\u02E9")]               // si 4声→sɹ̩˥˩
+        public void Convert_R1_AlveolarApical_ToneVariants(string pinyin, string expected)
         {
             Assert.Equal(expected, PinyinToIpa.Convert(pinyin));
         }
