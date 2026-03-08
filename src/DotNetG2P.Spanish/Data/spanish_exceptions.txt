@@ -1,0 +1,11 @@
+y	-1	i
+guion	1	ɡ i|o n
+truhan	1	t ɾ u|a n
+whisky	0	w i s|k i
+wifi	0	w i|f i
+kiwi	0	k i|w i
+show	0	ʃ o w
+méxico	0	m e|x i|k o
+mexico	1	m e|x i|k o
+xochimilco	2	ʃ o|tʃ i|m i l|k o
+wagner	0	b a ɡ|n e r

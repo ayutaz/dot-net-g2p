@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>DotNetG2P.Spanish</PackageId>
+    <AssemblyName>DotNetG2P.Spanish</AssemblyName>
+    <RootNamespace>DotNetG2P.Spanish</RootNamespace>
+    <Description>Spanish Grapheme-to-Phoneme (G2P) library for .NET and Unity. Rule-based IPA conversion with syllabification, stress assignment, and Castilian/Latin American dialect options.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>g2p;spanish;tts;phoneme;ipa;text-to-speech;unity</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\spanish_exceptions.txt" LogicalName="DotNetG2P.Spanish.Data.spanish_exceptions.txt" />
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+</Project>
