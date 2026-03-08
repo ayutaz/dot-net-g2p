@@ -16,12 +16,13 @@
   - `y / guion / truhan / whisky / wifi / show / México / Xochimilco / Wagner` などの例外辞書
   - `/b d g/` 弱化、鼻音同化、`/s/` 有声化の初版異音処理
   - 略語・数値・割合・通貨・記号展開を含む `SpanishNormalizer`
+  - `XSampaConverter` と `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch`
+  - X-SAMPA / エッジケース / パフォーマンス / 精度・回帰テスト
 - 未実装
-  - X-SAMPA
   - 大規模精度評価（WikiPron / ipa-dict）
   - Multilingual 統合
 - 検証状況
-  - `SpanishG2P` テスト: **98 passed**
+  - `SpanishG2P` テスト: **173 passed**
 
 調査本文はルール設計の根拠として維持し、最新の実装状態は [spanish-g2p-implementation-plan.md](spanish-g2p-implementation-plan.md) を正とする。
 

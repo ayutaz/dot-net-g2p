@@ -96,7 +96,7 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - LanguageDetector（Unicode文字種ベース言語判定）、TextSegmenter（2パスセグメント分割）
     - MultilingualG2PEngine（日英中G2Pファサード、IDisposable、lock保護）
     - テスト162件追加
-- **スペイン語G2P (DotNetG2P.Spanish)**: S2初版実装済み（feature/spanish-g2p ブランチ）
+- **スペイン語G2P (DotNetG2P.Spanish)**: S3初版実装済み（feature/spanish-g2p ブランチ）
   - **S1（コアルールエンジン + 基本G2P MVP）**: 完了
     - プロジェクト構成（csproj, package.json, asmdef, slnx更新）
     - モデル定義（SpanishIpaPhoneme enum, SpanishPhoneme struct, Dialect enum）
@@ -111,10 +111,11 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - SpanishNormalizer（NFKC、小文字化、句読点処理、略語・数字・通貨・割合・記号展開）
     - 埋め込み例外辞書 `spanish_exceptions.txt`（`y`, `guion`, `truhan`, `whisky`, `wifi`, `show`, `México`, `Xochimilco`, `Wagner` 等）
     - SpanishG2P テスト 98件通過
-  - **S3（X-SAMPA・大規模精度評価・拡張テスト）**: 未着手
-    - ipa-dict / WikiPron ベース精度評価
-    - X-SAMPA出力
-    - 精度・回帰・パフォーマンス・エッジケーステスト拡充
+  - **S3（X-SAMPA・大規模精度評価・拡張テスト）**: 初版実装済み
+    - XSampaConverter、`ToXSampa()`, `ToXSampaWithoutStress()`, `ToXSampaBatch()` を追加
+    - SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests を追加
+    - SpanishG2P テスト 173件通過
+    - 残タスクは ipa-dict / WikiPron ベースの大規模精度評価
   - **S4（Multilingual統合・パッケージング拡張）**: 未着手
     - Language.Spanish追加、DefaultLatinLanguageオプション
     - LanguageDetector/TextSegmenter拡張（ñ, ¿, ¡検出）
@@ -292,7 +293,8 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── Normalization/
 │   │   │   └── SpanishNormalizer.cs     # テキスト正規化 (NFC, 小文字化, 句読点)
 │   │   ├── Conversion/
-│   │   │   └── XSampaConverter.cs       # X-SAMPA変換 [S2]
+│   │   │   ├── IpaConverter.cs          # IPA変換
+│   │   │   └── XSampaConverter.cs       # X-SAMPA変換 [S3]
 │   │   ├── package.json                 # UPM (com.dotnetg2p.spanish)
 │   │   └── DotNetG2P.Spanish.asmdef     # Unity Assembly Definition
 │   │
@@ -377,16 +379,16 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       ├── SpanishG2P/                 # スペイン語G2Pテスト
 │       │   ├── SpanishG2PEngineTests.cs    # エンジン統合テスト [S1]
 │       │   ├── GraphemeToPhonemeRulesTests.cs # G2Pルールテスト [S1]
-│       │   ├── SyllableParserTests.cs      # 音節分割テスト [S1]
+│       │   ├── SpanishSyllabifierTests.cs  # 音節分割テスト [S1]
 │       │   ├── StressAssignerTests.cs      # ストレステスト [S1]
-│       │   ├── SpanishNormalizerTests.cs   # 正規化テスト [S1]
-│       │   ├── DialectTests.cs             # 方言テスト [S1]
+│       │   ├── SpanishIpaTests.cs          # IPA変換テスト [S1]
+│       │   ├── SpanishPhonemeTests.cs      # 音素モデルテスト [S1]
+│       │   ├── SpanishNormalizerTests.cs   # 正規化テスト [S2]
 │       │   ├── AllophoneProcessorTests.cs  # 異音テスト [S2]
-│       │   ├── SpanishPerTests.cs          # PER測定テスト [S2]
-│       │   ├── SpanishEdgeCaseTests.cs     # エッジケーステスト [S2]
-│       │   ├── SpanishPerformanceTests.cs  # パフォーマンステスト [S2]
-│       │   ├── SpanishAccuracyTests.cs     # 精度・回帰テスト [S2]
-│       │   └── XSampaConverterTests.cs     # X-SAMPA変換テスト [S2]
+│       │   ├── SpanishXSampaTests.cs       # X-SAMPA変換テスト [S3]
+│       │   ├── SpanishEdgeCaseTests.cs     # エッジケーステスト [S3]
+│       │   ├── SpanishPerformanceTests.cs  # パフォーマンステスト [S3]
+│       │   └── SpanishAccuracyTests.cs     # 精度・回帰テスト [S3]
 │       ├── Multilingual/               # 多言語G2Pテスト (308件)
 │       │   ├── LanguageDetectorTests.cs  # 言語判定テスト (29件)
 │       │   ├── TextSegmenterTests.cs     # セグメント分割テスト (30件)

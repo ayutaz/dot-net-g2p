@@ -39,6 +39,18 @@ namespace DotNetG2P.Spanish
             return ProcessText(text, pronunciation => IpaConverter.Convert(ApplyAllophonesIfNeeded(pronunciation), _options.IncludeStress));
         }
 
+        /// <summary>入力テキストを X-SAMPA 表記に変換する。</summary>
+        public string ToXSampa(string text)
+        {
+            return ProcessText(text, pronunciation => XSampaConverter.Convert(ApplyAllophonesIfNeeded(pronunciation), _options.IncludeStress));
+        }
+
+        /// <summary>入力テキストをストレスマークなしの X-SAMPA 表記に変換する。</summary>
+        public string ToXSampaWithoutStress(string text)
+        {
+            return ProcessText(text, pronunciation => XSampaConverter.Convert(ApplyAllophonesIfNeeded(pronunciation), includeStress: false));
+        }
+
         /// <summary>入力テキストを音素リストに変換する。</summary>
         public IReadOnlyList<SpanishPhoneme> ToPhonemeList(string text)
         {
@@ -91,6 +103,18 @@ namespace DotNetG2P.Spanish
             var results = new string[texts.Count];
             for (var i = 0; i < texts.Count; i++)
                 results[i] = ToIPA(texts[i]);
+            return results;
+        }
+
+        /// <summary>複数テキストを一括で X-SAMPA に変換する。</summary>
+        public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new string[texts.Count];
+            for (var i = 0; i < texts.Count; i++)
+                results[i] = ToXSampa(texts[i]);
             return results;
         }
 

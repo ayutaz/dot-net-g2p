@@ -13,7 +13,7 @@ namespace DotNetG2P.Spanish
         /// <summary>方言設定。</summary>
         public SpanishDialect Dialect { get; }
 
-        /// <summary>IPA出力にストレスマークを含めるか。</summary>
+        /// <summary>IPA / X-SAMPA 出力にストレスマークを含めるか。</summary>
         public bool IncludeStress { get; }
 
         /// <summary>将来の異音処理を有効化するか。</summary>

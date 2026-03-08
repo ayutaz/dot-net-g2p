@@ -15,11 +15,16 @@
   - `AllophoneProcessor` による `/b d g/` 弱化、鼻音同化、`/s/` の有声化を実装済み
   - `SpanishNormalizer` による Unicode正規化、小文字化、句読点除去、略語展開、数値展開、通貨/割合/記号展開を実装済み
   - 埋め込み例外辞書 `spanish_exceptions.txt` を追加し、`y / guion / truhan / whisky / wifi / show / México / Xochimilco / Wagner` などを補正
+- **S3: 初版実装済み**
+  - `XSampaConverter` と `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch` を実装済み
+  - `SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests` を追加済み
+  - ASCII-only X-SAMPA、バッチ整合性、回帰コーパス、性能しきい値を検証済み
 - **検証状況**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter SpanishG2P`
-  - 結果: **98 passed**
+  - 結果: **173 passed**
 - **未実装**
-  - X-SAMPA出力、バッチ精度テスト拡充、大規模精度評価、`DotNetG2P.Multilingual` 統合
+  - WikiPron / ipa-dict を使った大規模精度評価
+  - `DotNetG2P.Multilingual` 統合
 
 ---
 
@@ -42,12 +47,12 @@
 - 今後の残課題: 正規化語彙の拡充、例外辞書の追加、大規模精度評価
 
 ### S3: 出力形式拡張・テスト充実
-- 状態: **未着手**
+- 状態: **初版実装済み**
 - X-SAMPA出力
-- バッチAPI
+- `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch`
 - エッジケーステスト、パフォーマンステスト、精度テスト
 - WikiPron/ipa-dictデータによる精度検証
-- テスト 150件追加
+- テスト 75件追加（累計 173件）
 
 ### S4: 多言語統合・パッケージング
 - 状態: **未着手**
@@ -141,7 +146,7 @@ tests/DotNetG2P.Tests/SpanishG2P/
   SpanishAccuracyTests.cs           # 精度・回帰テスト [S3]
 ```
 
-現行テスト数: 98件（2026-03-09 時点）
+現行テスト数: 173件（2026-03-09 時点）
 
 ---
 
@@ -226,6 +231,7 @@ public sealed class SpanishG2PEngine : IDisposable
 
     // X-SAMPA [S3]
     public string ToXSampa(string text);
+    public string ToXSampaWithoutStress(string text);
     public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts);
 
     // IDisposable
