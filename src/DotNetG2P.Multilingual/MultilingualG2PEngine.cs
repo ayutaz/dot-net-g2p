@@ -29,6 +29,22 @@ namespace DotNetG2P.Multilingual
         private int _disposed;
 
         /// <summary>
+        /// 既定の辞書検索パスを用いて多言語G2Pエンジンを初期化する。
+        /// </summary>
+        public MultilingualG2PEngine()
+            : this(NaistJdicLocator.ResolveOrThrow(), MultilingualG2POptions.Default)
+        {
+        }
+
+        /// <summary>
+        /// 既定の辞書検索パスとオプションを用いて多言語G2Pエンジンを初期化する。
+        /// </summary>
+        public MultilingualG2PEngine(MultilingualG2POptions options)
+            : this(NaistJdicLocator.ResolveOrThrow(), options)
+        {
+        }
+
+        /// <summary>
         /// 日本語辞書パスを指定して多言語G2Pエンジンを初期化する（デフォルトオプション）。
         /// </summary>
         /// <param name="japaneseDictPath">naist-jdic辞書ディレクトリのパス</param>

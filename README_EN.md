@@ -10,7 +10,7 @@ A Japanese-English-Chinese multilingual + Spanish G2P (Grapheme-to-Phoneme) libr
 It natively reimplements the OpenJTalk-compatible Japanese G2P pipeline, CMU dictionary-based English G2P, pinyin-data dictionary-based Chinese pinyin conversion, and rule-based Spanish G2P in C#, without depending on Python or native binaries.
 
 ```csharp
-using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
+using var engine = new G2PEngine(new MeCabTokenizer());
 
 engine.ToPhonemes("こんにちは");  // => "k o N n i ch i w a"
 engine.ToKana("音声合成");        // => "オンセーゴーセー"
@@ -28,11 +28,11 @@ using var esEngine = new SpanishG2PEngine();
 esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
 // Mixed Japanese-English-Spanish text
-using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("私はhelloと言った");  // Japanese => Japanese phonemes, English => ARPAbet
 
 var multiEsOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
-using var multiEsEngine = new MultilingualG2PEngine("/path/to/naist-jdic", multiEsOptions);
+using var multiEsEngine = new MultilingualG2PEngine(multiEsOptions);
 multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese => Japanese phonemes
 ```
 
@@ -107,7 +107,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
-> **Note:** A naist-jdic dictionary is required separately. See [Dictionary Setup](#dictionary-setup) for details.
+> **Note:** Japanese and multilingual engines require a separate naist-jdic dictionary. See [Dictionary Setup](#dictionary-setup) for details.
 
 ## Quick Start
 
@@ -115,8 +115,8 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 using DotNetG2P;
 using DotNetG2P.MeCab;
 
-// 1. Initialize the engine (specify dictionary path)
-using var tokenizer = new MeCabTokenizer("/path/to/naist-jdic");
+// 1. Resolve the dictionary from the default install path or environment variables
+using var tokenizer = new MeCabTokenizer();
 using var engine = new G2PEngine(tokenizer);
 
 // 2. Convert text to phoneme sequence
@@ -188,7 +188,7 @@ string esIpa = esEngine.ToIPA("guion");
 // === Mixed Japanese-English-Chinese-Spanish Text ===
 using DotNetG2P.Multilingual;
 
-using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+using var multiEngine = new MultilingualG2PEngine();
 string mixed = multiEngine.ToPhonemes("今日はgood dayです");
 // Japanese segments => Japanese phonemes, English segments => ARPAbet phonemes
 
@@ -197,13 +197,13 @@ var segments = multiEngine.ToSegments("今日はgood dayです");
 
 // For text containing Chinese
 var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
-using var multiZhEngine = new MultilingualG2PEngine("/path/to/naist-jdic", zhOptions);
+using var multiZhEngine = new MultilingualG2PEngine(zhOptions);
 multiZhEngine.ToPhonemes("你好hello");
 // Chinese segments => Pinyin, English segments => ARPAbet phonemes
 
 // For text containing Spanish
 var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
-using var multiEsEngine = new MultilingualG2PEngine("/path/to/naist-jdic", esOptions);
+using var multiEsEngine = new MultilingualG2PEngine(esOptions);
 multiEsEngine.ToPhonemes("hola世界");
 // Spanish segments => IPA phonemes, Japanese segments => Japanese phonemes
 ```
@@ -321,7 +321,21 @@ Text Input
 
 DotNetG2P uses the naist-jdic dictionary (an OpenJTalk MeCab dictionary) for morphological analysis.
 
-### How to Obtain
+### Recommended Setup
+
+```powershell
+pwsh -File tools/install_naist_jdic.ps1
+```
+
+This script downloads the dictionary from the OpenJTalk distribution and extracts it to `%USERPROFILE%\naist-jdic` by default.
+`MeCabTokenizer()` and `MultilingualG2PEngine()` search for the dictionary in this order:
+
+1. `DOTNETG2P_NAIST_JDIC_PATH`
+2. `NAIST_JDIC_PATH`
+3. `%USERPROFILE%\naist-jdic`
+4. `naist-jdic` or `open_jtalk_dic_utf_8-1.11` under the current directory
+
+### Manual Setup
 
 1. Download from the [Open JTalk official website](https://open-jtalk.sourceforge.net/)
 2. Use the dictionary directory bundled with pyopenjtalk or OpenJTalk as-is
@@ -344,6 +358,7 @@ In Unity, place the dictionary files in the `StreamingAssets` folder and specify
 ```csharp
 var dicPath = Path.Combine(Application.streamingAssetsPath, "naist-jdic");
 using var tokenizer = new MeCabTokenizer(dicPath);
+using var multiEngine = new MultilingualG2PEngine(dicPath);
 ```
 
 ## Configuration Options
@@ -383,7 +398,13 @@ dotnet test DotNetG2P.slnx
 # Console sample (without dictionary: MoraMapping verification only)
 dotnet run --project samples/DotNetG2P.Console
 
-# Console sample (with dictionary: full G2P)
+# Install the dictionary to the default location
+pwsh -File tools/install_naist_jdic.ps1
+
+# Console sample (dictionary auto-resolved: full G2P)
+dotnet run --project samples/DotNetG2P.Console
+
+# Console sample (explicit dictionary path)
 dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
 

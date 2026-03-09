@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using DotNetG2P.MeCab;
 using DotNetG2P.Multilingual;
 using DotNetG2P.English;
 
@@ -15,24 +16,9 @@ namespace DotNetG2P.Tests.Multilingual
     {
         private static string? FindDictPath()
         {
-            // 1. 環境変数 NAIST_JDIC_PATH
-            var envPath = Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
-            if (!string.IsNullOrEmpty(envPath) && Directory.Exists(envPath))
-                return envPath;
-
-            // 2. 標準パスを検索
-            var candidates = new[]
-            {
-                @"C:\naist-jdic",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "naist-jdic"),
-                "/usr/local/share/naist-jdic",
-                "/usr/share/naist-jdic",
-            };
-            foreach (var path in candidates)
-                if (Directory.Exists(path))
-                    return path;
-
-            return null;
+            return NaistJdicLocator.TryResolve(out var dictionaryPath)
+                ? dictionaryPath
+                : null;
         }
 
         private static readonly string? DictPath = FindDictPath();
@@ -49,7 +35,7 @@ namespace DotNetG2P.Tests.Multilingual
         [Fact]
         public void コンストラクタ_nullパス_ArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => new MultilingualG2PEngine(null!));
+            Assert.Throws<ArgumentNullException>(() => new MultilingualG2PEngine((string)null!));
         }
 
         [Fact]
@@ -67,7 +53,7 @@ namespace DotNetG2P.Tests.Multilingual
             // （実装ではパス存在チェックがオプションチェックより先に実行されるため、
             //   存在しないダミーパスではDirectoryNotFoundExceptionが出てしまう）
             var ex = Assert.Throws<ArgumentNullException>(
-                () => new MultilingualG2PEngine(null!, null!));
+                () => new MultilingualG2PEngine((string)null!, null!));
             Assert.Equal("japaneseDictPath", ex.ParamName);
         }
 
@@ -77,6 +63,17 @@ namespace DotNetG2P.Tests.Multilingual
             SkipIfNoDictionary();
             using var engine = new MultilingualG2PEngine(DictPath!);
             Assert.Throws<ArgumentNullException>(() => engine.ToPhonemesBatch(null!));
+        }
+
+        [SkippableFact]
+        public void コンストラクタ_パス省略_既定辞書を解決できる()
+        {
+            SkipIfNoDictionary();
+
+            using var engine = new MultilingualG2PEngine();
+            var phonemes = engine.ToPhonemes("こんにちは hello");
+
+            Assert.False(string.IsNullOrWhiteSpace(phonemes));
         }
 
         [SkippableFact]

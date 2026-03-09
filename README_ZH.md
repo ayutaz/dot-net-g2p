@@ -10,7 +10,7 @@
 以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线、基于 CMU 词典的英语 G2P、基于 pinyin-data 词典的中文拼音转换，以及基于规则的西班牙语 G2P，无需依赖 Python 或原生二进制文件即可转换为音素序列。
 
 ```csharp
-using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
+using var engine = new G2PEngine(new MeCabTokenizer());
 
 engine.ToPhonemes("こんにちは");  // => "k o N n i ch i w a"
 engine.ToKana("音声合成");        // => "オンセーゴーセー"
@@ -28,7 +28,7 @@ using var esEngine = new SpanishG2PEngine();
 esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
 // 日英混合文本
-using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音素，英语部分 => ARPAbet
 ```
 
@@ -103,7 +103,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
-> **注意：** 需要另行准备 naist-jdic 词典。详情请参阅[词典准备](#词典准备)。
+> **注意：** 日语或多语言引擎需要另行准备 naist-jdic 词典。详情请参阅[词典准备](#词典准备)。
 
 ## 快速开始
 
@@ -111,8 +111,8 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 using DotNetG2P;
 using DotNetG2P.MeCab;
 
-// 1. 初始化引擎（指定词典路径）
-using var tokenizer = new MeCabTokenizer("/path/to/naist-jdic");
+// 1. 从默认安装位置或环境变量自动解析词典
+using var tokenizer = new MeCabTokenizer();
 using var engine = new G2PEngine(tokenizer);
 
 // 2. 从文本获取音素序列
@@ -189,7 +189,7 @@ string esIpa = esEngine.ToIPA("guion");
 // === 日英中西混合文本 ===
 using DotNetG2P.Multilingual;
 
-using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+using var multiEngine = new MultilingualG2PEngine();
 string mixed = multiEngine.ToPhonemes("今日はgood dayです");
 // 日语部分 => 日语音素，英语部分 => ARPAbet 音素
 
@@ -198,13 +198,13 @@ var segments = multiEngine.ToSegments("今日はgood dayです");
 
 // 包含中文文本的情况
 var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
-using var multiZhEngine = new MultilingualG2PEngine("/path/to/naist-jdic", zhOptions);
+using var multiZhEngine = new MultilingualG2PEngine(zhOptions);
 multiZhEngine.ToPhonemes("你好hello");
 // 中文部分 => 拼音，英语部分 => ARPAbet 音素
 
 // 包含西班牙语文本的情况
 var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
-using var multiEsEngine = new MultilingualG2PEngine("/path/to/naist-jdic", esOptions);
+using var multiEsEngine = new MultilingualG2PEngine(esOptions);
 multiEsEngine.ToPhonemes("hola世界");
 // 西班牙语部分 => IPA 音素，日语部分 => 日语音素
 ```
@@ -322,7 +322,21 @@ DotNetG2P 实现了与 [OpenJTalk](https://open-jtalk.sourceforge.net/) 相同�
 
 DotNetG2P 使用 naist-jdic 词典（OpenJTalk 专用 MeCab 词典）进行形态素分析。
 
-### 获取方式
+### 推荐方式
+
+```powershell
+pwsh -File tools/install_naist_jdic.ps1
+```
+
+该脚本会从 OpenJTalk 发布包下载词典，并默认解压到 `%USERPROFILE%\naist-jdic`。
+`MeCabTokenizer()` 与 `MultilingualG2PEngine()` 会按以下顺序自动查找词典：
+
+1. 环境变量 `DOTNETG2P_NAIST_JDIC_PATH`
+2. 环境变量 `NAIST_JDIC_PATH`
+3. `%USERPROFILE%\naist-jdic`
+4. 当前目录下的 `naist-jdic` 或 `open_jtalk_dic_utf_8-1.11`
+
+### 手动准备
 
 1. 从 [Open JTalk 官方网站](https://open-jtalk.sourceforge.net/)下载
 2. 直接使用 pyopenjtalk 或 OpenJTalk 附带的词典目录
@@ -345,6 +359,7 @@ DotNetG2P 使用 naist-jdic 词典（OpenJTalk 专用 MeCab 词典）进行形�
 ```csharp
 var dicPath = Path.Combine(Application.streamingAssetsPath, "naist-jdic");
 using var tokenizer = new MeCabTokenizer(dicPath);
+using var multiEngine = new MultilingualG2PEngine(dicPath);
 ```
 
 ## 选项配置
@@ -384,7 +399,13 @@ dotnet test DotNetG2P.slnx
 # 控制台示例（无词典：仅验证 MoraMapping）
 dotnet run --project samples/DotNetG2P.Console
 
-# 控制台示例（有词典：完整 G2P）
+# 将词典安装到默认位置
+pwsh -File tools/install_naist_jdic.ps1
+
+# 控制台示例（自动解析词典：完整 G2P）
+dotnet run --project samples/DotNetG2P.Console
+
+# 控制台示例（显式指定词典路径）
 dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
 

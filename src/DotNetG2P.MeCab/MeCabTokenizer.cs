@@ -24,6 +24,14 @@ namespace DotNetG2P.MeCab
         private readonly Lazy<ViterbiDecoder> _lazyDecoder;
         private int _disposed;
 
+        /// <summary>
+        /// 既定の辞書検索パスから Tokenizer を初期化する。
+        /// </summary>
+        public MeCabTokenizer()
+            : this(NaistJdicLocator.ResolveOrThrow())
+        {
+        }
+
         /// <param name="dictionaryPath">naist-jdic辞書ディレクトリのパス</param>
         public MeCabTokenizer(string dictionaryPath)
         {
