@@ -11,7 +11,7 @@
     <PackageTags>g2p;spanish;tts;phoneme;ipa;text-to-speech;unity</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Data\spanish_exceptions.txt" LogicalName="DotNetG2P.Spanish.Data.spanish_exceptions.txt" />
+    <EmbeddedResource Include="Data\spanish_exceptions.master.tsv" LogicalName="DotNetG2P.Spanish.Data.spanish_exceptions.master.tsv" />
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
   </ItemGroup>
 </Project>

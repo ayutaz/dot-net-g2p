@@ -13,18 +13,21 @@
   - ルールベースG2P本体
   - 音節分割とストレス付与
   - ラテンアメリカ / カスティーリャ切り替え
-  - `y / guion / truhan / whisky / wifi / show / México / Xochimilco / Wagner` などの例外辞書
-  - `/b d g/` 弱化、鼻音同化、`/s/` 有声化の初版異音処理
-  - 略語・数値・割合・通貨・記号展開を含む `SpanishNormalizer`
+  - `spanish_exceptions.master.tsv` ベースの例外辞書運用と `generate_spanish_exceptions.ps1`
+  - `y / guion / truhan / whisky / wifi / show / México / Xochimilco / Wagner` などに加え、loanword / 固有名詞の追加例外辞書
+  - `/b d g/` 弱化、鼻音同化、`/s/` 有声化、語末 `/d/` 軟化を切り替え可能な異音処理
+  - 略語・数値・割合・通貨・記号・日付・時刻・単位展開を含む `SpanishNormalizer`
+  - 文脈依存数詞（`un/uno`, `una`, `veintiún/veintiuna`）
   - `XSampaConverter` と `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch`
   - X-SAMPA / エッジケース / パフォーマンス / 精度・回帰テスト
   - `ipa-dict / WikiPron` サンプルデータを用いた PER 回帰テスト
+  - curated allophone corpus と exception metadata 整合テスト
   - `DotNetG2P.Multilingual` への統合（`Language.Spanish`, `DefaultLatinLanguage`, `MultilingualSpanishTests`）
   - `tools/install_naist_jdic.ps1` と `NaistJdicLocator` により、日本語辞書をダウンロードして `MeCabTokenizer()` / `MultilingualG2PEngine()` から既定パスで自動解決可能
 - 未実装
   - 全量コーパスでの大規模精度評価（WikiPron / ipa-dict）
 - 検証状況
-  - `SpanishG2P` テスト: **177 passed**
+  - `SpanishG2P` テスト: **222 passed**
   - `Multilingual` テスト: **169 passed / 152 skipped**
 
 調査本文はルール設計の根拠として維持し、最新の実装状態は [spanish-g2p-implementation-plan.md](spanish-g2p-implementation-plan.md) を正とする。

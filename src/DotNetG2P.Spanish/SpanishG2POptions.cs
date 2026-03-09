@@ -22,6 +22,9 @@ namespace DotNetG2P.Spanish
         /// <summary>テキスト正規化を有効化するか。</summary>
         public bool EnableTextNormalization { get; }
 
+        /// <summary>有効な異音規則セット。</summary>
+        public SpanishAllophoneFeatures AllophoneFeatures { get; }
+
         /// <summary>音素列出力の区切り文字。</summary>
         public string Separator { get; }
 
@@ -33,13 +36,15 @@ namespace DotNetG2P.Spanish
             bool includeStress = true,
             bool enableAllophones = false,
             bool enableTextNormalization = true,
-            string separator = " ")
+            string separator = " ",
+            SpanishAllophoneFeatures allophoneFeatures = SpanishAllophoneFeatures.Default)
         {
             Dialect = dialect;
             IncludeStress = includeStress;
             EnableAllophones = enableAllophones;
             EnableTextNormalization = enableTextNormalization;
             Separator = separator ?? throw new ArgumentNullException(nameof(separator));
+            AllophoneFeatures = allophoneFeatures;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace DotNetG2P.Spanish.Rules
             if (string.IsNullOrEmpty(word))
                 return new SpanishPronunciation(Array.Empty<SpanishPhoneme>(), Array.Empty<int>(), -1);
 
-            if (SpanishExceptionDictionary.TryLookup(word, out var exception))
+            if (SpanishExceptionDictionary.TryLookup(word, dialect, out var exception))
                 return exception;
 
             var stressedSyllables = StressAssigner.MarkStress(word, SpanishSyllabifier.Syllabify(word));

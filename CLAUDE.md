@@ -106,11 +106,12 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - StressAssigner（ストレス位置決定、アクセント記号 or デフォルトルール）
     - IPA出力: ToIPA(), ToPhonemes(), ToPhonemeList(), ToSyllables(), バッチAPI
     - テスト実装済み
-  - **S2（精度向上・異音規則・テキスト正規化）**: 初版実装済み
-    - AllophoneProcessor（/b,d,g/弱化、鼻音同化、/s/有声化、オプション）
-    - SpanishNormalizer（NFKC、小文字化、句読点処理、略語・数字・通貨・割合・記号展開）
-    - 埋め込み例外辞書 `spanish_exceptions.txt`（`y`, `guion`, `truhan`, `whisky`, `wifi`, `show`, `México`, `Xochimilco`, `Wagner` 等）
-    - SpanishG2P テスト 98件通過
+  - **S2（精度向上・異音規則・テキスト正規化）**: 完了
+    - `SpanishNormalizer` をカテゴリ別展開へ整理し、日付・時刻・単位・略語・記号を拡張
+    - `NumberToWords` に文脈依存数詞（`un/uno`, `una`, `veintiún/veintiuna`）を追加
+    - `SpanishAllophoneFeatures` により必須規則と可変規則を切替可能
+    - `spanish_exceptions.master.tsv` + `tools/generate_spanish_exceptions.ps1` による例外辞書運用へ移行
+    - SpanishG2P テスト 222件通過
   - **S3（X-SAMPA・大規模精度評価・拡張テスト）**: 初版実装済み
     - XSampaConverter、`ToXSampa()`, `ToXSampaWithoutStress()`, `ToXSampaBatch()` を追加
     - SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests を追加

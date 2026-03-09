@@ -5,17 +5,21 @@ whisky	0	w i s|k i
 wifi	0	w i|f i
 kiwi	0	k i|w i
 show	0	ʃ o w
-méxico	0	m e|x i|k o
-mexico	1	m e|x i|k o
-xochimilco	2	ʃ o|tʃ i|m i l|k o
-wagner	0	b a ɡ|n e r
 software	1	s o f|w e ɾ
 shampoo	1	ʃ a m|p u
 hockey	0	x o|k e j
 whatsapp	1	w a|s a p
 sándwich	0	s a n|w i tʃ
 iceberg	0	i|s e β e r ɡ
-oaxaca	1	w a|x a|k a
-ximena	1	x i|m e|n a
 ketchup	0	k e|tʃ u p
 croissant	1	k ɾ w a|s a n
+jetlag	1	x e t|l a ɡ
+podcast	1	p o d|k a s t
+méxico	0	m e|x i|k o
+mexico	1	m e|x i|k o
+xochimilco	2	ʃ o|tʃ i|m i l|k o
+wagner	0	b a ɡ|n e r
+oaxaca	1	w a|x a|k a
+ximena	1	x i|m e|n a
+yonqui	0	ʝ o n|k i
+google	1	ɡ u|ɣ e l

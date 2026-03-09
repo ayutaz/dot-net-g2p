@@ -11,10 +11,12 @@
   - `SpanishG2PEngine`, `SpanishG2POptions`, IPA音素モデル、音節分割、ストレス付与、ラテンアメリカ/カスティーリャ切り替えを実装済み
   - `ch / ll / rr / qu / gu / gü / c / g / r / x / y / z / h` を含む基本ルールベース変換を実装済み
   - `DotNetG2P.Spanish` パッケージ、UPMメタデータ、ソリューション接続、Spanish専用テスト群を追加済み
-- **S2: 初版実装済み**
-  - `AllophoneProcessor` による `/b d g/` 弱化、鼻音同化、`/s/` の有声化を実装済み
-  - `SpanishNormalizer` による Unicode正規化、小文字化、句読点除去、略語展開、数値展開、通貨/割合/記号展開を実装済み
-  - 埋め込み例外辞書 `spanish_exceptions.txt` を追加し、`y / guion / truhan / whisky / wifi / show / México / Xochimilco / Wagner` などを補正
+- **S2: 完了**
+  - `SpanishNormalizer` を段階型パイプラインへ整理し、日付/時刻/単位/略語/記号の正規化語彙を拡張済み
+  - `NumberToWords` に文脈依存の性・省略形（`un/uno`, `una`, `veintiún/veintiuna`）を追加済み
+  - 例外辞書を `spanish_exceptions.master.tsv` ソース + `generate_spanish_exceptions.ps1` 生成運用へ移行済み
+  - `AllophoneProcessor` を `SpanishAllophoneFeatures` で必須規則と可変規則に分離済み
+  - curated allophone corpus と metadata 整合テストを追加済み
 - **S3: 初版実装済み**
   - `XSampaConverter` と `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch` を実装済み
   - `SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests` を追加済み
@@ -28,7 +30,7 @@
   - 日本語辞書は `tools/install_naist_jdic.ps1` でダウンロード可能になり、`MeCabTokenizer()` / `MultilingualG2PEngine()` は `NaistJdicLocator` により既定パスから自動解決可能
 - **検証状況**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter SpanishG2P`
-  - 結果: **177 passed**
+  - 結果: **222 passed**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual`
   - 結果: **169 passed / 152 skipped**
 - **未実装**
@@ -48,11 +50,19 @@
 - テスト 98件（2026-03-09 時点）
 
 ### S2: 異音規則・テキスト正規化
-- 状態: **初版実装済み**
-- 異音処理（/b,d,g/ 弱化、鼻音同化、摩擦音有声化）
-- テキスト正規化（数字・記号・略語の展開）
-- 外来語例外辞書（少数、EmbeddedResource）
-- 今後の残課題: 正規化語彙の拡充、例外辞書の追加、大規模精度評価
+- 状態: **完了**
+- P1: 正規化仕様の拡張
+  - `SpanishNormalizer` をカテゴリ別の展開ステージに分割
+  - `NumberToWords` に性・省略形を追加
+  - 日付・時刻・単位・略語・記号の対象範囲を拡張
+- P2: 例外辞書運用の整備
+  - `spanish_exceptions.master.tsv` に `dialect / category / stress / phonemes / source / note` を保持
+  - `tools/generate_spanish_exceptions.ps1` でランタイム向け `spanish_exceptions.txt` を生成
+  - 固有名詞・外来語・hiato 例外を追加
+- P3: 異音規則の評価強化
+  - `SpanishAllophoneFeatures` で `Obligatory / Default / All` を切替可能にした
+  - curated allophone reference corpus を追加し、プロファイル別 exact match を検証
+  - metadata 同期テストと文脈数詞テストを追加
 
 ### S3: 出力形式拡張・テスト充実
 - 状態: **初版実装済み**
@@ -79,16 +89,16 @@
 
 ```
 入力テキスト
-  → Normalize (SpanishNormalizer: テキスト正規化)         [S2 初版実装済み]
+  → Normalize (SpanishNormalizer: テキスト正規化)         [S2 完了]
   → Tokenize (単語分割)                                    [S1]
   → RuleConvert (ルールベース: 正書法→音素変換)            [S1]
-      → 例外辞書 lookup（loanword / hiato / 固有名詞）      [S2 初版実装済み]
+      → 例外辞書 lookup（loanword / hiato / 固有名詞）      [S2 完了]
       → ダイグラフ処理（ch, ll, rr, qu, gu, gü）
       → 文脈依存ルール（c, g, r, x, y, z, h）
       → 単純対応ルール
   → Syllabify (音節分割)                                   [S1]
   → AssignStress (ストレス付与: アクセント記号+デフォルトルール) [S1]
-  → ApplyAllophones (異音規則: β/ð/ɣ, 鼻音同化等)          [S2 初版実装済み]
+  → ApplyAllophones (異音規則: β/ð/ɣ, 鼻音同化等)          [S2 完了]
   → Format (IPA / X-SAMPA)                                 [S1/S3]
 出力
 ```
@@ -126,14 +136,15 @@ src/DotNetG2P.Spanish/
     StressAssigner.cs                # ストレス位置決定
     AllophoneProcessor.cs            # 異音規則適用 [S2 初版実装済み]
   Normalization/
-    SpanishNormalizer.cs             # テキスト正規化 [S2 初版実装済み]
-    NumberToWords.cs                 # 数字→スペイン語読み [S2 初版実装済み]
+    SpanishNormalizer.cs             # テキスト正規化 [S2 完了]
+    NumberToWords.cs                 # 数字→スペイン語読み + 文脈依存数詞 [S2 完了]
   Conversion/
     IpaConverter.cs                  # 内部表現→IPA文字列変換
     XSampaConverter.cs               # 内部表現→X-SAMPA文字列変換 [S3]
   Data/                              # 例外辞書 [S2]
-    spanish_exceptions.txt           # 外来語・hiato・固有名詞例外 (EmbeddedResource)
-    SpanishExceptionDictionary.cs    # 埋め込み辞書ローダ
+    spanish_exceptions.master.tsv    # 例外辞書ソース（dialect/category/source metadata付き）
+    spanish_exceptions.txt           # ランタイム用生成辞書
+    SpanishExceptionDictionary.cs    # 例外辞書ローダ
   package.json                       # UPM (com.dotnetg2p.spanish)
   DotNetG2P.Spanish.asmdef           # Unity Assembly Definition
 ```
@@ -149,6 +160,9 @@ tests/DotNetG2P.Tests/SpanishG2P/
   SpanishPhonemeTests.cs             # 音素モデルテスト [S1]
   AllophoneProcessorTests.cs         # 異音規則テスト [S2]
   SpanishNormalizerTests.cs          # テキスト正規化テスト [S2]
+  NumberToWordsTests.cs              # 文脈依存数詞テスト [S2]
+  SpanishExceptionDictionaryMetadataTests.cs  # 例外辞書メタデータ整合性 [S2]
+  SpanishAllophoneEvaluationTests.cs # allophone reference corpus 評価 [S2]
   SpanishIpaTests.cs                 # IPA変換テスト [S1]
   SpanishXSampaTests.cs             # X-SAMPA変換テスト [S3]
   SpanishEdgeCaseTests.cs           # エッジケーステスト [S3]
@@ -156,7 +170,7 @@ tests/DotNetG2P.Tests/SpanishG2P/
   SpanishAccuracyTests.cs           # 精度・回帰テスト [S3]
 ```
 
-現行テスト数: 177件（2026-03-09 時点）
+現行テスト数: 222件（2026-03-09 時点）
 
 ---
 

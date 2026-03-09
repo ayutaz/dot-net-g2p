@@ -164,7 +164,7 @@ namespace DotNetG2P.Spanish
         private SpanishPronunciation ApplyAllophonesIfNeeded(SpanishPronunciation pronunciation)
         {
             return _options.EnableAllophones
-                ? AllophoneProcessor.Apply(pronunciation)
+                ? AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures)
                 : pronunciation;
         }
 

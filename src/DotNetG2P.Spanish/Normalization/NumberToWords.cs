@@ -1,8 +1,13 @@
-using System;
 using System.Text;
 
 namespace DotNetG2P.Spanish.Normalization
 {
+    internal enum SpanishNumberGender : byte
+    {
+        Masculine = 0,
+        Feminine = 1,
+    }
+
     internal static class NumberToWords
     {
         private static readonly string[] s_units =
@@ -27,10 +32,9 @@ namespace DotNetG2P.Spanish.Normalization
             if (string.IsNullOrEmpty(text))
                 return string.Empty;
 
-            if (!long.TryParse(text, out var value))
-                return text;
-
-            return Convert(value);
+            return long.TryParse(text, out var value)
+                ? Convert(value)
+                : text;
         }
 
         public static string ConvertDigits(string digits)
@@ -93,6 +97,56 @@ namespace DotNetG2P.Spanish.Normalization
             var remainder = value % 1000000;
             var millionPrefix = millions == 1 ? "un millón" : Convert(millions) + " millones";
             return remainder == 0 ? millionPrefix : millionPrefix + " " + Convert(remainder);
+        }
+
+        public static string ConvertAttributed(long value, SpanishNumberGender gender, bool apocopate)
+        {
+            var converted = Convert(value);
+            return ApplyAgreement(converted, gender, apocopate);
+        }
+
+        private static string ApplyAgreement(string text, SpanishNumberGender gender, bool apocopate)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            if (gender == SpanishNumberGender.Feminine)
+            {
+                text = text
+                    .Replace("doscientos", "doscientas")
+                    .Replace("trescientos", "trescientas")
+                    .Replace("cuatrocientos", "cuatrocientas")
+                    .Replace("quinientos", "quinientas")
+                    .Replace("seiscientos", "seiscientas")
+                    .Replace("setecientos", "setecientas")
+                    .Replace("ochocientos", "ochocientas")
+                    .Replace("novecientos", "novecientas");
+
+                if (text == "uno")
+                    return "una";
+                if (text == "veintiuno")
+                    return "veintiuna";
+                if (text.EndsWith(" y uno"))
+                    return text.Substring(0, text.Length - " y uno".Length) + " y una";
+                if (text.EndsWith(" uno"))
+                    return text.Substring(0, text.Length - " uno".Length) + " una";
+
+                return text;
+            }
+
+            if (!apocopate)
+                return text;
+
+            if (text == "uno")
+                return "un";
+            if (text == "veintiuno")
+                return "veintiún";
+            if (text.EndsWith(" y uno"))
+                return text.Substring(0, text.Length - " y uno".Length) + " y un";
+            if (text.EndsWith(" uno"))
+                return text.Substring(0, text.Length - " uno".Length) + " un";
+
+            return text;
         }
     }
 }

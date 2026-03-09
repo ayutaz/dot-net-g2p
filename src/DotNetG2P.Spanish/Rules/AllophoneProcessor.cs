@@ -1,5 +1,3 @@
-using System;
-
 namespace DotNetG2P.Spanish.Rules
 {
     /// <summary>
@@ -7,9 +5,9 @@ namespace DotNetG2P.Spanish.Rules
     /// </summary>
     internal static class AllophoneProcessor
     {
-        public static SpanishPronunciation Apply(SpanishPronunciation pronunciation)
+        public static SpanishPronunciation Apply(SpanishPronunciation pronunciation, SpanishAllophoneFeatures features)
         {
-            if (pronunciation.PhonemesInternal.Length == 0)
+            if (pronunciation.PhonemesInternal.Length == 0 || features == SpanishAllophoneFeatures.None)
                 return pronunciation;
 
             var result = new SpanishPhoneme[pronunciation.PhonemesInternal.Length];
@@ -17,48 +15,81 @@ namespace DotNetG2P.Spanish.Rules
             {
                 var current = pronunciation.PhonemesInternal[i];
                 var previous = i > 0 ? pronunciation.PhonemesInternal[i - 1] : default;
-                var next = i + 1 < pronunciation.PhonemesInternal.Length ? pronunciation.PhonemesInternal[i + 1] : default;
+                var hasNext = i + 1 < pronunciation.PhonemesInternal.Length;
+                var next = hasNext ? pronunciation.PhonemesInternal[i + 1] : default;
                 var transformed = current.Phoneme;
 
-                switch (current.Phoneme)
+                if (HasFeature(features, SpanishAllophoneFeatures.Lenition))
                 {
-                    case SpanishIpaPhoneme.B:
-                        transformed = IsWordInitial(i) || IsNasal(previous.Phoneme)
-                            ? SpanishIpaPhoneme.B
-                            : SpanishIpaPhoneme.Beta;
-                        break;
+                    transformed = ApplyLenition(i, previous.Phoneme, hasNext ? next.Phoneme : (SpanishIpaPhoneme?)null, transformed);
+                }
 
-                    case SpanishIpaPhoneme.D:
-                        transformed = IsWordInitial(i) || IsNasal(previous.Phoneme) || previous.Phoneme == SpanishIpaPhoneme.L
-                            ? SpanishIpaPhoneme.D
-                            : SpanishIpaPhoneme.Dh;
-                        break;
+                if (hasNext && HasFeature(features, SpanishAllophoneFeatures.NasalAssimilation) && transformed == SpanishIpaPhoneme.N)
+                {
+                    transformed = AssimilateNasal(next.Phoneme);
+                }
 
-                    case SpanishIpaPhoneme.G:
-                        transformed = IsWordInitial(i) || IsNasal(previous.Phoneme)
-                            ? SpanishIpaPhoneme.G
-                            : SpanishIpaPhoneme.Gh;
-                        break;
+                if (HasFeature(features, SpanishAllophoneFeatures.SVoicing)
+                    && transformed == SpanishIpaPhoneme.S
+                    && hasNext
+                    && IsVoicedConsonant(next.Phoneme))
+                {
+                    transformed = SpanishIpaPhoneme.Z;
+                }
 
-                    case SpanishIpaPhoneme.N:
-                        transformed = AssimilateNasal(next.Phoneme);
-                        break;
+                if (HasFeature(features, SpanishAllophoneFeatures.YeAffrication)
+                    && transformed == SpanishIpaPhoneme.Y
+                    && (IsWordInitial(i) || IsNasal(previous.Phoneme)))
+                {
+                    transformed = SpanishIpaPhoneme.YAffricate;
+                }
 
-                    case SpanishIpaPhoneme.S:
-                        if (IsVoicedConsonant(next.Phoneme))
-                            transformed = SpanishIpaPhoneme.Z;
-                        break;
-
-                    case SpanishIpaPhoneme.Y:
-                        if (IsWordInitial(i) || IsNasal(previous.Phoneme))
-                            transformed = SpanishIpaPhoneme.YAffricate;
-                        break;
+                if (HasFeature(features, SpanishAllophoneFeatures.FinalDSoftening)
+                    && transformed == SpanishIpaPhoneme.D
+                    && i == pronunciation.PhonemesInternal.Length - 1)
+                {
+                    transformed = SpanishIpaPhoneme.Dh;
                 }
 
                 result[i] = new SpanishPhoneme(transformed, current.IsStressed);
             }
 
             return new SpanishPronunciation(result, pronunciation.SyllableOffsetsInternal, pronunciation.StressedSyllableIndex);
+        }
+
+        private static SpanishIpaPhoneme ApplyLenition(int index, SpanishIpaPhoneme previous, SpanishIpaPhoneme? next, SpanishIpaPhoneme current)
+        {
+            switch (current)
+            {
+                case SpanishIpaPhoneme.B:
+                    return IsWordInitial(index) || IsNasal(previous)
+                        ? SpanishIpaPhoneme.B
+                        : SpanishIpaPhoneme.Beta;
+
+                case SpanishIpaPhoneme.D:
+                    if (index == 0)
+                        return SpanishIpaPhoneme.D;
+
+                    if (previous == SpanishIpaPhoneme.L || IsNasal(previous))
+                        return SpanishIpaPhoneme.D;
+
+                    return next == null
+                        ? SpanishIpaPhoneme.D
+                        : SpanishIpaPhoneme.Dh;
+
+                case SpanishIpaPhoneme.G:
+                    return IsWordInitial(index) || IsNasal(previous)
+                        ? SpanishIpaPhoneme.G
+                        : SpanishIpaPhoneme.Gh;
+
+                default:
+                    return current;
+            }
+        }
+
+        private static bool HasFeature(SpanishAllophoneFeatures value, SpanishAllophoneFeatures feature)
+        {
+            return (value & feature) == feature;
         }
 
         private static bool IsWordInitial(int index) => index == 0;
@@ -92,6 +123,7 @@ namespace DotNetG2P.Spanish.Rules
                 case SpanishIpaPhoneme.R:
                 case SpanishIpaPhoneme.Rr:
                 case SpanishIpaPhoneme.Y:
+                case SpanishIpaPhoneme.YAffricate:
                 case SpanishIpaPhoneme.Ll:
                     return true;
                 default:

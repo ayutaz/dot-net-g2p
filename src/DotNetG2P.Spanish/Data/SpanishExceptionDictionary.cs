@@ -7,58 +7,96 @@ namespace DotNetG2P.Spanish.Data
 {
     internal static class SpanishExceptionDictionary
     {
-        private static readonly Dictionary<string, SpanishPronunciation> s_entries = LoadEntries();
+        private const byte AnyDialectKey = byte.MaxValue;
+        private static readonly Dictionary<string, Dictionary<byte, SpanishPronunciation>> s_entries = LoadEntries();
 
-        public static bool TryLookup(string word, out SpanishPronunciation pronunciation)
+        public static bool TryLookup(string word, SpanishDialect dialect, out SpanishPronunciation pronunciation)
         {
-            if (word == null)
-            {
-                pronunciation = null!;
+            pronunciation = null!;
+            if (word == null || !s_entries.TryGetValue(word, out var byDialect))
                 return false;
-            }
 
-            return s_entries.TryGetValue(word, out pronunciation!);
+            if (byDialect.TryGetValue((byte)dialect, out pronunciation))
+                return true;
+
+            return byDialect.TryGetValue(AnyDialectKey, out pronunciation);
         }
 
-        private static Dictionary<string, SpanishPronunciation> LoadEntries()
+        private static Dictionary<string, Dictionary<byte, SpanishPronunciation>> LoadEntries()
         {
             var assembly = typeof(SpanishExceptionDictionary).Assembly;
-            using var stream = assembly.GetManifestResourceStream("DotNetG2P.Spanish.Data.spanish_exceptions.txt")
-                ?? throw new InvalidOperationException("Embedded resource not found: spanish_exceptions.txt");
+            using var stream = assembly.GetManifestResourceStream("DotNetG2P.Spanish.Data.spanish_exceptions.master.tsv")
+                ?? throw new InvalidOperationException("Embedded resource not found: spanish_exceptions.master.tsv");
             using var reader = new StreamReader(stream);
 
-            var entries = new Dictionary<string, SpanishPronunciation>(StringComparer.Ordinal);
+            var entries = new Dictionary<string, Dictionary<byte, SpanishPronunciation>>(StringComparer.Ordinal);
             string? line;
             while ((line = reader.ReadLine()) != null)
             {
                 line = line.Trim();
-                if (line.Length == 0 || line[0] == '#')
+                if (line.Length == 0 || line[0] == '#' || line.StartsWith("surface\t", StringComparison.Ordinal))
                     continue;
 
                 var parts = line.Split('\t');
-                if (parts.Length != 3)
+                if (parts.Length < 6)
                     continue;
 
                 var word = parts[0];
-                if (!int.TryParse(parts[1], out var stressIndex))
-                    continue;
-
-                var syllableSpecs = parts[2].Split('|');
-                var syllableOffsets = new int[syllableSpecs.Length];
-                var phonemes = new List<SpanishPhoneme>(8);
-
-                for (var i = 0; i < syllableSpecs.Length; i++)
+                if (!TryParseDialect(parts[1], out var dialectKey)
+                    || !int.TryParse(parts[3], out var stressIndex))
                 {
-                    syllableOffsets[i] = phonemes.Count;
-                    var tokens = syllableSpecs[i].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var token in tokens)
-                        phonemes.Add(new SpanishPhoneme(ParsePhoneme(token), isStressed: false));
+                    continue;
                 }
 
-                entries[word] = new SpanishPronunciation(phonemes.ToArray(), syllableOffsets, stressIndex);
+                var pronunciation = ParsePronunciation(parts[4], stressIndex);
+                if (!entries.TryGetValue(word, out var byDialect))
+                {
+                    byDialect = new Dictionary<byte, SpanishPronunciation>();
+                    entries[word] = byDialect;
+                }
+
+                byDialect[dialectKey] = pronunciation;
             }
 
             return entries;
+        }
+
+        private static bool TryParseDialect(string token, out byte dialect)
+        {
+            switch (token)
+            {
+                case "*":
+                    dialect = AnyDialectKey;
+                    return true;
+                case "la":
+                case "latin_american":
+                    dialect = (byte)SpanishDialect.LatinAmerican;
+                    return true;
+                case "castilian":
+                case "es":
+                    dialect = (byte)SpanishDialect.Castilian;
+                    return true;
+                default:
+                    dialect = AnyDialectKey;
+                    return false;
+            }
+        }
+
+        private static SpanishPronunciation ParsePronunciation(string value, int stressIndex)
+        {
+            var syllableSpecs = value.Split('|');
+            var syllableOffsets = new int[syllableSpecs.Length];
+            var phonemes = new List<SpanishPhoneme>(8);
+
+            for (var i = 0; i < syllableSpecs.Length; i++)
+            {
+                syllableOffsets[i] = phonemes.Count;
+                var tokens = syllableSpecs[i].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var token in tokens)
+                    phonemes.Add(new SpanishPhoneme(ParsePhoneme(token), isStressed: false));
+            }
+
+            return new SpanishPronunciation(phonemes.ToArray(), syllableOffsets, stressIndex);
         }
 
         private static SpanishIpaPhoneme ParsePhoneme(string token)
