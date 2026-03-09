@@ -20,6 +20,7 @@
   - X-SAMPA / エッジケース / パフォーマンス / 精度・回帰テスト
   - `ipa-dict / WikiPron` サンプルデータを用いた PER 回帰テスト
   - `DotNetG2P.Multilingual` への統合（`Language.Spanish`, `DefaultLatinLanguage`, `MultilingualSpanishTests`）
+  - `tools/install_naist_jdic.ps1` と `NaistJdicLocator` により、日本語辞書をダウンロードして `MeCabTokenizer()` / `MultilingualG2PEngine()` から既定パスで自動解決可能
 - 未実装
   - 全量コーパスでの大規模精度評価（WikiPron / ipa-dict）
 - 検証状況

@@ -25,6 +25,7 @@
   - `MultilingualG2PEngine` に `SpanishG2PEngine` を統合済み
   - `TextSegmenter` がラテン文字列を `English / Spanish` に振り分け可能
   - `MultilingualSpanishTests` を追加済み
+  - 日本語辞書は `tools/install_naist_jdic.ps1` でダウンロード可能になり、`MeCabTokenizer()` / `MultilingualG2PEngine()` は `NaistJdicLocator` により既定パスから自動解決可能
 - **検証状況**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter SpanishG2P`
   - 結果: **177 passed**
@@ -68,6 +69,7 @@
 - `LanguageDetector / TextSegmenter / MultilingualG2PEngine` のスペイン語対応
 - NuGet + UPM パッケージ構成更新
 - `MultilingualSpanishTests` を追加
+- `tools/install_naist_jdic.ps1` による辞書導入と `NaistJdicLocator` による既定辞書解決を追加
 
 ---
 
@@ -351,6 +353,18 @@ s → s      t → t      v → b      w → w
 | `MultilingualG2PEngine.cs` | `SpanishG2PEngine` フィールド追加、`ConvertSegment` に case 追加 |
 | `MultilingualG2POptions.cs` | `SpanishOptions` / `DefaultLatinLanguage` プロパティ追加 |
 | `DotNetG2P.Multilingual.csproj` | `DotNetG2P.Spanish` への ProjectReference 追加 |
+
+### 日本語辞書導入の改善
+
+S4 完了後、Japanese / Multilingual 利用時のセットアップも改善された。
+
+- `tools/install_naist_jdic.ps1` で OpenJTalk 由来の `naist-jdic` をダウンロードし、既定で `%USERPROFILE%\\naist-jdic` に展開できる
+- `NaistJdicLocator` が以下の順で辞書を探索する
+  1. `DOTNETG2P_NAIST_JDIC_PATH`
+  2. `NAIST_JDIC_PATH`
+  3. `%USERPROFILE%\\naist-jdic`
+  4. カレントディレクトリ配下の `naist-jdic` / `open_jtalk_dic_utf_8-1.11`
+- これにより `MeCabTokenizer()` および `MultilingualG2PEngine()` を引数なしで初期化できる
 
 ### スペイン語・英語の区別
 
