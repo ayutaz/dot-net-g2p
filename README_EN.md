@@ -44,6 +44,7 @@ multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese =>
 - [API Reference](#api-reference)
 - [Processing Pipeline](#processing-pipeline)
 - [Dictionary Setup](#dictionary-setup)
+- [Spanish Evaluation](#spanish-evaluation)
 - [Configuration Options](#configuration-options)
 - [Building](#building)
 - [Thread Safety](#thread-safety)
@@ -58,7 +59,7 @@ multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese =>
 - **Extensible design** — Swap out the morphological analysis engine via the `ITokenizer` interface
 - **English G2P support** — CMU dictionary (135,000 words) + Flite LTS rules for OOV estimation, IPA/X-SAMPA output, text normalization, and heteronym resolution
 - **Chinese G2P support** — pinyin-data character dictionary (44,000 entries) + phrase-pinyin-data phrase dictionary (411,000 entries) for automatic polyphone resolution, tone sandhi (third tone, 一/不 rules), 3 output styles, IPA (International Phonetic Alphabet) and Zhuyin (Bopomofo) output
-- **Spanish G2P support** — Rule-based IPA conversion with syllabification, stress assignment, Castilian/Latin American options, optional allophone processing, normalization, and an exception dictionary
+- **Spanish G2P support** — Rule-based IPA conversion with syllabification, stress assignment, Castilian/Latin American options, optional allophone processing, normalization, an exception dictionary, and a full-corpus evaluation toolchain
 - **Mixed Japanese-English-Chinese-Spanish text support** — Automatic language detection and segment splitting based on Unicode character categories, with `DefaultLatinLanguage` for English/Spanish Latin-script routing
 
 ## Installation
@@ -360,6 +361,31 @@ var dicPath = Path.Combine(Application.streamingAssetsPath, "naist-jdic");
 using var tokenizer = new MeCabTokenizer(dicPath);
 using var multiEngine = new MultilingualG2PEngine(dicPath);
 ```
+
+## Spanish Evaluation
+
+The Spanish G2P package includes a full-corpus evaluation pipeline backed by `ipa-dict` and `WikiPron`.
+
+```powershell
+pwsh -File tools/refresh_spanish_eval_data.ps1 -Mode Full
+pwsh -File tools/run_spanish_full_evaluation.ps1 -EnforceThresholds
+```
+
+- Corpus output: `artifacts/spanish-eval/corpora`
+- Report output: `artifacts/spanish-eval/reports/latest`
+- Main artifacts:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+Measured on March 9, 2026:
+
+- `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_es_full/allophones`: PER `1.37%`, WER `13.69%`
+- `ipa_dict_es_mx_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_mx_full/allophones`: PER `1.37%`, WER `13.69%`
+- `wikipron_spa_latn_ca_broad_filtered_full/base`: PER `1.38%`, WER `11.14%`
+- `wikipron_spa_latn_la_broad_filtered_full/base`: PER `1.43%`, WER `11.46%`
 
 ## Configuration Options
 

@@ -40,6 +40,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - [API リファレンス](#api-リファレンス)
 - [処理パイプライン](#処理パイプライン)
 - [辞書の準備](#辞書の準備)
+- [スペイン語評価](#スペイン語評価)
 - [オプション設定](#オプション設定)
 - [ビルド](#ビルド)
 - [スレッドセーフティ](#スレッドセーフティ)
@@ -54,7 +55,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - **拡張可能な設計** — `ITokenizer`インターフェースにより形態素解析エンジンを差し替え可能
 - **英語G2P対応** — CMU辞書（135,000語）+ Flite LTSルールによるOOV推定、IPA/X-SAMPA出力、テキスト正規化、同綴異音語解決
 - **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力
-- **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書を実装
+- **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装
 - **日英中西混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、`DefaultLatinLanguage` により英語/スペイン語のラテン文字系セグメントを切り替え可能
 
 ## インストール
@@ -360,6 +361,31 @@ var dicPath = Path.Combine(Application.streamingAssetsPath, "naist-jdic");
 using var tokenizer = new MeCabTokenizer(dicPath);
 using var multiEngine = new MultilingualG2PEngine(dicPath);
 ```
+
+## スペイン語評価
+
+スペイン語G2Pには、`ipa-dict` と `WikiPron` を使った全量評価パイプラインが含まれます。
+
+```powershell
+pwsh -File tools/refresh_spanish_eval_data.ps1 -Mode Full
+pwsh -File tools/run_spanish_full_evaluation.ps1 -EnforceThresholds
+```
+
+- コーパス出力先: `artifacts/spanish-eval/corpora`
+- レポート出力先: `artifacts/spanish-eval/reports/latest`
+- 主な出力:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+2026-03-09 時点の実測値:
+
+- `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_es_full/allophones`: PER `1.37%`, WER `13.69%`
+- `ipa_dict_es_mx_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_mx_full/allophones`: PER `1.37%`, WER `13.69%`
+- `wikipron_spa_latn_ca_broad_filtered_full/base`: PER `1.38%`, WER `11.14%`
+- `wikipron_spa_latn_la_broad_filtered_full/base`: PER `1.43%`, WER `11.46%`
 
 ## オプション設定
 

@@ -40,6 +40,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音
 - [API 参考](#api-参考)
 - [处理管线](#处理管线)
 - [词典准备](#词典准备)
+- [西班牙语评估](#西班牙语评估)
 - [选项配置](#选项配置)
 - [构建](#构建)
 - [线程安全性](#线程安全性)
@@ -54,7 +55,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音
 - **可扩展设计** — 通过 `ITokenizer` 接口可替换形态素分析引擎
 - **支持英语 G2P** — CMU 词典（135,000 词）+ Flite LTS 规则进行 OOV 推测、IPA/X-SAMPA 输出、文本规范化、同形异音词解析
 - **支持中文 G2P** — pinyin-data 单字词典（44,000 条）+ phrase-pinyin-data 短语词典（411,000 条），自动多音字解析、声调变调（三声连读、一/不变调）、3 种输出风格、IPA（国际音标）与注音符号（ㄅㄆㄇㄈ）输出
-- **支持西班牙语 G2P** — 提供基于规则的 IPA 转写、音节划分、重音判定、Castilian/Latin American 切换、异音处理选项、文本规范化与例外词典
+- **支持西班牙语 G2P** — 提供基于规则的 IPA 转写、音节划分、重音判定、Castilian/Latin American 切换、异音处理选项、文本规范化、例外词典以及全量语料评估工具链
 - **支持日英中西混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，并通过 `DefaultLatinLanguage` 控制英语/西班牙语拉丁文本路由
 
 ## 安装
@@ -361,6 +362,31 @@ var dicPath = Path.Combine(Application.streamingAssetsPath, "naist-jdic");
 using var tokenizer = new MeCabTokenizer(dicPath);
 using var multiEngine = new MultilingualG2PEngine(dicPath);
 ```
+
+## 西班牙语评估
+
+西班牙语 G2P 包含基于 `ipa-dict` 与 `WikiPron` 的全量语料评估管线。
+
+```powershell
+pwsh -File tools/refresh_spanish_eval_data.ps1 -Mode Full
+pwsh -File tools/run_spanish_full_evaluation.ps1 -EnforceThresholds
+```
+
+- 语料输出目录: `artifacts/spanish-eval/corpora`
+- 报告输出目录: `artifacts/spanish-eval/reports/latest`
+- 主要输出:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+截至 2026-03-09 的实测值:
+
+- `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_es_full/allophones`: PER `1.37%`, WER `13.69%`
+- `ipa_dict_es_mx_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_mx_full/allophones`: PER `1.37%`, WER `13.69%`
+- `wikipron_spa_latn_ca_broad_filtered_full/base`: PER `1.38%`, WER `11.14%`
+- `wikipron_spa_latn_la_broad_filtered_full/base`: PER `1.43%`, WER `11.46%`
 
 ## 选项配置
 
