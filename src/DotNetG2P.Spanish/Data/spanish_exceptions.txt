@@ -15,3 +15,7 @@ hockey	0	x o|k e j
 whatsapp	1	w a|s a p
 sándwich	0	s a n|w i tʃ
 iceberg	0	i|s e β e r ɡ
+oaxaca	1	w a|x a|k a
+ximena	1	x i|m e|n a
+ketchup	0	k e|tʃ u p
+croissant	1	k ɾ w a|s a n
