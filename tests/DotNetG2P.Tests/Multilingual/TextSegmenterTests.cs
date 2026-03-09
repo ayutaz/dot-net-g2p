@@ -129,13 +129,22 @@ namespace DotNetG2P.Tests.Multilingual
             AssertSegment(result, 0, "test123", Language.English);
         }
 
-        /// <summary>12. 数字のみ "123" → デフォルト日本語</summary>
+        /// <summary>12. ASCII数字のみ "123" → デフォルトLatin言語（既定ではEnglish）</summary>
         [Fact]
-        public void Segment_数字のみ_デフォルトJapanese()
+        public void Segment_ASCII数字のみ_デフォルトEnglish()
         {
             var result = TextSegmenter.Segment("123");
             Assert.Single(result);
-            AssertSegment(result, 0, "123", Language.Japanese);
+            AssertSegment(result, 0, "123", Language.English);
+        }
+
+        /// <summary>12b. 全角数字のみ "１２３" → デフォルトCJK言語（既定ではJapanese）</summary>
+        [Fact]
+        public void Segment_全角数字のみ_デフォルトJapanese()
+        {
+            var result = TextSegmenter.Segment("１２３");
+            Assert.Single(result);
+            AssertSegment(result, 0, "１２３", Language.Japanese);
         }
 
         // ===== 句読点・記号の扱い（テスト13-15） =====
@@ -267,14 +276,14 @@ namespace DotNetG2P.Tests.Multilingual
 
         // ===== 記号のみ（テスト25） =====
 
-        /// <summary>25. 記号のみ "!@#" → デフォルト日本語</summary>
+        /// <summary>25. ASCII記号のみ "!@#" → デフォルトLatin言語（既定ではEnglish）</summary>
         [Fact]
-        public void Segment_記号のみ_デフォルトJapanese()
+        public void Segment_ASCII記号のみ_デフォルトEnglish()
         {
-            // 全てPunctuation、前後に言語なし → デフォルトJapanese
+            // 全てASCII Punctuation、前後に言語なし → デフォルトLatin(English)
             var result = TextSegmenter.Segment("!@#");
             Assert.Single(result);
-            AssertSegment(result, 0, "!@#", Language.Japanese);
+            AssertSegment(result, 0, "!@#", Language.English);
         }
 
         // ===== 長い混在テキスト（テスト26） =====
@@ -300,11 +309,10 @@ namespace DotNetG2P.Tests.Multilingual
         [Fact]
         public void Segment_数字と記号のみ_適切に処理()
         {
-            // 数字はデフォルトJA、ハイフンは前後が英語でないのでPunct扱い→前方JAに付属
-            // 結果: 全体が1つのJapaneseセグメント
+            // ASCII数字・ASCII記号だけのrunはデフォルトLatin(English)に寄せる
             var result = TextSegmenter.Segment("123-456");
             Assert.Single(result);
-            AssertSegment(result, 0, "123-456", Language.Japanese);
+            AssertSegment(result, 0, "123-456", Language.English);
         }
 
         // ===== 改行・タブ（テスト28-29） =====
@@ -396,6 +404,24 @@ namespace DotNetG2P.Tests.Multilingual
             var result = TextSegmenter.Segment("元気？");
             Assert.Single(result);
             AssertSegment(result, 0, "元気？", Language.Japanese);
+        }
+
+        /// <summary>36. 簡体字マーカーを含むCJK語はChineseに寄せる</summary>
+        [Fact]
+        public void Segment_簡体字マーカーを含むCJK語_DefaultJapaneseでもChinese()
+        {
+            var result = TextSegmenter.Segment("欢迎你", Language.Japanese, Language.English);
+            Assert.Single(result);
+            AssertSegment(result, 0, "欢迎你", Language.Chinese);
+        }
+
+        /// <summary>37. 日本語専用寄りの漢字を含む語はDefaultChineseでもJapaneseに寄せる</summary>
+        [Fact]
+        public void Segment_日本語マーカーを含むCJK語_DefaultChineseでもJapanese()
+        {
+            var result = TextSegmenter.Segment("東京駅", Language.Chinese, Language.English);
+            Assert.Single(result);
+            AssertSegment(result, 0, "東京駅", Language.Japanese);
         }
     }
 }

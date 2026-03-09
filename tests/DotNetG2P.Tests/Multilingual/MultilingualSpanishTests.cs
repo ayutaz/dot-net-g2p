@@ -104,12 +104,49 @@ namespace DotNetG2P.Tests.Multilingual
         }
 
         [Fact]
-        public void Segment_DefaultEnglish_ASCIIラテン語は後方互換でEnglish()
+        public void Segment_DefaultEnglish_英語語彙はEnglishのまま()
         {
-            var result = TextSegmenter.Segment("hola", Language.Japanese, Language.English);
+            var result = TextSegmenter.Segment("hello", Language.Japanese, Language.English);
 
             Assert.Single(result);
             Assert.Equal(Language.English, result[0].Language);
+        }
+
+        [Fact]
+        public void Segment_DefaultEnglish_CommonASCIISpanishWordsはSpanishに分類()
+        {
+            var result = TextSegmenter.Segment("hola mundo", Language.Japanese, Language.English);
+
+            Assert.Single(result);
+            Assert.Equal("hola mundo", result[0].Text);
+            Assert.Equal(Language.Spanish, result[0].Language);
+        }
+
+        [Fact]
+        public void Segment_DefaultEnglish_ASCIISpanishLoanPhraseはSpanishに分類()
+        {
+            var result = TextSegmenter.Segment("wifi gratis", Language.Japanese, Language.English);
+
+            Assert.Single(result);
+            Assert.Equal(Language.Spanish, result[0].Language);
+        }
+
+        [Fact]
+        public void Segment_DefaultEnglish_GermanUmlautWordはSpanishに誤分類しない()
+        {
+            var result = TextSegmenter.Segment("über", Language.Japanese, Language.English);
+
+            Assert.Single(result);
+            Assert.Equal(Language.English, result[0].Language);
+        }
+
+        [Fact]
+        public void Segment_DefaultEnglish_GueiPatternWithDiaeresisはSpanishに分類()
+        {
+            var result = TextSegmenter.Segment("pingüino", Language.Japanese, Language.English);
+
+            Assert.Single(result);
+            Assert.Equal(Language.Spanish, result[0].Language);
         }
 
         [Fact]
@@ -119,6 +156,24 @@ namespace DotNetG2P.Tests.Multilingual
 
             Assert.Single(result);
             Assert.Equal("¡hola!", result[0].Text);
+            Assert.Equal(Language.Spanish, result[0].Language);
+        }
+
+        [Fact]
+        public void Segment_ASCII数字のみ_DefaultEnglishではEnglish()
+        {
+            var result = TextSegmenter.Segment("2026", Language.Japanese, Language.English);
+
+            Assert.Single(result);
+            Assert.Equal(Language.English, result[0].Language);
+        }
+
+        [Fact]
+        public void Segment_ASCII数字のみ_DefaultLatinSpanishではSpanish()
+        {
+            var result = TextSegmenter.Segment("2026", Language.Japanese, Language.Spanish);
+
+            Assert.Single(result);
             Assert.Equal(Language.Spanish, result[0].Language);
         }
 

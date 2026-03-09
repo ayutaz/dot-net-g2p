@@ -126,8 +126,9 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
   - **S4（Multilingual統合・パッケージング拡張）**: 初版実装済み
     - `DotNetG2P.Multilingual` に `Language.Spanish` と `DefaultLatinLanguage` を追加
     - `TextSegmenter` を英語/スペイン語のラテン文字振り分けに対応
+    - `TextSegmenter` を補強し、ASCII Spanish 高頻度語・接尾辞・`güe/güi`、standalone neutral token、CJK marker ベース判定を追加
     - `MultilingualG2PEngine` に `SpanishG2PEngine` を統合
-    - `MultilingualSpanishTests` を追加し、Multilingual テスト 321件通過
+    - `MultilingualSpanishTests` / `MultilingualMixedLanguageTests` を追加し、Multilingual テスト 337件通過
 
 ## ビルド・実行
 

@@ -27,6 +27,7 @@
   - curated allophone corpus と exception metadata 整合テスト
   - `DotNetG2P.Multilingual` への統合（`Language.Spanish`, `DefaultLatinLanguage`, `MultilingualSpanishTests`）
   - `MultilingualMixedLanguageTests` による日英中西4言語混在、句読点・数字入り混在、バッチ整合性テスト
+  - `TextSegmenter` を補強し、ASCII Spanish 高頻度語・接尾辞・`güe/güi`、standalone ASCII neutral token、CJK marker ベース判定を追加
   - `tools/install_naist_jdic.ps1` と `NaistJdicLocator` により、日本語辞書をダウンロードして `MeCabTokenizer()` / `MultilingualG2PEngine()` から既定パスで自動解決可能
 - 実測値
   - `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
@@ -36,10 +37,11 @@
   - `wikipron_spa_latn_ca_broad_filtered_full/base`: PER `1.38%`, WER `11.14%`
   - `wikipron_spa_latn_la_broad_filtered_full/base`: PER `1.43%`, WER `11.46%`
 - 未実装
-  - なし（S1-S4 計画範囲は実装済み）
+  - S1-S4 計画範囲は実装済み
+  - 既知制約: marker の無い純漢字runは `DefaultCjkLanguage` に依存
 - 検証状況
   - `SpanishG2P` テスト: **223 passed**
-  - `Multilingual` テスト: **328 passed**
+  - `Multilingual` テスト: **337 passed**
   - `Multilingual` 機能系テスト: **320 passed**
 
 調査本文はルール設計の根拠として維持し、最新の実装状態は [spanish-g2p-implementation-plan.md](spanish-g2p-implementation-plan.md) を正とする。
