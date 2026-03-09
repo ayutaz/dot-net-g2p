@@ -60,7 +60,7 @@ multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese =>
 - **English G2P support** — CMU dictionary (135,000 words) + Flite LTS rules for OOV estimation, IPA/X-SAMPA output, text normalization, and heteronym resolution
 - **Chinese G2P support** — pinyin-data character dictionary (44,000 entries) + phrase-pinyin-data phrase dictionary (411,000 entries) for automatic polyphone resolution, tone sandhi (third tone, 一/不 rules), 3 output styles, IPA (International Phonetic Alphabet) and Zhuyin (Bopomofo) output
 - **Spanish G2P support** — Rule-based IPA conversion with syllabification, stress assignment, Castilian/Latin American options, optional allophone processing, normalization, an exception dictionary, and a full-corpus evaluation toolchain
-- **Mixed Japanese-English-Chinese-Spanish text support** — Automatic language detection and segment splitting based on Unicode character categories, with `DefaultLatinLanguage` for English/Spanish Latin-script routing
+- **Mixed Japanese-English-Chinese-Spanish text support** — Automatic language detection and segment splitting based on Unicode character categories, with `DefaultLatinLanguage` for English/Spanish Latin-script routing. Pure CJK ideograph runs are further disambiguated with markers, Japanese lexical hints, and embedded Chinese dictionaries
 
 ## Installation
 
@@ -288,6 +288,13 @@ multiEsEngine.ToPhonemes("hola世界");
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | Language-tagged segments |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | Batch segment conversion |
+
+Multilingual notes:
+
+- Latin-script tokens default to `DefaultLatinLanguage`, then switch English / Spanish using accented Spanish letters, `gue/gui/güe/güi` patterns, common ASCII Spanish words, and common suffixes
+- Pure CJK ideograph runs are further classified with Chinese strong/weak markers, Japanese markers, Japanese lexical hints, and embedded Chinese phrase/character dictionaries
+- Only ambiguous pure ideograph runs with weak evidence fall back to `DefaultCjkLanguage`
+- Multilingual regression status as of March 10, 2026: `340 passed`
 
 ### Japanese Phoneme System
 

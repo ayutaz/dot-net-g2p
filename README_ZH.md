@@ -56,7 +56,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音
 - **支持英语 G2P** — CMU 词典（135,000 词）+ Flite LTS 规则进行 OOV 推测、IPA/X-SAMPA 输出、文本规范化、同形异音词解析
 - **支持中文 G2P** — pinyin-data 单字词典（44,000 条）+ phrase-pinyin-data 短语词典（411,000 条），自动多音字解析、声调变调（三声连读、一/不变调）、3 种输出风格、IPA（国际音标）与注音符号（ㄅㄆㄇㄈ）输出
 - **支持西班牙语 G2P** — 提供基于规则的 IPA 转写、音节划分、重音判定、Castilian/Latin American 切换、异音处理选项、文本规范化、例外词典以及全量语料评估工具链
-- **支持日英中西混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，并通过 `DefaultLatinLanguage` 控制英语/西班牙语拉丁文本路由
+- **支持日英中西混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，并通过 `DefaultLatinLanguage` 控制英语/西班牙语拉丁文本路由。纯汉字片段会结合 marker、日语词汇提示和内置中文词典进一步判定 JP/ZH
 
 ## 安装
 
@@ -289,6 +289,13 @@ multiEsEngine.ToPhonemes("hola世界");
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 带语言标签的分段 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | 批量分段转换 |
+
+Multilingual 补充说明:
+
+- 拉丁字母 token 以 `DefaultLatinLanguage` 为默认，再根据西班牙语重音字母、`gue/gui/güe/güi` 模式、常见 ASCII 西语词汇和常见后缀在 English / Spanish 间切换
+- 纯汉字片段会结合 `Chinese strong/weak markers`、`Japanese markers`、日语词汇提示以及内置中文 phrase/char 词典进一步判定 JP / ZH
+- 只有证据不足的歧义纯汉字片段才会回退到 `DefaultCjkLanguage`
+- 截至 2026-03-10 的 Multilingual 回归结果: `340 passed`
 
 ### 日语音素体系
 

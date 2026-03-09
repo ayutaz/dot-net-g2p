@@ -397,18 +397,19 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── SpanishEdgeCaseTests.cs     # エッジケーステスト [S3]
 │       │   ├── SpanishPerformanceTests.cs  # パフォーマンステスト [S3]
 │       │   └── SpanishAccuracyTests.cs     # 精度・回帰テスト [S3]
-│       ├── Multilingual/               # 多言語G2Pテスト (321件)
-│       │   ├── LanguageDetectorTests.cs  # 言語判定テスト (29件)
-│       │   ├── TextSegmenterTests.cs     # セグメント分割テスト (30件)
-│       │   ├── MultilingualEngineTests.cs # エンジン統合テスト (28件)
-│       │   ├── MultilingualEdgeCaseTests.cs # エッジケーステスト (25件)
-│       │   ├── MultilingualDisposeTests.cs # Disposeテスト (15件)
-│       │   ├── MultilingualPerformanceTests.cs # パフォーマンステスト (8件)
-│       │   ├── LanguageConsistencyTests.cs # 言語検出一貫性テスト (27件)
-│       │   ├── MultilingualChineseTests.cs # 中国語統合テスト (43件)
-│       │   ├── MultilingualSpanishTests.cs # スペイン語統合テスト (13件)
-│       │   ├── MixedTextBasicTests.cs    # 混在テキスト基本テスト (54件)
-│       │   └── MixedTextAdvancedTests.cs # 混在テキスト応用テスト (35件)
+│       ├── Multilingual/               # 多言語G2Pテスト（2026-03-10時点 340 passed）
+│       │   ├── LanguageDetectorTests.cs  # 言語判定テスト
+│       │   ├── TextSegmenterTests.cs     # セグメント分割テスト
+│       │   ├── MultilingualEngineTests.cs # エンジン統合テスト
+│       │   ├── MultilingualEdgeCaseTests.cs # エッジケーステスト
+│       │   ├── MultilingualDisposeTests.cs # Disposeテスト
+│       │   ├── MultilingualPerformanceTests.cs # パフォーマンステスト
+│       │   ├── LanguageConsistencyTests.cs # 言語検出一貫性テスト
+│       │   ├── MultilingualChineseTests.cs # 中国語統合テスト
+│       │   ├── MultilingualSpanishTests.cs # スペイン語統合テスト
+│       │   ├── MixedTextBasicTests.cs    # 混在テキスト基本テスト
+│       │   ├── MixedTextAdvancedTests.cs # 混在テキスト応用テスト
+│       │   └── MultilingualMixedLanguageTests.cs # 4言語混在回帰テスト
 │       └── Integration/                # 統合テスト
 │           ├── G2PPipelineTests.cs
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）

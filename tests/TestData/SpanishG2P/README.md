@@ -8,7 +8,19 @@ These TSV files are deterministic samples derived from:
 They are used for offline regression tests only. Refresh them with:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools/refresh_spanish_eval_data.ps1
+powershell -ExecutionPolicy Bypass -File tools/refresh_spanish_eval_data.ps1 -Mode Sample
+```
+
+Generate the full corpora used by the evaluation toolchain with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/refresh_spanish_eval_data.ps1 -Mode Full
+```
+
+Or refresh both sample and full corpora in one run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/refresh_spanish_eval_data.ps1 -Mode Both
 ```
 
 Current generation policy:
