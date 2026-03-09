@@ -23,13 +23,14 @@
   - ASCII-only X-SAMPA、バッチ整合性、回帰コーパス、性能しきい値を検証済み
   - `ipa-dict / WikiPron` サンプルコーパスと PER 回帰テストを追加済み
   - `refresh_spanish_eval_data.ps1` + `DotNetG2P.SpanishEval` + `run_spanish_full_evaluation.ps1` により全量 PER 評価、カテゴリ別集計、不一致 TSV 出力を実装済み
-- **S4: 初版実装済み**
+- **S4: 実装済み**
   - `DotNetG2P.Multilingual` に `Language.Spanish` と `DefaultLatinLanguage` を実装済み
   - `MultilingualG2PEngine` に `SpanishG2PEngine` を統合済み
   - `TextSegmenter` がラテン文字列を `English / Spanish` に振り分け可能
   - `TextSegmenter` を補強し、ASCII Spanish 高頻度語・接尾辞・`güe/güi` を Spanish に寄せるヒューリスティックを追加済み
   - `TextSegmenter` を補強し、standalone `ASCII数字 / ASCII記号` は `DefaultLatinLanguage`、`全角数字` は `DefaultCjkLanguage` に寄せるよう更新済み
   - `TextSegmenter` を補強し、純CJK漢字runは `Chinese strong/weak markers` と `Japanese markers` を見て `DefaultCjkLanguage` より前に判定するよう更新済み
+  - `TextSegmenter` を補強し、純CJK漢字runは埋め込み中国語 phrase/char 辞書と日本語語彙ヒントを使って `DefaultCjkLanguage` より前に判定するよう更新済み
   - `MultilingualSpanishTests` を追加済み
   - `MultilingualMixedLanguageTests` を追加し、日英中西4言語混在、句読点・数字入り混在、バッチAPI整合性を検証済み
   - 日本語辞書は `tools/install_naist_jdic.ps1` でダウンロード可能になり、`MeCabTokenizer()` / `MultilingualG2PEngine()` は `NaistJdicLocator` により既定パスから自動解決可能
@@ -37,10 +38,10 @@
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter SpanishG2P`
   - 結果: **223 passed**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual`
-  - 結果: **337 passed**
+  - 結果: **340 passed**
 - **未実装**
   - S1-S4 の計画範囲は実装済み
-  - 既知制約: `かな無し / Chinese strong marker無し / Japanese marker無し` の純漢字runは引き続き `DefaultCjkLanguage` に従う
+  - 既知制約: phrase 辞書・語彙ヒント・marker のいずれにも当たらない曖昧な純漢字runは `DefaultCjkLanguage` に従う
 
 ---
 
@@ -95,7 +96,7 @@
   - しきい値判定: すべて `pass`
 
 ### S4: 多言語統合・パッケージング
-- 状態: **初版実装済み**
+- 状態: **完了**
 - `DotNetG2P.Multilingual` への統合（`Language.Spanish`）
 - `DefaultLatinLanguage` と `SpanishOptions` を追加
 - `LanguageDetector / TextSegmenter / MultilingualG2PEngine` のスペイン語対応
@@ -209,7 +210,7 @@ tests/DotNetG2P.Tests/SpanishG2P/
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --no-build --filter "FullyQualifiedName~DotNetG2P.Tests.Multilingual&FullyQualifiedName!~Performance"`
   - **320 passed**
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --no-build --filter Multilingual`
-  - **337 passed**
+  - **340 passed**
 - `MultilingualPerformanceTests.メモリ圧迫なし`
   - ウォームアップと `PerformanceThresholds` ベースの relaxed 閾値へ調整済み
 
@@ -444,7 +445,7 @@ S4 完了後、Japanese / Multilingual 利用時のセットアップも改善�
 スペイン語と英語は同じラテン文字を共有するため、文字種だけでは区別できない。
 現実装では `DefaultCjkLanguage` と同様に `DefaultLatinLanguage` を導入し、アクセント付きスペイン語文字、`güe/güi`、高頻度ASCII Spanish語彙、代表的なスペイン語接尾辞を含む語は英語既定時でも Spanish に寄せる。
 
-一方で、`かな無し / Chinese strong marker無し / Japanese marker無し` の純漢字runは最終的に `DefaultCjkLanguage` にフォールバックする。
+また、純漢字runについては `Chinese strong/weak markers`、`Japanese markers`、日本語語彙ヒント、埋め込み中国語 phrase/char 辞書を使って先に判定し、それでも根拠が弱い曖昧ケースだけ `DefaultCjkLanguage` にフォールバックする。
 
 ```csharp
 public Language DefaultLatinLanguage { get; } = Language.English;

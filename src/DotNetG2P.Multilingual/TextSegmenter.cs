@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
+using DotNetG2P.Chinese;
 
 namespace DotNetG2P.Multilingual
 {
@@ -56,6 +57,18 @@ namespace DotNetG2P.Multilingual
             '駅', '円', '気', '込', '働', '畑', '栃', '辻', '峠', '栄', '覚', '団',
             '広', '転', '読', '売', '辺'
         };
+
+        private static readonly string[] s_japaneseWordSignals =
+        {
+            "東京", "東京都", "大阪", "大阪府", "京都", "北海道", "名古屋", "日本語",
+            "株式会社", "新宿", "渋谷", "山手線", "電車", "地下鉄", "改札", "ホーム"
+        };
+
+        private static readonly Lazy<PinyinPhraseDictionary?> s_chinesePhraseDictionary =
+            new Lazy<PinyinPhraseDictionary?>(TryLoadChinesePhraseDictionary);
+
+        private static readonly Lazy<PinyinCharDictionary?> s_chineseCharDictionary =
+            new Lazy<PinyinCharDictionary?>(TryLoadChineseCharDictionary);
 
         /// <summary>テキストを言語セグメントに分割する（後方互換: CJK漢字はJapanese扱い）。</summary>
         public static IReadOnlyList<TextSegment> Segment(string text)
@@ -558,6 +571,13 @@ namespace DotNetG2P.Multilingual
             if (ContainsAny(token, s_japaneseMarkers))
                 return LangJapanese;
 
+            if (ContainsAnyWordSignal(token, s_japaneseWordSignals))
+                return LangJapanese;
+
+            int chineseLexicalScore = ComputeChineseLexicalScore(token);
+            if (ShouldPreferChineseLexically(token, chineseLexicalScore, defaultCjkByte))
+                return LangChinese;
+
             return defaultCjkByte;
         }
 
@@ -582,6 +602,112 @@ namespace DotNetG2P.Multilingual
             }
 
             return count;
+        }
+
+        private static bool ContainsAnyWordSignal(ReadOnlySpan<char> token, string[] candidates)
+        {
+            string surface = new string(token);
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (surface.Contains(candidates[i], StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool ShouldPreferChineseLexically(ReadOnlySpan<char> token, int chineseLexicalScore, byte defaultCjkByte)
+        {
+            if (chineseLexicalScore < 3)
+                return false;
+
+            if (defaultCjkByte == LangChinese)
+                return true;
+
+            // Shared short kanji compounds such as "世界" are common in both Japanese and Chinese.
+            // When Japanese is the default, only override on longer lexical evidence.
+            return token.Length >= 3 && chineseLexicalScore >= 4;
+        }
+
+        private static int ComputeChineseLexicalScore(ReadOnlySpan<char> token)
+        {
+            int score = 0;
+            string surface = new string(token);
+
+            int coveredChars = ComputeChinesePhraseCoverage(surface);
+            if (coveredChars == surface.Length && surface.Length >= 2)
+                score += 4;
+            else if (coveredChars >= Math.Max(2, surface.Length - 1))
+                score += 3;
+            else if (coveredChars * 2 >= surface.Length && coveredChars > 0)
+                score += 1;
+
+            if (AllCharsHaveChineseReadings(token))
+                score += 1;
+
+            return score;
+        }
+
+        private static int ComputeChinesePhraseCoverage(string surface)
+        {
+            var phraseDictionary = s_chinesePhraseDictionary.Value;
+            if (phraseDictionary == null || surface.Length < 2)
+                return 0;
+
+            int covered = 0;
+            for (int i = 0; i < surface.Length;)
+            {
+                int matchedLength = phraseDictionary.FindLongestMatch(surface, i, out _);
+                if (matchedLength >= 2)
+                {
+                    covered += matchedLength;
+                    i += matchedLength;
+                    continue;
+                }
+
+                i++;
+            }
+
+            return covered;
+        }
+
+        private static bool AllCharsHaveChineseReadings(ReadOnlySpan<char> token)
+        {
+            var charDictionary = s_chineseCharDictionary.Value;
+            if (charDictionary == null || token.IsEmpty)
+                return false;
+
+            for (int i = 0; i < token.Length; i++)
+            {
+                if (!charDictionary.TryLookup(token[i], out _))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static PinyinPhraseDictionary? TryLoadChinesePhraseDictionary()
+        {
+            try
+            {
+                return PinyinPhraseDictionary.LoadEmbedded();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static PinyinCharDictionary? TryLoadChineseCharDictionary()
+        {
+            try
+            {
+                return PinyinCharDictionary.LoadEmbedded();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static byte ResolveStandaloneDigitLanguage(char c, byte defaultCjkByte, byte defaultLatinByte)

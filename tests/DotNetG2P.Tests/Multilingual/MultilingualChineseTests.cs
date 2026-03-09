@@ -148,11 +148,11 @@ namespace DotNetG2P.Tests.Multilingual
         // =================================================================
 
         [Fact]
-        public void Segment_漢字のみ_DefaultJapanese_全Japanese()
+        public void Segment_漢字のみ_DefaultJapanese_中国語語彙はChinese()
         {
             var result = TextSegmenter.Segment("你好世界", Language.Japanese);
             Assert.Single(result);
-            Assert.Equal(Language.Japanese, result[0].Language);
+            Assert.Equal(Language.Chinese, result[0].Language);
             Assert.Equal("你好世界", result[0].Text);
         }
 
@@ -223,10 +223,18 @@ namespace DotNetG2P.Tests.Multilingual
         }
 
         [Fact]
-        public void Segment_漢字のみテキスト_デフォルトオーバーロード_Japanese後方互換()
+        public void Segment_漢字のみテキスト_中国語語彙はデフォルトオーバーロードでもChinese()
         {
-            // Segment(string) はデフォルトで Language.Japanese
+            // Segment(string) でも中国語語彙の証拠が強い run は Chinese に寄せる
             var result = TextSegmenter.Segment("东京大学");
+            Assert.Single(result);
+            Assert.Equal(Language.Chinese, result[0].Language);
+        }
+
+        [Fact]
+        public void Segment_日本語純漢字_DefaultChineseでも日本語語彙ヒントでJapanese()
+        {
+            var result = TextSegmenter.Segment("東京大学", Language.Chinese);
             Assert.Single(result);
             Assert.Equal(Language.Japanese, result[0].Language);
         }

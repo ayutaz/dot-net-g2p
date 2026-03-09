@@ -423,5 +423,23 @@ namespace DotNetG2P.Tests.Multilingual
             Assert.Single(result);
             AssertSegment(result, 0, "東京駅", Language.Japanese);
         }
+
+        /// <summary>38. 中国語語彙証拠が強い純漢字runはDefaultJapaneseでもChineseに寄せる</summary>
+        [Fact]
+        public void Segment_中国語語彙が強い純漢字run_DefaultJapaneseでもChinese()
+        {
+            var result = TextSegmenter.Segment("你好世界", Language.Japanese, Language.English);
+            Assert.Single(result);
+            AssertSegment(result, 0, "你好世界", Language.Chinese);
+        }
+
+        /// <summary>39. 日本語語彙ヒントがある純漢字runはDefaultChineseでもJapaneseに寄せる</summary>
+        [Fact]
+        public void Segment_日本語語彙ヒントがある純漢字run_DefaultChineseでもJapanese()
+        {
+            var result = TextSegmenter.Segment("東京大学", Language.Chinese, Language.English);
+            Assert.Single(result);
+            AssertSegment(result, 0, "東京大学", Language.Japanese);
+        }
     }
 }
