@@ -5,7 +5,7 @@
 `DotNetG2P.Spanish` パッケージとして、スペイン語のG2P（書記素→音素変換）をC#でネイティブ実装する。
 スペイン語は正書法が非常に規則的なため、**ルールベースアプローチ**を採用し、大規模辞書を不要とする。
 
-## 実装状況（2026-03-09）
+## 実装状況（2026-03-10）
 
 - **S1: 完了**
   - `SpanishG2PEngine`, `SpanishG2POptions`, IPA音素モデル、音節分割、ストレス付与、ラテンアメリカ/カスティーリャ切り替えを実装済み
@@ -28,12 +28,13 @@
   - `MultilingualG2PEngine` に `SpanishG2PEngine` を統合済み
   - `TextSegmenter` がラテン文字列を `English / Spanish` に振り分け可能
   - `MultilingualSpanishTests` を追加済み
+  - `MultilingualMixedLanguageTests` を追加し、日英中西4言語混在、句読点・数字入り混在、バッチAPI整合性を検証済み
   - 日本語辞書は `tools/install_naist_jdic.ps1` でダウンロード可能になり、`MeCabTokenizer()` / `MultilingualG2PEngine()` は `NaistJdicLocator` により既定パスから自動解決可能
 - **検証状況**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter SpanishG2P`
-  - 結果: **222 passed**
+  - 結果: **223 passed**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual`
-  - 結果: **169 passed / 152 skipped**
+  - 結果: **328 passed**
 - **未実装**
   - なし（S1-S4 は計画範囲を実装済み）
 
@@ -96,6 +97,7 @@
 - `LanguageDetector / TextSegmenter / MultilingualG2PEngine` のスペイン語対応
 - NuGet + UPM パッケージ構成更新
 - `MultilingualSpanishTests` を追加
+- `MultilingualMixedLanguageTests` を追加し、日英中西4言語同時混在と句読点・数字入り混在を回帰化
 - `tools/install_naist_jdic.ps1` による辞書導入と `NaistJdicLocator` による既定辞書解決を追加
 
 ---
@@ -194,7 +196,17 @@ tests/DotNetG2P.Tests/SpanishG2P/
   SpanishAccuracyTests.cs           # 精度・回帰テスト [S3]
 ```
 
-現行テスト数: 223件（2026-03-09 時点）
+現行テスト数: 223件（2026-03-10 時点）
+
+追加の Multilingual 検証（2026-03-10）:
+
+- `MultilingualMixedLanguageTests`: 6件追加
+- `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --no-build --filter "FullyQualifiedName~DotNetG2P.Tests.Multilingual&FullyQualifiedName!~Performance"`
+  - **320 passed**
+- `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --no-build --filter Multilingual`
+  - **328 passed**
+- `MultilingualPerformanceTests.メモリ圧迫なし`
+  - ウォームアップと `PerformanceThresholds` ベースの relaxed 閾値へ調整済み
 
 ### 全量評価の実行方法
 

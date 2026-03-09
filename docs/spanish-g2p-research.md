@@ -5,7 +5,7 @@
 スペイン語（Español）のG2P（Grapheme-to-Phoneme: 書記素→音素変換）実装に向けた技術調査結果をまとめる。
 スペイン語は正書法が非常に規則的であり、英語・中国語と比較してルールベースアプローチが最も適している。
 
-## 実装反映メモ（2026-03-09）
+## 実装反映メモ（2026-03-10）
 
 この調査をもとに、リポジトリでは `DotNetG2P.Spanish` の初版実装が完了している。
 
@@ -26,6 +26,7 @@
   - `tools/run_spanish_full_evaluation.ps1` + `tools/spanish_eval_thresholds.json` によるしきい値付き評価運用
   - curated allophone corpus と exception metadata 整合テスト
   - `DotNetG2P.Multilingual` への統合（`Language.Spanish`, `DefaultLatinLanguage`, `MultilingualSpanishTests`）
+  - `MultilingualMixedLanguageTests` による日英中西4言語混在、句読点・数字入り混在、バッチ整合性テスト
   - `tools/install_naist_jdic.ps1` と `NaistJdicLocator` により、日本語辞書をダウンロードして `MeCabTokenizer()` / `MultilingualG2PEngine()` から既定パスで自動解決可能
 - 実測値
   - `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
@@ -38,7 +39,8 @@
   - なし（S1-S4 計画範囲は実装済み）
 - 検証状況
   - `SpanishG2P` テスト: **223 passed**
-  - `Multilingual` テスト: **169 passed / 152 skipped**
+  - `Multilingual` テスト: **328 passed**
+  - `Multilingual` 機能系テスト: **320 passed**
 
 調査本文はルール設計の根拠として維持し、最新の実装状態は [spanish-g2p-implementation-plan.md](spanish-g2p-implementation-plan.md) を正とする。
 
