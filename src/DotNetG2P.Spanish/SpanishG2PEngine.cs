@@ -63,7 +63,7 @@ namespace DotNetG2P.Spanish
             var result = new List<SpanishPhoneme>(words.Count * 6);
             for (var i = 0; i < words.Count; i++)
             {
-                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect);
+                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect, _options.EnableExceptionDictionary);
                 result.AddRange(ApplyAllophonesIfNeeded(pronunciation).PhonemesInternal);
             }
 
@@ -138,7 +138,7 @@ namespace DotNetG2P.Spanish
                 if (i > 0)
                     builder.Append(' ');
 
-                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect);
+                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect, _options.EnableExceptionDictionary);
                 builder.Append(formatter(pronunciation));
             }
 

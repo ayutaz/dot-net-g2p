@@ -112,12 +112,17 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - `SpanishAllophoneFeatures` により必須規則と可変規則を切替可能
     - `spanish_exceptions.master.tsv` + `tools/generate_spanish_exceptions.ps1` による例外辞書運用へ移行
     - SpanishG2P テスト 222件通過
-  - **S3（X-SAMPA・大規模精度評価・拡張テスト）**: 初版実装済み
+  - **S3（X-SAMPA・大規模精度評価・拡張テスト）**: 完了
     - XSampaConverter、`ToXSampa()`, `ToXSampaWithoutStress()`, `ToXSampaBatch()` を追加
     - SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests を追加
     - `ipa-dict / WikiPron` サンプルコーパスと PER 回帰テストを追加
-    - SpanishG2P テスト 177件通過
-    - 残タスクは ipa-dict / WikiPron 全量ベースの大規模精度評価
+    - `tools/refresh_spanish_eval_data.ps1` + `tools/DotNetG2P.SpanishEval` + `tools/run_spanish_full_evaluation.ps1` により全量 PER / WER / カテゴリ別集計を追加
+    - 2026-03-09 実測:
+      - `ipa_dict_es_es_full/base` PER `1.69%`, `allophones` PER `1.37%`
+      - `ipa_dict_es_mx_full/base` PER `1.69%`, `allophones` PER `1.37%`
+      - `wikipron_ca_full/base` PER `1.38%`
+      - `wikipron_la_full/base` PER `1.43%`
+    - SpanishG2P テスト 223件通過
   - **S4（Multilingual統合・パッケージング拡張）**: 初版実装済み
     - `DotNetG2P.Multilingual` に `Language.Spanish` と `DefaultLatinLanguage` を追加
     - `TextSegmenter` を英語/スペイン語のラテン文字振り分けに対応

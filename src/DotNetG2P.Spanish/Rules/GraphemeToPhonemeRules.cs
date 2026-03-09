@@ -9,12 +9,12 @@ namespace DotNetG2P.Spanish.Rules
     /// </summary>
     internal static class GraphemeToPhonemeRules
     {
-        public static SpanishPronunciation ConvertWord(string word, SpanishDialect dialect)
+        public static SpanishPronunciation ConvertWord(string word, SpanishDialect dialect, bool enableExceptionDictionary = true)
         {
             if (string.IsNullOrEmpty(word))
                 return new SpanishPronunciation(Array.Empty<SpanishPhoneme>(), Array.Empty<int>(), -1);
 
-            if (SpanishExceptionDictionary.TryLookup(word, dialect, out var exception))
+            if (enableExceptionDictionary && SpanishExceptionDictionary.TryLookup(word, dialect, out var exception))
                 return exception;
 
             var stressedSyllables = StressAssigner.MarkStress(word, SpanishSyllabifier.Syllabify(word));

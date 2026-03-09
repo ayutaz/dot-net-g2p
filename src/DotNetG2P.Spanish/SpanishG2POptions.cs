@@ -22,6 +22,9 @@ namespace DotNetG2P.Spanish
         /// <summary>テキスト正規化を有効化するか。</summary>
         public bool EnableTextNormalization { get; }
 
+        /// <summary>例外辞書を有効化するか。</summary>
+        public bool EnableExceptionDictionary { get; }
+
         /// <summary>有効な異音規則セット。</summary>
         public SpanishAllophoneFeatures AllophoneFeatures { get; }
 
@@ -36,6 +39,7 @@ namespace DotNetG2P.Spanish
             bool includeStress = true,
             bool enableAllophones = false,
             bool enableTextNormalization = true,
+            bool enableExceptionDictionary = true,
             string separator = " ",
             SpanishAllophoneFeatures allophoneFeatures = SpanishAllophoneFeatures.Default)
         {
@@ -43,6 +47,7 @@ namespace DotNetG2P.Spanish
             IncludeStress = includeStress;
             EnableAllophones = enableAllophones;
             EnableTextNormalization = enableTextNormalization;
+            EnableExceptionDictionary = enableExceptionDictionary;
             Separator = separator ?? throw new ArgumentNullException(nameof(separator));
             AllophoneFeatures = allophoneFeatures;
         }

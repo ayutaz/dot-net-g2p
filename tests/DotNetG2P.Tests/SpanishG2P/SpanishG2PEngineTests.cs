@@ -88,6 +88,14 @@ namespace DotNetG2P.Tests.SpanishG2P
         }
 
         [Fact]
+        public void EnableExceptionDictionaryFalse_UsesRuleBasedFallback()
+        {
+            using var engine = new SpanishG2PEngine(new SpanishG2POptions(enableExceptionDictionary: false));
+
+            Assert.Equal("ˈsow", engine.ToIPA("show"));
+        }
+
+        [Fact]
         public void EmptyInput_ReturnsEmptyOutputs()
         {
             Assert.Equal("", _engine.ToIPA(""));

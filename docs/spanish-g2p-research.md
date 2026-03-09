@@ -21,13 +21,23 @@
   - `XSampaConverter` と `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch`
   - X-SAMPA / エッジケース / パフォーマンス / 精度・回帰テスト
   - `ipa-dict / WikiPron` サンプルデータを用いた PER 回帰テスト
+  - `tools/refresh_spanish_eval_data.ps1` による全量コーパス生成
+  - `tools/DotNetG2P.SpanishEval` による全量 PER / WER / カテゴリ別不一致集計
+  - `tools/run_spanish_full_evaluation.ps1` + `tools/spanish_eval_thresholds.json` によるしきい値付き評価運用
   - curated allophone corpus と exception metadata 整合テスト
   - `DotNetG2P.Multilingual` への統合（`Language.Spanish`, `DefaultLatinLanguage`, `MultilingualSpanishTests`）
   - `tools/install_naist_jdic.ps1` と `NaistJdicLocator` により、日本語辞書をダウンロードして `MeCabTokenizer()` / `MultilingualG2PEngine()` から既定パスで自動解決可能
+- 実測値
+  - `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
+  - `ipa_dict_es_es_full/allophones`: PER `1.37%`, WER `13.69%`
+  - `ipa_dict_es_mx_full/base`: PER `1.69%`, WER `16.49%`
+  - `ipa_dict_es_mx_full/allophones`: PER `1.37%`, WER `13.69%`
+  - `wikipron_spa_latn_ca_broad_filtered_full/base`: PER `1.38%`, WER `11.14%`
+  - `wikipron_spa_latn_la_broad_filtered_full/base`: PER `1.43%`, WER `11.46%`
 - 未実装
-  - 全量コーパスでの大規模精度評価（WikiPron / ipa-dict）
+  - なし（S1-S4 計画範囲は実装済み）
 - 検証状況
-  - `SpanishG2P` テスト: **222 passed**
+  - `SpanishG2P` テスト: **223 passed**
   - `Multilingual` テスト: **169 passed / 152 skipped**
 
 調査本文はルール設計の根拠として維持し、最新の実装状態は [spanish-g2p-implementation-plan.md](spanish-g2p-implementation-plan.md) を正とする。

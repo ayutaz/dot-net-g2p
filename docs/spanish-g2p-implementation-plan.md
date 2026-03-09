@@ -17,11 +17,12 @@
   - 例外辞書を `spanish_exceptions.master.tsv` ソース + `generate_spanish_exceptions.ps1` 生成運用へ移行済み
   - `AllophoneProcessor` を `SpanishAllophoneFeatures` で必須規則と可変規則に分離済み
   - curated allophone corpus と metadata 整合テストを追加済み
-- **S3: 初版実装済み**
+- **S3: 完了**
   - `XSampaConverter` と `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch` を実装済み
   - `SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests` を追加済み
   - ASCII-only X-SAMPA、バッチ整合性、回帰コーパス、性能しきい値を検証済み
   - `ipa-dict / WikiPron` サンプルコーパスと PER 回帰テストを追加済み
+  - `refresh_spanish_eval_data.ps1` + `DotNetG2P.SpanishEval` + `run_spanish_full_evaluation.ps1` により全量 PER 評価、カテゴリ別集計、不一致 TSV 出力を実装済み
 - **S4: 初版実装済み**
   - `DotNetG2P.Multilingual` に `Language.Spanish` と `DefaultLatinLanguage` を実装済み
   - `MultilingualG2PEngine` に `SpanishG2PEngine` を統合済み
@@ -34,7 +35,7 @@
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual`
   - 結果: **169 passed / 152 skipped**
 - **未実装**
-  - WikiPron / ipa-dict 全量を使った大規模精度評価
+  - なし（S1-S4 は計画範囲を実装済み）
 
 ---
 
@@ -65,12 +66,28 @@
   - metadata 同期テストと文脈数詞テストを追加
 
 ### S3: 出力形式拡張・テスト充実
-- 状態: **初版実装済み**
+- 状態: **完了**
 - X-SAMPA出力
 - `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch`
 - エッジケーステスト、パフォーマンステスト、精度テスト
 - WikiPron/ipa-dictサンプルデータによる PER 回帰検証
-- テスト 79件追加（累計 177件）
+- `tools/refresh_spanish_eval_data.ps1`
+  - `Sample / Full / Both` モード
+  - `.cache/spanish-eval` にダウンロードキャッシュ
+  - `artifacts/spanish-eval/corpora` に全量 TSV を生成
+- `tools/DotNetG2P.SpanishEval`
+  - `base / allophones / no_exceptions` プロファイル
+  - `summary.tsv/json`, `category_summary.tsv/json`, `mismatches/*.tsv` を出力
+- `tools/run_spanish_full_evaluation.ps1`
+  - しきい値ファイル `tools/spanish_eval_thresholds.json` を使った全量評価ラッパー
+- 実測値（2026-03-09）
+  - `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
+  - `ipa_dict_es_es_full/allophones`: PER `1.37%`, WER `13.69%`
+  - `ipa_dict_es_mx_full/base`: PER `1.69%`, WER `16.49%`
+  - `ipa_dict_es_mx_full/allophones`: PER `1.37%`, WER `13.69%`
+  - `wikipron_ca_full/base`: PER `1.38%`, WER `11.14%`
+  - `wikipron_la_full/base`: PER `1.43%`, WER `11.46%`
+  - しきい値判定: すべて `pass`
 
 ### S4: 多言語統合・パッケージング
 - 状態: **初版実装済み**
@@ -147,6 +164,13 @@ src/DotNetG2P.Spanish/
     SpanishExceptionDictionary.cs    # 例外辞書ローダ
   package.json                       # UPM (com.dotnetg2p.spanish)
   DotNetG2P.Spanish.asmdef           # Unity Assembly Definition
+tools/
+  refresh_spanish_eval_data.ps1      # サンプル/全量評価コーパス生成 [S3]
+  run_spanish_full_evaluation.ps1    # 全量評価ラッパー [S3]
+  spanish_eval_thresholds.json       # PERしきい値設定 [S3]
+  DotNetG2P.SpanishEval/
+    DotNetG2P.SpanishEval.csproj     # 全量評価CLI [S3]
+    Program.cs                       # PER/カテゴリ別集計/不一致出力
 ```
 
 ### テスト構成
@@ -170,7 +194,24 @@ tests/DotNetG2P.Tests/SpanishG2P/
   SpanishAccuracyTests.cs           # 精度・回帰テスト [S3]
 ```
 
-現行テスト数: 222件（2026-03-09 時点）
+現行テスト数: 223件（2026-03-09 時点）
+
+### 全量評価の実行方法
+
+```powershell
+pwsh -File tools/refresh_spanish_eval_data.ps1 -Mode Full
+pwsh -File tools/run_spanish_full_evaluation.ps1 -EnforceThresholds
+```
+
+- 入力コーパス: `artifacts/spanish-eval/corpora`
+- 評価レポート: `artifacts/spanish-eval/reports`
+- ダウンロードキャッシュ: `.cache/spanish-eval`
+- 主な出力:
+  - `summary.tsv`
+  - `summary.json`
+  - `category_summary.tsv`
+  - `category_summary.json`
+  - `mismatches/*.tsv`
 
 ---
 
@@ -274,6 +315,7 @@ public sealed class SpanishG2POptions
     public bool IncludeStress { get; }                   // ストレスマーク（デフォルト: true）
     public bool EnableAllophones { get; }                 // 異音規則適用（デフォルト: false、実装済み）
     public bool EnableTextNormalization { get; }          // テキスト正規化（デフォルト: true）
+    public bool EnableExceptionDictionary { get; }        // 例外辞書適用（デフォルト: true、評価用切替）
     public string Separator { get; }                     // 音素区切り（デフォルト: " "）
 }
 ```
