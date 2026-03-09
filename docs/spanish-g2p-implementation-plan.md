@@ -19,11 +19,12 @@
   - `XSampaConverter` と `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch` を実装済み
   - `SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests` を追加済み
   - ASCII-only X-SAMPA、バッチ整合性、回帰コーパス、性能しきい値を検証済み
+  - `ipa-dict / WikiPron` サンプルコーパスと PER 回帰テストを追加済み
 - **検証状況**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter SpanishG2P`
-  - 結果: **173 passed**
+  - 結果: **177 passed**
 - **未実装**
-  - WikiPron / ipa-dict を使った大規模精度評価
+  - WikiPron / ipa-dict 全量を使った大規模精度評価
   - `DotNetG2P.Multilingual` 統合
 
 ---
@@ -51,8 +52,8 @@
 - X-SAMPA出力
 - `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch`
 - エッジケーステスト、パフォーマンステスト、精度テスト
-- WikiPron/ipa-dictデータによる精度検証
-- テスト 75件追加（累計 173件）
+- WikiPron/ipa-dictサンプルデータによる PER 回帰検証
+- テスト 79件追加（累計 177件）
 
 ### S4: 多言語統合・パッケージング
 - 状態: **未着手**
@@ -146,7 +147,7 @@ tests/DotNetG2P.Tests/SpanishG2P/
   SpanishAccuracyTests.cs           # 精度・回帰テスト [S3]
 ```
 
-現行テスト数: 173件（2026-03-09 時点）
+現行テスト数: 177件（2026-03-09 時点）
 
 ---
 

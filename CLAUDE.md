@@ -114,8 +114,9 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
   - **S3（X-SAMPA・大規模精度評価・拡張テスト）**: 初版実装済み
     - XSampaConverter、`ToXSampa()`, `ToXSampaWithoutStress()`, `ToXSampaBatch()` を追加
     - SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests を追加
-    - SpanishG2P テスト 173件通過
-    - 残タスクは ipa-dict / WikiPron ベースの大規模精度評価
+    - `ipa-dict / WikiPron` サンプルコーパスと PER 回帰テストを追加
+    - SpanishG2P テスト 177件通過
+    - 残タスクは ipa-dict / WikiPron 全量ベースの大規模精度評価
   - **S4（Multilingual統合・パッケージング拡張）**: 未着手
     - Language.Spanish追加、DefaultLatinLanguageオプション
     - LanguageDetector/TextSegmenter拡張（ñ, ¿, ¡検出）
