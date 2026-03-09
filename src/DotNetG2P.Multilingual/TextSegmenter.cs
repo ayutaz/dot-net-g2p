@@ -17,11 +17,12 @@ namespace DotNetG2P.Multilingual
         private const byte LangJapanese = 1;  // Language.Japanese
         private const byte LangEnglish = 2;   // Language.English
         private const byte LangChinese = 3;   // Language.Chinese
+        private const byte LangSpanish = 4;   // Language.Spanish
 
         /// <summary>テキストを言語セグメントに分割する（後方互換: CJK漢字はJapanese扱い）。</summary>
         public static IReadOnlyList<TextSegment> Segment(string text)
         {
-            return Segment(text, Language.Japanese);
+            return Segment(text, Language.Japanese, Language.English);
         }
 
         /// <summary>テキストを言語セグメントに分割する。</summary>
@@ -29,8 +30,20 @@ namespace DotNetG2P.Multilingual
         /// <param name="defaultCjkLanguage">CJK漢字のデフォルト言語（周囲にかな文字がない場合に使用）</param>
         public static IReadOnlyList<TextSegment> Segment(string text, Language defaultCjkLanguage)
         {
+            return Segment(text, defaultCjkLanguage, Language.English);
+        }
+
+        /// <summary>テキストを言語セグメントに分割する。</summary>
+        /// <param name="text">入力テキスト</param>
+        /// <param name="defaultCjkLanguage">CJK漢字のデフォルト言語（周囲にかな文字がない場合に使用）</param>
+        /// <param name="defaultLatinLanguage">ラテン文字列のデフォルト言語</param>
+        public static IReadOnlyList<TextSegment> Segment(string text, Language defaultCjkLanguage, Language defaultLatinLanguage)
+        {
             if (string.IsNullOrEmpty(text))
                 return Array.Empty<TextSegment>();
+
+            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish)
+                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English or Spanish.");
 
             int len = text.Length;
 
@@ -64,9 +77,9 @@ namespace DotNetG2P.Multilingual
                 byte defaultCjkByte = defaultCjkLanguage == Language.Chinese ? LangChinese
                                     : defaultCjkLanguage == Language.English ? LangEnglish
                                     : LangJapanese;
+                byte defaultLatinByte = defaultLatinLanguage == Language.Spanish ? LangSpanish : LangEnglish;
 
-                // まず、言語確定文字(Japanese/English)を直接割り当て
-                // アポストロフィとハイフンは英語文字間では英語に含める
+                // まず、日本語確定文字を直接割り当てる。
                 for (int i = 0; i < len; i++)
                 {
                     var kind = kinds[i];
@@ -74,10 +87,29 @@ namespace DotNetG2P.Multilingual
                     {
                         languages[i] = LangJapanese;
                     }
-                    else if (kind == ScriptKind.English || kind == ScriptKind.Latin)
+                }
+
+                // 次に、連続するラテン文字列を語単位で English / Spanish に振り分ける。
+                for (int i = 0; i < len;)
+                {
+                    if (!IsLatinScript(kinds[i]))
                     {
-                        languages[i] = LangEnglish;
+                        i++;
+                        continue;
                     }
+
+                    int start = i;
+                    bool hasLatinExtended = false;
+                    while (i < len && IsLatinScript(kinds[i]))
+                    {
+                        if (kinds[i] == ScriptKind.Latin)
+                            hasLatinExtended = true;
+                        i++;
+                    }
+
+                    byte latinLanguage = ResolveLatinLanguage(text, start, i - start, defaultLatinByte, hasLatinExtended);
+                    for (int j = start; j < i; j++)
+                        languages[j] = latinLanguage;
                 }
 
                 // CJKIdeograph文字の言語割り当て:
@@ -95,7 +127,7 @@ namespace DotNetG2P.Multilingual
                                 languages[i] = LangJapanese;
                         }
                         // 英語等の確定文字でかなチェーンをリセット
-                        if (kinds[i] == ScriptKind.English || kinds[i] == ScriptKind.Latin)
+                        if (IsLatinScript(kinds[i]))
                             lastKana = LangNone;
                     }
 
@@ -109,7 +141,7 @@ namespace DotNetG2P.Multilingual
                             if (lastKana == LangJapanese)
                                 languages[i] = LangJapanese;
                         }
-                        if (kinds[i] == ScriptKind.English || kinds[i] == ScriptKind.Latin)
+                        if (IsLatinScript(kinds[i]))
                             lastKana = LangNone;
                     }
 
@@ -154,16 +186,16 @@ namespace DotNetG2P.Multilingual
                         nextLangs[i] = lastLang;
                     }
 
-                    // アポストロフィ・ハイフン処理: 前後が英語なら英語に含める
+                    // アポストロフィ・ハイフン処理: 前後が同一ラテン言語ならそのセグメントに含める
                     for (int i = 0; i < len; i++)
                     {
                         if (kinds[i] == ScriptKind.Punctuation && (text[i] == '\'' || text[i] == '-'))
                         {
                             byte prev = prevLangs[i];
                             byte next = nextLangs[i];
-                            if (prev == LangEnglish && next == LangEnglish)
+                            if (prev == next && IsLatinLanguage(prev))
                             {
-                                languages[i] = LangEnglish;
+                                languages[i] = prev;
                             }
                         }
                     }
@@ -195,6 +227,8 @@ namespace DotNetG2P.Multilingual
                                 languages[i] = prev;
                             else if (next != LangNone)
                                 languages[i] = next;
+                            else if (defaultLatinByte == LangSpanish)
+                                languages[i] = LangSpanish;
                             else
                                 languages[i] = LangJapanese; // デフォルト
                         }
@@ -333,8 +367,52 @@ namespace DotNetG2P.Multilingual
             {
                 case LangJapanese: return Language.Japanese;
                 case LangChinese: return Language.Chinese;
+                case LangSpanish: return Language.Spanish;
                 default: return Language.English;
             }
+        }
+
+        private static bool IsLatinScript(ScriptKind kind)
+        {
+            return kind == ScriptKind.English || kind == ScriptKind.Latin;
+        }
+
+        private static bool IsLatinLanguage(byte language)
+        {
+            return language == LangEnglish || language == LangSpanish;
+        }
+
+        private static byte ResolveLatinLanguage(string text, int start, int length, byte defaultLatinByte, bool hasLatinExtended)
+        {
+            if (defaultLatinByte == LangSpanish)
+                return LangSpanish;
+
+            if (!hasLatinExtended)
+                return LangEnglish;
+
+            for (int i = start; i < start + length; i++)
+            {
+                switch (text[i])
+                {
+                    case '\u00C1':
+                    case '\u00C9':
+                    case '\u00CD':
+                    case '\u00D1':
+                    case '\u00D3':
+                    case '\u00DA':
+                    case '\u00DC':
+                    case '\u00E1':
+                    case '\u00E9':
+                    case '\u00ED':
+                    case '\u00F1':
+                    case '\u00F3':
+                    case '\u00FA':
+                    case '\u00FC':
+                        return LangSpanish;
+                }
+            }
+
+            return defaultLatinByte;
         }
     }
 }

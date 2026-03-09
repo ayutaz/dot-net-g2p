@@ -20,12 +20,18 @@
   - `SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests` を追加済み
   - ASCII-only X-SAMPA、バッチ整合性、回帰コーパス、性能しきい値を検証済み
   - `ipa-dict / WikiPron` サンプルコーパスと PER 回帰テストを追加済み
+- **S4: 初版実装済み**
+  - `DotNetG2P.Multilingual` に `Language.Spanish` と `DefaultLatinLanguage` を実装済み
+  - `MultilingualG2PEngine` に `SpanishG2PEngine` を統合済み
+  - `TextSegmenter` がラテン文字列を `English / Spanish` に振り分け可能
+  - `MultilingualSpanishTests` を追加済み
 - **検証状況**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter SpanishG2P`
   - 結果: **177 passed**
+  - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual`
+  - 結果: **169 passed / 152 skipped**
 - **未実装**
   - WikiPron / ipa-dict 全量を使った大規模精度評価
-  - `DotNetG2P.Multilingual` 統合
 
 ---
 
@@ -56,11 +62,12 @@
 - テスト 79件追加（累計 177件）
 
 ### S4: 多言語統合・パッケージング
-- 状態: **未着手**
-- DotNetG2P.Multilingual への統合（Language.Spanish）
-- LanguageDetector/TextSegmenter のスペイン語対応
-- NuGet + UPM パッケージ構成
-- テスト 50件追加
+- 状態: **初版実装済み**
+- `DotNetG2P.Multilingual` への統合（`Language.Spanish`）
+- `DefaultLatinLanguage` と `SpanishOptions` を追加
+- `LanguageDetector / TextSegmenter / MultilingualG2PEngine` のスペイン語対応
+- NuGet + UPM パッケージ構成更新
+- `MultilingualSpanishTests` を追加
 
 ---
 
@@ -331,7 +338,7 @@ s → s      t → t      v → b      w → w
 
 ---
 
-## Multilingual統合（S4）
+## Multilingual統合（S4, 実装済み）
 
 ### 修正が必要なファイル
 
@@ -339,16 +346,16 @@ s → s      t → t      v → b      w → w
 |---------|---------|
 | `Language.cs` | `Spanish = 3` を追加 |
 | `ScriptKind.cs` | 変更不要（Latin は既存） |
-| `LanguageDetector.cs` | スペイン語固有文字（ñ, ¿, ¡）検出、または `DefaultLatinLanguage` オプション追加 |
+| `LanguageDetector.cs` | `ToLanguage(kind, defaultLatinLanguage)` を追加し、Latin系の既定言語を切替 |
 | `TextSegmenter.cs` | `LangSpanish = 4` 定数追加、`FromLangByte` に case 追加 |
 | `MultilingualG2PEngine.cs` | `SpanishG2PEngine` フィールド追加、`ConvertSegment` に case 追加 |
-| `MultilingualG2POptions.cs` | `SpanishOptions` プロパティ追加 |
+| `MultilingualG2POptions.cs` | `SpanishOptions` / `DefaultLatinLanguage` プロパティ追加 |
 | `DotNetG2P.Multilingual.csproj` | `DotNetG2P.Spanish` への ProjectReference 追加 |
 
 ### スペイン語・英語の区別
 
 スペイン語と英語は同じラテン文字を共有するため、文字種だけでは区別できない。
-`DefaultCjkLanguage` と同様のパターンで `DefaultLatinLanguage` オプションを追加する方式を推奨。
+現実装では `DefaultCjkLanguage` と同様に `DefaultLatinLanguage` を導入し、アクセント付きスペイン語文字を含む語は英語既定時でも Spanish に寄せる。
 
 ```csharp
 public Language DefaultLatinLanguage { get; } = Language.English;

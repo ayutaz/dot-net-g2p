@@ -96,7 +96,7 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - LanguageDetector（Unicode文字種ベース言語判定）、TextSegmenter（2パスセグメント分割）
     - MultilingualG2PEngine（日英中G2Pファサード、IDisposable、lock保護）
     - テスト162件追加
-- **スペイン語G2P (DotNetG2P.Spanish)**: S3初版実装済み（feature/spanish-g2p ブランチ）
+- **スペイン語G2P (DotNetG2P.Spanish)**: S4初版実装済み（feature/spanish-g2p ブランチ）
   - **S1（コアルールエンジン + 基本G2P MVP）**: 完了
     - プロジェクト構成（csproj, package.json, asmdef, slnx更新）
     - モデル定義（SpanishIpaPhoneme enum, SpanishPhoneme struct, Dialect enum）
@@ -117,11 +117,11 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - `ipa-dict / WikiPron` サンプルコーパスと PER 回帰テストを追加
     - SpanishG2P テスト 177件通過
     - 残タスクは ipa-dict / WikiPron 全量ベースの大規模精度評価
-  - **S4（Multilingual統合・パッケージング拡張）**: 未着手
-    - Language.Spanish追加、DefaultLatinLanguageオプション
-    - LanguageDetector/TextSegmenter拡張（ñ, ¿, ¡検出）
-    - MultilingualG2PEngine統合
-    - テスト追加
+  - **S4（Multilingual統合・パッケージング拡張）**: 初版実装済み
+    - `DotNetG2P.Multilingual` に `Language.Spanish` と `DefaultLatinLanguage` を追加
+    - `TextSegmenter` を英語/スペイン語のラテン文字振り分けに対応
+    - `MultilingualG2PEngine` に `SpanishG2PEngine` を統合
+    - `MultilingualSpanishTests` を追加し、Multilingual テスト 321件通過
 
 ## ビルド・実行
 
@@ -299,16 +299,16 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── package.json                 # UPM (com.dotnetg2p.spanish)
 │   │   └── DotNetG2P.Spanish.asmdef     # Unity Assembly Definition
 │   │
-│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese依存）
+│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese + Spanish依存）
 │       ├── DotNetG2P.Multilingual.csproj # .NET Standard 2.1
-│       ├── Language.cs                  # Language enum (Japanese/English/Chinese)
+│       ├── Language.cs                  # Language enum (Japanese/English/Chinese/Spanish)
 │       ├── ScriptKind.cs               # ScriptKind enum (8種分類、internal)
 │       ├── TextSegment.cs              # 言語タグ付きテキストセグメント
 │       ├── G2PSegment.cs               # G2P結果セグメント
-│       ├── MultilingualG2POptions.cs   # 多言語G2Pオプション
+│       ├── MultilingualG2POptions.cs   # 多言語G2Pオプション（DefaultCjkLanguage / DefaultLatinLanguage）
 │       ├── LanguageDetector.cs         # Unicode文字種ベース言語判定
-│       ├── TextSegmenter.cs            # テキストセグメント分割
-│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中ファサード）
+│       ├── TextSegmenter.cs            # テキストセグメント分割（日英西ラテン文字対応）
+│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中西ファサード）
 │       ├── package.json                # UPM (com.dotnetg2p.multilingual)
 │       └── DotNetG2P.Multilingual.asmdef # Unity Assembly Definition
 │
@@ -390,7 +390,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── SpanishEdgeCaseTests.cs     # エッジケーステスト [S3]
 │       │   ├── SpanishPerformanceTests.cs  # パフォーマンステスト [S3]
 │       │   └── SpanishAccuracyTests.cs     # 精度・回帰テスト [S3]
-│       ├── Multilingual/               # 多言語G2Pテスト (308件)
+│       ├── Multilingual/               # 多言語G2Pテスト (321件)
 │       │   ├── LanguageDetectorTests.cs  # 言語判定テスト (29件)
 │       │   ├── TextSegmenterTests.cs     # セグメント分割テスト (30件)
 │       │   ├── MultilingualEngineTests.cs # エンジン統合テスト (28件)
@@ -399,6 +399,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── MultilingualPerformanceTests.cs # パフォーマンステスト (8件)
 │       │   ├── LanguageConsistencyTests.cs # 言語検出一貫性テスト (27件)
 │       │   ├── MultilingualChineseTests.cs # 中国語統合テスト (43件)
+│       │   ├── MultilingualSpanishTests.cs # スペイン語統合テスト (13件)
 │       │   ├── MixedTextBasicTests.cs    # 混在テキスト基本テスト (54件)
 │       │   └── MixedTextAdvancedTests.cs # 混在テキスト応用テスト (35件)
 │       └── Integration/                # 統合テスト

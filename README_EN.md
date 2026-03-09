@@ -27,9 +27,13 @@ zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 using var esEngine = new SpanishG2PEngine();
 esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
-// Mixed Japanese-English text
+// Mixed Japanese-English-Spanish text
 using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
 multiEngine.ToPhonemes("私はhelloと言った");  // Japanese => Japanese phonemes, English => ARPAbet
+
+var multiEsOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
+using var multiEsEngine = new MultilingualG2PEngine("/path/to/naist-jdic", multiEsOptions);
+multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese => Japanese phonemes
 ```
 
 ## Table of Contents
@@ -55,8 +59,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // Japanese => Japanese phon
 - **English G2P support** — CMU dictionary (135,000 words) + Flite LTS rules for OOV estimation, IPA/X-SAMPA output, text normalization, and heteronym resolution
 - **Chinese G2P support** — pinyin-data character dictionary (44,000 entries) + phrase-pinyin-data phrase dictionary (411,000 entries) for automatic polyphone resolution, tone sandhi (third tone, 一/不 rules), 3 output styles, IPA (International Phonetic Alphabet) and Zhuyin (Bopomofo) output
 - **Spanish G2P support** — Rule-based IPA conversion with syllabification, stress assignment, Castilian/Latin American options, optional allophone processing, normalization, and an exception dictionary
-- **Mixed Japanese-English-Chinese text support** — Automatic language detection and segment splitting based on Unicode character categories for seamless processing of mixed-language text
-- **Note** — `DotNetG2P.Multilingual` currently supports Japanese, English, and Chinese. Spanish is available as a standalone package and is not yet integrated into `Multilingual`
+- **Mixed Japanese-English-Chinese-Spanish text support** — Automatic language detection and segment splitting based on Unicode character categories, with `DefaultLatinLanguage` for English/Spanish Latin-script routing
 
 ## Installation
 
@@ -76,7 +79,7 @@ dotnet add package DotNetG2P.Chinese
 # Spanish G2P
 dotnet add package DotNetG2P.Spanish
 
-# Mixed Japanese-English-Chinese text support
+# Mixed Japanese-English-Chinese-Spanish text support
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -89,7 +92,7 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.English` | Apache-2.0 | English G2P engine (CMU dictionary + LTS rules) |
 | `DotNetG2P.Chinese` | Apache-2.0 | Chinese G2P engine (pinyin-data dictionary + tone sandhi) |
 | `DotNetG2P.Spanish` | Apache-2.0 | Spanish G2P engine (rule-based + optional allophones) |
-| `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese text support) |
+| `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese-Spanish text support) |
 
 ### Unity (UPM)
 
@@ -182,7 +185,7 @@ using var esEngine = new SpanishG2PEngine();
 string esIpa = esEngine.ToIPA("guion");
 // => "ɡiˈon"
 
-// === Mixed Japanese-English-Chinese Text ===
+// === Mixed Japanese-English-Chinese-Spanish Text ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
@@ -197,6 +200,12 @@ var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese)
 using var multiZhEngine = new MultilingualG2PEngine("/path/to/naist-jdic", zhOptions);
 multiZhEngine.ToPhonemes("你好hello");
 // Chinese segments => Pinyin, English segments => ARPAbet phonemes
+
+// For text containing Spanish
+var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
+using var multiEsEngine = new MultilingualG2PEngine("/path/to/naist-jdic", esOptions);
+multiEsEngine.ToPhonemes("hola世界");
+// Spanish segments => IPA phonemes, Japanese segments => Japanese phonemes
 ```
 
 ## API Reference
@@ -274,7 +283,7 @@ multiZhEngine.ToPhonemes("你好hello");
 
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `ToPhonemes(text)` | `string` | Mixed Japanese-English-Chinese phoneme sequence |
+| `ToPhonemes(text)` | `string` | Mixed Japanese-English-Chinese-Spanish phoneme sequence |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | Language-tagged segments |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | Batch segment conversion |
@@ -395,7 +404,7 @@ so creating multiple instances incurs minimal memory overhead.
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | English G2P engine |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | Chinese G2P engine |
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | Spanish G2P engine |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine (Japanese-English-Chinese) |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine (Japanese-English-Chinese-Spanish) |
 
 All components are available under the **Apache-2.0 License**.
 For third-party component licenses, see the [NOTICE](NOTICE) file.

@@ -55,8 +55,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音
 - **支持英语 G2P** — CMU 词典（135,000 词）+ Flite LTS 规则进行 OOV 推测、IPA/X-SAMPA 输出、文本规范化、同形异音词解析
 - **支持中文 G2P** — pinyin-data 单字词典（44,000 条）+ phrase-pinyin-data 短语词典（411,000 条），自动多音字解析、声调变调（三声连读、一/不变调）、3 种输出风格、IPA（国际音标）与注音符号（ㄅㄆㄇㄈ）输出
 - **支持西班牙语 G2P** — 提供基于规则的 IPA 转写、音节划分、重音判定、Castilian/Latin American 切换、异音处理选项、文本规范化与例外词典
-- **支持日英中混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，无缝处理日英中混合文本
-- **说明** — `DotNetG2P.Multilingual` 当前仍为日英中支持，西班牙语尚未集成到多语言引擎
+- **支持日英中西混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，并通过 `DefaultLatinLanguage` 控制英语/西班牙语拉丁文本路由
 
 ## 安装
 
@@ -76,7 +75,7 @@ dotnet add package DotNetG2P.Chinese
 # 西班牙语 G2P
 dotnet add package DotNetG2P.Spanish
 
-# 日英中混合文本支持
+# 日英中西混合文本支持
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -89,7 +88,7 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.English` | Apache-2.0 | 英语 G2P 引擎（CMU 词典 + LTS 规则） |
 | `DotNetG2P.Chinese` | Apache-2.0 | 中文 G2P 引擎（pinyin-data 词典 + 声调变调） |
 | `DotNetG2P.Spanish` | Apache-2.0 | 西班牙语 G2P 引擎（规则驱动 + 可选异音处理） |
-| `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中混合文本支持） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中西混合文本支持） |
 
 ### Unity (UPM)
 
@@ -187,7 +186,7 @@ using var esEngine = new SpanishG2PEngine();
 string esIpa = esEngine.ToIPA("guion");
 // => "ɡiˈon"
 
-// === 日英中混合文本 ===
+// === 日英中西混合文本 ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
@@ -202,6 +201,12 @@ var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese)
 using var multiZhEngine = new MultilingualG2PEngine("/path/to/naist-jdic", zhOptions);
 multiZhEngine.ToPhonemes("你好hello");
 // 中文部分 => 拼音，英语部分 => ARPAbet 音素
+
+// 包含西班牙语文本的情况
+var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
+using var multiEsEngine = new MultilingualG2PEngine("/path/to/naist-jdic", esOptions);
+multiEsEngine.ToPhonemes("hola世界");
+// 西班牙语部分 => IPA 音素，日语部分 => 日语音素
 ```
 
 ## API 参考
@@ -279,7 +284,7 @@ multiZhEngine.ToPhonemes("你好hello");
 
 | 方法 | 返回类型 | 说明 |
 |------|---------|------|
-| `ToPhonemes(text)` | `string` | 日英中混合音素序列 |
+| `ToPhonemes(text)` | `string` | 日英中西混合音素序列 |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 带语言标签的分段 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | 批量分段转换 |
@@ -400,7 +405,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | 英语 G2P 引擎 |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | 中文 G2P 引擎 |
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | 西班牙语 G2P 引擎 |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎（日英中对应） |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎（日英中西对应） |
 
 所有组件均以 **Apache-2.0 许可证** 提供。
 有关第三方组件的许可证信息，请参阅 [NOTICE](NOTICE) 文件。

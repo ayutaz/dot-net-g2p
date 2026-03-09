@@ -78,13 +78,22 @@ namespace DotNetG2P.Multilingual
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Language? ToLanguage(ScriptKind kind)
         {
+            return ToLanguage(kind, Language.English);
+        }
+
+        /// <summary>ScriptKindからLanguageへの変換。Latin系は既定言語に従う。</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Language? ToLanguage(ScriptKind kind, Language defaultLatinLanguage)
+        {
             switch (kind)
             {
                 case ScriptKind.Japanese:
                     return Language.Japanese;
                 case ScriptKind.English:
                 case ScriptKind.Latin:
-                    return Language.English;
+                    return defaultLatinLanguage == Language.Spanish
+                        ? Language.Spanish
+                        : Language.English;
                 case ScriptKind.CJKIdeograph:
                     // CJK漢字は日中共用のため、文脈で判定（TextSegmenterに委譲）
                     return null;

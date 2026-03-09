@@ -19,11 +19,12 @@
   - `XSampaConverter` と `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch`
   - X-SAMPA / エッジケース / パフォーマンス / 精度・回帰テスト
   - `ipa-dict / WikiPron` サンプルデータを用いた PER 回帰テスト
+  - `DotNetG2P.Multilingual` への統合（`Language.Spanish`, `DefaultLatinLanguage`, `MultilingualSpanishTests`）
 - 未実装
   - 全量コーパスでの大規模精度評価（WikiPron / ipa-dict）
-  - Multilingual 統合
 - 検証状況
   - `SpanishG2P` テスト: **177 passed**
+  - `Multilingual` テスト: **169 passed / 152 skipped**
 
 調査本文はルール設計の根拠として維持し、最新の実装状態は [spanish-g2p-implementation-plan.md](spanish-g2p-implementation-plan.md) を正とする。
 
