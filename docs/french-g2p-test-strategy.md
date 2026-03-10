@@ -6,7 +6,7 @@
 
 | 指標 | 目標値 |
 |------|--------|
-| テスト総数 | 400-430件（F1-F4合計） |
+| テスト総数 | 400-430件（F1-F4合計）。現時点: **366件**（F1: 218件 + F2: 148件） |
 | コードカバレッジ | 行カバレッジ90%以上（publicメソッド100%） |
 | PER（ipa-dict fr_FR） | F1: 8-12%, F2: 3-6%, F3: 3-6%（確定値） |
 | PER（WikiPron fra_latn_broad_filtered） | 交差検証用（閾値はipa-dict結果に基づき設定） |
@@ -32,17 +32,17 @@
 
 ## 2. マイルストーン別テスト計画
 
-### F1: コアG2P MVP（目標: 120-150件）
+### F1: コアG2P MVP（目標: 120-150件 → 実績: **218件**）
 
-F1ではルールベースのコアG2P変換を検証する。
+**ステータス: 完了** — 5テストファイル、218テストケース全通過。
 
-| テストファイル | 内容 | 件数目安 |
-|---------------|------|---------|
-| `FrenchG2PEngineTests.cs` | エンジン統合テスト（ToIPA, ToPhonemes, ToPhonemeList, バッチAPI） | 25-30件 |
-| `GraphemeToPhonemeRulesTests.cs` | 書記素→音素規則の個別検証（h aspire/h muet、エリジョン含む） | 50-60件 |
-| `FrenchSyllabifierTests.cs` | 音節分割テスト（旧StressAssignerTests統合分含む） | 25-30件 |
-| `FrenchIpaTests.cs` | IPA変換テスト（音素enum↔IPA文字列） | 15-20件 |
-| `FrenchPhonemeTests.cs` | 音素モデルテスト（enum値、struct equality等） | 10-15件 |
+| テストファイル | 内容 | 計画 | 実績 |
+|---------------|------|------|------|
+| `FrenchG2PEngineTests.cs` | エンジン統合テスト（ToIPA, ToPhonemes, ToPhonemeList, バッチAPI） | 25-30件 | **32件** |
+| `GraphemeToPhonemeRulesTests.cs` | 書記素→音素規則の個別検証（h aspire/h muet、エリジョン含む） | 50-60件 | **94件** |
+| `FrenchSyllabifierTests.cs` | 音節分割テスト（旧StressAssignerTests統合分含む） | 25-30件 | **38件** |
+| `FrenchIpaTests.cs` | IPA変換テスト（音素enum↔IPA文字列） | 15-20件 | **23件** |
+| `FrenchPhonemeTests.cs` | 音素モデルテスト（enum値、struct equality等） | 10-15件 | **31件** |
 
 注: フランス語は語レベルの独立したストレスを持たないため、`StressAssignerTests.cs` は設けない（音韻論レビュー指摘 M17）。語末音節への韻律的強勢は句レベルの現象であり、語レベルG2Pのスコープ外。音節構造の検証は `FrenchSyllabifierTests.cs` に統合する。
 
@@ -215,143 +215,92 @@ F1ではルールベースのコアG2P変換を検証する。
 [InlineData("avenue", "avny")]     // 語中シュワー脱落
 ```
 
-### F2: 精度向上・異音・正規化（目標: 110-140件）
+### F2: 精度向上・異音・正規化（目標: 110-140件 → 実績: **148件**）
 
-| テストファイル | 内容 | 件数目安 |
-|---------------|------|---------|
-| `FrenchNormalizerTests.cs` | テキスト正規化テスト（数字展開以外） | 35-45件 |
-| `FrenchNumberToWordsTests.cs` | 数値→フランス語文字列変換の単体テスト | 20-25件 |
-| `AllophoneProcessorTests.cs` | 異音規則テスト | 15-20件 |
-| `FrenchExceptionDictionaryTests.cs` | 例外辞書テスト | 20-25件 |
-| `LiaisonTests.cs` | リエゾン規則テスト（オプション） | 15-20件 |
+**ステータス: 完了** — 4テストファイル、148テストケース全通過。
 
-#### 数値変換テスト（`FrenchNumberToWordsTests.cs`）
+| テストファイル | 内容 | 計画 | 実績 |
+|---------------|------|------|------|
+| `FrenchNumberToWordsTests.cs` | 数値→フランス語文字列変換の単体テスト | 20-25件 | **55件** |
+| `FrenchNormalizerTests.cs` | テキスト正規化テスト（略語・日付・時刻・通貨・単位・記号等） | 35-45件 | **51件** |
+| `AllophoneProcessorTests.cs` | 異音規則テスト（R無声化・有声性同化） | 15-20件 | **18件** |
+| `FrenchExceptionDictionaryTests.cs` | 例外辞書テスト（外来語・不規則語・動詞3複・方言） | 20-25件 | **24件** |
+| `LiaisonTests.cs` | リエゾン規則テスト（オプション） | 15-20件 | 未実装（F3以降で検討） |
 
-フランス語の数詞は vigesimal（20進法）体系を持ち、特に複雑。独立テストファイルとして詳細に検証する:
+#### 数値変換テスト（`FrenchNumberToWordsTests.cs`）— 実績55件
 
-```csharp
-// 1-20 基数詞
-[InlineData(0, "zéro")]
-[InlineData(1, "un")]
-[InlineData(11, "onze")]
-[InlineData(16, "seize")]
-[InlineData(20, "vingt")]
+フランス語の数詞は vigesimal（20進法）体系を持ち、特に複雑。独立テストファイルとして詳細に検証する。
 
-// 21-69 通常範囲（et挿入規則）
-[InlineData(21, "vingt et un")]
-[InlineData(31, "trente et un")]
-[InlineData(22, "vingt-deux")]
+**実装済みテストカテゴリ（55テストケース）:**
 
-// 70-79 soixante-dix 系列（vigesimal）
-[InlineData(70, "soixante-dix")]
-[InlineData(71, "soixante et onze")]
-[InlineData(79, "soixante-dix-neuf")]
+| カテゴリ | メソッド | テストケース数 | 内容 |
+|---------|---------|-------------|------|
+| 基本数詞 (0-19) | `Convert_BasicNumbers_ReturnsCorrect` | 6件 | 0, 1, 5, 11, 16, 19 |
+| 20台 | `Convert_Twenty_ReturnsVingt` | 1件 | 20 |
+| et挿入 | `Convert_EtInsertion_ReturnsCorrect` | 5件 | 21, 31, 41, 51, 61 |
+| 通常の十の位 | `Convert_RegularTens_ReturnsCorrect` | 5件 | 22, 35, 48, 59, 63 |
+| vigesimal 70系列 | `Convert_Seventies_ReturnsVigesimal` | 5件 | 70, 71, 72, 75, 79 |
+| vigesimal 80系列 | `Convert_Eighties_ReturnsVigesimal` | 4件 | 80(末尾s), 81(sなし), 85, 89 |
+| vigesimal 90系列 | `Convert_Nineties_ReturnsVigesimal` | 4件 | 90, 91, 95, 99 |
+| 百の位 | `Convert_Hundreds_ReturnsCorrect` | 6件 | 100, 101, 200(末尾s), 201(sなし), 300, 999 |
+| 千の位 | `Convert_Thousands_ReturnsCorrect` | 4件 | 1000, 1001, 2000, 2025 |
+| million/milliard | `Convert_LargeNumbers_ReturnsCorrect` | 4件 | 100万, 200万, 10億, 20億 |
+| 負の数 | `Convert_Negative_ReturnsMoins` | 1件 | -5 → "moins cinq" |
+| 序数詞 | `ConvertOrdinal_ReturnsCorrect` | 6件 | 1er, 1ère, 2e, 3ème, 5e, 9e(neuvième) |
+| 桁読み | `ConvertDigits_ReturnsIndividualDigits` | 1件 | "123" → "un deux trois" |
+| 文字列版 | `Convert_String_ReturnsCorrect` | 3件 | 数値文字列, 非数値, 空文字列 |
 
-// 80-89 quatre-vingts 系列（vigesimal）
-[InlineData(80, "quatre-vingts")]        // 末尾s付き（後続数なし）
-[InlineData(81, "quatre-vingt-un")]      // 末尾sなし（後続数あり）、et なし
+#### 正規化テストの分類（`FrenchNormalizerTests.cs`）— 実績51件
 
-// 90-99 quatre-vingt-dix 系列
-[InlineData(90, "quatre-vingt-dix")]
-[InlineData(91, "quatre-vingt-onze")]    // et なし
-[InlineData(99, "quatre-vingt-dix-neuf")]
+スペイン語 `SpanishNormalizerTests.cs` のパターンに準拠し実装済み。
 
-// 桁上がり
-[InlineData(100, "cent")]
-[InlineData(200, "deux cents")]          // 末尾s付き
-[InlineData(201, "deux cent un")]        // 末尾sなし
-[InlineData(1000, "mille")]
-[InlineData(1000000, "un million")]
+**実装済みテストカテゴリ（51テストケース）:**
 
-// 序数詞
-[InlineData("1er", "premier")]
-[InlineData("1re", "première")]          // 女性形
-[InlineData("2e", "deuxième")]
+| カテゴリ | メソッド | テストケース数 | 内容 |
+|---------|---------|-------------|------|
+| 基本動作 | `Normalize_Null/Empty/PlainText` | 3件 | null→空, 空→空, 小文字化 |
+| 略語展開 | `ExpandAbbreviations_ReturnsExpanded` | 5件 | M., Mme, Dr, etc., p. ex. |
+| 日付展開 | `ExpandDates_ReturnsExpanded` + `InvalidDate` | 4件 | DD/MM/YYYY形式, 無効日付フォールバック |
+| 時刻展開 | `ExpandTimes_ReturnsExpanded` | 5件 | Nh/NhMM, minuit, midi |
+| 通貨展開 | `ExpandCurrencies_ReturnsExpanded` | 5件 | €(単複,小数), $(単複) |
+| パーセンテージ | `ExpandPercentages_ReturnsExpanded` | 3件 | 整数%, 小数% |
+| 単位展開 | `ExpandUnits_ReturnsExpanded` | 8件 | km, kg, m, cm, mm, L, °C + 単数形 |
+| 小数展開 | `ExpandDecimals_ReturnsExpanded` | 2件 | "virgule" + 桁読み |
+| 数字展開 | `ExpandNumbers_ReturnsExpanded` | 3件 | 整数→文字列 |
+| 記号展開 | `ExpandSymbols_ReturnsExpanded` | 6件 | &, @, §, #, +, = |
+| 空白正規化 | `Normalize_MultipleSpaces_Collapsed` | 1件 | 連続空白圧縮 |
+| 複合テスト | `Normalize_MixedContent/DateTimeCombo` | 2件 | 略語+数字+記号混在, 日付+時刻複合 |
+| Tokenize | `Tokenize_Empty/Elision/CompoundWord` | 3件 | 空→空, エリジョン保持, ハイフン語保持 |
+| n°展開 | `ExpandAbbreviations_NumeroSign_Expanded` | 1件 | n° → numéro |
 
-// ハイフン規則（1990年改定綴り）
-// 1990年改定により、すべての数詞の構成要素間にハイフンを使用可能
-```
+#### 異音テスト（`AllophoneProcessorTests.cs`）— 実績18件
 
-#### 正規化テストの分類（`FrenchNormalizerTests.cs`）
+**実装済みテストカテゴリ（18テストケース）:**
 
-スペイン語 `SpanishNormalizerTests.cs` のパターンに準拠:
+| カテゴリ | テストケース数 | 内容 |
+|---------|-------------|------|
+| R無声化 (RDevoicing) | 6件 | R+無声阻害音→Rh, 無声阻害音+R→Rh, 母音間R維持, 語末R維持, 有声阻害音前R維持, 鼻音前R維持 |
+| 有声性同化 (ObstruentVoicingAssimilation) | 5件 | 有声→無声(b+s→p+s), 無声→有声(k+d→g+d), 同一voicing不変, 非阻害音で分断, 3連阻害音カスケード逆行同化 |
+| フラグ制御 | 4件 | None→変化なし, RDevoicingのみ, Assimilationのみ, Default(両方) |
+| 空入力 | 1件 | 空配列→空返却 |
+| 統合（メタデータ保持） | 2件 | 音節オフセット+ストレス保持, IsSyllableNucleus保持 |
 
-```csharp
-// 通貨展開
-[InlineData("3,50 €", "trois euros cinquante")]
-[InlineData("$1", "un dollar")]
-[InlineData("1,01 €", "un euro et un centime")]
+#### 例外辞書テスト（`FrenchExceptionDictionaryTests.cs`）— 実績24件
 
-// 時刻展開
-[InlineData("12h30", "douze heures trente")]
-[InlineData("1h05", "une heure cinq")]
-[InlineData("midi", "midi")]
+**実装済みテストカテゴリ（24テストケース）:**
 
-// 日付展開
-[InlineData("12/10/2025", "le douze octobre deux mille vingt-cinq")]
-[InlineData("1er janvier", "premier janvier")]
-
-// 単位展開
-[InlineData("3,5 km", "trois virgule cinq kilomètres")]
-[InlineData("2 kg", "deux kilogrammes")]
-[InlineData("3 °C", "trois degrés celsius")]
-
-// 略語展開
-[InlineData("M. Dupont", "monsieur dupont")]
-[InlineData("Mme Dupont", "madame dupont")]
-[InlineData("Dr Dupont", "docteur dupont")]
-[InlineData("etc.", "et cetera")]
-[InlineData("p. ex.", "par exemple")]
-
-// 記号展開
-[InlineData("pain & fromage", "pain et fromage")]
-[InlineData("50%", "cinquante pour cent")]
-[InlineData("§ 4", "paragraphe quatre")]
-```
-
-#### 異音テスト（`AllophoneProcessorTests.cs`）
-
-```csharp
-// /ʁ/ の無声化（無声子音後）
-[InlineData("quatre", "katʁ̥")]    // t後のʁ無声化
-
-// 有声性同化
-[InlineData("absent", "apsɑ̃")]    // b→p（sの前）
-[InlineData("médecin", "medsɛ̃")]  // 逆行同化
-
-// 鼻音同化（オプション）
-// /n/ → [ŋ] before velar
-```
-
-#### 例外辞書テスト（`FrenchExceptionDictionaryTests.cs`）
-
-```csharp
-// 英語由来外来語
-[InlineData("football", "futbol")]
-[InlineData("weekend", "wikɛnd")]
-[InlineData("shopping", "ʃɔpiŋ")]
-
-// イタリア語由来外来語
-[InlineData("pizza", "pidza")]
-[InlineData("cappuccino", "kapytʃino")]
-
-// アラビア語由来外来語
-[InlineData("algèbre", "alʒɛbʁ")]
-
-// ドイツ語由来外来語
-[InlineData("kitsch", "kitʃ")]
-
-// 不規則発音語
-[InlineData("oignon", "ɔɲɔ̃")]
-[InlineData("femme", "fam")]
-[InlineData("monsieur", "məsjø")]
-[InlineData("fils", "fis")]
-
-// 辞書ロード・ルックアップ
-[Fact] LoadDictionary_ReturnsExpectedEntryCount()
-[Fact] TryLookup_KnownWord_ReturnsTrue()
-[Fact] TryLookup_UnknownWord_ReturnsFalse()
-```
+| カテゴリ | テストケース数 | 内容 |
+|---------|-------------|------|
+| ロード検証 | 3件 | football→True, 未知語→False, null→False |
+| 外来語 (英語/イタリア語/日本語) | 3件 | weekend(5音素), pizza(5音素), sushi(4音素) — 各音素を個別Assert |
+| 不規則語 | 4件 | monsieur(5音素,ə), femme(3音素,a), oignon(3音素,ɲ), fils(3音素,語末s発音) |
+| 動詞3人称複数 (-ent黙字) | 3件 | parlent(4音素,-ent黙字), chantent(3音素), sont(2音素,不規則) |
+| 学術語・特殊黙字 | 4件 | bus(語末s発音), album(語末m発音), fusil(語末l黙字), tabac(語末c黙字) |
+| 方言 | 2件 | football→Metropolitan/Conservative 両方マッチ（ワイルドカード方言） |
+| 音節核 | 1件 | pizza → 音節核フラグ(IsSyllableNucleus)の正確性検証 |
+| ストレス | 1件 | monsieur → StressedSyllableIndex = -1（フランス語は語レベルストレスなし） |
+| 同綴異音語 | 2件 | est(1音素,ɛ), content(4音素,k+ɔ̃+t+ɑ̃) |
+| エントリ数検証 | 1件 | 辞書の基本16語全ルックアップ成功 |
 
 ### F3: X-SAMPA・精度評価（目標: 100-120件）
 
@@ -825,19 +774,19 @@ public class FrenchPerformanceTests : IDisposable
 ```
 tests/DotNetG2P.Tests/
 ├── FrenchG2P/
-│   ├── FrenchG2PEngineTests.cs              # F1: エンジン統合テスト (25-30件)
-│   ├── GraphemeToPhonemeRulesTests.cs        # F1: G2Pルール単体テスト (50-60件)
+│   ├── FrenchG2PEngineTests.cs              # F1: エンジン統合テスト (32件) ✅
+│   ├── GraphemeToPhonemeRulesTests.cs        # F1: G2Pルール単体テスト (94件) ✅
 │   │                                        #     h aspire/h muet, エリジョン,
 │   │                                        #     -tion/-sion/-ill-系, y半母音 含む
-│   ├── FrenchSyllabifierTests.cs            # F1: 音節分割テスト (25-30件)
+│   ├── FrenchSyllabifierTests.cs            # F1: 音節分割テスト (38件) ✅
 │   │                                        #     旧StressAssigner分を統合
-│   ├── FrenchIpaTests.cs                    # F1: IPA変換テスト (15-20件)
-│   ├── FrenchPhonemeTests.cs                # F1: 音素モデルテスト (10-15件)
-│   ├── FrenchNormalizerTests.cs             # F2: 正規化テスト (35-45件)
-│   ├── FrenchNumberToWordsTests.cs          # F2: 数値→文字列変換テスト (20-25件)
-│   ├── AllophoneProcessorTests.cs           # F2: 異音テスト (15-20件)
-│   ├── FrenchExceptionDictionaryTests.cs    # F2: 例外辞書テスト (20-25件)
-│   ├── LiaisonTests.cs                      # F2: リエゾンテスト（オプション）(15-20件)
+│   ├── FrenchIpaTests.cs                    # F1: IPA変換テスト (23件) ✅
+│   ├── FrenchPhonemeTests.cs                # F1: 音素モデルテスト (31件) ✅
+│   ├── FrenchNumberToWordsTests.cs          # F2: 数値→文字列変換テスト (55件) ✅
+│   ├── FrenchNormalizerTests.cs             # F2: 正規化テスト (51件) ✅
+│   ├── AllophoneProcessorTests.cs           # F2: 異音テスト (18件) ✅
+│   ├── FrenchExceptionDictionaryTests.cs    # F2: 例外辞書テスト (24件) ✅
+│   ├── LiaisonTests.cs                      # F2: リエゾンテスト（オプション、未実装）
 │   ├── FrenchXSampaTests.cs                 # F3: X-SAMPA変換テスト (20-25件)
 │   ├── FrenchEdgeCaseTests.cs               # F3: エッジケーステスト (30-35件)
 │   │                                        #     Unicode NFC/NFD, バッチ大量入力 含む
@@ -1023,6 +972,6 @@ dotnet test --filter "Category=Accuracy"
 | 主な困難 | 方言差（seseo/distincion） | 黙字、鼻母音化、シュワー、位置の法則、h aspire/h muet |
 | 例外辞書依存度 | 低い（~100語） | 高い（~500-1000語以上） |
 | 正規化の複雑度 | 中程度 | 中程度（数字・日付規則がフランス固有、vigesimal体系） |
-| テスト件数 | 355件 | 400-430件（目標） |
+| テスト件数 | 355件 | 400-430件（目標）、現時点366件（F1: 218件 + F2: 148件） |
 | 評価データセット | ipa-dict es_ES/es_MX + WikiPron spa | ipa-dict fr_FR + WikiPron fra |
 | 方言サポート | LatinAmerican / Castilian | Metropolitan / Conservative |

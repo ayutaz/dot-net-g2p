@@ -34,7 +34,7 @@ Normalize → Tokenize → G2PRules → Syllabifier → (StressAssigner) → All
 | マイルストーン | 名称 | 主な成果物 | テスト目標 | PER目標 |
 |:-:|:--|:--|:-:|:-:|
 | **F1** | コアG2Pルールエンジン + 基本MVP | 基本的なフランス語G2P動作 | 150-180件 | 8-12% |
-| **F2** | 精度向上・異音規則・テキスト正規化 | 高精度フランス語G2P | 100-130件追加 | 3-6% |
+| **F2** ✅ | 精度向上・異音規則・テキスト正規化 | 高精度フランス語G2P | 366件（累計） | 3-6% |
 | **F3** | X-SAMPA・大規模精度評価・拡張テスト | 評価済みフランス語G2P | 80-100件追加 | 3-6% (確定値) |
 | **F4** | Multilingual統合・パッケージング | 多言語G2Pにフランス語統合 | 40-50件追加 | - |
 | | **合計** | | **400-430件** | |
@@ -149,46 +149,68 @@ F1はスペイン語S1に比べG2Pルールの複雑さが2-3倍あるため、�
 
 ---
 
-### F2: 精度向上・異音規則・テキスト正規化
+### F2: 精度向上・異音規則・テキスト正規化 ✅ 完了
 
-#### スコープ
+#### ステータス
+- **完了**（テスト366件合格）
+
+#### 実装内容
 
 **テキスト正規化**
-- `FrenchNormalizer` (static class)
-  - `NumberToWords`: フランス語数詞展開
-    - **20進法対応**: 70 = soixante-dix, 80 = quatre-vingts, 90 = quatre-vingt-dix
-    - 序数詞: premier/première, deuxieme, troisieme...
-    - 小数: virgule（フランス語ではカンマが小数点）
-    - ベルギー/スイス方言数詞（septante/huitante/nonante）: `FrenchG2POptions` に `UseRegionalNumbers` フラグとして対応する（`FrenchDialect` enum には含めない。Metropolitan/Conservative の音韻学的分類とは独立した地域的数詞差異であるため）
-  - `CurrencyExpander`: EUR (euros), USD (dollars), GBP (livres) 等
-  - `TimeExpander`: "14h30" → "quatorze heures trente"
-  - `DateExpander`: "le 1er janvier" → "le premier janvier"
-  - `UnitExpander`: kg, km, m, cm, mm, L 等
-  - `AbbreviationExpander`: M. (monsieur), Mme (madame), Dr (docteur), etc. (etc.) 等
-  - `SymbolExpander`: @ (arobase), & (esperluette), % (pour cent) 等
+- `FrenchNormalizer` (static class): 11段階正規化パイプライン
+  1. NFC正規化 + 小文字化
+  2. 略語展開（M./Mme/Mlle/Dr/Me/Prof/etc./p.ex./n°/St/Ste/av.J.-C./ap.J.-C.）
+  3. 日付展開（DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY → "le premier janvier deux mille vingt-six" 等、バリデーション付き）
+  4. 時刻展開（NNhNN → "quatorze heures trente"、0h→minuit/12h→midi対応）
+  5. 通貨展開（€/$ 前置・後置、整数部+小数部、単複形変化: euro/euros/centime/centimes/dollar/dollars/cent/cents）
+  6. パーセント展開（N% → "N pour cent"、小数パーセントも対応）
+  7. 単位展開（km/kg/cm/mm/m/l + °C、単複形変化: kilomètre/kilomètres 等）
+  8. 小数展開（N,N → "N virgule N"、フランス語のカンマ小数点対応）
+  9. 数字展開（残りの整数をフランス語数詞に変換）
+  10. 記号展開（&→et, @→arobase, §→paragraphe, #→dièse, +→plus, =→égal）
+  11. 空白正規化 + trim
+- `Tokenize()`: アポストロフ・ハイフン保持のトークン分割
+
+- `NumberToWords` (static class): フランス語数詞変換
+  - **20進法（vigesimal）完全対応**: 70=soixante-dix, 71=soixante et onze, 80=quatre-vingts, 81=quatre-vingt-un, 90=quatre-vingt-dix
+  - 序数詞: premier/première、N→Nième変換（neuf→neuv, cinq→cinqu 等の特殊変換）
+  - 小数桁読み: `ConvertDigits()` による1桁ずつ読み上げ
+  - 負数: "moins N"
+  - 十億（milliard）単位まで対応
+  - 百（cent/cents）・千（mille）の複数形ルール準拠
 
 **異音規則**
 - `AllophoneProcessor` (static class)
-  - /ʁ/ 無声化: 無声子音に隣接する環境で /ʁ/ → /ʁ̥/
-  - 有声性同化（voice assimilation）: 閉塞音連続での逆行同化
-  - 母音長母音化: /ʁ/, /z/, /ʒ/, /v/ の前で母音が長くなる（オプション）
-  - 語末 /ə/ の脱落（e caduc）の精密化
-- `FrenchAllophoneFeatures` flags enum（各規則のON/OFF制御）
+  - **R無声化**: 無声阻害音（/p/,/t/,/k/,/f/,/s/,/ʃ/）に隣接する /ʁ/ を /χ/ に変換（語末Rは除外）
+  - **閉鎖音有声性同化**: 阻害音クラスタ内の逆行同化（後方の有声性に前方を統一: /p/↔/b/, /t/↔/d/, /k/↔/ɡ/, /f/↔/v/, /s/↔/z/, /ʃ/↔/ʒ/）
+- `FrenchAllophoneFeatures` flags enum : byte（5規則、ON/OFF制御）
+  - `RDevoicing`: /ʁ/ 無声化
+  - `ObstruentVoicingAssimilation`: 阻害音有声性同化
+  - `VowelLengthening`: 閉音節母音長化（オプション）
+  - `LVelarization`: /l/ 軟口蓋化（オプション）
+  - `FinalDevoicing`: 語末阻害音無声化（オプション）
+  - `Obligatory = RDevoicing | ObstruentVoicingAssimilation`
+  - `Default = Obligatory`
 
 **例外辞書**
-- `Data/french_exceptions.master.tsv`: 500-1000語
-  - 外来語: "football" → /futbol/, "week-end" → /wikɛnd/
-  - 学術語・ラテン語由来: "album" → /albɔm/, "forum" → /fɔʁɔm/
-  - 同綴異音語: "fils" (/fis/ vs /fil/), "est" (/ɛ/ vs /ɛst/)
-  - 不規則語: "monsieur" → /məsjø/, "femme" → /fam/, "oignon" → /ɔɲɔ̃/
-- `ExceptionDictionary` class: TSV読み込み + ルックアップ
-- `tools/generate_french_exceptions.ps1`: ipa-dict等から例外辞書を抽出・生成
+- `Data/french_exceptions.master.tsv`: 571行（ヘッダ・コメント含む、約550+エントリ）
+  - 外来語、学術語・ラテン語由来、同綴異音語、不規則語をカバー
+  - TSV形式: surface / dialect / category / stress_index / pronunciation / note
+- `Data/FrenchExceptionDictionary.cs` (static class): 埋め込みリソースTSV読み込み + 方言別ルックアップ
+  - `TryLookup(word, dialect, out pronunciation)`: 方言指定ルックアップ（方言固有→任意方言のフォールバック）
+  - IPA音素パーサ（36音素対応）、音節区切り `|` 記法サポート
 
-**テスト追加**
-- `FrenchNormalizerTests.cs`: 正規化テスト
-- `AllophoneProcessorTests.cs`: 異音テスト
-- `ExceptionDictionaryTests.cs`: 例外辞書テスト
-- **目標**: 100-130件追加
+**F2で追加したファイル**
+- `src/DotNetG2P.French/Normalization/NumberToWords.cs` — フランス語数詞変換（280行）
+- `src/DotNetG2P.French/Normalization/FrenchNormalizer.cs` — 11段階正規化パイプライン（365行）
+- `src/DotNetG2P.French/Rules/AllophoneProcessor.cs` — 異音規則処理（145行）
+- `src/DotNetG2P.French/FrenchAllophoneFeatures.cs` — 異音規則flags enum（31行）
+- `src/DotNetG2P.French/Data/FrenchExceptionDictionary.cs` — 例外辞書クラス（164行）
+- `src/DotNetG2P.French/Data/french_exceptions.master.tsv` — 例外辞書TSVデータ（571行）
+- `tests/DotNetG2P.Tests/FrenchG2P/FrenchNumberToWordsTests.cs` — 数詞変換テスト
+- `tests/DotNetG2P.Tests/FrenchG2P/FrenchNormalizerTests.cs` — 正規化テスト
+- `tests/DotNetG2P.Tests/FrenchG2P/AllophoneProcessorTests.cs` — 異音テスト
+- `tests/DotNetG2P.Tests/FrenchG2P/FrenchExceptionDictionaryTests.cs` — 例外辞書テスト
 
 #### 成果物
 - 高精度フランス語G2P（正規化 + 例外辞書 + 異音規則）

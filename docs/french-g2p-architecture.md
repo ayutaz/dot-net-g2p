@@ -130,22 +130,24 @@ public bool IsSemivowel => Phoneme >= FrenchIpaPhoneme.J && Phoneme <= FrenchIpa
     │
     ▼
 ┌──────────────────┐
-│ FrenchNormalizer  │  テキスト正規化（数字・通貨・日付・時刻・略語・記号展開）
+│ FrenchNormalizer  │  テキスト正規化（11段階パイプライン）  [F2実装済み]
+│  NFC→略語→日付  │  →時刻→通貨→%→単位→小数→数値→記号→空白
 └──────────────────┘
     │
     ▼
 ┌──────────────────┐
-│ Tokenize         │  単語分割（空白分割 + アポストロフ保持）
+│ Tokenize         │  単語分割（空白分割 + アポストロフ/ハイフン保持）  [F2実装済み]
 └──────────────────┘
     │  単語リスト
     ▼
 ┌──────────────────────────────────┐
-│ ExceptionDictionary.TryLookup    │  例外辞書ルックアップ（hit→スキップ）
+│ ExceptionDictionary.TryLookup    │  例外辞書ルックアップ（hit→スキップ）  [F2実装済み: 500+エントリ]
+│  方言フォールバック: 特定方言→全方言 │
 └──────────────────────────────────┘
     │  miss
     ▼
 ┌──────────────────────────────────┐
-│ GraphemeToPhonemeRules.Convert   │  コアG2Pルール変換
+│ GraphemeToPhonemeRules.Convert   │  コアG2Pルール変換  [F1実装済み]
 │   1. ダイグラフ/トライグラフ特定  │
 │   2. c/g/s/x 文脈依存判定        │
 │   3. 鼻母音化判定                │
@@ -156,20 +158,19 @@ public bool IsSemivowel => Phoneme >= FrenchIpaPhoneme.J && Phoneme <= FrenchIpa
     │  音素列
     ▼
 ┌──────────────────────────────────┐
-│ FrenchSyllabifier.Syllabify      │  音素ベース音節分割
+│ FrenchSyllabifier.Syllabify      │  音素ベース音節分割  [F1実装済み]
 └──────────────────────────────────┘
     │  音節付き音素列
     ▼
 ┌──────────────────────────────────┐
-│ AllophoneProcessor.Apply         │  異音規則（オプション）
+│ AllophoneProcessor.Apply         │  異音規則（オプション）  [F2実装済み: 2必須規則]
 │   - /ʁ/→[χ] 無声化             │
-│   - 阻害音有声性同化             │
-│   - その他オプション規則          │
+│   - 阻害音有声性同化（逆行同化） │
 └──────────────────────────────────┘
     │
     ▼
 ┌──────────────────────────────────┐
-│ IpaConverter / XSampaConverter   │  出力フォーマット変換
+│ IpaConverter                     │  出力フォーマット変換  [F1実装済み]
 └──────────────────────────────────┘
     │
     ▼
@@ -198,109 +199,132 @@ public bool IsSemivowel => Phoneme >= FrenchIpaPhoneme.J && Phoneme <= FrenchIpa
 
 ---
 
-## 4. プロジェクト構成（ファイル構成案）
+## 4. プロジェクト構成（ファイル構成）
+
+F2実装完了時点のファイル構成。F1で作成したコアルールファイル群に加え、F2で `Normalization/`、`Data/`、`Rules/AllophoneProcessor.cs` を追加した。
 
 ```
 src/DotNetG2P.French/
 ├── DotNetG2P.French.csproj             # .NET Standard 2.1
 ├── FrenchG2PEngine.cs                  # メインAPI (sealed class, IDisposable)
-├── FrenchG2POptions.cs                 # イミュータブルオプション
-├── FrenchAllophoneFeatures.cs          # [Flags] enum : byte
+├── FrenchG2POptions.cs                 # イミュータブルオプション (F2: EnableAllophones, AllophoneFeatures, EnableExceptionDictionary 追加)
+├── FrenchAllophoneFeatures.cs          # [Flags] enum : byte (5規則、Obligatory/Default/All プリセット)
 ├── Models/
 │   ├── FrenchIpaPhoneme.cs             # IPA音素 enum : byte (40種)
 │   ├── FrenchPhoneme.cs                # 音素 readonly struct (Phoneme + IsSyllableNucleus)
 │   ├── FrenchPronunciation.cs          # 発音クラス (音素配列 + 音節オフセット)
 │   └── FrenchDialect.cs               # 方言 enum : byte (Metropolitan, Conservative)
 ├── Rules/
-│   ├── GraphemeToPhonemeRules.cs       # コアG2Pルール (6フェーズ)
-│   ├── FrenchOrthography.cs            # 正書法ヘルパー (母音判定、ダイグラフ判定等)
-│   ├── NasalVowelizer.cs              # 鼻母音化ロジック (独立static class、GraphemeToPhonemeRulesから呼び出し)
-│   ├── FrenchSyllabifier.cs            # 音素ベース音節分割
-│   ├── AllophoneProcessor.cs           # 異音規則
-│   └── LiaisonProcessor.cs            # リエゾン + enchaînement処理 (Phase2)
-├── Normalization/
-│   ├── FrenchNormalizer.cs             # テキスト正規化ファサード
-│   └── NumberToWords.cs               # フランス語数詞変換 (20進法)
-├── Data/
-│   ├── FrenchExceptionDictionary.cs    # 例外辞書ルックアップ
-│   ├── french_exceptions.master.tsv    # 例外辞書TSV (EmbeddedResource)
-│   └── h_aspire.txt                   # h aspiré語リスト (EmbeddedResource)
+│   ├── GraphemeToPhonemeRules.cs       # コアG2Pルール (6フェーズ) [F1]
+│   ├── FrenchOrthography.cs            # 正書法ヘルパー (母音判定、ダイグラフ判定等) [F1]
+│   ├── NasalVowelizer.cs              # 鼻母音化ロジック (独立static class) [F1]
+│   ├── FrenchSyllabifier.cs            # 音素ベース音節分割 [F1]
+│   ├── AllophoneProcessor.cs           # 異音規則 (R無声化、阻害音有声性同化) [F2]
+│   └── LiaisonProcessor.cs            # リエゾン + enchaînement処理 (Phase2、未実装)
+├── Normalization/                      # [F2 で追加]
+│   ├── FrenchNormalizer.cs             # テキスト正規化ファサード (11段階パイプライン)
+│   └── NumberToWords.cs               # フランス語数詞変換 (vigesimal 20進法)
+├── Data/                               # [F2 で追加]
+│   ├── FrenchExceptionDictionary.cs    # 例外辞書ルックアップ (方言フォールバック付き)
+│   └── french_exceptions.master.tsv    # 例外辞書TSV (571行、500+エントリ、EmbeddedResource)
 ├── Conversion/
-│   ├── IpaConverter.cs                 # IPA文字列変換
-│   └── XSampaConverter.cs             # X-SAMPA文字列変換
+│   └── IpaConverter.cs                 # IPA文字列変換 [F1]
 ├── package.json                        # UPM (com.dotnetg2p.french)
 └── DotNetG2P.French.asmdef            # Unity Assembly Definition
 ```
+
+**F1→F2 の差分**: `Normalization/` ディレクトリ一式（FrenchNormalizer + NumberToWords）、`Data/` ディレクトリ一式（FrenchExceptionDictionary + TSV）、`Rules/AllophoneProcessor.cs`、`FrenchAllophoneFeatures.cs` を新規追加。`FrenchG2POptions.cs` に異音・例外辞書関連プロパティを追加。`FrenchG2PEngine.cs` に AllophoneProcessor 呼び出しを統合。
 
 ---
 
 ## 5. 各コンポーネントの設計
 
-### 5.1 FrenchG2PEngine
+### 5.1 FrenchG2PEngine（F2実装済み）
 
-スペイン語の `SpanishG2PEngine` と同一パターンで実装する。
+スペイン語の `SpanishG2PEngine` と同一パターンで実装。F2で AllophoneProcessor 呼び出しと例外辞書連携を統合した。
 
 ```csharp
-namespace DotNetG2P.French
+public sealed class FrenchG2PEngine : IDisposable
 {
-    public sealed class FrenchG2PEngine : IDisposable
-    {
-        private readonly FrenchG2POptions _options;
-        private int _disposed;  // Interlocked.CompareExchange + Volatile.Read パターン
+    private readonly FrenchG2POptions _options;
+    private int _disposed;  // Interlocked.CompareExchange + Volatile.Read パターン
 
-        public FrenchG2PEngine();
-        public FrenchG2PEngine(FrenchG2POptions options);
+    public FrenchG2PEngine();
+    public FrenchG2PEngine(FrenchG2POptions options);
 
-        // --- 基本API ---
-        public string ToPhonemes(string text);
-        public string ToIPA(string text);
-        public string ToIPAWithoutStress(string text);  // ストレスマークなし
-        public string ToXSampa(string text);
-        public string ToXSampaWithoutStress(string text);
-        public IReadOnlyList<FrenchPhoneme> ToPhonemeList(string text);
-        public IReadOnlyList<FrenchSyllable> ToSyllables(string text);
+    // --- 基本API ---
+    public string ToPhonemes(string text);
+    public string ToIPA(string text);
+    public string ToIPAWithoutStress(string text);
+    public IReadOnlyList<FrenchPhoneme> ToPhonemeList(string text);
+    public IReadOnlyList<FrenchPhoneme[]> ToSyllables(string word);
 
-        // --- バッチAPI ---
-        public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts);
-        public IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts);
-        public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts);
-        public IReadOnlyList<IReadOnlyList<FrenchPhoneme>> ToPhonemeListBatch(IReadOnlyList<string> texts);
+    // --- バッチAPI ---
+    public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts);
+    public IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts);
+    public IReadOnlyList<IReadOnlyList<FrenchPhoneme>> ToPhonemeListBatch(IReadOnlyList<string> texts);
 
-        public void Dispose();
-    }
+    public void Dispose();
 }
 ```
 
+#### エンジン内部の処理フロー（F2統合後）
+
+エンジン内部で AllophoneProcessor を呼び出す箇所は以下の3つ:
+
+**1. `ProcessText()` — 文字列出力API共通メソッド**
+
+`ToPhonemes()`, `ToIPA()`, `ToIPAWithoutStress()` から呼ばれる共通メソッド。
+
+```
+入力テキスト
+  → GetWords(text): Normalize → Tokenize → 単語リスト
+  → 単語ごとに:
+      GraphemeToPhonemeRules.ConvertWord(word, dialect, enableExceptionDictionary)
+        ↓ (例外辞書ヒット時はルールをスキップ)
+      if EnableAllophones:
+        AllophoneProcessor.Apply(pronunciation, allophoneFeatures)
+      formatter(pronunciation) → 文字列
+  → 結合して返す
+```
+
+**2. `ToPhonemeList()` — 音素リスト出力**
+
+ProcessText と同じ Normalize → Tokenize → ConvertWord → AllophoneProcessor.Apply のフローだが、formatter の代わりに `pronunciation.PhonemesInternal` をリストに追加する。
+
+**3. `ToSyllables()` — 音節分割出力**
+
+単一単語を対象。ConvertWord → AllophoneProcessor.Apply の後、`FrenchSyllabifier.Syllabify()` で音節分割し、音節ごとの `FrenchPhoneme[]` 配列を返す。
+
+#### 例外辞書の統合ポイント
+
+`EnableExceptionDictionary` オプションは `GraphemeToPhonemeRules.ConvertWord()` に引数として渡される。ConvertWord 内部で `FrenchExceptionDictionary.TryLookup()` を最初に呼び出し、ヒットした場合はルールベース変換をスキップして辞書の発音を返す。
+
 **注意**: フランス語は語レベルストレスを持たないため `ToIPAWithoutStress` は `ToIPA` と同一出力になるが、API一貫性のために提供する。将来的に句ストレス対応を追加する場合のAPIフックとしても機能する。
 
-### 5.2 FrenchG2POptions
+### 5.2 FrenchG2POptions（F2実装済み）
 
 ```csharp
-namespace DotNetG2P.French
+public sealed class FrenchG2POptions
 {
-    public sealed class FrenchG2POptions
-    {
-        public static readonly FrenchG2POptions Default = new FrenchG2POptions();
+    public static readonly FrenchG2POptions Default = new FrenchG2POptions();
 
-        public FrenchDialect Dialect { get; }                  // デフォルト: Metropolitan
-        public bool IncludeStress { get; }                     // デフォルト: false（フランス語は語レベルストレスなし。API一貫性のために保持。将来の句ストレス対応用フック）
-        public bool EnableAllophones { get; }                  // デフォルト: false
-        public bool EnableTextNormalization { get; }           // デフォルト: true
-        public bool EnableExceptionDictionary { get; }         // デフォルト: true
-        public bool EnableLiaison { get; }                     // デフォルト: false (Phase2)
-        public FrenchAllophoneFeatures AllophoneFeatures { get; }
-        public string Separator { get; }                       // デフォルト: " "
+    public FrenchDialect Dialect { get; }                  // デフォルト: Metropolitan
+    public bool IncludeStress { get; }                     // デフォルト: false
+    public bool EnableAllophones { get; }                  // デフォルト: false   [F2追加]
+    public bool EnableTextNormalization { get; }           // デフォルト: true    [F2追加]
+    public bool EnableExceptionDictionary { get; }         // デフォルト: true    [F2追加]
+    public FrenchAllophoneFeatures AllophoneFeatures { get; } // デフォルト: Default [F2追加]
+    public string Separator { get; }                       // デフォルト: " "
 
-        public FrenchG2POptions(
-            FrenchDialect dialect = FrenchDialect.Metropolitan,
-            bool includeStress = false,
-            bool enableAllophones = false,
-            bool enableTextNormalization = true,
-            bool enableExceptionDictionary = true,
-            bool enableLiaison = false,
-            string separator = " ",
-            FrenchAllophoneFeatures allophoneFeatures = FrenchAllophoneFeatures.Default);
-    }
+    public FrenchG2POptions(
+        FrenchDialect dialect = FrenchDialect.Metropolitan,
+        bool includeStress = false,
+        bool enableAllophones = false,
+        bool enableTextNormalization = true,
+        bool enableExceptionDictionary = true,
+        string separator = " ",
+        FrenchAllophoneFeatures allophoneFeatures = FrenchAllophoneFeatures.Default);
 }
 ```
 
@@ -530,9 +554,9 @@ Phase1ではシュワー（/ə/）を保持し、脱落予測は行わない。�
 - **設計上の位置づけ**: `Rules/SchwaProcessor.cs` として独立static classに配置し、AllophoneProcessor実行前にオプション適用する
 - シュワー脱落はフランス語TTS/ASR品質に大きく影響する重要な処理であり、PER改善にも寄与する
 
-### 5.6 FrenchNormalizer
+### 5.6 FrenchNormalizer（F2実装済み）
 
-`SpanishNormalizer` のサブモジュール分割パターンを採用する。
+`SpanishNormalizer` のサブモジュール分割パターンを採用する。F2で11段階パイプラインとして実装完了。
 
 ```csharp
 namespace DotNetG2P.French.Normalization
@@ -540,34 +564,67 @@ namespace DotNetG2P.French.Normalization
     internal static class FrenchNormalizer
     {
         public static string Normalize(string text);
-        public static IReadOnlyList<string> Tokenize(string text);
+        public static string[] Tokenize(string text);
     }
 }
 ```
 
-#### 正規化規則
+#### 11段階正規化パイプライン
+
+`Normalize()` は以下の11段階を順次適用する。各段階は独立した private メソッドとして実装されており、パイプライン順序は展開の依存関係に基づく（例: 略語展開で生成された数字が後段の数値展開で処理される）。
+
+| 段階 | メソッド | 処理内容 | 例 |
+|------|---------|---------|-----|
+| 1 | NFC + ToLowerInvariant | Unicode正規化 + 小文字化 | `É` → `é` |
+| 2 | ExpandAbbreviations | 略語展開（13パターン） | `M.` → `monsieur`, `etc.` → `et cetera` |
+| 3 | ExpandDates | 日付展開（DD/MM/YYYY、DD-MM-YYYY、DD.MM.YYYY） | `25/12/2024` → `le vingt-cinq décembre deux mille vingt-quatre` |
+| 4 | ExpandTimes | 時刻展開（NNhNN形式、0h→minuit、12h→midi） | `14h30` → `quatorze heures trente` |
+| 5 | ExpandCurrencies | 通貨展開（€後置/前置、$前置/後置、単複対応） | `5,50€` → `cinq euros cinquante centimes` |
+| 6 | ExpandPercentages | パーセント展開（小数対応） | `3,14%` → `trois virgule un quatre pour cent` |
+| 7 | ExpandUnits | 単位展開（km/kg/cm/mm/m/l/°C、単複対応） | `100km` → `cent kilomètres` |
+| 8 | ExpandDecimals | 小数展開（カンマ小数点→virgule） | `3,14` → `trois virgule un quatre` |
+| 9 | ExpandNumbers | 残数値展開（正規表現で全数字キャプチャ） | `42` → `quarante-deux` |
+| 10 | ExpandSymbols | 記号→読み変換（&/\@/§/#/+/=） | `&` → `et` |
+| 11 | NormalizeWhitespace | 空白正規化 + trim（連続空白を1つに） | `  a  b  ` → `a b` |
+
+**設計上の要点**:
+- 段階3-7は段階9（汎用数値展開）より前に実行する。これにより、日付・時刻・通貨等の構造化された数値パターンが先に適切な文脈で展開され、残った裸の数字だけが段階9で処理される
+- 段階8（小数展開）は段階9の前に実行する。`N,N` パターンを先にキャプチャし、カンマ区切りの数字が誤って整数として展開されるのを防ぐ
+- 略語展開（段階2）は13パターンの Regex.Replace で実装。`\b` ワードバウンダリで誤マッチを防止
+
+#### Tokenize()
+
+`Normalize()` の出力を受け取り、空白分割でトークン列を生成する。以下の特殊処理を含む:
+
+- **アポストロフ保持**: `'` / `'` (U+2019) をトークン内に保持する（エリジオン: `l'homme` → `"l'homme"` として1トークン）
+- **ハイフン保持**: 複合語内のハイフンを保持する（`peut-être` → `"peut-être"` として1トークン）。ただし、ハイフンの後に文字が続く場合のみ
+- **句読点除去**: アポストロフ・ハイフン以外の非文字・非数字は区切りとして扱う
+
+#### 正規化規則サマリ
 
 | カテゴリ | 規則 | 例 |
 |---------|------|-----|
 | Unicode正規化 | NFC + 小文字化 | 常時 |
-| 数字 | 20進法（vigesimal） | 70=soixante-dix, 80=quatre-vingts, 90=quatre-vingt-dix |
-| 小数点 | カンマが小数点 | 3,14 → trois virgule quatorze |
-| 桁区切り | スペースが桁区切り | 1 000 → mille |
-| 通貨 | euro(s), centime(s) | 5,50€ → cinq euros cinquante centimes |
-| 時刻 | heure(s) | 14h30 → quatorze heures trente |
-| 日付 | 日-月-年 | 25/12/2024 → le vingt-cinq décembre deux mille vingt-quatre |
-| 単位 | km, kg, m, °C 等 | 100km → cent kilomètres |
-| 略語 | M., Mme, Dr, etc. | M. → monsieur |
-| 記号 | @, &, %, # 等 | & → et |
-| アポストロフ | 保持（エリジオン） | l'homme → l'homme（アポストロフで分割しない） |
+| 略語 | M., Mme, Dr, etc., n°, av./ap. J.-C. 等13パターン | `M.` → `monsieur` |
+| 日付 | DD/MM/YYYY（1er→premier、他は基数詞） | `01/03/2024` → `le premier mars deux mille vingt-quatre` |
+| 時刻 | NNhNN（0h→minuit、12h→midi） | `0h` → `minuit`, `14h30` → `quatorze heures trente` |
+| 通貨 | euro(s)/centime(s), dollar(s)/cent(s)（単複自動判定） | `1€` → `un euro` |
+| パーセント | 整数/小数 + % → pour cent | `50%` → `cinquante pour cent` |
+| 単位 | km, kg, cm, mm, m, l, °C（単複自動判定） | `1km` → `un kilomètre` |
+| 小数点 | カンマが小数点 → virgule + 各桁読み | `3,14` → `trois virgule un quatre` |
+| 数字 | 20進法（vigesimal） | `70` → `soixante-dix` |
+| 記号 | &→et, @→arobase, §→paragraphe, #→dièse, +→plus, =→égal | `&` → `et` |
+| 空白 | 連続空白→単一スペース + trim | 常時 |
 
-#### NumberToWords: フランス語20進法
+#### NumberToWords: フランス語20進法（F2実装済み）
+
+`NumberToWords` は `long` 型の数値をフランス語読みに変換する。vigesimal（20進法）による70-99の特殊な読み方を正確に実装する。
 
 ```
 70: soixante-dix (60+10)
-71: soixante et onze (60+11)
+71: soixante et onze (60+11)    ← "et" 挿入
 72-79: soixante-douze ... soixante-dix-neuf
-80: quatre-vingts (4×20, 末尾s)
+80: quatre-vingts (4×20, 末尾s)  ← 後続なしなら "s" あり
 81: quatre-vingt-un (4×20+1, sなし)
 82-89: quatre-vingt-deux ... quatre-vingt-neuf
 90: quatre-vingt-dix (4×20+10)
@@ -575,84 +632,164 @@ namespace DotNetG2P.French.Normalization
 92-99: quatre-vingt-douze ... quatre-vingt-dix-neuf
 ```
 
-### 5.7 AllophoneProcessor
+**実装済みAPI**:
+
+| メソッド | 説明 | 例 |
+|---------|------|-----|
+| `Convert(long number)` | 数値→フランス語基数詞 | `80` → `"quatre-vingts"` |
+| `Convert(string text)` | 文字列→数値パース→変換 | `"42"` → `"quarante-deux"` |
+| `ConvertOrdinal(string text)` | 序数詞変換（1er→premier、Ne→Nième） | `"2e"` → `"deuxième"`, `"1ère"` → `"première"` |
+| `ConvertDigits(string digits)` | 個別桁読み（小数部用） | `"14"` → `"un quatre"` |
+
+**スケール対応**: 0〜milliard（10億）まで対応。内部で `ConvertTens` → `ConvertHundreds` → `ConvertThousands` → `ConvertMillions` → `ConvertBillions` と再帰的に分解する。
+
+**フランス語数詞の正書法ルール**:
+- `et` 挿入: 21, 31, 41, 51, 61, 71 のみ（81, 91 には入らない）
+- `cent` の末尾 s: `N00` で N>1 の場合のみ（`deux cents` だが `deux cent un`）
+- `quatre-vingts` の末尾 s: 後続数字がない場合のみ
+- `mille` は不変（`un` は付けない: `mille` not `un mille`）
+- `million`/`milliard` は通常名詞として複数形 s が付く
+
+**序数詞変換の特殊ルール**:
+- `1er/1ère` → `premier/première`（不規則）
+- 末尾 `e` 脱落: `quatre` → `quatr` + `ième`
+- `neuf` → `neuv` + `ième`（9e = neuvième）
+- `cinq` → `cinqu` + `ième`（5e = cinquième）
+
+### 5.7 AllophoneProcessor（F2実装済み）
+
+`Rules/AllophoneProcessor.cs` として実装。`FrenchAllophoneFeatures` flags enum で規則の有効/無効を制御する。
+
+#### FrenchAllophoneFeatures（F2実装済み）
+
+`FrenchAllophoneFeatures.cs` で定義。5つの異音規則をビットフラグで管理する。
 
 ```csharp
-namespace DotNetG2P.French
+[Flags]
+public enum FrenchAllophoneFeatures : byte
 {
-    [Flags]
-    public enum FrenchAllophoneFeatures : byte
-    {
-        None = 0,
+    None = 0,
+    RDevoicing = 1 << 0,                    // /ʁ/→[χ] 無声化
+    ObstruentVoicingAssimilation = 1 << 1,   // 阻害音有声性同化
+    VowelLengthening = 1 << 2,               // 母音長化（未実装、将来用）
+    LVelarization = 1 << 3,                  // /l/ 軟口蓋化（未実装、将来用）
+    FinalDevoicing = 1 << 4,                 // 語末阻害音無声化（未実装、将来用）
 
-        /// <summary>/ʁ/→[χ] 無声阻害音前後で無声化。</summary>
-        RDevoicing = 1 << 0,
-
-        /// <summary>阻害音の有声性同化（逆行同化）。</summary>
-        ObstruentVoicingAssimilation = 1 << 1,
-
-        /// <summary>有声摩擦音前の母音長母音化。</summary>
-        VowelLengthening = 1 << 2,
-
-        /// <summary>/l/ の軟口蓋化（コーダ位置）。</summary>
-        LVelarization = 1 << 3,
-
-        /// <summary>語末阻害音の無声化（標準フランス語では非体系的。ドイツ語やロシア語と異なり、
-        /// フランス語の語末有声阻害音は有声のまま発音される: robe /ʁɔb/, rouge /ʁuʒ/。
-        /// デフォルト無効。特殊な音声コンテキストでのみ使用）。</summary>
-        FinalDevoicing = 1 << 4,
-
-        Obligatory = RDevoicing | ObstruentVoicingAssimilation,
-        Default = Obligatory,
-        All = Default | VowelLengthening | LVelarization | FinalDevoicing,
-    }
+    Obligatory = RDevoicing | ObstruentVoicingAssimilation,
+    Default = Obligatory,
+    All = Default | VowelLengthening | LVelarization | FinalDevoicing,
 }
 ```
 
-#### 必須異音規則
+**プリセット**:
+- `Obligatory`/`Default`: R無声化 + 阻害音有声性同化（F2で実装済みの2規則）
+- `All`: 全5規則（VowelLengthening, LVelarization, FinalDevoicing は将来実装）
 
-1. **/ʁ/ 無声化**: 無声阻害音の前後で /ʁ/ → [χ]
-   - 例: `arbre` /aʁbʁ/ → [aʁbχ]（語末 /ʁ/ が無声化）, `prendre` /pʁɑ̃dʁ/ → [pχɑ̃dʁ]（語頭 /pʁ/ の /ʁ/ が無声阻害音 /p/ 後で無声化、語末 /dʁ/ の /ʁ/ は有声阻害音 /d/ 後のため無声化しない）
+#### AllophoneProcessor の内部設計
 
-2. **阻害音有声性同化（逆行同化）**: 阻害音クラスタ内で最後の阻害音の有声性に統一
-   - 例: `absent` /absɑ̃/ → [apsɑ̃], `anecdote` /anɛkdɔt/ → [anɛɡdɔt]
+```csharp
+internal static class AllophoneProcessor
+{
+    public static FrenchPronunciation Apply(FrenchPronunciation pronunciation, FrenchAllophoneFeatures features);
+}
+```
 
-#### オプション異音規則
+**処理フロー**:
+1. 入力 `FrenchPronunciation` の音素配列をコピー（非破壊的変換）
+2. `HasFeature()` で各フラグをチェックし、有効な規則のみ適用
+3. R無声化 → 阻害音有声性同化 の順で適用（順序依存: R無声化で生成された [χ] が同化の入力になりうる）
+4. 変更後の音素配列と元の音節オフセットから新しい `FrenchPronunciation` を生成して返す
 
-3. **母音長母音化**: 有声摩擦音 /v, z, ʒ, ʁ/ の前の母音が長母音化
-4. **/l/ 軟口蓋化**: コーダ位置の /l/ が暗い l に
-5. **語末阻害音無声化**: 語末の阻害音が無声化
+#### 必須異音規則（F2で実装済み）
 
-### 5.8 ExceptionDictionary
+**1. R無声化 (`ApplyRDevoicing`)**
 
-スペイン語 `SpanishExceptionDictionary` と同一設計。TSV形式の埋め込みリソース。
+/ʁ/ が無声阻害音（/p, t, k, f, s, ʃ/）に隣接している場合、[χ] に無声化する。
+
+| 条件 | 変換 | 例 |
+|------|------|-----|
+| 無声阻害音 + /ʁ/ | /ʁ/ → [χ] | `prendre` /pʁ.../ → [pχ...] |
+| /ʁ/ + 無声阻害音 | /ʁ/ → [χ] | `arche` /aʁʃ/ → [aχʃ] |
+| 語末 /ʁ/ | 無声化しない | `par` /paʁ/ → [paʁ]（変化なし） |
+
+**実装上の要点**: 語末位置の R は無声化しない（`i == phonemes.Length - 1` で除外）。これは標準フランス語の語末 R が有声のまま保持される一般的な傾向を反映する。
+
+**2. 阻害音有声性同化 (`ApplyObstruentVoicingAssimilation`)**
+
+阻害音クラスタ内で、後ろの阻害音の有声性に前の阻害音を統一する（逆行同化）。
+
+| 条件 | 変換 | 例 |
+|------|------|-----|
+| 有声 + 無声 | 有声→無声 | `absent` /absɑ̃/ → [apsɑ̃] |
+| 無声 + 有声 | 無声→有声 | `anecdote` /anɛkdɔt/ → [anɛɡdɔt] |
+
+**実装上の要点**:
+- 配列末尾から先頭に向かってスキャン（逆行同化の方向性に対応）
+- `Voice()`/`Devoice()` ヘルパーで6対の有声/無声ペア変換: p↔b, t↔d, k↔ɡ, f↔v, s↔z, ʃ↔ʒ
+
+#### オプション異音規則（将来実装）
+
+3. **母音長母音化** (`VowelLengthening`): 有声摩擦音 /v, z, ʒ, ʁ/ の前の母音が長母音化
+4. **/l/ 軟口蓋化** (`LVelarization`): コーダ位置の /l/ が暗い l に
+5. **語末阻害音無声化** (`FinalDevoicing`): 語末の阻害音が無声化（フランス語では非体系的。デフォルト無効）
+
+### 5.8 FrenchExceptionDictionary（F2実装済み）
+
+`Data/FrenchExceptionDictionary.cs` + `Data/french_exceptions.master.tsv` として実装。スペイン語 `SpanishExceptionDictionary` と同一設計パターンで、TSV形式の埋め込みリソースを使用する。
+
+#### アーキテクチャ
+
+```csharp
+internal static class FrenchExceptionDictionary
+{
+    public static bool TryLookup(string word, FrenchDialect dialect, out FrenchPronunciation pronunciation);
+}
+```
+
+**データ構造**: `Dictionary<string, Dictionary<byte, FrenchPronunciation>>` の二重辞書。外側のキーは表層形（小文字）、内側のキーは方言バイト値。
+
+**方言フォールバック**: `TryLookup` は以下の順序で検索する:
+1. 指定された方言（`metropolitan` or `conservative`）の専用エントリ
+2. 全方言共通エントリ（`*` = `AnyDialectKey = byte.MaxValue`）
+
+これにより、方言固有のエントリと全方言共通エントリを同一の辞書内で共存させることができる。
+
+**音節核設定**: TSVの音素列パース時に、各音節内の最初の母音（`phoneme <= FrenchIpaPhoneme.OeNasal`）に `IsSyllableNucleus = true` を自動設定する。これにより例外辞書エントリにも音節構造情報が保持される。
 
 #### TSVフォーマット
 
 ```
 # surface	dialect	category	stress_index	phonemes	source	note
-camping	*	loanword	0	k ɑ̃|p i ŋ	manual	英語借用語
+football	*	loanword	-1	f u t|b o l	manual	English loanword
 ```
 
 | カラム | 説明 |
 |--------|------|
 | surface | 表層形（小文字） |
 | dialect | `*`（全方言）/ `metropolitan` / `conservative` |
-| category | `loanword` / `academic` / `homograph` / `irregular` |
+| category | `loanword` / `academic` / `homograph` / `irregular` / `verb3pl` |
 | stress_index | 強勢音節インデックス（フランス語では通常 -1） |
-| phonemes | 音節区切り `\|` + スペース区切り音素 |
+| phonemes | 音節区切り `\|` + スペース区切りIPA音素 |
 | source | 出典 |
 | note | 備考 |
 
-#### 例外辞書の想定規模
+**音素パーサ**: `ParsePhoneme()` で IPA 文字列→`FrenchIpaPhoneme` enum 変換。鼻母音は結合チルダ付き2文字シーケンス（例: `ɑ̃` = U+0251 + U+0303 → `ANasal`）として解析する。全40種の音素に対応。
 
-| カテゴリ | 語数 | 例 |
-|---------|------|-----|
-| 外来語 | 200-400 | camping, parking, football, pizza |
-| 学術語（語末子音例外） | 150-300 | bus, index, anus, atlas |
-| 同綴異音語 | ~70 | -tions (動詞/名詞), -ent (動詞/形容詞) |
-| その他不規則 | 50-100 | monsieur, femme, oignon |
-| **合計** | **500-1000** | |
+#### 例外辞書の実績規模（F2実装時点）
+
+571行（ヘッダ+コメント行含む）、500+実エントリ。
+
+| カテゴリ | 主な内容 | 例 |
+|---------|---------|-----|
+| 外来語 (loanword) | 英語/イタリア語/ドイツ語等からの借用語 | football, pizza, parking, weekend |
+| 学術語 (academic) | CaReFuL規則の例外（語末子音が発音される/されない） | bus, index, atlas |
+| 動詞3人称複数 (verb3pl) | -ent が黙字になる動詞活用形 | parlent, chantent, mangent |
+| 不規則語 (irregular) | 正書法と発音が大きく乖離する語 | monsieur, femme, oignon |
+| 同綴異音語 (homograph) | 品詞や文脈で発音が異なる語（方言別エントリ可能） | -ent系（形容詞 vs 動詞） |
+
+#### 例外辞書運用ワークフロー
+
+`tools/generate_french_exceptions.ps1` でTSVを管理し、PER評価結果のエラー分析から逐次エントリを追加する運用を想定。スペイン語の `tools/generate_spanish_exceptions.ps1` と同一パターン。
 
 ### 5.9 IpaConverter / XSampaConverter
 
@@ -905,12 +1042,12 @@ public sealed class MultilingualG2POptions
 | Phoneme struct | `readonly struct SpanishPhoneme` | `readonly struct FrenchPhoneme` |
 | Pronunciation | `sealed class SpanishPronunciation` (音素配列+音節オフセット) | 同一 |
 | Dialect enum | `SpanishDialect : byte` | `FrenchDialect : byte` |
-| Allophone flags | `[Flags] SpanishAllophoneFeatures : byte` | `[Flags] FrenchAllophoneFeatures : byte` |
-| Exception dict | TSV埋め込み、`TryLookup(word, dialect, out pron)` | 同一 |
+| Allophone flags | `[Flags] SpanishAllophoneFeatures : byte` | `[Flags] FrenchAllophoneFeatures : byte` (F2実装済み) |
+| Exception dict | TSV埋め込み、`TryLookup(word, dialect, out pron)` | 同一 (F2実装済み、500+エントリ) |
 | G2P rules | `internal static class GraphemeToPhonemeRules` | 同一 |
 | Syllabifier | `internal static class SpanishSyllabifier` | `internal static class FrenchSyllabifier`（音素ベース） |
 | StressAssigner | `internal static class StressAssigner` | **不要** |
-| Normalizer | `internal static class SpanishNormalizer` + `NumberToWords` | 同一構造 |
+| Normalizer | `internal static class SpanishNormalizer` + `NumberToWords` | 同一構造 (F2実装済み、11段階パイプライン) |
 | IpaConverter | `internal static class IpaConverter` | 同一 |
 | XSampaConverter | `internal static class XSampaConverter` | 同一 |
 | API surface | `ToPhonemes`, `ToIPA`, `ToXSampa`, `ToPhonemeList`, `ToSyllables`, `+Batch` | 同一 |
