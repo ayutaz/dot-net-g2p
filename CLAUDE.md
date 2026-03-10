@@ -421,12 +421,6 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │           ├── PiperPlusTests.cs        # piper-plus移植テスト（87件）
 │           └── PyOpenJTalkComparisonTests.cs  # pyopenjtalk比較テスト（20件）
 │
-├── docs/                                # 技術ドキュメント
-│   ├── chinese-g2p-research.md           # 中国語G2P技術調査
-│   ├── chinese-g2p-implementation-plan.md # 中国語G2P実装計画
-│   ├── spanish-g2p-research.md           # スペイン語G2P技術調査
-│   └── spanish-g2p-implementation-plan.md # スペイン語G2P実装計画
-│
 └── samples/
     └── DotNetG2P.Console/               # コンソールサンプル (net8.0)
         ├── DotNetG2P.Console.csproj
