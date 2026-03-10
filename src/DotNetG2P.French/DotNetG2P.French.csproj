@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>DotNetG2P.French</PackageId>
+    <AssemblyName>DotNetG2P.French</AssemblyName>
+    <RootNamespace>DotNetG2P.French</RootNamespace>
+    <Description>French Grapheme-to-Phoneme (G2P) library for .NET and Unity. Rule-based IPA conversion with syllabification, nasal vowels, and Metropolitan/Conservative dialect options.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>g2p;french;tts;phoneme;ipa;text-to-speech;unity</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\french_exceptions.master.tsv" LogicalName="DotNetG2P.French.Data.french_exceptions.master.tsv" />
+  </ItemGroup>
+</Project>

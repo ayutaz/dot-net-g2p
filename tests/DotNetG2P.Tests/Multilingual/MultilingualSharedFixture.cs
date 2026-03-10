@@ -5,6 +5,7 @@ using DotNetG2P.Chinese;
 using DotNetG2P.English;
 using DotNetG2P.MeCab;
 using DotNetG2P.Multilingual;
+using DotNetG2P.French;
 using DotNetG2P.Spanish;
 
 namespace DotNetG2P.Tests.Multilingual
@@ -37,6 +38,10 @@ namespace DotNetG2P.Tests.Multilingual
 
         public SpanishG2PEngine SpanishEngine { get; } = new SpanishG2PEngine();
 
+        public FrenchG2PEngine FrenchEngine { get; } = new FrenchG2PEngine();
+
+        public MultilingualG2PEngine? FrenchDefaultEngine { get; }
+
         public MultilingualSharedFixture()
         {
             DictPath = FindDictPath();
@@ -55,6 +60,9 @@ namespace DotNetG2P.Tests.Multilingual
                 new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese, defaultLatinLanguage: Language.Spanish));
             JapaneseEngine = new G2PEngine(new MeCabTokenizer(DictPath), G2POptions.Default);
             ChineseEngine = new ChineseG2PEngine();
+            FrenchDefaultEngine = new MultilingualG2PEngine(
+                DictPath,
+                new MultilingualG2POptions(defaultLatinLanguage: Language.French));
         }
 
         public void Dispose()
@@ -67,6 +75,8 @@ namespace DotNetG2P.Tests.Multilingual
             EnglishEngine.Dispose();
             ChineseEngine?.Dispose();
             SpanishEngine.Dispose();
+            FrenchDefaultEngine?.Dispose();
+            FrenchEngine.Dispose();
         }
 
         private static string? FindDictPath()

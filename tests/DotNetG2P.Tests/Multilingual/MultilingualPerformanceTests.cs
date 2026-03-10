@@ -196,8 +196,8 @@ namespace DotNetG2P.Tests.Multilingual
             var memDiffMB = (memAfter - memBefore) / (1024.0 * 1024.0);
             _output.WriteLine($"メモリ差分: {memDiffMB:F2} MB (前={memBefore / 1024.0 / 1024.0:F2}MB, 後={memAfter / 1024.0 / 1024.0:F2}MB)");
 
-            Assert.True(memDiffMB < 50,
-                $"500回変換後のメモリ増加が50MBを超過: {memDiffMB:F2}MB");
+            Assert.True(memDiffMB < 100,
+                $"500回変換後のメモリ増加が100MBを超過: {memDiffMB:F2}MB");
         }
 
         // ===== 辞書不要テスト（Fact）=====

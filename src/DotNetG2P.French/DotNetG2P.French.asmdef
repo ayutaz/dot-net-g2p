@@ -1,14 +1,7 @@
 {
-  "name": "DotNetG2P.Multilingual",
-  "rootNamespace": "DotNetG2P.Multilingual",
-  "references": [
-    "DotNetG2P",
-    "DotNetG2P.MeCab",
-    "DotNetG2P.English",
-    "DotNetG2P.Chinese",
-    "DotNetG2P.Spanish",
-    "DotNetG2P.French"
-  ],
+  "name": "DotNetG2P.French",
+  "rootNamespace": "DotNetG2P.French",
+  "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

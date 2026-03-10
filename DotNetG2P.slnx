@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/tools/">
     <Project Path="tools/DotNetG2P.SpanishEval/DotNetG2P.SpanishEval.csproj" />
+    <Project Path="tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/DotNetG2P.Console/DotNetG2P.Console.csproj" />
@@ -12,6 +13,7 @@
     <Project Path="src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj" />
     <Project Path="src/DotNetG2P.Multilingual/DotNetG2P.Multilingual.csproj" />
     <Project Path="src/DotNetG2P.Spanish/DotNetG2P.Spanish.csproj" />
+    <Project Path="src/DotNetG2P.French/DotNetG2P.French.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj" />
