@@ -6,7 +6,7 @@
 
 | 指標 | 目標値 |
 |------|--------|
-| テスト総数 | 400-430件（F1-F4合計）。現時点: **366件**（F1: 218件 + F2: 148件） |
+| テスト総数 | 556-566件（F1-F4合計）。現時点: **516件**（F1: 218件 + F2: 148件 + F3: 150件） |
 | コードカバレッジ | 行カバレッジ90%以上（publicメソッド100%） |
 | PER（ipa-dict fr_FR） | F1: 8-12%, F2: 3-6%, F3: 3-6%（確定値） |
 | PER（WikiPron fra_latn_broad_filtered） | 交差検証用（閾値はipa-dict結果に基づき設定） |
@@ -302,90 +302,18 @@
 | 同綴異音語 | 2件 | est(1音素,ɛ), content(4音素,k+ɔ̃+t+ɑ̃) |
 | エントリ数検証 | 1件 | 辞書の基本16語全ルックアップ成功 |
 
-### F3: X-SAMPA・精度評価（目標: 100-120件）
+### F3: X-SAMPA・精度評価（目標: 100-120件 → 実績: **150件**） ✅ 完了
 
-| テストファイル | 内容 | 件数目安 |
-|---------------|------|---------|
-| `FrenchXSampaTests.cs` | X-SAMPA変換テスト | 20-25件 |
-| `FrenchEdgeCaseTests.cs` | エッジケーステスト | 30-35件 |
-| `FrenchPerformanceTests.cs` | パフォーマンステスト | 10-15件 |
-| `FrenchAccuracyTests.cs` | 精度・回帰テスト（キュレーション済みコーパス） | 20-25件 |
-| `FrenchDatasetEvaluationTests.cs` | 外部TSVコーパスPER閾値テスト | 10-15件 |
-| `FrenchAllophoneEvaluationTests.cs` | 異音プロファイル別PER評価テスト | 5-10件 |
+**ステータス: 完了** — 6テストファイル、150テストケース（504 pass + 12 skip）。
 
-#### X-SAMPA変換テスト（`FrenchXSampaTests.cs`）
-
-IPA→X-SAMPA変換の網羅的検証:
-
-```csharp
-// 基本変換
-[InlineData("bonjour", "bO~ZuR")]
-[InlineData("français", "fRA~sE")]
-
-// 特殊記号
-// ɑ̃ → A~, ɛ̃ → E~, ɔ̃ → O~, œ̃ → 9~
-// ʁ → R, ʃ → S, ʒ → Z, ɲ → J
-// ø → 2, œ → 9, ə → @
-```
-
-#### 外部コーパスPER評価テスト（`FrenchDatasetEvaluationTests.cs`）
-
-スペイン語 `SpanishDatasetEvaluationTests.cs` パターンに準拠。`FrenchAccuracyTests.cs`（キュレーション済みコーパスの正確性回帰テスト）とは役割を分離する:
-
-```csharp
-[Trait("Category", "Accuracy")]
-public class FrenchDatasetEvaluationTests : IDisposable
-{
-    // ipa-dict fr_FR サンプル（500語）PER閾値テスト
-    [Fact]
-    public void IpaDictSample_Base_PER_BelowThreshold()
-    {
-        // TSVからサンプルロード → PER計算 → 閾値チェック
-    }
-
-    // ipa-dict fr_FR フル（全量）PER閾値テスト
-    [Fact]
-    public void IpaDictFull_Base_PER_BelowThreshold()
-    {
-        // 全量TSVロード → PER計算 → 閾値チェック
-    }
-
-    // WikiPron PER閾値テスト
-    [Fact]
-    public void WikiPronSample_Base_PER_BelowThreshold()
-    {
-        // WikiPronサンプルからPER計算
-    }
-
-    [Fact]
-    public void WikiPronFull_Base_PER_BelowThreshold()
-    {
-        // WikiPronフルからPER計算
-    }
-}
-```
-
-#### 異音プロファイル評価テスト（`FrenchAllophoneEvaluationTests.cs`）
-
-スペイン語 `SpanishAllophoneEvaluationTests.cs` パターンに準拠。TSVリファレンスを使い、異音プロファイル（base/allophones/no_exceptions）ごとの正確性を検証:
-
-```csharp
-[Trait("Category", "Accuracy")]
-public class FrenchAllophoneEvaluationTests : IDisposable
-{
-    // base プロファイル（ルール+例外辞書）
-    [Fact]
-    public void IpaDictSample_Base_PER_BelowThreshold()
-
-    // allophones プロファイル（異音規則有効）
-    [Fact]
-    public void IpaDictSample_Allophones_PER_BelowThreshold()
-
-    // no_exceptions プロファイル（ルールのみ）
-    [Fact]
-    public void IpaDictSample_NoExceptions_PER_BelowThreshold()
-}
-```
+| テストファイル | 内容 | 計画 | 実績 |
+|---------------|------|------|------|
+| `FrenchXSampaTests.cs` | X-SAMPA変換テスト（ToSymbol 40音素、基本変換Theory 12語、Conservative差分、ストレス/バッチ/ASCII/Dispose） | 20-25件 | **63件** |
+| `FrenchEdgeCaseTests.cs` | エッジケーステスト（入力バリデーション、バッチAPI、Unicode NFC/NFD、アクセント文字等価性13文字、Dispose、オプション効果、長文、大量バッチ10000語） | 30-35件 | **35件** |
+| `FrenchPerformanceTests.cs` | パフォーマンステスト（コンストラクタ5回100ms/500ms、IPAスループット10000×、X-SAMPAスループット2000×、バッチ効率、辞書ルックアップ、メモリ成長） | 10-15件 | **11件** |
+| `FrenchAccuracyTests.cs` | 精度・回帰テスト（Metropolitan代表語15語Theory、Conservative差分2件、Allophonic 2件、例外辞書語1件、X-SAMPA回帰8語Theory、全形式非空チェック1件） | 20-25件 | **29件** |
+| `FrenchDatasetEvaluationTests.cs` | 外部TSVコーパスPER閾値テスト（ipa-dict sample/full × base/allophones/no_exceptions、WikiPron sample/full × base） | 10-15件 | **6件** (TSV不在時Skip) |
+| `FrenchAllophoneEvaluationTests.cs` | 異音プロファイル別PER評価テスト（base vs no_exceptions比較、allophones ≈ base確認） | 5-10件 | **6件** (TSV不在時Skip) |
 
 ### F4: Multilingual統合（目標: 40-50件）
 
@@ -787,14 +715,14 @@ tests/DotNetG2P.Tests/
 │   ├── AllophoneProcessorTests.cs           # F2: 異音テスト (18件) ✅
 │   ├── FrenchExceptionDictionaryTests.cs    # F2: 例外辞書テスト (24件) ✅
 │   ├── LiaisonTests.cs                      # F2: リエゾンテスト（オプション、未実装）
-│   ├── FrenchXSampaTests.cs                 # F3: X-SAMPA変換テスト (20-25件)
-│   ├── FrenchEdgeCaseTests.cs               # F3: エッジケーステスト (30-35件)
+│   ├── FrenchXSampaTests.cs                 # F3: X-SAMPA変換テスト (63件) ✅
+│   ├── FrenchEdgeCaseTests.cs               # F3: エッジケーステスト (35件) ✅
 │   │                                        #     Unicode NFC/NFD, バッチ大量入力 含む
-│   ├── FrenchPerformanceTests.cs            # F3: パフォーマンステスト (10-15件)
-│   ├── FrenchAccuracyTests.cs               # F3: 精度・回帰テスト (20-25件)
+│   ├── FrenchPerformanceTests.cs            # F3: パフォーマンステスト (11件) ✅
+│   ├── FrenchAccuracyTests.cs               # F3: 精度・回帰テスト (29件) ✅
 │   │                                        #     キュレーション済みコーパス正確性回帰
-│   ├── FrenchDatasetEvaluationTests.cs      # F3: 外部TSVコーパスPER閾値テスト (10-15件)
-│   └── FrenchAllophoneEvaluationTests.cs    # F3: 異音プロファイル別PER評価 (5-10件)
+│   ├── FrenchDatasetEvaluationTests.cs      # F3: 外部TSVコーパスPER閾値テスト (6件, TSV不在時Skip) ✅
+│   └── FrenchAllophoneEvaluationTests.cs    # F3: 異音プロファイル別PER評価 (6件, TSV不在時Skip) ✅
 ├── Multilingual/
 │   ├── MultilingualFrenchTests.cs           # F4: フランス語Multilingual統合テスト (25-30件)
 │   └── MultilingualMixedLanguageTests.cs    # F4: 5言語混在テスト（追記）(15-20件)
@@ -972,6 +900,6 @@ dotnet test --filter "Category=Accuracy"
 | 主な困難 | 方言差（seseo/distincion） | 黙字、鼻母音化、シュワー、位置の法則、h aspire/h muet |
 | 例外辞書依存度 | 低い（~100語） | 高い（~500-1000語以上） |
 | 正規化の複雑度 | 中程度 | 中程度（数字・日付規則がフランス固有、vigesimal体系） |
-| テスト件数 | 355件 | 400-430件（目標）、現時点366件（F1: 218件 + F2: 148件） |
+| テスト件数 | 355件 | 556-566件（目標）、現時点516件（F1: 218件 + F2: 148件 + F3: 150件） |
 | 評価データセット | ipa-dict es_ES/es_MX + WikiPron spa | ipa-dict fr_FR + WikiPron fra |
 | 方言サポート | LatinAmerican / Castilian | Metropolitan / Conservative |

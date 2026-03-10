@@ -201,12 +201,12 @@ public bool IsSemivowel => Phoneme >= FrenchIpaPhoneme.J && Phoneme <= FrenchIpa
 
 ## 4. プロジェクト構成（ファイル構成）
 
-F2実装完了時点のファイル構成。F1で作成したコアルールファイル群に加え、F2で `Normalization/`、`Data/`、`Rules/AllophoneProcessor.cs` を追加した。
+F3実装完了時点のファイル構成。F1で作成したコアルールファイル群に加え、F2で `Normalization/`、`Data/`、`Rules/AllophoneProcessor.cs` を追加し、F3で `Conversion/XSampaConverter.cs` を追加した。
 
 ```
 src/DotNetG2P.French/
 ├── DotNetG2P.French.csproj             # .NET Standard 2.1
-├── FrenchG2PEngine.cs                  # メインAPI (sealed class, IDisposable)
+├── FrenchG2PEngine.cs                  # メインAPI (sealed class, IDisposable) [F3: ToXSampa系3メソッド追加]
 ├── FrenchG2POptions.cs                 # イミュータブルオプション (F2: EnableAllophones, AllophoneFeatures, EnableExceptionDictionary 追加)
 ├── FrenchAllophoneFeatures.cs          # [Flags] enum : byte (5規則、Obligatory/Default/All プリセット)
 ├── Models/
@@ -228,20 +228,23 @@ src/DotNetG2P.French/
 │   ├── FrenchExceptionDictionary.cs    # 例外辞書ルックアップ (方言フォールバック付き)
 │   └── french_exceptions.master.tsv    # 例外辞書TSV (571行、500+エントリ、EmbeddedResource)
 ├── Conversion/
-│   └── IpaConverter.cs                 # IPA文字列変換 [F1]
+│   ├── IpaConverter.cs                 # IPA文字列変換 [F1]
+│   └── XSampaConverter.cs             # X-SAMPA変換 (40音素マッピング) [F3]
 ├── package.json                        # UPM (com.dotnetg2p.french)
 └── DotNetG2P.French.asmdef            # Unity Assembly Definition
 ```
 
 **F1→F2 の差分**: `Normalization/` ディレクトリ一式（FrenchNormalizer + NumberToWords）、`Data/` ディレクトリ一式（FrenchExceptionDictionary + TSV）、`Rules/AllophoneProcessor.cs`、`FrenchAllophoneFeatures.cs` を新規追加。`FrenchG2POptions.cs` に異音・例外辞書関連プロパティを追加。`FrenchG2PEngine.cs` に AllophoneProcessor 呼び出しを統合。
 
+**F2→F3 の差分**: `Conversion/XSampaConverter.cs` を新規追加。`FrenchG2PEngine.cs` に `ToXSampa()`, `ToXSampaWithoutStress()`, `ToXSampaBatch()` の3メソッドを追加。評価ツール `tools/DotNetG2P.FrenchEval/` 一式と評価スクリプト群を新規追加。
+
 ---
 
 ## 5. 各コンポーネントの設計
 
-### 5.1 FrenchG2PEngine（F2実装済み）
+### 5.1 FrenchG2PEngine（F3実装済み）
 
-スペイン語の `SpanishG2PEngine` と同一パターンで実装。F2で AllophoneProcessor 呼び出しと例外辞書連携を統合した。
+スペイン語の `SpanishG2PEngine` と同一パターンで実装。F2で AllophoneProcessor 呼び出しと例外辞書連携を統合。F3で X-SAMPA 変換APIを追加した。
 
 ```csharp
 public sealed class FrenchG2PEngine : IDisposable
@@ -256,12 +259,15 @@ public sealed class FrenchG2PEngine : IDisposable
     public string ToPhonemes(string text);
     public string ToIPA(string text);
     public string ToIPAWithoutStress(string text);
+    public string ToXSampa(string text);                    // [F3追加]
+    public string ToXSampaWithoutStress(string text);       // [F3追加]
     public IReadOnlyList<FrenchPhoneme> ToPhonemeList(string text);
     public IReadOnlyList<FrenchPhoneme[]> ToSyllables(string word);
 
     // --- バッチAPI ---
     public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts);
     public IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts);
+    public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts);  // [F3追加]
     public IReadOnlyList<IReadOnlyList<FrenchPhoneme>> ToPhonemeListBatch(IReadOnlyList<string> texts);
 
     public void Dispose();
@@ -791,7 +797,7 @@ football	*	loanword	-1	f u t|b o l	manual	English loanword
 
 `tools/generate_french_exceptions.ps1` でTSVを管理し、PER評価結果のエラー分析から逐次エントリを追加する運用を想定。スペイン語の `tools/generate_spanish_exceptions.ps1` と同一パターン。
 
-### 5.9 IpaConverter / XSampaConverter
+### 5.9 IpaConverter / XSampaConverter（F3実装済み）
 
 スペイン語と同一パターン。`FrenchIpaPhoneme` → IPA文字列 / X-SAMPA文字列 の静的変換。
 
@@ -1110,22 +1116,40 @@ public sealed class MultilingualG2POptions
 | y | /i/ or /j/ | 母音として /i/、母音前で /j/。語中で母音+y+母音は二重母音的分裂（フェーズ4参照） |
 | z | /z/ | 語末黙字以外 |
 
-## 付録B: 評価パイプライン設計
+## 付録B: 評価パイプライン設計（F3実装済み）
 
-`tools/DotNetG2P.SpanishEval` をコピー改変して `tools/DotNetG2P.FrenchEval` を作成する。
+`tools/DotNetG2P.SpanishEval` をコピー改変して `tools/DotNetG2P.FrenchEval` を作成した。
 
 ```
 tools/
-├── DotNetG2P.FrenchEval/              # フランス語PER/WER評価ツール
-│   ├── DotNetG2P.FrenchEval.csproj
-│   └── Program.cs
-├── refresh_french_eval_data.ps1       # 評価データ取得スクリプト
-├── run_french_full_evaluation.ps1     # 全量評価実行スクリプト
+├── DotNetG2P.FrenchEval/              # フランス語PER/WER評価ツール (F3実装済み)
+│   ├── DotNetG2P.FrenchEval.csproj    # net8.0 コンソールアプリ
+│   └── Program.cs                     # PER/WER評価 + フランス語IPA正規化 + 9カテゴリ別エラー分類 (~600行)
+├── refresh_french_eval_data.ps1       # 評価データ取得スクリプト (F3実装済み)
+├── run_french_full_evaluation.ps1     # 全量評価実行スクリプト (F3実装済み)
+├── french_eval_thresholds.json        # PER閾値定義 (F3実装済み)
 └── generate_french_exceptions.ps1     # 例外辞書生成スクリプト
 ```
 
 #### 評価メトリクス
 
-- **PER (Phone Error Rate)**: 音素レベル編集距離 / 参照音素数
+- **PER (Phone Error Rate)**: 音素レベルLevenshtein距離 / 参照音素数
 - **WER (Word Error Rate)**: 完全一致しなかった語数 / 全語数
-- **カテゴリ別集計**: 外来語 / 鼻母音 / 黙字 / 不規則語 等のサブセット分析
+- **カテゴリ別集計**: nasal_vowel / silent_letter / schwa / vowel_quality / foreign_word / suffix_pattern / h_aspire / consonant / other の9カテゴリ
+
+#### フランス語固有IPA正規化（評価時）
+
+評価ツール内で参照IPA・仮説IPAの両方に以下の正規化を適用してから比較する:
+- `/ɑ/` → `/a/`（Metropolitan方言の統合）
+- `/œ̃/` → `/ɛ̃/`（鼻母音合流）
+
+#### CLIオプション
+
+```
+--input-root    評価データルートディレクトリ
+--output-root   レポート出力先ディレクトリ
+--thresholds    閾値JSONファイルパス
+--dataset-set   評価対象データセット（sample/full/all）
+--profiles      評価プロファイル（base/allophones/no_exceptions）
+--enforce-thresholds  閾値超過時に非ゼロ終了コードを返す
+```

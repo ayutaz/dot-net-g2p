@@ -35,9 +35,9 @@ Normalize → Tokenize → G2PRules → Syllabifier → (StressAssigner) → All
 |:-:|:--|:--|:-:|:-:|
 | **F1** ✅ | コアG2Pルールエンジン + 基本MVP | 基本的なフランス語G2P動作 | 218件 | 8-12% |
 | **F2** ✅ | 精度向上・異音規則・テキスト正規化 | 高精度フランス語G2P | 366件（累計） | 3-6% |
-| **F3** | X-SAMPA・大規模精度評価・拡張テスト | 評価済みフランス語G2P | 80-100件追加 | 3-6% (確定値) |
+| **F3** ✅ | X-SAMPA・大規模精度評価・拡張テスト | 評価済みフランス語G2P | 516件（累計） | 3-6% (確定値) |
 | **F4** | Multilingual統合・パッケージング | 多言語G2Pにフランス語統合 | 40-50件追加 | - |
-| | **合計** | | **400-430件** | |
+| | **合計** | | **556-566件** | |
 
 > **注**: PER目標はアーキテクチャ設計書・テスト戦略書と統一済み。F3のPERはF2からの変更なし（X-SAMPA追加がメインのため）。将来のリエゾン対応後はPER 2-4%を目標とする。
 
@@ -223,47 +223,54 @@ F1はスペイン語S1に比べG2Pルールの複雑さが2-3倍あるため、�
 
 ---
 
-### F3: X-SAMPA・大規模精度評価・拡張テスト
+### F3: X-SAMPA・大規模精度評価・拡張テスト ✅ 完了
 
-#### スコープ
+#### ステータス
+- **完了**（テスト150件追加、累計516件合格: 504 pass + 12 skip）
+
+#### 実装内容
 
 **X-SAMPA変換**
-- `XSampaConverter` (static class)
-  - `ToXSampa()`: ストレス付きX-SAMPA
-  - `ToXSampaWithoutStress()`: ストレスなしX-SAMPA
-  - `ToXSampaBatch()`: バッチAPI
+- `Conversion/XSampaConverter.cs` (static class): 40種全音素のIPA→X-SAMPA変換マッピング
+  - `Convert(FrenchPronunciation, bool includeStress)`: ストレス付き/なしX-SAMPA文字列変換
+  - `ToSymbol(FrenchIpaPhoneme)`: 個別音素→X-SAMPA記号変換
+- `FrenchG2PEngine` に3メソッド追加:
+  - `ToXSampa(string text)`: X-SAMPA出力
+  - `ToXSampaWithoutStress(string text)`: ストレスなしX-SAMPA出力
+  - `ToXSampaBatch(IReadOnlyList<string> texts)`: バッチAPI
 
 **精度評価ツール**
-- `tools/DotNetG2P.FrenchEval/`: 評価用コンソールプロジェクト
-  - PER (Phoneme Error Rate) / WER (Word Error Rate) 計算
-  - カテゴリ別集計（母音/子音/鼻母音/黙字/外来語）
-  - エラー分析レポート生成
-- `tools/refresh_french_eval_data.ps1`: ipa-dict/WikiPronからの評価データ取得
-- `tools/run_french_full_evaluation.ps1`: 全量評価実行スクリプト
-- `tools/french_eval_thresholds.json`: PER/WER閾値設定
+- `tools/DotNetG2P.FrenchEval/`: 評価用コンソールプロジェクト (net8.0)
+  - PER (Phoneme Error Rate) / WER (Word Error Rate) 計算（Levenshtein距離ベース）
+  - フランス語固有IPA正規化（/ɑ/→/a/, /œ̃/→/ɛ̃/）
+  - 9カテゴリ別エラー分類（nasal_vowel, silent_letter, schwa, vowel_quality, foreign_word, suffix_pattern, h_aspire, consonant, other）
+  - CLIオプション: `--input-root`, `--output-root`, `--thresholds`, `--dataset-set`, `--profiles`, `--enforce-thresholds`
+  - 出力: summary.tsv/json, category_summary.tsv/json, mismatches/*.tsv
+- `tools/refresh_french_eval_data.ps1`: ipa-dict/WikiPronからの評価データ取得（サンプル500語 + フルTSV生成）
+- `tools/run_french_full_evaluation.ps1`: 全量評価実行スクリプト（データ取得→評価→レポート、閾値超過時非ゼロ終了）
+- `tools/french_eval_thresholds.json`: PER閾値設定（4データセット × 3プロファイル）
 
 **評価コーパス**
 - ipa-dict (fr_FR): フランス語IPA辞書
-- WikiPron (fra): Wiktionaryベース発音辞書
+- WikiPron (fra_latn_broad_filtered): Wiktionaryベース発音辞書
 
-**テスト追加**
-- `FrenchXSampaTests.cs`: X-SAMPA変換テスト
-- `FrenchEdgeCaseTests.cs`: エッジケーステスト
-  - 空文字列、null、特殊文字、超長文
-  - アクセント付き文字（e, e, e, e, a, a, i, i, o, u, u, u, c）
-  - ハイフン付き語（aujourd'hui, peut-etre）
-  - アポストロフィ（l'homme, d'accord, n'est-ce pas）
-- `FrenchPerformanceTests.cs`: パフォーマンステスト
-  - スループット、バッチ比較、例外辞書初期化、メモリ
-- `FrenchAccuracyTests.cs`: 精度・回帰テスト
-  - ipa-dict PER回帰テスト
-  - WikiPron PER回帰テスト
-  - 高頻度語精度テスト
-- **目標**: 80-100件追加（合計400-430件）
+**F3で追加したファイル**
+- `src/DotNetG2P.French/Conversion/XSampaConverter.cs` — X-SAMPA変換（40音素マッピング）
+- `tests/DotNetG2P.Tests/FrenchG2P/FrenchXSampaTests.cs` — X-SAMPA変換テスト（63件）
+- `tests/DotNetG2P.Tests/FrenchG2P/FrenchEdgeCaseTests.cs` — エッジケーステスト（35件）
+- `tests/DotNetG2P.Tests/FrenchG2P/FrenchPerformanceTests.cs` — パフォーマンステスト（11件）
+- `tests/DotNetG2P.Tests/FrenchG2P/FrenchAccuracyTests.cs` — 精度・回帰テスト（29件）
+- `tests/DotNetG2P.Tests/FrenchG2P/FrenchDatasetEvaluationTests.cs` — 外部TSVコーパスPER閾値テスト（6件、TSV不在時Skip）
+- `tests/DotNetG2P.Tests/FrenchG2P/FrenchAllophoneEvaluationTests.cs` — 異音プロファイル別PER評価テスト（6件、TSV不在時Skip）
+- `tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj` — 評価ツールプロジェクト
+- `tools/DotNetG2P.FrenchEval/Program.cs` — 評価ツールメイン（~600行）
+- `tools/refresh_french_eval_data.ps1` — 評価データ取得スクリプト
+- `tools/run_french_full_evaluation.ps1` — 全量評価実行スクリプト
+- `tools/french_eval_thresholds.json` — PER閾値設定
 
 #### 成果物
-- X-SAMPA出力対応
-- 大規模コーパスでの精度評価結果
+- X-SAMPA出力対応（3メソッド追加）
+- 大規模コーパス精度評価パイプライン完備
 - PER回帰テストによる品質保証
 
 #### 依存関係
@@ -391,7 +398,7 @@ F1はスペイン語S1に比べG2Pルールの複雑さが2-3倍あるため、�
 | **辞書依存** | 例外辞書のみ | CMU辞書 (135K語) | 例外辞書のみ (500-1000語) |
 | **正規化** | 数字/日付/時刻/単位/略語/記号 | 数字/通貨/時刻/略語/頭字語/記号 | 数字(20進法)/通貨/時刻/日付/単位/略語/記号 |
 | **特有の難しさ** | 方言差異、ü処理 | OOV語、同綴異音語 | 黙字、鼻母音化、外来語 |
-| **テスト目標** | 355件 | 511件 | 400-430件 |
+| **テスト目標** | 355件 | 511件 | 556-566件 |
 
 ### パイプライン比較
 
