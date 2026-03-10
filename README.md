@@ -275,10 +275,13 @@ multiEsEngine.ToPhonemes("hola世界");
 |---------|---------|------|
 | `ToPhonemes(text)` | `string` | スペース区切りIPA音素列 (`"ˈb e ɾ ˈɡ w e n s a"` のような形式) |
 | `ToIPA(text)` | `string` | IPA表記 |
+| `ToXSampa(text)` | `string` | X-SAMPA表記 |
+| `ToXSampaWithoutStress(text)` | `string` | ストレスマークなしX-SAMPA表記 |
 | `ToPhonemeList(text)` | `IReadOnlyList<SpanishPhoneme>` | 構造化音素リスト |
 | `ToSyllables(word)` | `IReadOnlyList<SpanishSyllable>` | 音節分割結果 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
 
 ### MultilingualG2PEngine
 
@@ -456,6 +459,12 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 
 辞書データ（`DictionaryBundle`）は内部でWeakReferenceキャッシュにより自動的に共有されるため、
 複数インスタンスを作成してもメモリ使用量は最小限に抑えられます。
+
+`EnglishG2PEngine`、`ChineseG2PEngine`、`SpanishG2PEngine` はステートレスな変換を行うため、
+単一インスタンスを複数スレッドから呼び出しても安全です。
+
+`MultilingualG2PEngine` は内部の日本語エンジンを `lock` で保護しているため、
+複数スレッドから安全に呼び出せます。ただし日本語テキストの変換は直列化されます。
 
 ## ライセンス
 

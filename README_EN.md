@@ -275,10 +275,13 @@ multiEsEngine.ToPhonemes("hola世界");
 |--------|-------------|-------------|
 | `ToPhonemes(text)` | `string` | Space-separated IPA phoneme sequence |
 | `ToIPA(text)` | `string` | IPA transcription |
+| `ToXSampa(text)` | `string` | X-SAMPA transcription |
+| `ToXSampaWithoutStress(text)` | `string` | X-SAMPA transcription without stress marks |
 | `ToPhonemeList(text)` | `IReadOnlyList<SpanishPhoneme>` | Structured phoneme list |
 | `ToSyllables(word)` | `IReadOnlyList<SpanishSyllable>` | Syllabification result |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | Batch IPA conversion |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | Batch X-SAMPA conversion |
 
 ### MultilingualG2PEngine
 
@@ -456,6 +459,12 @@ In multi-threaded environments, create a separate instance for each thread.
 
 Dictionary data (`DictionaryBundle`) is automatically shared via an internal WeakReference cache,
 so creating multiple instances incurs minimal memory overhead.
+
+`EnglishG2PEngine`, `ChineseG2PEngine`, and `SpanishG2PEngine` perform stateless conversions,
+so a single instance can safely be called from multiple threads.
+
+`MultilingualG2PEngine` protects its internal Japanese engine with a `lock`,
+so it can safely be called from multiple threads. However, Japanese text conversions are serialized.
 
 ## License
 
