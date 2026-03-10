@@ -276,10 +276,13 @@ multiEsEngine.ToPhonemes("hola世界");
 |------|---------|------|
 | `ToPhonemes(text)` | `string` | 空格分隔的 IPA 音素序列 |
 | `ToIPA(text)` | `string` | IPA 表记 |
+| `ToXSampa(text)` | `string` | X-SAMPA 表记 |
+| `ToXSampaWithoutStress(text)` | `string` | 无重音标记的 X-SAMPA 表记 |
 | `ToPhonemeList(text)` | `IReadOnlyList<SpanishPhoneme>` | 结构化音素列表 |
 | `ToSyllables(word)` | `IReadOnlyList<SpanishSyllable>` | 音节划分结果 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | 批量 IPA 转换 |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | 批量 X-SAMPA 转换 |
 
 ### MultilingualG2PEngine
 
@@ -457,6 +460,12 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 
 字典数据（`DictionaryBundle`）通过内部 WeakReference 缓存自动共享，
 因此创建多个实例的内存开销极小。
+
+`EnglishG2PEngine`、`ChineseG2PEngine`、`SpanishG2PEngine` 执行无状态转换，
+因此可以从多个线程安全地调用单个实例。
+
+`MultilingualG2PEngine` 通过 `lock` 保护内部的日语引擎，
+因此可以从多个线程安全地调用。但日语文本的转换会被串行化。
 
 ## 许可证
 
