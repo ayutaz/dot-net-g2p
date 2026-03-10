@@ -201,7 +201,7 @@ public bool IsSemivowel => Phoneme >= FrenchIpaPhoneme.J && Phoneme <= FrenchIpa
 
 ## 4. プロジェクト構成（ファイル構成）
 
-F3実装完了時点のファイル構成。F1で作成したコアルールファイル群に加え、F2で `Normalization/`、`Data/`、`Rules/AllophoneProcessor.cs` を追加し、F3で `Conversion/XSampaConverter.cs` を追加した。
+F4実装完了時点のファイル構成。F1で作成したコアルールファイル群に加え、F2で `Normalization/`、`Data/`、`Rules/AllophoneProcessor.cs` を追加し、F3で `Conversion/XSampaConverter.cs` を追加した。F4では `DotNetG2P.Multilingual` にフランス語を統合した。
 
 ```
 src/DotNetG2P.French/
@@ -237,6 +237,8 @@ src/DotNetG2P.French/
 **F1→F2 の差分**: `Normalization/` ディレクトリ一式（FrenchNormalizer + NumberToWords）、`Data/` ディレクトリ一式（FrenchExceptionDictionary + TSV）、`Rules/AllophoneProcessor.cs`、`FrenchAllophoneFeatures.cs` を新規追加。`FrenchG2POptions.cs` に異音・例外辞書関連プロパティを追加。`FrenchG2PEngine.cs` に AllophoneProcessor 呼び出しを統合。
 
 **F2→F3 の差分**: `Conversion/XSampaConverter.cs` を新規追加。`FrenchG2PEngine.cs` に `ToXSampa()`, `ToXSampaWithoutStress()`, `ToXSampaBatch()` の3メソッドを追加。評価ツール `tools/DotNetG2P.FrenchEval/` 一式と評価スクリプト群を新規追加。
+
+**F3→F4 の差分**: `DotNetG2P.Multilingual` にフランス語を統合。`Language.French`、`TextSegmenter` のフランス語言語判定（高頻度語46語+接尾辞23種+特有文字27種+é曖昧フォールバック）、`MultilingualG2PEngine` に `FrenchG2PEngine` 統合、`MultilingualG2POptions` に `FrenchOptions` 追加。csproj/package.json/asmdefにFrench依存追加。
 
 ---
 
@@ -918,7 +920,7 @@ public sealed class FrenchPronunciation
 
 ---
 
-## 6. Multilingual統合設計
+## 6. Multilingual統合設計（F4実装済み）
 
 ### 6.1 Language enum 拡張
 
@@ -929,18 +931,19 @@ public enum Language : byte
     English = 1,
     Chinese = 2,
     Spanish = 3,
-    French = 4,    // 追加
+    French = 4,
 }
 ```
 
 ### 6.2 DefaultLatinLanguage の拡張
 
-現在 `DefaultLatinLanguage` は `English` / `Spanish` のみ許可。フランス語追加で3言語のラテン文字振り分けが必要。
+`DefaultLatinLanguage` は `English` / `Spanish` / `French` の3言語を許可。
 
 ```csharp
 public MultilingualG2POptions(
     ...
-    Language defaultLatinLanguage = Language.English)  // English, Spanish, French を許可
+    Language defaultLatinLanguage = Language.English,
+    FrenchG2POptions? frenchOptions = null)
 {
     if (defaultLatinLanguage != Language.English
         && defaultLatinLanguage != Language.Spanish
@@ -951,39 +954,51 @@ public MultilingualG2POptions(
 
 ### 6.3 TextSegmenter のフランス語対応
 
-#### フランス語判定シグナル
+#### フランス語判定シグナル（実装済み）
 
 ```csharp
+// 高頻度語シグナル（46語）
 private static readonly string[] s_frenchWordSignals =
 {
-    "bonjour", "merci", "salut", "bonsoir", "comment", "pourquoi",
-    "parce", "aussi", "beaucoup", "toujours", "jamais", "monsieur",
-    "madame", "mademoiselle", "oui", "avec", "dans", "pour",
-    "chez", "entre", "sans", "depuis", "voici", "voila"
+    "alors", "au", "aussi", "autre", "aux", "avec", "bien", "bonjour",
+    "bonsoir", "ce", "cette", "comme", "dans", "depuis", "des",
+    "donc", "du", "encore", "entre", "et", "faire", "ici", "jamais",
+    "je", "le", "les", "leur", "mais", "merci", "monde", "ne",
+    "notre", "nous", "parce", "peut", "plus", "pour", "quand",
+    "sans", "seulement", "sous", "tout", "toujours", "une",
+    "votre", "vous"
 };
 
+// 接尾辞シグナル（23種）
 private static readonly string[] s_frenchSuffixSignals =
 {
-    "ment", "tion", "sion", "ance", "ence", "eux", "euse",
-    "eur", "euse", "oir", "oire", "ais", "aise", "ique"
+    "tion", "sion", "ment", "eux", "euse", "euses", "ence", "ance",
+    "ique", "iques", "iste", "istes", "aire", "aires",
+    "oire", "oires", "able", "ables", "ible", "ibles",
+    "eur", "eure", "eures"
 };
 ```
 
-#### ラテン文字3言語振り分けアルゴリズム
+#### ラテン文字3言語振り分けアルゴリズム（実装済み）
 
-1. アクセント文字で判定: `ñ` → Spanish、`ç`/`ù`/`œ`/`æ` → French（ただし `ç` はトルコ語等にもあるため複合判定）
-2. 高頻度語リストマッチ
-3. 接尾辞パターンマッチ
-4. フォールバック: `DefaultLatinLanguage`
+`ResolveLatinLanguage` での判定フロー:
 
-### 6.4 MultilingualG2PEngine の拡張
+1. `DefaultLatinLanguage` が French/Spanish → 即座にその言語を返す
+2. フランス語特有文字（27種: è/ê/ë/ô/î/ï/û/ù/ç/œ/æ/ÿ 等）→ French
+3. スペイン語特有文字（ñ/á/í/ó/ú — é は除外）→ Spanish
+4. é のみ（他のマーカーなし）→ French（英語圏での仏語借用語がスペイン語より多い）
+5. ASCII語彙ヒューリスティクス → French / Spanish
+6. フォールバック: `DefaultLatinLanguage`
+
+**設計上の要点**: `é` (U+00E9) はフランス語・スペイン語の両方で高頻度だが、英語圏での借用語（"café", "résumé" 等）はフランス語由来が圧倒的に多いため、é のみの語はフランス語にフォールバックする。`á`/`í`/`ó`/`ú` はフランス語では使われないためスペイン語確定。
+
+### 6.4 MultilingualG2PEngine の拡張（実装済み）
 
 ```csharp
 public sealed class MultilingualG2PEngine : IDisposable
 {
-    private readonly FrenchG2PEngine _frenchEngine;  // 追加
+    private readonly FrenchG2PEngine _frenchEngine;
 
-    // ConvertSegment 拡張
     private string ConvertSegment(TextSegment segment)
     {
         switch (segment.Language)
@@ -996,12 +1011,12 @@ public sealed class MultilingualG2PEngine : IDisposable
 }
 ```
 
-### 6.5 MultilingualG2POptions の拡張
+### 6.5 MultilingualG2POptions の拡張（実装済み）
 
 ```csharp
 public sealed class MultilingualG2POptions
 {
-    public FrenchG2POptions? FrenchOptions { get; }  // 追加
+    public FrenchG2POptions? FrenchOptions { get; }
     ...
 }
 ```
