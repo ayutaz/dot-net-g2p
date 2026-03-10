@@ -1,0 +1,25 @@
+{
+  "name": "com.dotnetg2p.french",
+  "displayName": "DotNetG2P.French",
+  "version": "1.3.0",
+  "unity": "2021.2",
+  "description": "French Grapheme-to-Phoneme (G2P) library for .NET and Unity. Rule-based IPA conversion with syllabification, nasal vowels, and Metropolitan/Conservative dialect options.",
+  "keywords": [
+    "g2p",
+    "french",
+    "tts",
+    "phoneme",
+    "ipa"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "author": {
+    "name": "ayutaz"
+  },
+  "documentationUrl": "https://github.com/ayutaz/dot-net-g2p#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ayutaz/dot-net-g2p.git",
+    "directory": "src/DotNetG2P.French"
+  }
+}
