@@ -1,0 +1,20 @@
+{
+  "datasets": {
+    "ipa_dict_fr_fr_sample.tsv": {
+      "base": 0.08,
+      "allophones": 0.08,
+      "no_exceptions": 0.12
+    },
+    "ipa_dict_fr_fr_full.tsv": {
+      "base": 0.12,
+      "allophones": 0.12,
+      "no_exceptions": 0.18
+    },
+    "wikipron_fra_latn_broad_filtered_sample.tsv": {
+      "base": 0.08
+    },
+    "wikipron_fra_latn_broad_filtered_full.tsv": {
+      "base": 0.12
+    }
+  }
+}
