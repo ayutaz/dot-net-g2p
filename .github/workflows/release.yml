@@ -77,6 +77,7 @@ jobs:
           dotnet pack src/DotNetG2P.English/DotNetG2P.English.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
           dotnet pack src/DotNetG2P.Chinese/DotNetG2P.Chinese.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
           dotnet pack src/DotNetG2P.Spanish/DotNetG2P.Spanish.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
+          dotnet pack src/DotNetG2P.French/DotNetG2P.French.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
           dotnet pack src/DotNetG2P.Multilingual/DotNetG2P.Multilingual.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
 
       - uses: actions/upload-artifact@v4

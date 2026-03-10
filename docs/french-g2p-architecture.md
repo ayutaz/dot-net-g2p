@@ -219,8 +219,7 @@ src/DotNetG2P.French/
 │   ├── FrenchOrthography.cs            # 正書法ヘルパー (母音判定、ダイグラフ判定等) [F1]
 │   ├── NasalVowelizer.cs              # 鼻母音化ロジック (独立static class) [F1]
 │   ├── FrenchSyllabifier.cs            # 音素ベース音節分割 [F1]
-│   ├── AllophoneProcessor.cs           # 異音規則 (R無声化、阻害音有声性同化) [F2]
-│   └── LiaisonProcessor.cs            # リエゾン + enchaînement処理 (Phase2、未実装)
+│   └── AllophoneProcessor.cs           # 異音規則 (R無声化、阻害音有声性同化) [F2]
 ├── Normalization/                      # [F2 で追加]
 │   ├── FrenchNormalizer.cs             # テキスト正規化ファサード (11段階パイプライン)
 │   └── NumberToWords.cs               # フランス語数詞変換 (vigesimal 20進法)
@@ -532,7 +531,7 @@ namespace DotNetG2P.French.Rules
 {
     internal static class FrenchSyllabifier
     {
-        public static IReadOnlyList<int> Syllabify(FrenchPhoneme[] phonemes);
+        public static (int[] syllableOffsets, FrenchPhoneme[] phonemesWithNucleus) Syllabify(FrenchIpaPhoneme[] phonemes);
     }
 }
 ```

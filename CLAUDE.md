@@ -153,7 +153,7 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - FrenchXSampaTests / FrenchEdgeCaseTests / FrenchPerformanceTests / FrenchAccuracyTests を追加
     - FrenchDatasetEvaluationTests / FrenchAllophoneEvaluationTests（外部TSVコーパスPER閾値テスト）を追加
     - `tools/DotNetG2P.FrenchEval` + `tools/refresh_french_eval_data.ps1` + `tools/run_french_full_evaluation.ps1` により全量PER/WER/カテゴリ別集計を追加
-    - テスト150件追加（累計516件: 504 pass + 12 skip）
+    - テスト150件追加（累計719件: 707 pass + 12 skip）
   - **F4（Multilingual統合・パッケージング）**: 完了
     - `DotNetG2P.Multilingual` に `Language.French` と `FrenchOptions` を追加
     - `TextSegmenter` にフランス語言語判定（高頻度語46語+接尾辞23種+特有文字27種+é曖昧フォールバック）を実装
@@ -456,22 +456,24 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── SpanishEdgeCaseTests.cs     # エッジケーステスト [S3]
 │       │   ├── SpanishPerformanceTests.cs  # パフォーマンステスト [S3]
 │       │   └── SpanishAccuracyTests.cs     # 精度・回帰テスト [S3]
-│       ├── FrenchG2P/                  # フランス語G2Pテスト (516件: 504 pass + 12 skip)
+│       ├── FrenchG2P/                  # フランス語G2Pテスト (719件: 707 pass + 12 skip)
 │       │   ├── FrenchG2PEngineTests.cs     # エンジン統合テスト (32件) [F1]
-│       │   ├── GraphemeToPhonemeRulesTests.cs # G2Pルール単体テスト (94件) [F1]
+│       │   ├── GraphemeToPhonemeRulesTests.cs # G2Pルール単体テスト (109件) [F1]
 │       │   ├── FrenchSyllabifierTests.cs   # 音節分割テスト (38件) [F1]
-│       │   ├── FrenchIpaTests.cs           # IPA変換テスト (23件) [F1]
+│       │   ├── FrenchIpaTests.cs           # IPA変換テスト (43件) [F1]
 │       │   ├── FrenchPhonemeTests.cs       # 音素モデルテスト (31件) [F1]
 │       │   ├── FrenchNumberToWordsTests.cs # 数値→文字列変換テスト (55件) [F2]
 │       │   ├── FrenchNormalizerTests.cs    # 正規化テスト (51件) [F2]
-│       │   ├── AllophoneProcessorTests.cs  # 異音テスト (18件) [F2]
+│       │   ├── AllophoneProcessorTests.cs  # 異音テスト (22件) [F2]
 │       │   ├── FrenchExceptionDictionaryTests.cs # 例外辞書テスト (24件) [F2]
 │       │   ├── FrenchXSampaTests.cs        # X-SAMPA変換テスト (63件) [F3]
-│       │   ├── FrenchEdgeCaseTests.cs      # エッジケーステスト (35件) [F3]
-│       │   ├── FrenchPerformanceTests.cs   # パフォーマンステスト (11件) [F3]
+│       │   ├── FrenchEdgeCaseTests.cs      # エッジケーステスト (36件) [F3]
+│       │   ├── FrenchPerformanceTests.cs   # パフォーマンステスト (10件) [F3]
 │       │   ├── FrenchAccuracyTests.cs      # 精度・回帰テスト (29件) [F3]
 │       │   ├── FrenchDatasetEvaluationTests.cs # 外部TSVコーパスPER閾値テスト (6件) [F3]
-│       │   └── FrenchAllophoneEvaluationTests.cs # 異音プロファイル別PER評価 (6件) [F3]
+│       │   ├── FrenchAllophoneEvaluationTests.cs # 異音プロファイル別PER評価 (6件) [F3]
+│       │   ├── NasalVowelizerTests.cs         # 鼻母音化テスト (35件) [F1]
+│       │   └── FrenchOrthographyTests.cs      # 正書法ヘルパーテスト (129件) [F1]
 │       ├── Multilingual/               # 多言語G2Pテスト（372件通過）
 │       │   ├── LanguageDetectorTests.cs  # 言語判定テスト
 │       │   ├── TextSegmenterTests.cs     # セグメント分割テスト

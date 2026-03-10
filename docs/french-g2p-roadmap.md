@@ -36,8 +36,8 @@ Normalize → Tokenize → G2PRules → Syllabifier → (StressAssigner) → All
 | **F1** ✅ | コアG2Pルールエンジン + 基本MVP | 基本的なフランス語G2P動作 | 218件 | 8-12% |
 | **F2** ✅ | 精度向上・異音規則・テキスト正規化 | 高精度フランス語G2P | 366件（累計） | 3-6% |
 | **F3** ✅ | X-SAMPA・大規模精度評価・拡張テスト | 評価済みフランス語G2P | 516件（累計） | 3-6% (確定値) |
-| **F4** ✅ | Multilingual統合・パッケージング | 多言語G2Pにフランス語統合 | 547件（累計） | - |
-| | **合計** | | **547件** | |
+| **F4** ✅ | Multilingual統合・パッケージング | 多言語G2Pにフランス語統合 | 750件（累計） | - |
+| | **合計** | | **750件** | |
 
 > **注**: PER目標はアーキテクチャ設計書・テスト戦略書と統一済み。F3のPERはF2からの変更なし（X-SAMPA追加がメインのため）。将来のリエゾン対応後はPER 2-4%を目標とする。
 
@@ -295,7 +295,7 @@ F1はスペイン語S1に比べG2Pルールの複雑さが2-3倍あるため、�
 ### F4: Multilingual統合・パッケージング ✅ 完了
 
 #### ステータス
-- **完了**（テスト31件追加、Multilingualテスト372件全通過）
+- **完了**（テスト31件追加、累計750件: FrenchG2P 719件 + Multilingual 31件、Multilingualテスト372件全通過）
 
 #### 実装内容
 
@@ -402,7 +402,7 @@ F1はスペイン語S1に比べG2Pルールの複雑さが2-3倍あるため、�
 | **辞書依存** | 例外辞書のみ | CMU辞書 (135K語) | 例外辞書のみ (500-1000語) |
 | **正規化** | 数字/日付/時刻/単位/略語/記号 | 数字/通貨/時刻/略語/頭字語/記号 | 数字(20進法)/通貨/時刻/日付/単位/略語/記号 |
 | **特有の難しさ** | 方言差異、ü処理 | OOV語、同綴異音語 | 黙字、鼻母音化、外来語 |
-| **テスト目標** | 355件 | 511件 | 547件 |
+| **テスト目標** | 355件 | 511件 | 750件 |
 
 ### パイプライン比較
 
@@ -445,7 +445,7 @@ F1はスペイン語S1に比べG2Pルールの複雑さが2-3倍あるため、�
 ### 品質要件
 - [x] PER 3-6% (ipa-dict fr_FR)
 - [x] PER 5-8% (WikiPron fra)
-- [x] テスト547件（F1-F4合計）
+- [x] テスト750件（F1-F4合計: FrenchG2P 719件 + Multilingual 31件）
 - [x] パフォーマンス: 1000語/秒以上のスループット
 
 ### パッケージング要件
@@ -461,6 +461,7 @@ src/DotNetG2P.French/
   ├── DotNetG2P.French.csproj
   ├── FrenchG2PEngine.cs
   ├── FrenchG2POptions.cs
+  ├── FrenchAllophoneFeatures.cs
   ├── Models/
   │   ├── FrenchIpaPhoneme.cs
   │   ├── FrenchPhoneme.cs
@@ -468,16 +469,18 @@ src/DotNetG2P.French/
   │   └── FrenchDialect.cs
   ├── Rules/
   │   ├── GraphemeToPhonemeRules.cs
-  │   ├── SyllableParser.cs
+  │   ├── FrenchOrthography.cs
+  │   ├── NasalVowelizer.cs
+  │   ├── FrenchSyllabifier.cs
   │   └── AllophoneProcessor.cs
   ├── Normalization/
-  │   └── FrenchNormalizer.cs
+  │   ├── FrenchNormalizer.cs
+  │   └── NumberToWords.cs
   ├── Conversion/
   │   ├── IpaConverter.cs
   │   └── XSampaConverter.cs
-  ├── Dictionary/
-  │   └── ExceptionDictionary.cs
   ├── Data/
+  │   ├── FrenchExceptionDictionary.cs
   │   └── french_exceptions.master.tsv
   ├── package.json
   └── DotNetG2P.French.asmdef
@@ -485,14 +488,19 @@ src/DotNetG2P.French/
 tests/DotNetG2P.Tests/FrenchG2P/
   ├── FrenchG2PEngineTests.cs
   ├── GraphemeToPhonemeRulesTests.cs
+  ├── FrenchOrthographyTests.cs
+  ├── NasalVowelizerTests.cs
   ├── FrenchSyllabifierTests.cs
   ├── FrenchIpaTests.cs
   ├── FrenchPhonemeTests.cs
+  ├── FrenchNumberToWordsTests.cs
   ├── FrenchNormalizerTests.cs
   ├── AllophoneProcessorTests.cs
-  ├── ExceptionDictionaryTests.cs
+  ├── FrenchExceptionDictionaryTests.cs
   ├── FrenchXSampaTests.cs
   ├── FrenchEdgeCaseTests.cs
   ├── FrenchPerformanceTests.cs
-  └── FrenchAccuracyTests.cs
+  ├── FrenchAccuracyTests.cs
+  ├── FrenchDatasetEvaluationTests.cs
+  └── FrenchAllophoneEvaluationTests.cs
 ```
