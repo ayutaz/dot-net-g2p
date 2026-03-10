@@ -27,7 +27,7 @@ Current generation policy:
 
 - keep single-token alphabetic words only
 - require at least one lowercase Spanish letter
-- keep words with length `3..16`
+- keep words with length `3..24`
 - keep only entries whose IPA symbols match the current test normalizer
 - deduplicate by lowercase surface form
 - select a deterministic evenly spaced sample of 256 entries per upstream corpus

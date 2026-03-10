@@ -8,14 +8,6 @@ namespace DotNetG2P.Spanish.Rules
             if (c == 'y')
                 return word.Length == 1 || index == word.Length - 1;
 
-            if (c == 'ü' && index > 0 && index < word.Length - 1)
-            {
-                var prev = char.ToLowerInvariant(word[index - 1]);
-                var next = char.ToLowerInvariant(word[index + 1]);
-                if (prev == 'g' && (next == 'e' || next == 'é' || next == 'i' || next == 'í'))
-                    return false;
-            }
-
             if (!IsVowelChar(c))
                 return false;
 
@@ -25,7 +17,7 @@ namespace DotNetG2P.Spanish.Rules
         public static bool IsStrongVowel(char c)
         {
             c = char.ToLowerInvariant(c);
-            return c == 'a' || c == 'á' || c == 'e' || c == 'é' || c == 'o' || c == 'ó' || c == 'í' || c == 'ú';
+            return c == 'a' || c == 'á' || c == 'e' || c == 'é' || c == 'o' || c == 'ó';
         }
 
         public static bool IsWeakUnaccentedVowel(char c)

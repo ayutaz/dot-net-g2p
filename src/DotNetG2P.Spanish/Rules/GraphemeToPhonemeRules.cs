@@ -137,7 +137,7 @@ namespace DotNetG2P.Spanish.Rules
                     continue;
                 }
 
-                if (i + 1 < word.Length)
+                if (i + 1 < end)
                 {
                     var next = char.ToLowerInvariant(word[i + 1]);
                     if (current == 'c' && next == 'h')

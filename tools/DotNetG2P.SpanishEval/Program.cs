@@ -437,7 +437,7 @@ internal static class CorpusEvaluator
             "ɱ" => "m",
             "ŋ" or "n̪" => "n",
             "ʎ" or "ɟʝ" => "ʝ",
-            "ʃ" => dialect == SpanishDialect.Castilian ? "x" : "x",
+            "ʃ" => "x",
             _ => token,
         };
     }

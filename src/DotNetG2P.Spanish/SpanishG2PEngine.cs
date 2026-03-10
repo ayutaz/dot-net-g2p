@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using DotNetG2P.Spanish.Conversion;
 using DotNetG2P.Spanish.Normalization;
 using DotNetG2P.Spanish.Rules;
@@ -13,7 +14,7 @@ namespace DotNetG2P.Spanish
     public sealed class SpanishG2PEngine : IDisposable
     {
         private readonly SpanishG2POptions _options;
-        private bool _disposed;
+        private int _disposed;
 
         /// <summary>デフォルトオプションで初期化する。</summary>
         public SpanishG2PEngine()
@@ -43,6 +44,12 @@ namespace DotNetG2P.Spanish
         public string ToXSampa(string text)
         {
             return ProcessText(text, pronunciation => XSampaConverter.Convert(ApplyAllophonesIfNeeded(pronunciation), _options.IncludeStress));
+        }
+
+        /// <summary>入力テキストをストレスマークなしのIPA表記に変換する。</summary>
+        public string ToIPAWithoutStress(string text)
+        {
+            return ProcessText(text, pronunciation => IpaConverter.Convert(ApplyAllophonesIfNeeded(pronunciation), includeStress: false));
         }
 
         /// <summary>入力テキストをストレスマークなしの X-SAMPA 表記に変換する。</summary>
@@ -106,6 +113,18 @@ namespace DotNetG2P.Spanish
             return results;
         }
 
+        /// <summary>複数テキストを一括で音素リストに変換する。</summary>
+        public IReadOnlyList<IReadOnlyList<SpanishPhoneme>> ToPhonemeListBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new IReadOnlyList<SpanishPhoneme>[texts.Count];
+            for (var i = 0; i < texts.Count; i++)
+                results[i] = ToPhonemeList(texts[i]);
+            return results;
+        }
+
         /// <summary>複数テキストを一括で X-SAMPA に変換する。</summary>
         public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts)
         {
@@ -121,7 +140,7 @@ namespace DotNetG2P.Spanish
         /// <summary>リソースを解放する。</summary>
         public void Dispose()
         {
-            _disposed = true;
+            Interlocked.CompareExchange(ref _disposed, 1, 0);
         }
 
         private string ProcessText(string text, Func<SpanishPronunciation, string> formatter)
@@ -170,7 +189,7 @@ namespace DotNetG2P.Spanish
 
         private void ThrowIfDisposed()
         {
-            if (_disposed)
+            if (Volatile.Read(ref _disposed) != 0)
                 throw new ObjectDisposedException(nameof(SpanishG2PEngine));
         }
     }

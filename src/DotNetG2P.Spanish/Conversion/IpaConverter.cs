@@ -7,6 +7,7 @@ namespace DotNetG2P.Spanish.Conversion
     {
         public static string Convert(SpanishPronunciation pronunciation, bool includeStress)
         {
+            if (pronunciation == null) throw new ArgumentNullException(nameof(pronunciation));
             if (pronunciation.PhonemesInternal.Length == 0)
                 return string.Empty;
 

@@ -27,7 +27,7 @@ namespace DotNetG2P.Spanish.Rules
                 return 0;
 
             var last = char.ToLowerInvariant(word[word.Length - 1]);
-            var endsWithVowelOrNS = SpanishOrthography.IsPronouncedVowelChar(last) || last == 'n' || last == 's';
+            var endsWithVowelOrNS = last != 'y' && (SpanishOrthography.IsPronouncedVowelChar(last) || last == 'n' || last == 's');
             return endsWithVowelOrNS ? syllables.Count - 2 : syllables.Count - 1;
         }
 
