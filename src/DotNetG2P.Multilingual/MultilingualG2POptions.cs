@@ -3,6 +3,7 @@
 using System;
 using DotNetG2P.Chinese;
 using DotNetG2P.English;
+using DotNetG2P.French;
 using DotNetG2P.Spanish;
 
 namespace DotNetG2P.Multilingual
@@ -21,6 +22,9 @@ namespace DotNetG2P.Multilingual
 
         /// <summary>スペイン語G2Pオプション（null時はデフォルト）。</summary>
         public SpanishG2POptions? SpanishOptions { get; }
+
+        /// <summary>フランス語G2Pオプション（null時はデフォルト）。</summary>
+        public FrenchG2POptions? FrenchOptions { get; }
 
         /// <summary>CJK漢字のデフォルト言語（周囲にかな文字がない場合に使用、デフォルト: Japanese）。</summary>
         public Language DefaultCjkLanguage { get; }
@@ -44,6 +48,7 @@ namespace DotNetG2P.Multilingual
         /// <param name="segmentSeparator">セグメント間の区切り文字（デフォルト: スペース）</param>
         /// <param name="spanishOptions">スペイン語G2Pオプション（null時はデフォルト）</param>
         /// <param name="defaultLatinLanguage">ラテン文字列のデフォルト言語（デフォルト: English）</param>
+        /// <param name="frenchOptions">フランス語G2Pオプション（null時はデフォルト）</param>
         public MultilingualG2POptions(
             G2POptions? japaneseOptions = null,
             EnglishG2POptions? englishOptions = null,
@@ -51,15 +56,17 @@ namespace DotNetG2P.Multilingual
             Language defaultCjkLanguage = Language.Japanese,
             string segmentSeparator = " ",
             SpanishG2POptions? spanishOptions = null,
-            Language defaultLatinLanguage = Language.English)
+            Language defaultLatinLanguage = Language.English,
+            FrenchG2POptions? frenchOptions = null)
         {
-            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish)
-                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English or Spanish.");
+            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French)
+                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, or French.");
 
             JapaneseOptions = japaneseOptions;
             EnglishOptions = englishOptions;
             ChineseOptions = chineseOptions;
             SpanishOptions = spanishOptions;
+            FrenchOptions = frenchOptions;
             DefaultCjkLanguage = defaultCjkLanguage;
             DefaultLatinLanguage = defaultLatinLanguage;
             SegmentSeparator = segmentSeparator;

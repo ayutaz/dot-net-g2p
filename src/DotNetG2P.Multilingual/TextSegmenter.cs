@@ -19,6 +19,27 @@ namespace DotNetG2P.Multilingual
         private const byte LangEnglish = 2;   // Language.English
         private const byte LangChinese = 3;   // Language.Chinese
         private const byte LangSpanish = 4;   // Language.Spanish
+        private const byte LangFrench = 5;    // Language.French
+
+        private static readonly string[] s_frenchWordSignals =
+        {
+            "alors", "au", "aussi", "autre", "aux", "avec", "bien", "bonjour",
+            "bonsoir", "ce", "cette", "comme", "dans", "depuis", "des",
+            "donc", "du", "encore", "entre", "et", "faire", "ici", "jamais",
+            "je", "le", "les", "leur", "mais", "merci", "monde", "ne",
+            "notre", "nous", "parce", "peut", "plus", "pour", "quand",
+            "sans", "seulement", "sous", "tout", "toujours", "une",
+            "votre", "vous"
+        };
+
+        private static readonly string[] s_frenchSuffixSignals =
+        {
+            "tion", "sion", "ment", "eux", "euse", "euses", "ence", "ance",
+            "ique", "iques", "iste", "istes", "aire", "aires",
+            "oire", "oires", "able", "ables", "ible", "ibles",
+            "eur", "eure", "eures"
+        };
+
         private static readonly string[] s_spanishWordSignals =
         {
             "adios", "amigo", "amigos", "amiga", "amigas", "buenas", "buenos",
@@ -87,8 +108,8 @@ namespace DotNetG2P.Multilingual
             if (string.IsNullOrEmpty(text))
                 return Array.Empty<TextSegment>();
 
-            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish)
-                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English or Spanish.");
+            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French)
+                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, or French.");
 
             int len = text.Length;
 
@@ -122,7 +143,9 @@ namespace DotNetG2P.Multilingual
                 byte defaultCjkByte = defaultCjkLanguage == Language.Chinese ? LangChinese
                                     : defaultCjkLanguage == Language.English ? LangEnglish
                                     : LangJapanese;
-                byte defaultLatinByte = defaultLatinLanguage == Language.Spanish ? LangSpanish : LangEnglish;
+                byte defaultLatinByte = defaultLatinLanguage == Language.Spanish ? LangSpanish
+                                     : defaultLatinLanguage == Language.French ? LangFrench
+                                     : LangEnglish;
 
                 // まず、日本語確定文字を直接割り当てる。
                 for (int i = 0; i < len; i++)
@@ -420,6 +443,7 @@ namespace DotNetG2P.Multilingual
                 case LangJapanese: return Language.Japanese;
                 case LangChinese: return Language.Chinese;
                 case LangSpanish: return Language.Spanish;
+                case LangFrench: return Language.French;
                 default: return Language.English;
             }
         }
@@ -431,7 +455,7 @@ namespace DotNetG2P.Multilingual
 
         private static bool IsLatinLanguage(byte language)
         {
-            return language == LangEnglish || language == LangSpanish;
+            return language == LangEnglish || language == LangSpanish || language == LangFrench;
         }
 
         private static byte ResolveLatinLanguage(string text, int start, int length, byte defaultLatinByte, bool hasLatinExtended)
@@ -439,10 +463,24 @@ namespace DotNetG2P.Multilingual
             if (defaultLatinByte == LangSpanish)
                 return LangSpanish;
 
+            if (defaultLatinByte == LangFrench)
+                return LangFrench;
+
             ReadOnlySpan<char> token = text.AsSpan(start, length);
+
+            // フランス語特有文字の検出（スペイン語より先に判定）
+            if (ContainsExplicitFrenchCharacter(token))
+                return LangFrench;
 
             if (ContainsExplicitSpanishCharacter(token) || ContainsSpanishDiaeresisPattern(token))
                 return LangSpanish;
+
+            // é のみ（á/í/ó/ú/ñ なし）→ フランス語（英語圏での仏語借用語がスペイン語より多い）
+            if (ContainsAcuteEOnly(token))
+                return LangFrench;
+
+            if (!hasLatinExtended && LooksLikeFrenchAsciiToken(token))
+                return LangFrench;
 
             if (!hasLatinExtended && LooksLikeSpanishAsciiToken(token))
                 return LangSpanish;
@@ -452,27 +490,38 @@ namespace DotNetG2P.Multilingual
 
         private static bool ContainsExplicitSpanishCharacter(ReadOnlySpan<char> token)
         {
+            // é/É はフランス語でも高頻度のため、スペイン語専用とはみなさない
             for (int i = 0; i < token.Length; i++)
             {
                 switch (token[i])
                 {
-                    case '\u00C1':
-                    case '\u00C9':
-                    case '\u00CD':
-                    case '\u00D1':
-                    case '\u00D3':
-                    case '\u00DA':
-                    case '\u00E1':
-                    case '\u00E9':
-                    case '\u00ED':
-                    case '\u00F1':
-                    case '\u00F3':
-                    case '\u00FA':
+                    case '\u00C1': // Á
+                    case '\u00CD': // Í
+                    case '\u00D1': // Ñ
+                    case '\u00D3': // Ó
+                    case '\u00DA': // Ú
+                    case '\u00E1': // á
+                    case '\u00ED': // í
+                    case '\u00F1': // ñ
+                    case '\u00F3': // ó
+                    case '\u00FA': // ú
                         return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>é/É のみを含む（á/í/ó/ú/ñ は含まない）ラテン拡張トークンか判定する。</summary>
+        private static bool ContainsAcuteEOnly(ReadOnlySpan<char> token)
+        {
+            bool hasAcuteE = false;
+            for (int i = 0; i < token.Length; i++)
+            {
+                if (token[i] == '\u00E9' || token[i] == '\u00C9') // é, É
+                    hasAcuteE = true;
+            }
+            return hasAcuteE;
         }
 
         private static bool ContainsSpanishDiaeresisPattern(ReadOnlySpan<char> token)
@@ -524,6 +573,89 @@ namespace DotNetG2P.Multilingual
                 lower.Contains("qui", StringComparison.Ordinal) ||
                 lower.Contains("gue", StringComparison.Ordinal) ||
                 lower.Contains("gui", StringComparison.Ordinal))
+            {
+                score += 1;
+            }
+
+            return score >= 3;
+        }
+
+        private static bool ContainsExplicitFrenchCharacter(ReadOnlySpan<char> token)
+        {
+            for (int i = 0; i < token.Length; i++)
+            {
+                switch (token[i])
+                {
+                    // è, ê, ë（スペイン語にはない）
+                    case '\u00C8': // È
+                    case '\u00CA': // Ê
+                    case '\u00CB': // Ë
+                    case '\u00E8': // è
+                    case '\u00EA': // ê
+                    case '\u00EB': // ë
+                    // ô, î, ï, û, ù（スペイン語にはない）
+                    case '\u00CE': // Î
+                    case '\u00CF': // Ï
+                    case '\u00D4': // Ô
+                    case '\u00D9': // Ù
+                    case '\u00DB': // Û
+                    case '\u00EE': // î
+                    case '\u00EF': // ï
+                    case '\u00F4': // ô
+                    case '\u00F9': // ù
+                    case '\u00FB': // û
+                    // ç（セディーユ — スペイン語では使わない）
+                    case '\u00C7': // Ç
+                    case '\u00E7': // ç
+                    // œ, æ（リガチャ）
+                    case '\u0152': // Œ
+                    case '\u0153': // œ
+                    case '\u00C6': // Æ
+                    case '\u00E6': // æ
+                    // ÿ
+                    case '\u00FF': // ÿ
+                    case '\u0178': // Ÿ
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool LooksLikeFrenchAsciiToken(ReadOnlySpan<char> token)
+        {
+            if (token.Length < 2 || IsLikelyAcronym(token))
+                return false;
+
+            string lower = new string(token).ToLowerInvariant();
+            if (Array.IndexOf(s_englishWordSignals, lower) >= 0)
+                return false;
+
+            int score = 0;
+
+            if (Array.IndexOf(s_frenchWordSignals, lower) >= 0)
+                score += 4;
+
+            for (int i = 0; i < s_frenchSuffixSignals.Length; i++)
+            {
+                if (lower.EndsWith(s_frenchSuffixSignals[i], StringComparison.Ordinal))
+                {
+                    score += 2;
+                    break;
+                }
+            }
+
+            // フランス語的な綴りパターン
+            if (lower.Contains("eau", StringComparison.Ordinal) ||
+                lower.Contains("eux", StringComparison.Ordinal) ||
+                lower.Contains("oux", StringComparison.Ordinal) ||
+                lower.Contains("oi", StringComparison.Ordinal))
+            {
+                score += 1;
+            }
+
+            if (lower.Contains("qu", StringComparison.Ordinal) ||
+                lower.Contains("ou", StringComparison.Ordinal))
             {
                 score += 1;
             }

@@ -91,9 +91,11 @@ namespace DotNetG2P.Multilingual
                     return Language.Japanese;
                 case ScriptKind.English:
                 case ScriptKind.Latin:
-                    return defaultLatinLanguage == Language.Spanish
-                        ? Language.Spanish
-                        : Language.English;
+                    if (defaultLatinLanguage == Language.Spanish)
+                        return Language.Spanish;
+                    if (defaultLatinLanguage == Language.French)
+                        return Language.French;
+                    return Language.English;
                 case ScriptKind.CJKIdeograph:
                     // CJK漢字は日中共用のため、文脈で判定（TextSegmenterに委譲）
                     return null;
