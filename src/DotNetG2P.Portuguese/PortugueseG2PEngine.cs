@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using DotNetG2P.Portuguese.Conversion;
+using DotNetG2P.Portuguese.Normalization;
 using DotNetG2P.Portuguese.Rules;
 
 namespace DotNetG2P.Portuguese
@@ -57,7 +58,7 @@ namespace DotNetG2P.Portuguese
             var result = new List<PortuguesePhoneme>(words.Count * 6);
             for (var i = 0; i < words.Count; i++)
             {
-                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect, _options.EnableExceptionDictionary);
+                var pronunciation = ConvertWordWithAllophones(words[i]);
                 result.AddRange(pronunciation.PhonemesInternal);
             }
 
@@ -72,7 +73,7 @@ namespace DotNetG2P.Portuguese
             if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<PortugueseSyllable>();
 
-            var normalized = Normalize(text);
+            var normalized = text.Normalize(NormalizationForm.FormC).ToLowerInvariant();
             return PortugueseSyllabifier.Syllabify(normalized);
         }
 
@@ -132,12 +133,21 @@ namespace DotNetG2P.Portuguese
                 if (i > 0)
                     builder.Append(' ');
 
-                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect, _options.EnableExceptionDictionary);
-                // P2でAllophoneProcessor追加予定
+                var pronunciation = ConvertWordWithAllophones(words[i]);
                 builder.Append(formatter(pronunciation));
             }
 
             return builder.ToString();
+        }
+
+        private PortuguesePronunciation ConvertWordWithAllophones(string word)
+        {
+            var pronunciation = GraphemeToPhonemeRules.ConvertWord(word, _options.Dialect, _options.EnableExceptionDictionary);
+
+            if (_options.EnableAllophones)
+                pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures, _options.Dialect);
+
+            return pronunciation;
         }
 
         private IReadOnlyList<string> GetWords(string text)
@@ -145,30 +155,12 @@ namespace DotNetG2P.Portuguese
             if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<string>();
 
-            var normalized = Normalize(text);
-            // P1ではシンプルな空白・句読点分割。P2でPortugueseNormalizer.Tokenize()に置換
-            var parts = normalized.Split(new[] { ' ', '\t', '\n', '\r', ',', '.', '!', '?', ';', ':', '(', ')', '[', ']', '{', '}', '"', '\'' }, StringSplitOptions.RemoveEmptyEntries);
-            var result = new List<string>();
-            foreach (var part in parts)
-            {
-                var trimmed = part.Trim();
-                if (trimmed.Length > 0 && ContainsAlpha(trimmed))
-                    result.Add(trimmed);
-            }
-            return result;
-        }
+            if (_options.EnableTextNormalization)
+                return PortugueseNormalizer.Tokenize(text, _options.Dialect);
 
-        private string Normalize(string text)
-        {
-            // P1ではNormalizer未実装。基本的なNFC正規化+小文字化のみ
-            return text.Normalize(NormalizationForm.FormC).ToLowerInvariant();
-        }
-
-        private static bool ContainsAlpha(string s)
-        {
-            for (int i = 0; i < s.Length; i++)
-                if (char.IsLetter(s[i])) return true;
-            return false;
+            // テキスト正規化無効時: 基本的なNFC正規化+小文字化+空白分割
+            var normalized = text.Normalize(NormalizationForm.FormC).ToLowerInvariant();
+            return PortugueseNormalizer.TokenizeNormalized(normalized);
         }
 
         private void ThrowIfDisposed()

@@ -11,6 +11,9 @@
     <PackageTags>g2p;portuguese;tts;phoneme;ipa;text-to-speech;unity</PackageTags>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Data\portuguese_exceptions.master.tsv" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
   </ItemGroup>
 </Project>

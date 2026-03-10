@@ -19,6 +19,9 @@ namespace DotNetG2P.Portuguese
         /// <summary>異音処理を有効化するか。</summary>
         public bool EnableAllophones { get; }
 
+        /// <summary>適用する異音規則セット。</summary>
+        public PortugueseAllophoneFeatures AllophoneFeatures { get; }
+
         /// <summary>テキスト正規化を有効化するか。</summary>
         public bool EnableTextNormalization { get; }
 
@@ -35,6 +38,7 @@ namespace DotNetG2P.Portuguese
             PortugueseDialect dialect = default,
             bool includeStress = true,
             bool enableAllophones = false,
+            PortugueseAllophoneFeatures allophoneFeatures = default,
             bool enableTextNormalization = true,
             bool enableExceptionDictionary = true,
             string separator = " ")
@@ -42,6 +46,11 @@ namespace DotNetG2P.Portuguese
             Dialect = dialect;
             IncludeStress = includeStress;
             EnableAllophones = enableAllophones;
+            AllophoneFeatures = allophoneFeatures == default
+                ? (dialect == PortugueseDialect.European
+                    ? PortugueseAllophoneFeatures.EuropeanDefault
+                    : PortugueseAllophoneFeatures.BrazilianDefault)
+                : allophoneFeatures;
             EnableTextNormalization = enableTextNormalization;
             EnableExceptionDictionary = enableExceptionDictionary;
             Separator = separator ?? throw new ArgumentNullException(nameof(separator));
