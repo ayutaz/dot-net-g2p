@@ -24,6 +24,14 @@ namespace DotNetG2P.MeCab
         private readonly Lazy<ViterbiDecoder> _lazyDecoder;
         private int _disposed;
 
+        /// <summary>
+        /// 既定の辞書検索パスから Tokenizer を初期化する。
+        /// </summary>
+        public MeCabTokenizer()
+            : this(NaistJdicLocator.ResolveOrThrow())
+        {
+        }
+
         /// <param name="dictionaryPath">naist-jdic辞書ディレクトリのパス</param>
         public MeCabTokenizer(string dictionaryPath)
         {
@@ -33,6 +41,18 @@ namespace DotNetG2P.MeCab
                 throw new DirectoryNotFoundException($"辞書ディレクトリが見つかりません: {dictionaryPath}");
 
             _dic = DictionaryBundle.Load(dictionaryPath);
+            _lazyBuilder = new Lazy<LatticeBuilder>(() => new LatticeBuilder(_dic));
+            _lazyDecoder = new Lazy<ViterbiDecoder>(() => new ViterbiDecoder(_dic.Matrix));
+        }
+
+        /// <summary>
+        /// 事前に読み込み済みの辞書バンドルからTokenizerを初期化する。
+        /// WebGL等ファイルシステムが使えない環境向け。
+        /// </summary>
+        /// <param name="dictionaryBundle">読み込み済みの辞書バンドル</param>
+        public MeCabTokenizer(DictionaryBundle dictionaryBundle)
+        {
+            _dic = dictionaryBundle ?? throw new ArgumentNullException(nameof(dictionaryBundle));
             _lazyBuilder = new Lazy<LatticeBuilder>(() => new LatticeBuilder(_dic));
             _lazyDecoder = new Lazy<ViterbiDecoder>(() => new ViterbiDecoder(_dic.Matrix));
         }

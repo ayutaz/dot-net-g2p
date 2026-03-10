@@ -7,6 +7,7 @@ using System.Threading;
 using DotNetG2P.Chinese;
 using DotNetG2P.English;
 using DotNetG2P.MeCab;
+using DotNetG2P.Spanish;
 
 namespace DotNetG2P.Multilingual
 {
@@ -22,9 +23,26 @@ namespace DotNetG2P.Multilingual
         private readonly G2PEngine _japaneseEngine;
         private readonly EnglishG2PEngine _englishEngine;
         private readonly ChineseG2PEngine _chineseEngine;
+        private readonly SpanishG2PEngine _spanishEngine;
         private readonly MultilingualG2POptions _options;
         private readonly object _japaneseLock = new object();
         private int _disposed;
+
+        /// <summary>
+        /// 既定の辞書検索パスを用いて多言語G2Pエンジンを初期化する。
+        /// </summary>
+        public MultilingualG2PEngine()
+            : this(NaistJdicLocator.ResolveOrThrow(), MultilingualG2POptions.Default)
+        {
+        }
+
+        /// <summary>
+        /// 既定の辞書検索パスとオプションを用いて多言語G2Pエンジンを初期化する。
+        /// </summary>
+        public MultilingualG2PEngine(MultilingualG2POptions options)
+            : this(NaistJdicLocator.ResolveOrThrow(), options)
+        {
+        }
 
         /// <summary>
         /// 日本語辞書パスを指定して多言語G2Pエンジンを初期化する（デフォルトオプション）。
@@ -52,9 +70,10 @@ namespace DotNetG2P.Multilingual
 
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
-            G2PEngine japaneseEngine = null;
-            EnglishG2PEngine englishEngine = null;
-            ChineseG2PEngine chineseEngine = null;
+            G2PEngine? japaneseEngine = null;
+            EnglishG2PEngine? englishEngine = null;
+            ChineseG2PEngine? chineseEngine = null;
+            SpanishG2PEngine? spanishEngine = null;
             try
             {
                 japaneseEngine = new G2PEngine(
@@ -67,15 +86,20 @@ namespace DotNetG2P.Multilingual
                 chineseEngine = new ChineseG2PEngine(
                     options.ChineseOptions ?? ChineseG2POptions.Default);
 
+                spanishEngine = new SpanishG2PEngine(
+                    options.SpanishOptions ?? SpanishG2POptions.Default);
+
                 _japaneseEngine = japaneseEngine;
                 _englishEngine = englishEngine;
                 _chineseEngine = chineseEngine;
+                _spanishEngine = spanishEngine;
             }
             catch
             {
                 japaneseEngine?.Dispose();
                 englishEngine?.Dispose();
                 chineseEngine?.Dispose();
+                spanishEngine?.Dispose();
                 throw;
             }
         }
@@ -94,7 +118,7 @@ namespace DotNetG2P.Multilingual
             if (string.IsNullOrWhiteSpace(text))
                 return "";
 
-            var segments = TextSegmenter.Segment(text, _options.DefaultCjkLanguage);
+            var segments = TextSegmenter.Segment(text, _options.DefaultCjkLanguage, _options.DefaultLatinLanguage);
             if (segments.Count == 0)
                 return "";
 
@@ -122,7 +146,7 @@ namespace DotNetG2P.Multilingual
             if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<G2PSegment>();
 
-            var segments = TextSegmenter.Segment(text, _options.DefaultCjkLanguage);
+            var segments = TextSegmenter.Segment(text, _options.DefaultCjkLanguage, _options.DefaultLatinLanguage);
             if (segments.Count == 0)
                 return Array.Empty<G2PSegment>();
 
@@ -183,6 +207,7 @@ namespace DotNetG2P.Multilingual
             _japaneseEngine.Dispose();
             _englishEngine.Dispose();
             _chineseEngine.Dispose();
+            _spanishEngine.Dispose();
         }
 
         /// <summary>
@@ -203,6 +228,9 @@ namespace DotNetG2P.Multilingual
 
                 case Language.Chinese:
                     return _chineseEngine.ToPinyin(segment.Text);
+
+                case Language.Spanish:
+                    return _spanishEngine.ToPhonemes(segment.Text);
 
                 default:
                     return "";

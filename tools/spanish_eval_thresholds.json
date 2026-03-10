@@ -1,0 +1,44 @@
+{
+  "datasets": {
+    "ipa_dict_es_es_sample.tsv": {
+      "base": 0.12,
+      "allophones": 0.12,
+      "no_exceptions": 0.16
+    },
+    "ipa_dict_es_mx_sample.tsv": {
+      "base": 0.12,
+      "allophones": 0.12,
+      "no_exceptions": 0.16
+    },
+    "wikipron_spa_latn_ca_broad_filtered_sample.tsv": {
+      "base": 0.08,
+      "allophones": 0.08,
+      "no_exceptions": 0.12
+    },
+    "wikipron_spa_latn_la_broad_filtered_sample.tsv": {
+      "base": 0.08,
+      "allophones": 0.08,
+      "no_exceptions": 0.12
+    },
+    "ipa_dict_es_es_full.tsv": {
+      "base": 0.12,
+      "allophones": 0.12,
+      "no_exceptions": 0.20
+    },
+    "ipa_dict_es_mx_full.tsv": {
+      "base": 0.12,
+      "allophones": 0.12,
+      "no_exceptions": 0.20
+    },
+    "wikipron_spa_latn_ca_broad_filtered_full.tsv": {
+      "base": 0.08,
+      "allophones": 0.08,
+      "no_exceptions": 0.14
+    },
+    "wikipron_spa_latn_la_broad_filtered_full.tsv": {
+      "base": 0.08,
+      "allophones": 0.08,
+      "no_exceptions": 0.14
+    }
+  }
+}

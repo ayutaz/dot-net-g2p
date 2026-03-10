@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-C#/.NET（Unity対応）向けの日英中多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換をC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
+C#/.NET（Unity対応）向けの日英中西多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、ルールベースのスペイン語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
 
 ## 進捗状況
 
@@ -96,6 +96,42 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - LanguageDetector（Unicode文字種ベース言語判定）、TextSegmenter（2パスセグメント分割）
     - MultilingualG2PEngine（日英中G2Pファサード、IDisposable、lock保護）
     - テスト162件追加
+- **スペイン語G2P (DotNetG2P.Spanish)**: S4実装済み（feature/spanish-g2p ブランチ）
+  - **S1（コアルールエンジン + 基本G2P MVP）**: 完了
+    - プロジェクト構成（csproj, package.json, asmdef, slnx更新）
+    - モデル定義（SpanishIpaPhoneme enum, SpanishPhoneme struct, Dialect enum）
+    - SpanishG2PEngine（sealed class, IDisposable）、SpanishG2POptions
+    - GraphemeToPhonemeRules（ダイグラフ→文脈依存→単純対応の3フェーズ）
+    - SpanishSyllabifier（音節分割、onset maximization）
+    - StressAssigner（ストレス位置決定、アクセント記号 or デフォルトルール）
+    - IPA出力: ToIPA(), ToPhonemes(), ToPhonemeList(), ToSyllables(), バッチAPI
+    - テスト実装済み
+  - **S2（精度向上・異音規則・テキスト正規化）**: 完了
+    - `SpanishNormalizer` をカテゴリ別展開へ整理し、日付・時刻・単位・略語・記号を拡張
+    - 桁区切りと小数点の解釈分離、不正な日付/時刻の安全なフォールバックを追加
+    - `NumberToWords` に文脈依存数詞（`un/uno`, `una`, `veintiún/veintiuna`）を追加
+    - `SpanishAllophoneFeatures` により必須規則と可変規則を切替可能
+    - `spanish_exceptions.master.tsv` + `tools/generate_spanish_exceptions.ps1` による例外辞書運用へ移行
+    - SpanishG2P テスト 227件通過
+  - **S3（X-SAMPA・大規模精度評価・拡張テスト）**: 完了
+    - XSampaConverter、`ToXSampa()`, `ToXSampaWithoutStress()`, `ToXSampaBatch()` を追加
+    - SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests を追加
+    - `ipa-dict / WikiPron` サンプルコーパスと PER 回帰テストを追加
+    - `tools/refresh_spanish_eval_data.ps1` + `tools/DotNetG2P.SpanishEval` + `tools/run_spanish_full_evaluation.ps1` により全量 PER / WER / カテゴリ別集計を追加
+    - 2026-03-09 実測:
+      - `ipa_dict_es_es_full/base` PER `1.69%`, `allophones` PER `1.37%`
+      - `ipa_dict_es_mx_full/base` PER `1.69%`, `allophones` PER `1.37%`
+      - `wikipron_ca_full/base` PER `1.38%`
+      - `wikipron_la_full/base` PER `1.43%`
+    - SpanishG2P テスト 227件通過
+  - **S4（Multilingual統合・パッケージング拡張）**: 完了
+    - `DotNetG2P.Multilingual` に `Language.Spanish` と `DefaultLatinLanguage` を追加
+    - `TextSegmenter` を英語/スペイン語のラテン文字振り分けに対応
+    - `TextSegmenter` を補強し、ASCII Spanish 高頻度語・接尾辞・`güe/güi`、standalone neutral token、CJK marker ベース判定、埋め込み中国語 phrase/char 辞書と日本語語彙ヒントによる純漢字run判定を追加
+    - `TextSegmenter` と `ChineseG2PEngine` の埋め込み中国語辞書共有キャッシュを追加し、純CJK判定時の辞書二重ロードを解消
+    - `MultilingualG2PEngine` に `SpanishG2PEngine` を統合
+    - `MultilingualSpanishTests` / `MultilingualMixedLanguageTests` を追加し、重い Multilingual 統合テストは shared fixture 化
+    - Multilingual テスト 341件通過、代表 Multilingual 回帰 110件通過、Multilingual performance テスト 8件通過
 
 ## ビルド・実行
 
@@ -216,7 +252,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── package.json                 # UPM (com.dotnetg2p.chinese)
 │   │   └── DotNetG2P.Chinese.asmdef     # Unity Assembly Definition
 │   │
-│   └── DotNetG2P.English/              # 英語G2Pパッケージ（独立、Core参照なし）
+│   ├── DotNetG2P.English/              # 英語G2Pパッケージ（独立、Core参照なし）
 │       ├── DotNetG2P.English.csproj     # .NET Standard 2.1
 │       ├── EnglishG2PEngine.cs          # メインAPI (ToPhonemes, ToPhonemeList, LookupWord等)
 │       ├── EnglishG2POptions.cs         # オプション (IncludeStress, EnableLts, EnableNormalization, EnableHomographResolution)
@@ -251,16 +287,38 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       ├── package.json                 # UPM (com.dotnetg2p.english)
 │       └── DotNetG2P.English.asmdef     # Unity Assembly Definition
 │
-│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese依存）
+│   ├── DotNetG2P.Spanish/              # スペイン語G2Pパッケージ（独立、Core参照なし）
+│   │   ├── DotNetG2P.Spanish.csproj     # .NET Standard 2.1
+│   │   ├── SpanishG2PEngine.cs          # メインAPI (ToIPA, ToPhonemes, ToPhonemeList等)
+│   │   ├── SpanishG2POptions.cs         # オプション (Dialect, IncludeStress, EnableAllophones, Separator)
+│   │   ├── Models/
+│   │   │   ├── SpanishIpaPhoneme.cs     # IPA音素enum : byte (28種)
+│   │   │   ├── SpanishPhoneme.cs        # ストレス付き音素 readonly struct
+│   │   │   ├── SpanishPronunciation.cs  # 発音クラス (音素配列ラッパー)
+│   │   │   └── Dialect.cs               # 方言enum : byte (LatinAmerican, Castilian)
+│   │   ├── Rules/
+│   │   │   ├── GraphemeToPhonemeRules.cs # コアG2Pルール（switch文ベース3フェーズ）
+│   │   │   ├── SyllableParser.cs        # 音節分割 (onset maximization)
+│   │   │   ├── StressAssigner.cs        # ストレス位置決定
+│   │   │   └── AllophoneProcessor.cs    # 異音規則 (β,ð,ɣ弱化, 鼻音同化) [S2]
+│   │   ├── Normalization/
+│   │   │   └── SpanishNormalizer.cs     # テキスト正規化 (数値/日付/時刻/単位/略語/記号)
+│   │   ├── Conversion/
+│   │   │   ├── IpaConverter.cs          # IPA変換
+│   │   │   └── XSampaConverter.cs       # X-SAMPA変換 [S3]
+│   │   ├── package.json                 # UPM (com.dotnetg2p.spanish)
+│   │   └── DotNetG2P.Spanish.asmdef     # Unity Assembly Definition
+│   │
+│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese + Spanish依存）
 │       ├── DotNetG2P.Multilingual.csproj # .NET Standard 2.1
-│       ├── Language.cs                  # Language enum (Japanese/English/Chinese)
+│       ├── Language.cs                  # Language enum (Japanese/English/Chinese/Spanish)
 │       ├── ScriptKind.cs               # ScriptKind enum (8種分類、internal)
 │       ├── TextSegment.cs              # 言語タグ付きテキストセグメント
 │       ├── G2PSegment.cs               # G2P結果セグメント
-│       ├── MultilingualG2POptions.cs   # 多言語G2Pオプション
+│       ├── MultilingualG2POptions.cs   # 多言語G2Pオプション（DefaultCjkLanguage / DefaultLatinLanguage）
 │       ├── LanguageDetector.cs         # Unicode文字種ベース言語判定
-│       ├── TextSegmenter.cs            # テキストセグメント分割
-│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中ファサード）
+│       ├── TextSegmenter.cs            # テキストセグメント分割（日英西ラテン文字対応）
+│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中西ファサード）
 │       ├── package.json                # UPM (com.dotnetg2p.multilingual)
 │       └── DotNetG2P.Multilingual.asmdef # Unity Assembly Definition
 │
@@ -329,17 +387,34 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── Normalization/           # 正規化テスト (143件)
 │       │   ├── Homograph/              # 同綴異音語テスト (154件)
 │       │   └── Integration/            # 統合テスト (~42件)
-│       ├── Multilingual/               # 多言語G2Pテスト (308件)
-│       │   ├── LanguageDetectorTests.cs  # 言語判定テスト (29件)
-│       │   ├── TextSegmenterTests.cs     # セグメント分割テスト (30件)
-│       │   ├── MultilingualEngineTests.cs # エンジン統合テスト (28件)
-│       │   ├── MultilingualEdgeCaseTests.cs # エッジケーステスト (25件)
-│       │   ├── MultilingualDisposeTests.cs # Disposeテスト (15件)
-│       │   ├── MultilingualPerformanceTests.cs # パフォーマンステスト (8件)
-│       │   ├── LanguageConsistencyTests.cs # 言語検出一貫性テスト (27件)
-│       │   ├── MultilingualChineseTests.cs # 中国語統合テスト (43件)
-│       │   ├── MixedTextBasicTests.cs    # 混在テキスト基本テスト (54件)
-│       │   └── MixedTextAdvancedTests.cs # 混在テキスト応用テスト (35件)
+│       ├── SpanishG2P/                 # スペイン語G2Pテスト
+│       │   ├── SpanishG2PEngineTests.cs    # エンジン統合テスト [S1]
+│       │   ├── GraphemeToPhonemeRulesTests.cs # G2Pルールテスト [S1]
+│       │   ├── SpanishSyllabifierTests.cs  # 音節分割テスト [S1]
+│       │   ├── StressAssignerTests.cs      # ストレステスト [S1]
+│       │   ├── SpanishIpaTests.cs          # IPA変換テスト [S1]
+│       │   ├── SpanishPhonemeTests.cs      # 音素モデルテスト [S1]
+│       │   ├── SpanishNormalizerTests.cs   # 正規化テスト [S2]
+│       │   ├── AllophoneProcessorTests.cs  # 異音テスト [S2]
+│       │   ├── SpanishXSampaTests.cs       # X-SAMPA変換テスト [S3]
+│       │   ├── SpanishEdgeCaseTests.cs     # エッジケーステスト [S3]
+│       │   ├── SpanishPerformanceTests.cs  # パフォーマンステスト [S3]
+│       │   └── SpanishAccuracyTests.cs     # 精度・回帰テスト [S3]
+│       ├── Multilingual/               # 多言語G2Pテスト（2026-03-10時点 代表110 passed + perf 8 passed）
+│       │   ├── LanguageDetectorTests.cs  # 言語判定テスト
+│       │   ├── TextSegmenterTests.cs     # セグメント分割テスト
+│       │   ├── MultilingualEngineTests.cs # エンジン統合テスト
+│       │   ├── MultilingualEdgeCaseTests.cs # エッジケーステスト
+│       │   ├── MultilingualDisposeTests.cs # Disposeテスト
+│       │   ├── MultilingualPerformanceTests.cs # パフォーマンステスト
+│       │   ├── LanguageConsistencyTests.cs # 言語検出一貫性テスト
+│       │   ├── MultilingualChineseTests.cs # 中国語統合テスト
+│       │   ├── MultilingualSpanishTests.cs # スペイン語統合テスト
+│       │   ├── MultilingualSharedFixture.cs # 重い統合テスト用 shared fixture
+│       │   ├── EmbeddedChineseDictionaryCacheTests.cs # 中国語辞書共有キャッシュ検証
+│       │   ├── MixedTextBasicTests.cs    # 混在テキスト基本テスト
+│       │   ├── MixedTextAdvancedTests.cs # 混在テキスト応用テスト
+│       │   └── MultilingualMixedLanguageTests.cs # 4言語混在回帰テスト
 │       └── Integration/                # 統合テスト
 │           ├── G2PPipelineTests.cs
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）
@@ -348,7 +423,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │
 ├── docs/                                # 技術ドキュメント
 │   ├── chinese-g2p-research.md           # 中国語G2P技術調査
-│   └── chinese-g2p-implementation-plan.md # 中国語G2P実装計画
+│   ├── chinese-g2p-implementation-plan.md # 中国語G2P実装計画
+│   ├── spanish-g2p-research.md           # スペイン語G2P技術調査
+│   └── spanish-g2p-implementation-plan.md # スペイン語G2P実装計画
 │
 └── samples/
     └── DotNetG2P.Console/               # コンソールサンプル (net8.0)
@@ -393,7 +470,7 @@ OpenJTalk用のnaist-jdic辞書フォーマット（IPADIC + アクセント情�
 - **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、Apache-2.0、外部依存なし）
 - **辞書**: naist-jdic（BSD License）
 - **テスト**: xUnit 2.5.3 (net8.0)
-- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.Chinese`, `DotNetG2P.English`, `DotNetG2P.Multilingual`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`, `com.dotnetg2p.chinese`, `com.dotnetg2p.english`, `com.dotnetg2p.multilingual`)
+- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.Chinese`, `DotNetG2P.English`, `DotNetG2P.Spanish`, `DotNetG2P.Multilingual`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`, `com.dotnetg2p.chinese`, `com.dotnetg2p.english`, `com.dotnetg2p.spanish`, `com.dotnetg2p.multilingual`)
 - **CI/CD**: GitHub Actions (ci.yml, release.yml)
 - **ソリューション形式**: .slnx（.NET 10）
 

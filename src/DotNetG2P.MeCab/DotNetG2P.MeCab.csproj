@@ -13,6 +13,9 @@
     <PackageTags>mecab;morphological-analysis;japanese;tokenizer;trie;viterbi;g2p;unity</PackageTags>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\DotNetG2P.Core\DotNetG2P.Core.csproj" />
   </ItemGroup>
 </Project>

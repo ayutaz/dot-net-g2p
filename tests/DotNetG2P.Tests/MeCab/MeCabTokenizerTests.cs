@@ -13,7 +13,10 @@ namespace DotNetG2P.Tests.MeCab
     /// </summary>
     public class MeCabTokenizerTests : IDisposable
     {
-        private static string? DicPath => Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
+        private static string? DicPath =>
+            Environment.GetEnvironmentVariable("NAIST_JDIC_PATH")
+            ?? Environment.GetEnvironmentVariable("DOTNETG2P_NAIST_JDIC_PATH")
+            ?? (NaistJdicLocator.TryResolve(out var path) ? path : null);
         private static bool DictionaryExists => !string.IsNullOrEmpty(DicPath) && Directory.Exists(DicPath);
 
         private readonly MeCabTokenizer? _tokenizer;
@@ -179,6 +182,17 @@ namespace DotNetG2P.Tests.MeCab
             var tokenizer = new MeCabTokenizer(DicPath!);
             tokenizer.Dispose();
             tokenizer.Dispose(); // 二重Dispose
+        }
+
+        [SkippableFact]
+        public void コンストラクタ_パス省略_既定辞書を解決できる()
+        {
+            SkipIfNoDictionary();
+
+            using var tokenizer = new MeCabTokenizer();
+            var tokens = tokenizer.Tokenize("こんにちは");
+
+            Assert.NotEmpty(tokens);
         }
 
         // =====================================================================

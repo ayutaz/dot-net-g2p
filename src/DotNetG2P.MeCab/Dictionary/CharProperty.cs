@@ -98,6 +98,23 @@ namespace DotNetG2P.MeCab.Dictionary
                 throw new FileNotFoundException($"文字種定義ファイルが見つかりません: {filePath}", filePath);
 
             using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return LoadFromStream(stream);
+        }
+
+        /// <summary>
+        /// バイト配列から文字種プロパティを読み込む。WebGL等ファイルシステムが使えない環境向け。
+        /// </summary>
+        /// <param name="data">char.bin のバイト配列</param>
+        public static CharProperty Load(byte[] data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            using var stream = new MemoryStream(data, writable: false);
+            return LoadFromStream(stream);
+        }
+
+        private static CharProperty LoadFromStream(Stream stream)
+        {
             using var reader = new BinaryReader(stream);
 
             // カテゴリ数

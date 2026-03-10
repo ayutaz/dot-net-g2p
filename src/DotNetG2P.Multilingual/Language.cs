@@ -13,5 +13,8 @@ namespace DotNetG2P.Multilingual
 
         /// <summary>中国語</summary>
         Chinese = 2,
+
+        /// <summary>スペイン語</summary>
+        Spanish = 3,
     }
 }

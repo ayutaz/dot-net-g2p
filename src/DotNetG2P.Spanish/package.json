@@ -1,0 +1,25 @@
+{
+  "name": "com.dotnetg2p.spanish",
+  "displayName": "DotNetG2P.Spanish",
+  "version": "1.2.0",
+  "unity": "2021.2",
+  "description": "Spanish Grapheme-to-Phoneme (G2P) library for .NET and Unity. Rule-based IPA conversion with syllabification, stress assignment, and Castilian/Latin American dialect options.",
+  "keywords": [
+    "g2p",
+    "spanish",
+    "tts",
+    "phoneme",
+    "ipa"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {},
+  "author": {
+    "name": "ayutaz"
+  },
+  "documentationUrl": "https://github.com/ayutaz/dot-net-g2p#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ayutaz/dot-net-g2p.git",
+    "directory": "src/DotNetG2P.Spanish"
+  }
+}

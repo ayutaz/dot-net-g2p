@@ -5,7 +5,8 @@
     "DotNetG2P",
     "DotNetG2P.MeCab",
     "DotNetG2P.English",
-    "DotNetG2P.Chinese"
+    "DotNetG2P.Chinese",
+    "DotNetG2P.Spanish"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

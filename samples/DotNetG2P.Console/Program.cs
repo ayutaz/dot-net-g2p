@@ -3,15 +3,20 @@ using DotNetG2P;
 using DotNetG2P.MeCab;
 
 // naist-jdic辞書のパスを指定
-// 環境変数 NAIST_JDIC_PATH または第1引数で辞書パスを指定可能
+// 第1引数を優先し、省略時は環境変数または既定インストール先 (%USERPROFILE%\naist-jdic) を探索
 var dicPath = args.Length > 0
     ? args[0]
-    : Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
+    : null;
 
-if (string.IsNullOrEmpty(dicPath))
+var useDefaultDictionaryResolution = string.IsNullOrEmpty(dicPath);
+var defaultDictionaryAvailable = useDefaultDictionaryResolution
+    && NaistJdicLocator.TryResolve(out _);
+
+if (string.IsNullOrEmpty(dicPath) && !defaultDictionaryAvailable)
 {
     Console.WriteLine("使用方法: DotNetG2P.Console <naist-jdic辞書ディレクトリパス>");
-    Console.WriteLine("  または環境変数 NAIST_JDIC_PATH を設定してください。");
+    Console.WriteLine("  または環境変数 DOTNETG2P_NAIST_JDIC_PATH / NAIST_JDIC_PATH を設定してください。");
+    Console.WriteLine("  既定配置にインストールする場合: pwsh -File tools/install_naist_jdic.ps1");
     Console.WriteLine();
     Console.WriteLine("辞書なしでMoraMappingの動作確認を行います...");
     Console.WriteLine();
@@ -34,7 +39,9 @@ Console.WriteLine("=== DotNetG2P NJDパイプライン動作確認 ===");
 Console.WriteLine();
 
 // デフォルトオプション（全処理有効）で動作確認
-using var tokenizer = new MeCabTokenizer(dicPath);
+using var tokenizer = useDefaultDictionaryResolution
+    ? new MeCabTokenizer()
+    : new MeCabTokenizer(dicPath!);
 using var engine = new G2PEngine(tokenizer);
 
 var samples = new[]
@@ -71,7 +78,9 @@ foreach (var text in samples)
 Console.WriteLine("--- 無声音化OFF ---");
 Console.WriteLine();
 
-using var tokenizer2 = new MeCabTokenizer(dicPath);
+using var tokenizer2 = useDefaultDictionaryResolution
+    ? new MeCabTokenizer()
+    : new MeCabTokenizer(dicPath!);
 var optionsNoUnvoiced = new G2POptions(enableUnvoicedVowel: false);
 using var engine2 = new G2PEngine(tokenizer2, optionsNoUnvoiced);
 

@@ -30,6 +30,8 @@ Desktop.ini
 nul
 temp_*
 test_output.txt
+artifacts/spanish-eval/
+.cache/spanish-eval/
 
 ## Dictionary (large binary)
 open_jtalk_dic_utf_8-*/

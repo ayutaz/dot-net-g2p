@@ -1,0 +1,26 @@
+surface	dialect	category	stress	phonemes	source	note
+y	*	hiato_override	-1	i	curated	Standalone conjunction pronounced as vowel.
+guion	*	hiato_override	1	ɡ i|o n	curated	Prefer hiatus reading.
+truhan	*	hiato_override	1	t ɾ u|a n	curated	Prefer hiatus reading.
+whisky	*	loanword	0	w i s|k i	curated	English loanword.
+wifi	*	loanword	0	w i|f i	curated	English loanword.
+kiwi	*	loanword	0	k i|w i	curated	Loanword with /w/.
+show	*	loanword	0	ʃ o w	curated	English loanword.
+software	*	loanword	1	s o f|w e ɾ	curated	English loanword.
+shampoo	*	loanword	1	ʃ a m|p u	curated	English loanword.
+hockey	*	loanword	0	x o|k e j	curated	Spanish-adapted pronunciation.
+whatsapp	*	loanword	1	w a|s a p	curated	Brand pronunciation.
+sándwich	*	loanword	0	s a n|w i tʃ	curated	Common adapted loanword.
+iceberg	*	loanword	0	i|s e β e r ɡ	curated	Common adapted loanword.
+ketchup	*	loanword	0	k e|tʃ u p	curated	Common adapted loanword.
+croissant	*	loanword	1	k ɾ w a|s a n	curated	Common adapted loanword.
+jetlag	*	loanword	1	x e t|l a ɡ	curated	Common adapted loanword.
+podcast	*	loanword	1	p o d|k a s t	curated	Common adapted loanword.
+méxico	*	proper_noun	0	m e|x i|k o	curated	Historic x -> /x/.
+mexico	*	proper_noun	1	m e|x i|k o	curated	Unaccented form retained for normalization.
+xochimilco	*	proper_noun	2	ʃ o|tʃ i|m i l|k o	curated	Nahuatl-origin x -> /ʃ/.
+wagner	*	proper_noun	0	b a ɡ|n e r	curated	German-origin proper noun adapted with /b/.
+oaxaca	*	proper_noun	1	w a|x a|k a	curated	Nahuatl-origin proper noun.
+ximena	*	proper_noun	1	x i|m e|n a	curated	Conventional x -> /x/.
+yonqui	*	loanword	0	ʝ o n|k i	curated	Adapted loanword.
+google	*	brand	1	ɡ u|ɣ e l	curated	Common brand name adapted in Spanish.

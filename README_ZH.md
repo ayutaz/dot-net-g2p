@@ -6,11 +6,11 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-面向 C#/.NET 的日英中多语言 G2P（Grapheme-to-Phoneme：字素到音素转换）库。
-以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线、基于 CMU 词典的英语 G2P 以及基于 pinyin-data 词典的中文拼音转换，无需依赖 Python 或原生二进制文件即可将多语言文本转换为音素序列。
+面向 C#/.NET 的日英中多语言 + 西班牙语 G2P（Grapheme-to-Phoneme：字素到音素转换）库。
+以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线、基于 CMU 词典的英语 G2P、基于 pinyin-data 词典的中文拼音转换，以及基于规则的西班牙语 G2P，无需依赖 Python 或原生二进制文件即可转换为音素序列。
 
 ```csharp
-using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
+using var engine = new G2PEngine(new MeCabTokenizer());
 
 engine.ToPhonemes("こんにちは");  // => "k o N n i ch i w a"
 engine.ToKana("音声合成");        // => "オンセーゴーセー"
@@ -23,8 +23,12 @@ enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
 using var zhEngine = new ChineseG2PEngine();
 zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 
+// 西班牙语 G2P
+using var esEngine = new SpanishG2PEngine();
+esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
+
 // 日英混合文本
-using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音素，英语部分 => ARPAbet
 ```
 
@@ -36,6 +40,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音
 - [API 参考](#api-参考)
 - [处理管线](#处理管线)
 - [词典准备](#词典准备)
+- [西班牙语评估](#西班牙语评估)
 - [选项配置](#选项配置)
 - [构建](#构建)
 - [线程安全性](#线程安全性)
@@ -50,7 +55,8 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音
 - **可扩展设计** — 通过 `ITokenizer` 接口可替换形态素分析引擎
 - **支持英语 G2P** — CMU 词典（135,000 词）+ Flite LTS 规则进行 OOV 推测、IPA/X-SAMPA 输出、文本规范化、同形异音词解析
 - **支持中文 G2P** — pinyin-data 单字词典（44,000 条）+ phrase-pinyin-data 短语词典（411,000 条），自动多音字解析、声调变调（三声连读、一/不变调）、3 种输出风格、IPA（国际音标）与注音符号（ㄅㄆㄇㄈ）输出
-- **支持日英中混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，无缝处理日英中混合文本
+- **支持西班牙语 G2P** — 提供基于规则的 IPA 转写、音节划分、重音判定、Castilian/Latin American 切换、异音处理选项、文本规范化、例外词典以及全量语料评估工具链。规范化器现已区分千位分隔符与小数点，并对非法日期/时间安全回退
+- **支持日英中西混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，并通过 `DefaultLatinLanguage` 控制英语/西班牙语拉丁文本路由。纯汉字片段会结合 marker、日语词汇提示和内置中文词典进一步判定 JP/ZH，且内置中文词典与 `ChineseG2PEngine` 共享以避免重复常驻
 
 ## 安装
 
@@ -67,7 +73,10 @@ dotnet add package DotNetG2P.English
 # 中文 G2P（拼音转换）
 dotnet add package DotNetG2P.Chinese
 
-# 日英中混合文本支持
+# 西班牙语 G2P
+dotnet add package DotNetG2P.Spanish
+
+# 日英中西混合文本支持
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -79,7 +88,8 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.MeCab` | Apache-2.0 | 自研 MeCab 引擎（无外部依赖） |
 | `DotNetG2P.English` | Apache-2.0 | 英语 G2P 引擎（CMU 词典 + LTS 规则） |
 | `DotNetG2P.Chinese` | Apache-2.0 | 中文 G2P 引擎（pinyin-data 词典 + 声调变调） |
-| `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中混合文本支持） |
+| `DotNetG2P.Spanish` | Apache-2.0 | 西班牙语 G2P 引擎（规则驱动 + 可选异音处理） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中西混合文本支持） |
 
 ### Unity (UPM)
 
@@ -90,10 +100,11 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
-> **注意：** 需要另行准备 naist-jdic 词典。详情请参阅[词典准备](#词典准备)。
+> **注意：** 日语或多语言引擎需要另行准备 naist-jdic 词典。详情请参阅[词典准备](#词典准备)。
 
 ## 快速开始
 
@@ -101,8 +112,8 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 using DotNetG2P;
 using DotNetG2P.MeCab;
 
-// 1. 初始化引擎（指定词典路径）
-using var tokenizer = new MeCabTokenizer("/path/to/naist-jdic");
+// 1. 从默认安装位置或环境变量自动解析词典
+using var tokenizer = new MeCabTokenizer();
 using var engine = new G2PEngine(tokenizer);
 
 // 2. 从文本获取音素序列
@@ -169,10 +180,17 @@ using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
 
-// === 日英中混合文本 ===
+// === 西班牙语 G2P ===
+using DotNetG2P.Spanish;
+
+using var esEngine = new SpanishG2PEngine();
+string esIpa = esEngine.ToIPA("guion");
+// => "ɡiˈon"
+
+// === 日英中西混合文本 ===
 using DotNetG2P.Multilingual;
 
-using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+using var multiEngine = new MultilingualG2PEngine();
 string mixed = multiEngine.ToPhonemes("今日はgood dayです");
 // 日语部分 => 日语音素，英语部分 => ARPAbet 音素
 
@@ -181,9 +199,15 @@ var segments = multiEngine.ToSegments("今日はgood dayです");
 
 // 包含中文文本的情况
 var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
-using var multiZhEngine = new MultilingualG2PEngine("/path/to/naist-jdic", zhOptions);
+using var multiZhEngine = new MultilingualG2PEngine(zhOptions);
 multiZhEngine.ToPhonemes("你好hello");
 // 中文部分 => 拼音，英语部分 => ARPAbet 音素
+
+// 包含西班牙语文本的情况
+var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
+using var multiEsEngine = new MultilingualG2PEngine(esOptions);
+multiEsEngine.ToPhonemes("hola世界");
+// 西班牙语部分 => IPA 音素，日语部分 => 日语音素
 ```
 
 ## API 参考
@@ -246,14 +270,35 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToZhuyinBatch(texts)` | `string[]` | 批量注音转换 |
 | `ToZhuyinBatch(texts, includeTones)` | `string[]` | 批量注音转换（声调控制） |
 
+### SpanishG2PEngine
+
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `ToPhonemes(text)` | `string` | 空格分隔的 IPA 音素序列 |
+| `ToIPA(text)` | `string` | IPA 表记 |
+| `ToPhonemeList(text)` | `IReadOnlyList<SpanishPhoneme>` | 结构化音素列表 |
+| `ToSyllables(word)` | `IReadOnlyList<SpanishSyllable>` | 音节划分结果 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | 批量 IPA 转换 |
+
 ### MultilingualG2PEngine
 
 | 方法 | 返回类型 | 说明 |
 |------|---------|------|
-| `ToPhonemes(text)` | `string` | 日英中混合音素序列 |
+| `ToPhonemes(text)` | `string` | 日英中西混合音素序列 |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 带语言标签的分段 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | 批量分段转换 |
+
+Multilingual 补充说明:
+
+- 拉丁字母 token 以 `DefaultLatinLanguage` 为默认，再根据西班牙语重音字母、`gue/gui/güe/güi` 模式、常见 ASCII 西语词汇和常见后缀在 English / Spanish 间切换
+- 纯汉字片段会结合 `Chinese strong/weak markers`、`Japanese markers`、日语词汇提示以及内置中文 phrase/char 词典进一步判定 JP / ZH
+- 内置中文词典与 `ChineseG2PEngine` 共享，当前测量下 `TextSegmenter` 额外带来的词典常驻约为 `0.02MB`
+- 只有证据不足的歧义纯汉字片段才会回退到 `DefaultCjkLanguage`
+- 截至 2026-03-10 的 Multilingual 回归结果: `341 passed`
+- 代表性 Multilingual 回归子集: `110 passed`
+- `MultilingualPerformanceTests`: `8 passed`
 
 ### 日语音素体系
 
@@ -288,7 +333,21 @@ DotNetG2P 实现了与 [OpenJTalk](https://open-jtalk.sourceforge.net/) 相同�
 
 DotNetG2P 使用 naist-jdic 词典（OpenJTalk 专用 MeCab 词典）进行形态素分析。
 
-### 获取方式
+### 推荐方式
+
+```powershell
+pwsh -File tools/install_naist_jdic.ps1
+```
+
+该脚本会从 OpenJTalk 发布包下载词典，并默认解压到 `%USERPROFILE%\naist-jdic`。
+`MeCabTokenizer()` 与 `MultilingualG2PEngine()` 会按以下顺序自动查找词典：
+
+1. 环境变量 `DOTNETG2P_NAIST_JDIC_PATH`
+2. 环境变量 `NAIST_JDIC_PATH`
+3. `%USERPROFILE%\naist-jdic`
+4. 当前目录下的 `naist-jdic` 或 `open_jtalk_dic_utf_8-1.11`
+
+### 手动准备
 
 1. 从 [Open JTalk 官方网站](https://open-jtalk.sourceforge.net/)下载
 2. 直接使用 pyopenjtalk 或 OpenJTalk 附带的词典目录
@@ -311,7 +370,38 @@ DotNetG2P 使用 naist-jdic 词典（OpenJTalk 专用 MeCab 词典）进行形�
 ```csharp
 var dicPath = Path.Combine(Application.streamingAssetsPath, "naist-jdic");
 using var tokenizer = new MeCabTokenizer(dicPath);
+using var multiEngine = new MultilingualG2PEngine(dicPath);
 ```
+
+## 西班牙语评估
+
+西班牙语 G2P 包含基于 `ipa-dict` 与 `WikiPron` 的全量语料评估管线。
+
+```powershell
+pwsh -File tools/refresh_spanish_eval_data.ps1 -Mode Full
+pwsh -File tools/run_spanish_full_evaluation.ps1 -EnforceThresholds
+```
+
+- 语料输出目录: `artifacts/spanish-eval/corpora`
+- 报告输出目录: `artifacts/spanish-eval/reports/latest`
+- 主要输出:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+截至 2026-03-09 的实测值:
+
+- `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_es_full/allophones`: PER `1.37%`, WER `13.69%`
+- `ipa_dict_es_mx_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_mx_full/allophones`: PER `1.37%`, WER `13.69%`
+- `wikipron_spa_latn_ca_broad_filtered_full/base`: PER `1.38%`, WER `11.14%`
+- `wikipron_spa_latn_la_broad_filtered_full/base`: PER `1.43%`, WER `11.46%`
+
+2026-03-10 的补充回归验证:
+
+- `SpanishG2P`: `227 passed`
+- `SpanishNormalizer` 会将 `1.234` 视为千位分隔整数，并且不会对非法日期/时间做语义展开
 
 ## 选项配置
 
@@ -350,7 +440,13 @@ dotnet test DotNetG2P.slnx
 # 控制台示例（无词典：仅验证 MoraMapping）
 dotnet run --project samples/DotNetG2P.Console
 
-# 控制台示例（有词典：完整 G2P）
+# 将词典安装到默认位置
+pwsh -File tools/install_naist_jdic.ps1
+
+# 控制台示例（自动解析词典：完整 G2P）
+dotnet run --project samples/DotNetG2P.Console
+
+# 控制台示例（显式指定词典路径）
 dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
 
@@ -370,7 +466,8 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 自研 MeCab 引擎 |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | 英语 G2P 引擎 |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | 中文 G2P 引擎 |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎（日英中对应） |
+| **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | 西班牙语 G2P 引擎 |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎（日英中西对应） |
 
 所有组件均以 **Apache-2.0 许可证** 提供。
 有关第三方组件的许可证信息，请参阅 [NOTICE](NOTICE) 文件。

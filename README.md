@@ -6,11 +6,11 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-C#/.NET向け日英中多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換をC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに多言語テキストを音素列に変換します。
+C#/.NET向け日英中多言語 + スペイン語対応 G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、ルールベースのスペイン語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに音素列へ変換します。
 
 ```csharp
-using var engine = new G2PEngine(new MeCabTokenizer("/path/to/naist-jdic"));
+using var engine = new G2PEngine(new MeCabTokenizer());
 
 engine.ToPhonemes("こんにちは");  // => "k o N n i ch i w a"
 engine.ToKana("音声合成");        // => "オンセーゴーセー"
@@ -23,8 +23,12 @@ enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
 using var zhEngine = new ChineseG2PEngine();
 zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 
+// スペイン語G2P
+using var esEngine = new SpanishG2PEngine();
+esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
+
 // 日英混在テキスト
-using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本語音素、英語部分はARPAbet
 ```
 
@@ -36,6 +40,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - [API リファレンス](#api-リファレンス)
 - [処理パイプライン](#処理パイプライン)
 - [辞書の準備](#辞書の準備)
+- [スペイン語評価](#スペイン語評価)
 - [オプション設定](#オプション設定)
 - [ビルド](#ビルド)
 - [スレッドセーフティ](#スレッドセーフティ)
@@ -50,7 +55,8 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - **拡張可能な設計** — `ITokenizer`インターフェースにより形態素解析エンジンを差し替え可能
 - **英語G2P対応** — CMU辞書（135,000語）+ Flite LTSルールによるOOV推定、IPA/X-SAMPA出力、テキスト正規化、同綴異音語解決
 - **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力
-- **日英中混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割により、日英中が混在するテキストをシームレスに処理
+- **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応
+- **日英中西混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、`DefaultLatinLanguage` により英語/スペイン語のラテン文字系セグメントを切り替え可能。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
 
 ## インストール
 
@@ -67,7 +73,10 @@ dotnet add package DotNetG2P.English
 # 中国語G2P（ピンイン変換）
 dotnet add package DotNetG2P.Chinese
 
-# 日英中混在テキスト対応
+# スペイン語G2P
+dotnet add package DotNetG2P.Spanish
+
+# 日英中西混在テキスト対応
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -79,7 +88,8 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.MeCab` | Apache-2.0 | 独自MeCabエンジン（外部依存なし） |
 | `DotNetG2P.English` | Apache-2.0 | 英語G2Pエンジン（CMU辞書 + LTSルール） |
 | `DotNetG2P.Chinese` | Apache-2.0 | 中国語G2Pエンジン（pinyin-data辞書 + 声調変調） |
-| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中混在テキスト対応） |
+| `DotNetG2P.Spanish` | Apache-2.0 | スペイン語G2Pエンジン（ルールベース + 異音処理オプション） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中西混在テキスト対応） |
 
 ### Unity (UPM)
 
@@ -90,10 +100,11 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
-> **Note:** 別途 naist-jdic 辞書が必要です。詳細は[辞書の準備](#辞書の準備)を参照してください。
+> **Note:** 日本語または多言語エンジンでは別途 naist-jdic 辞書が必要です。詳細は[辞書の準備](#辞書の準備)を参照してください。
 
 ## クイックスタート
 
@@ -101,8 +112,8 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 using DotNetG2P;
 using DotNetG2P.MeCab;
 
-// 1. エンジン初期化（辞書パスを指定）
-using var tokenizer = new MeCabTokenizer("/path/to/naist-jdic");
+// 1. 既定インストール先または環境変数から辞書を自動解決
+using var tokenizer = new MeCabTokenizer();
 using var engine = new G2PEngine(tokenizer);
 
 // 2. テキストから音素列を取得
@@ -164,10 +175,21 @@ using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
 
-// === 日英中混在テキスト ===
+// === スペイン語G2P ===
+using DotNetG2P.Spanish;
+
+using var esEngine = new SpanishG2PEngine();
+string esIpa = esEngine.ToIPA("guion");
+// => "ɡiˈon"
+
+using var esAlloEngine = new SpanishG2PEngine(new SpanishG2POptions(enableAllophones: true));
+string esAllo = esAlloEngine.ToIPA("uva");
+// => "ˈuβa"
+
+// === 日英中西混在テキスト ===
 using DotNetG2P.Multilingual;
 
-using var multiEngine = new MultilingualG2PEngine("/path/to/naist-jdic");
+using var multiEngine = new MultilingualG2PEngine();
 string mixed = multiEngine.ToPhonemes("今日はgood dayです");
 // 日本語部分→日本語音素、英語部分→ARPAbet音素
 
@@ -176,9 +198,15 @@ var segments = multiEngine.ToSegments("今日はgood dayです");
 
 // 中国語テキストを含む場合
 var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
-using var multiZhEngine = new MultilingualG2PEngine("/path/to/naist-jdic", zhOptions);
+using var multiZhEngine = new MultilingualG2PEngine(zhOptions);
 multiZhEngine.ToPhonemes("你好hello");
 // 中国語部分→ピンイン、英語部分→ARPAbet音素
+
+// スペイン語テキストを含む場合
+var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
+using var multiEsEngine = new MultilingualG2PEngine(esOptions);
+multiEsEngine.ToPhonemes("hola世界");
+// スペイン語部分→IPA音素、日本語部分→日本語音素
 ```
 
 ## API リファレンス
@@ -241,14 +269,35 @@ multiZhEngine.ToPhonemes("你好hello");
 | `ToZhuyinBatch(texts)` | `string[]` | バッチ注音変換 |
 | `ToZhuyinBatch(texts, includeTones)` | `string[]` | バッチ注音変換（声調制御） |
 
+### SpanishG2PEngine
+
+| メソッド | 戻り値型 | 説明 |
+|---------|---------|------|
+| `ToPhonemes(text)` | `string` | スペース区切りIPA音素列 (`"ˈb e ɾ ˈɡ w e n s a"` のような形式) |
+| `ToIPA(text)` | `string` | IPA表記 |
+| `ToPhonemeList(text)` | `IReadOnlyList<SpanishPhoneme>` | 構造化音素リスト |
+| `ToSyllables(word)` | `IReadOnlyList<SpanishSyllable>` | 音節分割結果 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
+
 ### MultilingualG2PEngine
 
 | メソッド | 戻り値型 | 説明 |
 |---------|---------|------|
-| `ToPhonemes(text)` | `string` | 日英中混在音素列 |
+| `ToPhonemes(text)` | `string` | 日英中西混在音素列 |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 言語タグ付きセグメント |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | バッチセグメント変換 |
+
+Multilingual の補足:
+
+- ラテン文字列は `DefaultLatinLanguage` を既定にしつつ、アクセント付きスペイン語文字、`güe/güi`、高頻度 ASCII Spanish 語彙、代表的な接尾辞で English / Spanish を切り替えます
+- 純漢字 run は `Chinese strong/weak markers`、`Japanese markers`、日本語語彙ヒント、埋め込み中国語 phrase/char 辞書を使って JP / ZH を補強判定します
+- 埋め込み中国語辞書は `ChineseG2PEngine` と共有され、`TextSegmenter` 単独の追加辞書常駐は実測で約 `0.02MB` です
+- それでも根拠が弱い曖昧な純漢字 run だけ `DefaultCjkLanguage` にフォールバックします
+- 2026-03-10 時点の Multilingual 回帰: `341 passed`
+- 代表 Multilingual 回帰: `110 passed`
+- `MultilingualPerformanceTests`: `8 passed`
 
 ### 日本語音素体系
 
@@ -283,7 +332,21 @@ DotNetG2Pは[OpenJTalk](https://open-jtalk.sourceforge.net/)と同等の6段階N
 
 DotNetG2Pは形態素解析にnaist-jdic辞書（OpenJTalk用MeCab辞書）を使用します。
 
-### 入手方法
+### 推奨手順
+
+```powershell
+pwsh -File tools/install_naist_jdic.ps1
+```
+
+上記スクリプトは OpenJTalk 配布物から辞書をダウンロードし、既定で `%USERPROFILE%\naist-jdic` に展開します。
+`MeCabTokenizer()` と `MultilingualG2PEngine()` は次の順で辞書を自動探索します。
+
+1. 環境変数 `DOTNETG2P_NAIST_JDIC_PATH`
+2. 環境変数 `NAIST_JDIC_PATH`
+3. `%USERPROFILE%\naist-jdic`
+4. カレントディレクトリ配下の `naist-jdic` または `open_jtalk_dic_utf_8-1.11`
+
+### 手動で用意する場合
 
 1. [Open JTalk公式サイト](https://open-jtalk.sourceforge.net/)からダウンロード
 2. pyopenjtalkやOpenJTalkに同梱の辞書ディレクトリをそのまま使用
@@ -306,7 +369,38 @@ Unityでは `StreamingAssets` フォルダに辞書ファイルを配置し、`A
 ```csharp
 var dicPath = Path.Combine(Application.streamingAssetsPath, "naist-jdic");
 using var tokenizer = new MeCabTokenizer(dicPath);
+using var multiEngine = new MultilingualG2PEngine(dicPath);
 ```
+
+## スペイン語評価
+
+スペイン語G2Pには、`ipa-dict` と `WikiPron` を使った全量評価パイプラインが含まれます。
+
+```powershell
+pwsh -File tools/refresh_spanish_eval_data.ps1 -Mode Full
+pwsh -File tools/run_spanish_full_evaluation.ps1 -EnforceThresholds
+```
+
+- コーパス出力先: `artifacts/spanish-eval/corpora`
+- レポート出力先: `artifacts/spanish-eval/reports/latest`
+- 主な出力:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+2026-03-09 時点の実測値:
+
+- `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_es_full/allophones`: PER `1.37%`, WER `13.69%`
+- `ipa_dict_es_mx_full/base`: PER `1.69%`, WER `16.49%`
+- `ipa_dict_es_mx_full/allophones`: PER `1.37%`, WER `13.69%`
+- `wikipron_spa_latn_ca_broad_filtered_full/base`: PER `1.38%`, WER `11.14%`
+- `wikipron_spa_latn_la_broad_filtered_full/base`: PER `1.43%`, WER `11.46%`
+
+追加の回帰確認（2026-03-10）:
+
+- `SpanishG2P`: `227 passed`
+- `SpanishNormalizer` は `1.234` を千区切りとして扱い、不正な日付/時刻は意味展開せず安全にフォールバック
 
 ## オプション設定
 
@@ -345,7 +439,13 @@ dotnet test DotNetG2P.slnx
 # コンソールサンプル（辞書なし: MoraMappingのみ確認）
 dotnet run --project samples/DotNetG2P.Console
 
-# コンソールサンプル（辞書あり: フルG2P）
+# 辞書を既定場所にインストール
+pwsh -File tools/install_naist_jdic.ps1
+
+# コンソールサンプル（辞書自動解決: フルG2P）
+dotnet run --project samples/DotNetG2P.Console
+
+# コンソールサンプル（辞書パスを明示）
 dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 ```
 
@@ -365,7 +465,8 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 独自MeCabエンジン |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | 英語G2Pエンジン |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | 中国語G2Pエンジン |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中対応） |
+| **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | スペイン語G2Pエンジン |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中西対応） |
 
 全コンポーネントが**Apache-2.0ライセンス**で利用可能です。
 サードパーティコンポーネントのライセンスについては [NOTICE](NOTICE) ファイルを参照してください。

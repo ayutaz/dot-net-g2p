@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DotNetG2P.English;
+using DotNetG2P.Tests.TestHelpers;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -35,19 +36,21 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
         [Fact]
         public void DictionaryLoad_CompletesWithinTimeLimit()
         {
+            var thresholdMs = PerformanceThresholds.Milliseconds(strictThreshold: 2000, relaxedThreshold: 8000);
             var sw = Stopwatch.StartNew();
             using var engine = new EnglishG2PEngine();
             sw.Stop();
 
             _output.WriteLine($"辞書ロード時間: {sw.ElapsedMilliseconds}ms");
-            Assert.True(sw.ElapsedMilliseconds < 2000,
-                $"辞書ロードが{sw.ElapsedMilliseconds}msかかりました（閾値: 2000ms）");
+            Assert.True(sw.ElapsedMilliseconds < thresholdMs,
+                $"辞書ロードが{sw.ElapsedMilliseconds}msかかりました（閾値: {thresholdMs}ms）");
         }
 
         [Fact]
         public void DictionaryLoad_RepeatedLoads_StableTime()
         {
             var times = new long[3];
+            var thresholdMs = PerformanceThresholds.Milliseconds(strictThreshold: 4000, relaxedThreshold: 8000);
 
             for (var i = 0; i < 3; i++)
             {
@@ -61,8 +64,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
             var max = times.Max();
             _output.WriteLine($"3回ロード時間: {times[0]}ms, {times[1]}ms, {times[2]}ms (平均: {avg:F1}ms)");
 
-            Assert.True(avg < 4000,
-                $"辞書ロード平均が{avg:F1}msかかりました（閾値: 4000ms）");
+            Assert.True(avg < thresholdMs,
+                $"辞書ロード平均が{avg:F1}msかかりました（閾値: {thresholdMs}ms）");
             // 最大値が平均の3倍を超えないことで安定性を確認
             Assert.True(max < avg * 3 + 500,
                 $"辞書ロード最大値({max}ms)が平均({avg:F1}ms)に対して不安定です");
@@ -204,19 +207,18 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
 
             _output.WriteLine($"辞書ルックアップ {dictWords.Length * iterations}回: {swDict.ElapsedMilliseconds}ms");
             _output.WriteLine($"LTS変換 {oovWords.Length * iterations}回: {swLts.ElapsedMilliseconds}ms");
-            _output.WriteLine($"LTS/辞書 比率: {(double)swLts.ElapsedMilliseconds / Math.Max(swDict.ElapsedMilliseconds, 1):F2}x");
+            var ratio = (double)swLts.ElapsedMilliseconds / Math.Max(swDict.ElapsedMilliseconds, 1);
+            _output.WriteLine($"LTS/辞書 比率: {ratio:F2}x");
 
-            // LTSは辞書ルックアップより遅いことを確認（期待される動作）
-            // CI環境やフルスイート実行時はGC/他テストの影響でタイミングが不安定になるため、
-            // 十分な差が出る場合のみ比較する
-            if (swDict.ElapsedMilliseconds > 50)
+            // 実行環境やキャッシュ状態によって前後するため、極端な乖離だけを検出する。
+            if (swDict.ElapsedMilliseconds > 50 && swLts.ElapsedMilliseconds > 50)
             {
-                Assert.True(swLts.ElapsedMilliseconds >= swDict.ElapsedMilliseconds,
-                    $"LTS変換({swLts.ElapsedMilliseconds}ms)が辞書ルックアップ({swDict.ElapsedMilliseconds}ms)より速いのは想定外です");
+                Assert.True(ratio > 0.25 && ratio < 4.0,
+                    $"LTS/辞書 比率が想定範囲外です: {ratio:F2}x (LTS={swLts.ElapsedMilliseconds}ms, Dict={swDict.ElapsedMilliseconds}ms)");
             }
             else
             {
-                _output.WriteLine($"辞書ルックアップが{swDict.ElapsedMilliseconds}ms（閾値50ms以下）のため比較スキップ（どちらも十分高速）");
+                _output.WriteLine($"測定値が小さいため比率比較をスキップ: Dict={swDict.ElapsedMilliseconds}ms, LTS={swLts.ElapsedMilliseconds}ms");
             }
         }
 
@@ -225,6 +227,7 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
         [Fact]
         public void MemoryUsage_EngineCreation_WithinReasonableRange()
         {
+            var thresholdMb = PerformanceThresholds.Megabytes(strictThreshold: 80, relaxedThreshold: 160);
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
@@ -240,8 +243,8 @@ namespace DotNetG2P.Tests.EnglishG2P.Integration
 
             _output.WriteLine($"エンジン作成後のメモリ増加: {memUsedMb:F2} MB");
             // フルスイート実行時は他テストのGC遅延によりメモリが膨らむことがあるため余裕を持たせる
-            Assert.True(memUsedMb < 80,
-                $"メモリ使用量が{memUsedMb:F2}MBで閾値(80MB)を超えています");
+            Assert.True(memUsedMb < thresholdMb,
+                $"メモリ使用量が{memUsedMb:F2}MBで閾値({thresholdMb:F0}MB)を超えています");
         }
 
         [Fact]

@@ -3,13 +3,14 @@
   "displayName": "DotNetG2P.Multilingual",
   "version": "1.2.0",
   "unity": "2021.2",
-  "description": "Multilingual G2P engine combining Japanese, English, and Chinese grapheme-to-phoneme support with automatic language detection.",
+  "description": "Multilingual G2P engine combining Japanese, English, Chinese, and Spanish grapheme-to-phoneme support with automatic language detection.",
   "keywords": [
     "g2p",
     "multilingual",
     "japanese",
     "english",
     "chinese",
+    "spanish",
     "pinyin",
     "mandarin",
     "tts",
@@ -20,7 +21,8 @@
     "com.dotnetg2p.core": "1.2.0",
     "com.dotnetg2p.mecab": "1.2.0",
     "com.dotnetg2p.english": "1.2.0",
-    "com.dotnetg2p.chinese": "0.1.0"
+    "com.dotnetg2p.chinese": "0.1.0",
+    "com.dotnetg2p.spanish": "1.2.0"
   },
   "author": {
     "name": "ayutaz"

@@ -4,6 +4,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
+using DotNetG2P.Chinese;
 
 namespace DotNetG2P.Multilingual
 {
@@ -17,11 +18,56 @@ namespace DotNetG2P.Multilingual
         private const byte LangJapanese = 1;  // Language.Japanese
         private const byte LangEnglish = 2;   // Language.English
         private const byte LangChinese = 3;   // Language.Chinese
+        private const byte LangSpanish = 4;   // Language.Spanish
+        private static readonly string[] s_spanishWordSignals =
+        {
+            "adios", "amigo", "amigos", "amiga", "amigas", "buenas", "buenos",
+            "dias", "gracias", "hasta", "hola", "luego", "mundo", "para",
+            "porque", "quiero", "vamos", "gratis", "seguro", "senor", "senora",
+            "senorita", "casa", "comida", "familia", "trabajo", "tiempo", "wifi"
+        };
+
+        private static readonly string[] s_spanishSuffixSignals =
+        {
+            "cion", "ciones", "mente", "ando", "iendo", "ados", "adas",
+            "ado", "ada", "idos", "idas", "ido", "ida", "ista", "istas",
+            "ismo", "ismos", "anza", "anzas", "oso", "osa", "osos", "osas"
+        };
+
+        private static readonly string[] s_englishWordSignals =
+        {
+            "api", "example", "free", "good", "hello", "known", "night",
+            "openai", "test", "today", "tomorrow", "well", "world"
+        };
+
+        private static readonly char[] s_chineseStrongMarkers =
+        {
+            '这', '们', '说', '话', '吗', '边', '门', '电', '车', '书',
+            '欢', '谢', '气', '医', '网'
+        };
+
+        private static readonly char[] s_chineseWeakMarkers =
+        {
+            '个', '为', '开', '关', '东', '乐', '习', '飞', '广', '后', '发',
+            '经', '听'
+        };
+
+        private static readonly char[] s_japaneseMarkers =
+        {
+            '駅', '円', '気', '込', '働', '畑', '栃', '辻', '峠', '栄', '覚', '団',
+            '広', '転', '読', '売', '辺'
+        };
+
+        private static readonly string[] s_japaneseWordSignals =
+        {
+            "東京", "東京都", "大阪", "大阪府", "京都", "北海道", "名古屋", "日本語",
+            "株式会社", "新宿", "渋谷", "山手線", "電車", "地下鉄", "改札", "ホーム"
+        };
 
         /// <summary>テキストを言語セグメントに分割する（後方互換: CJK漢字はJapanese扱い）。</summary>
         public static IReadOnlyList<TextSegment> Segment(string text)
         {
-            return Segment(text, Language.Japanese);
+            return Segment(text, Language.Japanese, Language.English);
         }
 
         /// <summary>テキストを言語セグメントに分割する。</summary>
@@ -29,8 +75,20 @@ namespace DotNetG2P.Multilingual
         /// <param name="defaultCjkLanguage">CJK漢字のデフォルト言語（周囲にかな文字がない場合に使用）</param>
         public static IReadOnlyList<TextSegment> Segment(string text, Language defaultCjkLanguage)
         {
+            return Segment(text, defaultCjkLanguage, Language.English);
+        }
+
+        /// <summary>テキストを言語セグメントに分割する。</summary>
+        /// <param name="text">入力テキスト</param>
+        /// <param name="defaultCjkLanguage">CJK漢字のデフォルト言語（周囲にかな文字がない場合に使用）</param>
+        /// <param name="defaultLatinLanguage">ラテン文字列のデフォルト言語</param>
+        public static IReadOnlyList<TextSegment> Segment(string text, Language defaultCjkLanguage, Language defaultLatinLanguage)
+        {
             if (string.IsNullOrEmpty(text))
                 return Array.Empty<TextSegment>();
+
+            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish)
+                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English or Spanish.");
 
             int len = text.Length;
 
@@ -64,9 +122,9 @@ namespace DotNetG2P.Multilingual
                 byte defaultCjkByte = defaultCjkLanguage == Language.Chinese ? LangChinese
                                     : defaultCjkLanguage == Language.English ? LangEnglish
                                     : LangJapanese;
+                byte defaultLatinByte = defaultLatinLanguage == Language.Spanish ? LangSpanish : LangEnglish;
 
-                // まず、言語確定文字(Japanese/English)を直接割り当て
-                // アポストロフィとハイフンは英語文字間では英語に含める
+                // まず、日本語確定文字を直接割り当てる。
                 for (int i = 0; i < len; i++)
                 {
                     var kind = kinds[i];
@@ -74,10 +132,29 @@ namespace DotNetG2P.Multilingual
                     {
                         languages[i] = LangJapanese;
                     }
-                    else if (kind == ScriptKind.English || kind == ScriptKind.Latin)
+                }
+
+                // 次に、連続するラテン文字列を語単位で English / Spanish に振り分ける。
+                for (int i = 0; i < len;)
+                {
+                    if (!IsLatinScript(kinds[i]))
                     {
-                        languages[i] = LangEnglish;
+                        i++;
+                        continue;
                     }
+
+                    int start = i;
+                    bool hasLatinExtended = false;
+                    while (i < len && IsLatinScript(kinds[i]))
+                    {
+                        if (kinds[i] == ScriptKind.Latin)
+                            hasLatinExtended = true;
+                        i++;
+                    }
+
+                    byte latinLanguage = ResolveLatinLanguage(text, start, i - start, defaultLatinByte, hasLatinExtended);
+                    for (int j = start; j < i; j++)
+                        languages[j] = latinLanguage;
                 }
 
                 // CJKIdeograph文字の言語割り当て:
@@ -95,7 +172,7 @@ namespace DotNetG2P.Multilingual
                                 languages[i] = LangJapanese;
                         }
                         // 英語等の確定文字でかなチェーンをリセット
-                        if (kinds[i] == ScriptKind.English || kinds[i] == ScriptKind.Latin)
+                        if (IsLatinScript(kinds[i]))
                             lastKana = LangNone;
                     }
 
@@ -109,17 +186,26 @@ namespace DotNetG2P.Multilingual
                             if (lastKana == LangJapanese)
                                 languages[i] = LangJapanese;
                         }
-                        if (kinds[i] == ScriptKind.English || kinds[i] == ScriptKind.Latin)
+                        if (IsLatinScript(kinds[i]))
                             lastKana = LangNone;
                     }
 
-                    // 残りのCJKIdeograph（前後にかながない）にデフォルト言語を割り当て
-                    for (int i = 0; i < len; i++)
+                    // 残りのCJKIdeograph（前後にかながない）を連続run単位で解決する
+                    for (int i = 0; i < len;)
                     {
-                        if (kinds[i] == ScriptKind.CJKIdeograph && languages[i] == LangNone)
+                        if (kinds[i] != ScriptKind.CJKIdeograph || languages[i] != LangNone)
                         {
-                            languages[i] = defaultCjkByte;
+                            i++;
+                            continue;
                         }
+
+                        int start = i;
+                        while (i < len && kinds[i] == ScriptKind.CJKIdeograph && languages[i] == LangNone)
+                            i++;
+
+                        byte resolved = ResolveCjkIdeographLanguage(text, start, i - start, defaultCjkByte);
+                        for (int j = start; j < i; j++)
+                            languages[j] = resolved;
                     }
                 }
 
@@ -154,16 +240,16 @@ namespace DotNetG2P.Multilingual
                         nextLangs[i] = lastLang;
                     }
 
-                    // アポストロフィ・ハイフン処理: 前後が英語なら英語に含める
+                    // アポストロフィ・ハイフン処理: 前後が同一ラテン言語ならそのセグメントに含める
                     for (int i = 0; i < len; i++)
                     {
                         if (kinds[i] == ScriptKind.Punctuation && (text[i] == '\'' || text[i] == '-'))
                         {
                             byte prev = prevLangs[i];
                             byte next = nextLangs[i];
-                            if (prev == LangEnglish && next == LangEnglish)
+                            if (prev == next && IsLatinLanguage(prev))
                             {
-                                languages[i] = LangEnglish;
+                                languages[i] = prev;
                             }
                         }
                     }
@@ -196,7 +282,7 @@ namespace DotNetG2P.Multilingual
                             else if (next != LangNone)
                                 languages[i] = next;
                             else
-                                languages[i] = LangJapanese; // デフォルト
+                                languages[i] = ResolveStandaloneDigitLanguage(text[i], defaultCjkByte, defaultLatinByte);
                         }
                     }
 
@@ -270,7 +356,7 @@ namespace DotNetG2P.Multilingual
                             if (next != LangNone)
                                 languages[i] = next;
                             else
-                                languages[i] = LangJapanese; // 全て記号等のみの場合のデフォルト
+                                languages[i] = ResolveStandaloneNeutralLanguage(kinds[i], text[i], defaultCjkByte, defaultLatinByte);
                         }
                     }
                 }
@@ -333,8 +419,286 @@ namespace DotNetG2P.Multilingual
             {
                 case LangJapanese: return Language.Japanese;
                 case LangChinese: return Language.Chinese;
+                case LangSpanish: return Language.Spanish;
                 default: return Language.English;
             }
+        }
+
+        private static bool IsLatinScript(ScriptKind kind)
+        {
+            return kind == ScriptKind.English || kind == ScriptKind.Latin;
+        }
+
+        private static bool IsLatinLanguage(byte language)
+        {
+            return language == LangEnglish || language == LangSpanish;
+        }
+
+        private static byte ResolveLatinLanguage(string text, int start, int length, byte defaultLatinByte, bool hasLatinExtended)
+        {
+            if (defaultLatinByte == LangSpanish)
+                return LangSpanish;
+
+            ReadOnlySpan<char> token = text.AsSpan(start, length);
+
+            if (ContainsExplicitSpanishCharacter(token) || ContainsSpanishDiaeresisPattern(token))
+                return LangSpanish;
+
+            if (!hasLatinExtended && LooksLikeSpanishAsciiToken(token))
+                return LangSpanish;
+
+            return defaultLatinByte;
+        }
+
+        private static bool ContainsExplicitSpanishCharacter(ReadOnlySpan<char> token)
+        {
+            for (int i = 0; i < token.Length; i++)
+            {
+                switch (token[i])
+                {
+                    case '\u00C1':
+                    case '\u00C9':
+                    case '\u00CD':
+                    case '\u00D1':
+                    case '\u00D3':
+                    case '\u00DA':
+                    case '\u00E1':
+                    case '\u00E9':
+                    case '\u00ED':
+                    case '\u00F1':
+                    case '\u00F3':
+                    case '\u00FA':
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool ContainsSpanishDiaeresisPattern(ReadOnlySpan<char> token)
+        {
+            for (int i = 1; i + 1 < token.Length; i++)
+            {
+                if (token[i] != '\u00DC' && token[i] != '\u00FC')
+                    continue;
+
+                char prev = token[i - 1];
+                char next = token[i + 1];
+                if ((prev == 'g' || prev == 'G') &&
+                    (next == 'e' || next == 'E' || next == 'i' || next == 'I'))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool LooksLikeSpanishAsciiToken(ReadOnlySpan<char> token)
+        {
+            if (token.Length < 2 || IsLikelyAcronym(token))
+                return false;
+
+            string lower = new string(token).ToLowerInvariant();
+            if (Array.IndexOf(s_englishWordSignals, lower) >= 0)
+                return false;
+
+            int score = 0;
+
+            if (Array.IndexOf(s_spanishWordSignals, lower) >= 0)
+                score += 4;
+
+            for (int i = 0; i < s_spanishSuffixSignals.Length; i++)
+            {
+                if (lower.EndsWith(s_spanishSuffixSignals[i], StringComparison.Ordinal))
+                {
+                    score += 2;
+                    break;
+                }
+            }
+
+            if (lower.Contains("ll", StringComparison.Ordinal) || lower.Contains("rr", StringComparison.Ordinal))
+                score += 1;
+
+            if (lower.Contains("que", StringComparison.Ordinal) ||
+                lower.Contains("qui", StringComparison.Ordinal) ||
+                lower.Contains("gue", StringComparison.Ordinal) ||
+                lower.Contains("gui", StringComparison.Ordinal))
+            {
+                score += 1;
+            }
+
+            return score >= 3;
+        }
+
+        private static bool IsLikelyAcronym(ReadOnlySpan<char> token)
+        {
+            if (token.Length == 0 || token.Length > 6)
+                return false;
+
+            bool hasLetter = false;
+            for (int i = 0; i < token.Length; i++)
+            {
+                char c = token[i];
+                if (c >= 'A' && c <= 'Z')
+                {
+                    hasLetter = true;
+                    continue;
+                }
+
+                if (c >= '0' && c <= '9')
+                    continue;
+
+                return false;
+            }
+
+            return hasLetter;
+        }
+
+        private static byte ResolveCjkIdeographLanguage(string text, int start, int length, byte defaultCjkByte)
+        {
+            ReadOnlySpan<char> token = text.AsSpan(start, length);
+
+            if (ContainsAny(token, s_chineseStrongMarkers) || CountMarkers(token, s_chineseWeakMarkers) >= 2)
+                return LangChinese;
+
+            if (ContainsAny(token, s_japaneseMarkers))
+                return LangJapanese;
+
+            if (ContainsAnyWordSignal(token, s_japaneseWordSignals))
+                return LangJapanese;
+
+            int chineseLexicalScore = ComputeChineseLexicalScore(token);
+            if (ShouldPreferChineseLexically(token, chineseLexicalScore, defaultCjkByte))
+                return LangChinese;
+
+            return defaultCjkByte;
+        }
+
+        private static bool ContainsAny(ReadOnlySpan<char> token, ReadOnlySpan<char> markers)
+        {
+            for (int i = 0; i < token.Length; i++)
+            {
+                if (markers.IndexOf(token[i]) >= 0)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static int CountMarkers(ReadOnlySpan<char> token, ReadOnlySpan<char> markers)
+        {
+            int count = 0;
+            for (int i = 0; i < token.Length; i++)
+            {
+                if (markers.IndexOf(token[i]) >= 0)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static bool ContainsAnyWordSignal(ReadOnlySpan<char> token, string[] candidates)
+        {
+            string surface = new string(token);
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (surface.Contains(candidates[i], StringComparison.Ordinal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool ShouldPreferChineseLexically(ReadOnlySpan<char> token, int chineseLexicalScore, byte defaultCjkByte)
+        {
+            if (chineseLexicalScore < 3)
+                return false;
+
+            if (defaultCjkByte == LangChinese)
+                return true;
+
+            // Shared short kanji compounds such as "世界" are common in both Japanese and Chinese.
+            // When Japanese is the default, only override on longer lexical evidence.
+            return token.Length >= 3 && chineseLexicalScore >= 4;
+        }
+
+        private static int ComputeChineseLexicalScore(ReadOnlySpan<char> token)
+        {
+            int score = 0;
+            string surface = new string(token);
+
+            int coveredChars = ComputeChinesePhraseCoverage(surface);
+            if (coveredChars == surface.Length && surface.Length >= 2)
+                score += 4;
+            else if (coveredChars >= Math.Max(2, surface.Length - 1))
+                score += 3;
+            else if (coveredChars * 2 >= surface.Length && coveredChars > 0)
+                score += 1;
+
+            if (AllCharsHaveChineseReadings(token))
+                score += 1;
+
+            return score;
+        }
+
+        private static int ComputeChinesePhraseCoverage(string surface)
+        {
+            var phraseDictionary = EmbeddedChineseDictionaryCache.TryGetPhraseDictionary();
+            if (phraseDictionary == null || surface.Length < 2)
+                return 0;
+
+            int covered = 0;
+            for (int i = 0; i < surface.Length;)
+            {
+                int matchedLength = phraseDictionary.FindLongestMatch(surface, i, out _);
+                if (matchedLength >= 2)
+                {
+                    covered += matchedLength;
+                    i += matchedLength;
+                    continue;
+                }
+
+                i++;
+            }
+
+            return covered;
+        }
+
+        private static bool AllCharsHaveChineseReadings(ReadOnlySpan<char> token)
+        {
+            var charDictionary = EmbeddedChineseDictionaryCache.TryGetCharDictionary();
+            if (charDictionary == null || token.IsEmpty)
+                return false;
+
+            for (int i = 0; i < token.Length; i++)
+            {
+                if (!charDictionary.TryLookup(token[i], out _))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static byte ResolveStandaloneDigitLanguage(char c, byte defaultCjkByte, byte defaultLatinByte)
+        {
+            if (c >= '\uFF10' && c <= '\uFF19')
+                return defaultCjkByte;
+
+            return defaultLatinByte;
+        }
+
+        private static byte ResolveStandaloneNeutralLanguage(ScriptKind kind, char c, byte defaultCjkByte, byte defaultLatinByte)
+        {
+            if (kind == ScriptKind.Punctuation)
+            {
+                if (c >= '\uFF01' && c <= '\uFF5E')
+                    return defaultCjkByte;
+
+                return defaultLatinByte;
+            }
+
+            return defaultCjkByte;
         }
     }
 }

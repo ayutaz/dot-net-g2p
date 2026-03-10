@@ -14,7 +14,7 @@ namespace DotNetG2P.Tests.MeCab
         [Fact]
         public void コンストラクタ_nullパス_ArgumentNullException()
         {
-            Assert.Throws<ArgumentNullException>(() => new MeCabTokenizer(null!));
+            Assert.Throws<ArgumentNullException>(() => new MeCabTokenizer((string)null!));
         }
 
         [Fact]
