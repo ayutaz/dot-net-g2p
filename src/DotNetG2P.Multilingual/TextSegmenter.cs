@@ -9,7 +9,7 @@ using DotNetG2P.Chinese;
 namespace DotNetG2P.Multilingual
 {
     /// <summary>
-    /// 日英混在テキストを言語タグ付きセグメントに分割する。
+    /// 多言語混在テキストを言語タグ付きセグメントに分割する。
     /// </summary>
     public static class TextSegmenter
     {

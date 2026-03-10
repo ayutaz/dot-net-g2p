@@ -28,6 +28,32 @@ namespace DotNetG2P.Tests.FrenchG2P
         [InlineData(FrenchIpaPhoneme.Zh, "\u0292")]           // ʒ
         [InlineData(FrenchIpaPhoneme.R, "\u0281")]            // ʁ
         [InlineData(FrenchIpaPhoneme.Ny, "\u0272")]           // ɲ
+        // 半母音
+        [InlineData(FrenchIpaPhoneme.J, "j")]
+        [InlineData(FrenchIpaPhoneme.W, "w")]
+        [InlineData(FrenchIpaPhoneme.Uj, "\u0265")]            // ɥ
+        // 閉鎖音
+        [InlineData(FrenchIpaPhoneme.P, "p")]
+        [InlineData(FrenchIpaPhoneme.B, "b")]
+        [InlineData(FrenchIpaPhoneme.T, "t")]
+        [InlineData(FrenchIpaPhoneme.D, "d")]
+        [InlineData(FrenchIpaPhoneme.K, "k")]
+        [InlineData(FrenchIpaPhoneme.G, "\u0261")]             // ɡ (U+0261)
+        // 摩擦音
+        [InlineData(FrenchIpaPhoneme.F, "f")]
+        [InlineData(FrenchIpaPhoneme.V, "v")]
+        [InlineData(FrenchIpaPhoneme.S, "s")]
+        [InlineData(FrenchIpaPhoneme.Z, "z")]
+        // 鼻音
+        [InlineData(FrenchIpaPhoneme.M, "m")]
+        [InlineData(FrenchIpaPhoneme.N, "n")]
+        // 側面音
+        [InlineData(FrenchIpaPhoneme.L, "l")]
+        // 異音
+        [InlineData(FrenchIpaPhoneme.Rh, "\u03C7")]            // χ
+        [InlineData(FrenchIpaPhoneme.Ng, "\u014B")]            // ŋ
+        [InlineData(FrenchIpaPhoneme.Ts, "ts")]
+        [InlineData(FrenchIpaPhoneme.Dz, "dz")]
         public void ToSymbol_Phoneme_ReturnsCorrectIPA(FrenchIpaPhoneme phoneme, string expected)
         {
             var result = IpaConverter.ToSymbol(phoneme);

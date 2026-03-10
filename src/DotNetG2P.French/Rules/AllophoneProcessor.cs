@@ -87,6 +87,7 @@ namespace DotNetG2P.French.Rules
                 case FrenchIpaPhoneme.F:
                 case FrenchIpaPhoneme.S:
                 case FrenchIpaPhoneme.Sh:
+                case FrenchIpaPhoneme.Rh:
                     return true;
                 default:
                     return false;

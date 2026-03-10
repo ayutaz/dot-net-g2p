@@ -40,6 +40,7 @@ namespace DotNetG2P.French.Conversion
         /// </summary>
         public static string ConvertPhonemeSequence(FrenchPronunciation pronunciation, bool includeStress, string separator)
         {
+            if (pronunciation == null) throw new ArgumentNullException(nameof(pronunciation));
             if (pronunciation.PhonemesInternal.Length == 0)
                 return string.Empty;
 

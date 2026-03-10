@@ -13,7 +13,7 @@ using DotNetG2P.Spanish;
 namespace DotNetG2P.Multilingual
 {
     /// <summary>
-    /// 日英混在テキスト対応の多言語G2Pエンジン。
+    /// 多言語混在テキスト対応の多言語G2Pエンジン。
     /// テキストを言語セグメントに自動分割し、各言語のG2Pエンジンで変換する。
     /// </summary>
     /// <remarks>

@@ -419,6 +419,116 @@ namespace DotNetG2P.Tests.FrenchG2P
             Assert.Equal(FrenchIpaPhoneme.ENasal, phonemes[0]);
         }
 
+        // ========== sc + 前舌母音 (~2件) ==========
+
+        [Theory]
+        // "sc" + e/i → /s/ (science: s→sc=/s/, i→半母音j, en→ANasal, ce→/s/)
+        [InlineData("science", "sj\u0251\u0303s")]
+        // "sc" + è → /s/ (scène: sc=/s/, è=/ɛ/, n→/n/, 語末e黙字)
+        [InlineData("sc\u00E8ne", "s\u025Bn")]
+        public void ToIPA_ScBeforeFrontVowel_ReturnsCorrect(string input, string expected)
+        {
+            Assert.Equal(expected, _engine.ToIPA(input));
+        }
+
+        // ========== gu + 前舌母音 (~2件) ==========
+
+        [Theory]
+        // "gu" + i → /g/ (guide: gu=/ɡ/, i→/i/, d語末黙字→黙字, 語末e黙字)
+        [InlineData("guide", "\u0261id")]
+        // "gu" + e → /g/ (guerre: gu=/ɡ/, e→/ə/, rr→/ʁ/, 語末e黙字)
+        [InlineData("guerre", "\u0261\u0259\u0281")]
+        public void ToIPA_GuBeforeFrontVowel_ReturnsCorrect(string input, string expected)
+        {
+            Assert.Equal(expected, _engine.ToIPA(input));
+        }
+
+        // ========== cc + 前舌母音/非前舌母音 (~3件) ==========
+
+        [Theory]
+        // "cc" + 前舌母音(e) → /ks/ (accent: a + cc→/ks/ + en→ANasal + t語末黙字)
+        [InlineData("accent", "akss\u0251\u0303")]
+        // "cc" + 前舌母音(i) → /ks/ (accident: a + cc→/ks/ + i + d + en→ANasal + t語末黙字)
+        [InlineData("accident", "akssid\u0251\u0303")]
+        // "cc" + 非前舌母音(o) → /k/ consumed=2 (accord: a + cc→/k/ + o + r + d語末黙字)
+        [InlineData("accord", "ak\u0254\u0281")]
+        public void ToIPA_CcRules_ReturnsCorrect(string input, string expected)
+        {
+            Assert.Equal(expected, _engine.ToIPA(input));
+        }
+
+        // ========== "eaux" 4文字マルチグラフ ==========
+
+        [Fact]
+        public void ToIPA_Eaux_FourCharMultigraph_ReturnsO()
+        {
+            // "beaux" → b + eaux=/o/
+            Assert.Equal("bo", _engine.ToIPA("beaux"));
+        }
+
+        // ========== "-euille" 語末パターン ==========
+
+        [Fact]
+        public void ToIPA_EuilleSuffix_ReturnsOehJ()
+        {
+            // "feuille" → f + euille=/œj/
+            Assert.Equal("f\u0153j", _engine.ToIPA("feuille"));
+        }
+
+        // ========== "ein" → /ɛ̃/ ==========
+
+        [Fact]
+        public void ToIPA_Ein_ReturnsENasal()
+        {
+            // "plein" → p + l + ein=/ɛ̃/
+            Assert.Equal("pl\u025B\u0303", _engine.ToIPA("plein"));
+        }
+
+        // ========== "sch" → /ʃ/ ==========
+
+        [Fact]
+        public void ToIPA_Sch_ReturnsSh()
+        {
+            // "schéma" → sch=/ʃ/ + é=/e/ + m + a
+            Assert.Equal("\u0283ema", _engine.ToIPA("sch\u00E9ma"));
+        }
+
+        // ========== トレマによるダイグラフ抑制 ==========
+
+        [Fact]
+        public void ToIPA_Trema_PreventsDigraph()
+        {
+            // "naïf" → n + a + ï=/i/ + f (aï はダイグラフ /ɛ/ にならない)
+            Assert.Equal("naif", _engine.ToIPA("na\u00EFf"));
+        }
+
+        // ========== "ill" 語中（子音先行後の母音+ill）==========
+
+        [Fact]
+        public void ToIPA_IllInWord_ReturnsCorrect()
+        {
+            // "briller" → b + r + ill + er
+            Assert.Equal("b\u0281ile", _engine.ToIPA("briller"));
+        }
+
+        // ========== x + 子音 → /ks/ ==========
+
+        [Fact]
+        public void ToIPA_XBeforeConsonant_ReturnsKs()
+        {
+            // "extra" → e→/ə/ + x=/ks/ + t + r + a
+            Assert.Equal("\u0259kst\u0281a", _engine.ToIPA("extra"));
+        }
+
+        // ========== "ennui" nn非鼻母音化確認 ==========
+
+        [Fact]
+        public void ToIPA_Ennui_NnNotNasalized()
+        {
+            // "ennui" → e→/ə/ + nn→/n/ + u→/y/→半母音/ɥ/ + i
+            Assert.Equal("\u0259n\u0265i", _engine.ToIPA("ennui"));
+        }
+
         public void Dispose()
         {
             _engine.Dispose();

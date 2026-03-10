@@ -64,7 +64,18 @@ namespace DotNetG2P.French.Normalization
             if (string.IsNullOrEmpty(text))
                 return Array.Empty<string>();
 
-            var normalized = Normalize(text);
+            return TokenizeNormalized(Normalize(text));
+        }
+
+        /// <summary>
+        /// 正規化済みテキストをトークン列に分割する（内部用）。
+        /// 二重正規化を避けるため、既に Normalize 済みのテキストを受け取る。
+        /// </summary>
+        internal static string[] TokenizeNormalized(string normalized)
+        {
+            if (string.IsNullOrEmpty(normalized))
+                return Array.Empty<string>();
+
             var tokens = new List<string>();
             var builder = new StringBuilder();
 
@@ -283,7 +294,7 @@ namespace DotNetG2P.French.Normalization
         {
             // 温度 (°C) を先に処理
             text = Regex.Replace(text, @"(\d+)\s*°c\b", m =>
-                NumberToWords.Convert(m.Groups[1].Value) + " degrés celsius");
+                NumberToWords.Convert(m.Groups[1].Value) + (m.Groups[1].Value == "1" ? " degré celsius" : " degrés celsius"));
 
             // 複合単位を先に（km, kg, cm, mm）
             text = Regex.Replace(text, @"(\d+)\s*km\b", m =>
@@ -345,7 +356,7 @@ namespace DotNetG2P.French.Normalization
                     continue;
                 }
 
-                if (char.IsLetter(ch) || ch == '-' || ch == '\'' || ch == '\u2019')
+                if (char.IsLetterOrDigit(ch) || ch == '-' || ch == '\'' || ch == '\u2019')
                 {
                     builder.Append(ch);
                     prevWasSpace = false;

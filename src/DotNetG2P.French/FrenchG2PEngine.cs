@@ -193,7 +193,7 @@ namespace DotNetG2P.French
             if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<string>();
 
-            return FrenchNormalizer.Tokenize(Normalize(text));
+            return FrenchNormalizer.TokenizeNormalized(Normalize(text));
         }
 
         private string Normalize(string text)

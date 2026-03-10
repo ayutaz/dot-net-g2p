@@ -524,10 +524,13 @@ namespace DotNetG2P.French.Rules
 
                 case 'b':
                     phonemes.Add(FrenchIpaPhoneme.B);
+                    // 重複子音: bb → /b/
+                    if (i + 1 < len && word[i + 1] == 'b')
+                        consumed = 2;
                     return true;
 
                 case 'c':
-                    return HandleC(word, i, len, phonemes);
+                    return HandleC(word, i, len, phonemes, ref consumed);
 
                 case '\u00E7': // ç → /s/
                     phonemes.Add(FrenchIpaPhoneme.S);
@@ -544,6 +547,9 @@ namespace DotNetG2P.French.Rules
                         return true;
                     }
                     phonemes.Add(FrenchIpaPhoneme.D);
+                    // 重複子音: dd → /d/
+                    if (i + 1 < len && word[i + 1] == 'd')
+                        consumed = 2;
                     return true;
 
                 case 'f':
@@ -554,7 +560,7 @@ namespace DotNetG2P.French.Rules
                     return true;
 
                 case 'g':
-                    return HandleG(word, i, len, phonemes);
+                    return HandleG(word, i, len, phonemes, ref consumed);
 
                 case 'h':
                     // h は常に黙字
@@ -732,7 +738,7 @@ namespace DotNetG2P.French.Rules
         }
 
         /// <summary>'c' の処理。前舌母音の前では /s/、それ以外は /k/。</summary>
-        private static bool HandleC(string word, int i, int len, List<FrenchIpaPhoneme> phonemes)
+        private static bool HandleC(string word, int i, int len, List<FrenchIpaPhoneme> phonemes, ref int consumed)
         {
             // 語末 -c → CaReFuL規則: /k/
             if (i + 1 == len)
@@ -749,6 +755,14 @@ namespace DotNetG2P.French.Rules
                 return true;
             }
 
+            // 重複子音: cc + 非前舌母音 → /k/ (consumed=2)
+            if (i + 1 < len && word[i + 1] == 'c' && (i + 2 >= len || !IsFrontVowelForSoftening(word[i + 2])))
+            {
+                phonemes.Add(FrenchIpaPhoneme.K);
+                consumed = 2;
+                return true;
+            }
+
             // c + 前舌母音 → /s/
             if (i + 1 < len && IsFrontVowelForSoftening(word[i + 1]))
             {
@@ -762,11 +776,19 @@ namespace DotNetG2P.French.Rules
         }
 
         /// <summary>'g' の処理。前舌母音の前では /ʒ/、それ以外は /g/。</summary>
-        private static bool HandleG(string word, int i, int len, List<FrenchIpaPhoneme> phonemes)
+        private static bool HandleG(string word, int i, int len, List<FrenchIpaPhoneme> phonemes, ref int consumed)
         {
             // 語末 -g → 黙字
             if (i + 1 == len)
                 return true;
+
+            // 重複子音: gg → /g/ (consumed=2)
+            if (i + 1 < len && word[i + 1] == 'g')
+            {
+                phonemes.Add(FrenchIpaPhoneme.G);
+                consumed = 2;
+                return true;
+            }
 
             // g + 前舌母音 → /ʒ/
             if (i + 1 < len && IsFrontVowelForSoftening(word[i + 1]))
@@ -840,10 +862,6 @@ namespace DotNetG2P.French.Rules
             if (i + 1 == len)
                 return true;
 
-            // 語末 -ux → 黙字（例: "deux", "veux"）
-            if (i + 1 == len)
-                return true;
-
             // 語頭 "ex-" + 母音 → /ɛgz/
             if (i == 1 && word[0] == 'e' && i + 1 < len && FrenchOrthography.IsVowelChar(word[i + 1]))
             {
@@ -913,8 +931,8 @@ namespace DotNetG2P.French.Rules
                 var current = phonemes[i];
                 var next = phonemes[i + 1];
 
-                // I + 母音 → J + 母音
-                if (current == FrenchIpaPhoneme.I && IsOralVowel(next))
+                // I + 母音 → J + 母音（鼻母音を含む全母音が対象）
+                if (current == FrenchIpaPhoneme.I && IsVowelPhoneme(next))
                 {
                     // 語頭で後ろに母音がない場合はI維持（ただしここでは音素列上の判定）
                     // 語頭の I は ConvertGraphemes で J に変換済みなので、残ったI+母音は半母音化
@@ -922,15 +940,15 @@ namespace DotNetG2P.French.Rules
                     continue;
                 }
 
-                // Y(=/y/) + 母音 → Uj + 母音
-                if (current == FrenchIpaPhoneme.Y && IsOralVowel(next))
+                // Y(=/y/) + 母音 → Uj + 母音（鼻母音を含む全母音が対象）
+                if (current == FrenchIpaPhoneme.Y && IsVowelPhoneme(next))
                 {
                     phonemes[i] = FrenchIpaPhoneme.Uj;
                     continue;
                 }
 
-                // U(=/u/) + 母音 → W + 母音
-                if (current == FrenchIpaPhoneme.U && IsOralVowel(next))
+                // U(=/u/) + 母音 → W + 母音（鼻母音を含む全母音が対象）
+                if (current == FrenchIpaPhoneme.U && IsVowelPhoneme(next))
                 {
                     phonemes[i] = FrenchIpaPhoneme.W;
                     continue;
@@ -1024,7 +1042,7 @@ namespace DotNetG2P.French.Rules
             {
                 // 語末子音が発音される場合は閉音節
                 var finalC = word[afterVowel];
-                return IsCaReFuLConsonant(finalC) || finalC == 'c' || finalC == 'r' || finalC == 'f' || finalC == 'l';
+                return IsCaReFuLConsonant(finalC);
             }
 
             // 後続に子音クラスターがある → 閉音節

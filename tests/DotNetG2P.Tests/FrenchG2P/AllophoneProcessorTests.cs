@@ -229,6 +229,57 @@ namespace DotNetG2P.Tests.FrenchG2P
             Assert.True(result.PhonemesInternal[2].IsSyllableNucleus);
         }
 
+        // --- 未実装フラグ確認（有効にしても入力が変わらない） ---
+
+        [Fact]
+        public void Apply_VowelLengtheningFlag_NoChangeToInput()
+        {
+            // VowelLengthening は未実装なので、有効にしても出力は変わらない
+            var pron = MakePron(FrenchIpaPhoneme.A, FrenchIpaPhoneme.R, FrenchIpaPhoneme.T);
+            var result = AllophoneProcessor.Apply(pron, FrenchAllophoneFeatures.VowelLengthening);
+            Assert.Equal(
+                new[] { FrenchIpaPhoneme.A, FrenchIpaPhoneme.R, FrenchIpaPhoneme.T },
+                Ipa(result));
+        }
+
+        [Fact]
+        public void Apply_LVelarizationFlag_NoChangeToInput()
+        {
+            // LVelarization は未実装なので、有効にしても出力は変わらない
+            var pron = MakePron(FrenchIpaPhoneme.A, FrenchIpaPhoneme.L, FrenchIpaPhoneme.T);
+            var result = AllophoneProcessor.Apply(pron, FrenchAllophoneFeatures.LVelarization);
+            Assert.Equal(
+                new[] { FrenchIpaPhoneme.A, FrenchIpaPhoneme.L, FrenchIpaPhoneme.T },
+                Ipa(result));
+        }
+
+        [Fact]
+        public void Apply_FinalDevoicingFlag_NoChangeToInput()
+        {
+            // FinalDevoicing は未実装なので、有効にしても出力は変わらない
+            var pron = MakePron(FrenchIpaPhoneme.A, FrenchIpaPhoneme.B);
+            var result = AllophoneProcessor.Apply(pron, FrenchAllophoneFeatures.FinalDevoicing);
+            Assert.Equal(
+                new[] { FrenchIpaPhoneme.A, FrenchIpaPhoneme.B },
+                Ipa(result));
+        }
+
+        [Fact]
+        public void Apply_AllUnimplementedFlags_NoChangeToInput()
+        {
+            // 未実装フラグ3つ全て有効にしても出力は変わらない
+            var features = FrenchAllophoneFeatures.VowelLengthening
+                         | FrenchAllophoneFeatures.LVelarization
+                         | FrenchAllophoneFeatures.FinalDevoicing;
+            var pron = MakePron(FrenchIpaPhoneme.P, FrenchIpaPhoneme.A, FrenchIpaPhoneme.R, FrenchIpaPhoneme.L, FrenchIpaPhoneme.B);
+            var result = AllophoneProcessor.Apply(pron, features);
+            Assert.Equal(
+                new[] { FrenchIpaPhoneme.P, FrenchIpaPhoneme.A, FrenchIpaPhoneme.R, FrenchIpaPhoneme.L, FrenchIpaPhoneme.B },
+                Ipa(result));
+        }
+
+        // --- 属性保持確認 ---
+
         [Fact]
         public void Apply_PreservesIsSyllableNucleus()
         {
