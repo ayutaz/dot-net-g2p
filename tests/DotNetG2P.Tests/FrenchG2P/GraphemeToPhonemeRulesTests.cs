@@ -10,9 +10,10 @@ namespace DotNetG2P.Tests.FrenchG2P
     /// </summary>
     public class GraphemeToPhonemeRulesTests : IDisposable
     {
-        private readonly FrenchG2PEngine _engine = new FrenchG2PEngine();
+        private readonly FrenchG2PEngine _engine = new FrenchG2PEngine(
+            new FrenchG2POptions(enableExceptionDictionary: false));
         private readonly FrenchG2PEngine _conservativeEngine = new FrenchG2PEngine(
-            new FrenchG2POptions(dialect: FrenchDialect.Conservative));
+            new FrenchG2POptions(dialect: FrenchDialect.Conservative, enableExceptionDictionary: false));
 
         // ========== 母音規則 (~10件) ==========
 

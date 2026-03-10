@@ -13,4 +13,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\french_exceptions.master.tsv" LogicalName="DotNetG2P.French.Data.french_exceptions.master.tsv" />
+  </ItemGroup>
 </Project>

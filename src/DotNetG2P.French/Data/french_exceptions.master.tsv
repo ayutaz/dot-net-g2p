@@ -1,0 +1,571 @@
+surface	dialect	category	stress_index	phonemes	source	note
+# ===== 外来語 (loanword) =====
+# --- 英語由来 ---
+football	*	loanword	-1	f u t|b o l	manual	English loanword
+weekend	*	loanword	-1	w i k|ɛ̃ d	manual	English loanword
+shopping	*	loanword	-1	ʃ ɔ|p i ŋ	manual	English loanword
+parking	*	loanword	-1	p a ʁ|k i ŋ	manual	English loanword
+interview	*	loanword	-1	ɛ̃|t ɛ ʁ|v j u	manual	English loanword
+rugby	*	loanword	-1	ʁ y ɡ|b i	manual	English loanword
+sandwich	*	loanword	-1	s ɑ̃ d|w i ʃ	manual	English loanword
+business	*	loanword	-1	b i z|n ɛ s	manual	English loanword
+email	*	loanword	-1	i|m ɛ l	manual	English loanword
+meeting	*	loanword	-1	m i|t i ŋ	manual	English loanword
+marketing	*	loanword	-1	m a ʁ|k ə|t i ŋ	manual	English loanword
+design	*	loanword	-1	d ə|z a j n	manual	English loanword
+manager	*	loanword	-1	m a|n a|ʒ ɛ ʁ	manual	English loanword adapted
+leader	*	loanword	-1	l i|d ɛ ʁ	manual	English loanword
+team	*	loanword	-1	t i m	manual	English loanword
+coach	*	loanword	-1	k o t ʃ	manual	English loanword
+sport	*	loanword	-1	s p ɔ ʁ	manual	English loanword
+golf	*	loanword	-1	ɡ ɔ l f	manual	English loanword
+tennis	*	loanword	-1	t ɛ|n i s	manual	English loanword
+surf	*	loanword	-1	s œ ʁ f	manual	English loanword
+jazz	*	loanword	-1	d ʒ a z	manual	English loanword
+rock	*	loanword	-1	ʁ ɔ k	manual	English loanword
+pop	*	loanword	-1	p ɔ p	manual	English loanword
+rap	*	loanword	-1	ʁ a p	manual	English loanword
+film	*	loanword	-1	f i l m	manual	English loanword
+star	*	loanword	-1	s t a ʁ	manual	English loanword
+show	*	loanword	-1	ʃ o	manual	English loanword
+clip	*	loanword	-1	k l i p	manual	English loanword
+blog	*	loanword	-1	b l ɔ ɡ	manual	English loanword
+web	*	loanword	-1	w ɛ b	manual	English loanword
+site	*	loanword	-1	s i t	manual	English loanword
+tchat	*	loanword	-1	t ʃ a t	manual	English loanword (tchat is French spelling)
+post	*	loanword	-1	p o s t	manual	English loanword
+tweet	*	loanword	-1	t w i t	manual	English loanword
+like	*	loanword	-1	l a j k	manual	English loanword
+selfie	*	loanword	-1	s ɛ l|f i	manual	English loanword
+hamburger	*	loanword	-1	ɑ̃|b u ʁ|ɡ ɛ ʁ	manual	English loanword
+hot-dog	*	loanword	-1	ɔ t|d ɔ ɡ	manual	English loanword
+ketchup	*	loanword	-1	k ɛ|t ʃ œ p	manual	English loanword
+steak	*	loanword	-1	s t ɛ k	manual	English loanword
+toast	*	loanword	-1	t o s t	manual	English loanword
+pudding	*	loanword	-1	p u|d i ŋ	manual	English loanword
+cake	*	loanword	-1	k ɛ k	manual	English loanword
+cookie	*	loanword	-1	k u|k i	manual	English loanword
+muffin	*	loanword	-1	m ɔ|f i n	manual	English loanword
+cocktail	*	loanword	-1	k ɔ k|t ɛ l	manual	English loanword
+whisky	*	loanword	-1	w i s|k i	manual	English loanword
+gin	*	loanword	-1	d ʒ i n	manual	English loanword
+vodka	*	loanword	-1	v ɔ d|k a	manual	Russian loanword via English
+brandy	*	loanword	-1	b ʁ ɑ̃|d i	manual	English loanword
+bar	*	loanword	-1	b a ʁ	manual	English loanword
+pub	*	loanword	-1	p œ b	manual	English loanword
+club	*	loanword	-1	k l œ b	manual	English loanword
+disco	*	loanword	-1	d i s|k o	manual	English loanword
+camping	*	loanword	-1	k ɑ̃|p i ŋ	manual	English loanword
+trekking	*	loanword	-1	t ʁ ɛ|k i ŋ	manual	English loanword
+jogging	*	loanword	-1	d ʒ ɔ|ɡ i ŋ	manual	English loanword
+fitness	*	loanword	-1	f i t|n ɛ s	manual	English loanword
+gym	*	loanword	-1	d ʒ i m	manual	English loanword
+ski	*	loanword	-1	s k i	manual	Norwegian loanword
+snowboard	*	loanword	-1	s n o|b ɔ ʁ d	manual	English loanword
+scooter	*	loanword	-1	s k u|t ɛ ʁ	manual	English loanword
+dealer	*	loanword	-1	d i|l ɛ ʁ	manual	English loanword
+standing	*	loanword	-1	s t ɑ̃|d i ŋ	manual	English loanword
+scanner	*	loanword	-1	s k a|n ɛ ʁ	manual	English loanword
+container	*	loanword	-1	k ɔ̃|t ɛ|n ɛ ʁ	manual	English loanword
+blazer	*	loanword	-1	b l a|z ɛ ʁ	manual	English loanword
+poster	*	loanword	-1	p ɔ s|t ɛ ʁ	manual	English loanword
+gangster	*	loanword	-1	ɡ ɑ̃ ɡ s|t ɛ ʁ	manual	English loanword
+rocker	*	loanword	-1	ʁ ɔ|k ɛ ʁ	manual	English loanword
+hacker	*	loanword	-1	a|k ɛ ʁ	manual	English loanword
+thriller	*	loanword	-1	t ʁ i|l ɛ ʁ	manual	English loanword
+best-seller	*	loanword	-1	b ɛ s t|s ɛ|l ɛ ʁ	manual	English loanword
+sweater	*	loanword	-1	s w i|t ɛ ʁ	manual	English loanword
+sweat	*	loanword	-1	s w ɛ t	manual	English loanword (sweatshirt abbrev)
+legging	*	loanword	-1	l ɛ|ɡ i ŋ	manual	English loanword
+smoking	*	loanword	-1	s m ɔ|k i ŋ	manual	English loanword (tuxedo)
+bowling	*	loanword	-1	b u|l i ŋ	manual	English loanword
+zapping	*	loanword	-1	z a|p i ŋ	manual	English loanword
+streaming	*	loanword	-1	s t ʁ i|m i ŋ	manual	English loanword
+brushing	*	loanword	-1	b ʁ œ|ʃ i ŋ	manual	English loanword
+checking	*	loanword	-1	t ʃ ɛ|k i ŋ	manual	English loanword
+booking	*	loanword	-1	b u|k i ŋ	manual	English loanword
+brainstorming	*	loanword	-1	b ʁ ɛ̃ s|t ɔ ʁ|m i ŋ	manual	English loanword
+coworking	*	loanword	-1	k o|w ɔ ʁ|k i ŋ	manual	English loanword
+brunch	*	loanword	-1	b ʁ œ̃ ʃ	manual	English loanword
+punch	*	loanword	-1	p œ̃ ʃ	manual	English loanword
+lunch	*	loanword	-1	l œ̃ ʃ	manual	English loanword
+match	*	loanword	-1	m a t ʃ	manual	English loanword
+catch	*	loanword	-1	k a t ʃ	manual	English loanword
+pitch	*	loanword	-1	p i t ʃ	manual	English loanword
+sketch	*	loanword	-1	s k ɛ t ʃ	manual	English loanword
+switch	*	loanword	-1	s w i t ʃ	manual	English loanword
+flash	*	loanword	-1	f l a ʃ	manual	English loanword
+crash	*	loanword	-1	k ʁ a ʃ	manual	English loanword
+rush	*	loanword	-1	ʁ œ ʃ	manual	English loanword
+trash	*	loanword	-1	t ʁ a ʃ	manual	English loanword
+job	*	loanword	-1	d ʒ ɔ b	manual	English loanword
+flop	*	loanword	-1	f l ɔ p	manual	English loanword
+stop	*	loanword	-1	s t ɔ p	manual	English loanword
+top	*	loanword	-1	t ɔ p	manual	English loanword
+gap	*	loanword	-1	ɡ a p	manual	English loanword
+bug	*	loanword	-1	b œ ɡ	manual	English loanword
+plug	*	loanword	-1	p l œ ɡ	manual	English loanword
+mug	*	loanword	-1	m œ ɡ	manual	English loanword
+look	*	loanword	-1	l u k	manual	English loanword
+cool	*	loanword	-1	k u l	manual	English loanword
+pool	*	loanword	-1	p u l	manual	English loanword
+boom	*	loanword	-1	b u m	manual	English loanword
+zoom	*	loanword	-1	z u m	manual	English loanword
+scoop	*	loanword	-1	s k u p	manual	English loanword
+speed	*	loanword	-1	s p i d	manual	English loanword
+feed	*	loanword	-1	f i d	manual	English loanword
+geek	*	loanword	-1	ɡ i k	manual	English loanword
+snob	*	loanword	-1	s n ɔ b	manual	English loanword
+box	*	loanword	-1	b ɔ k s	manual	English loanword
+fox	*	loanword	-1	f ɔ k s	manual	English loanword
+mix	*	loanword	-1	m i k s	manual	English loanword
+quiz	*	loanword	-1	k w i z	manual	English loanword
+# --- イタリア語由来 ---
+pizza	*	loanword	-1	p i d|z a	manual	Italian loanword
+cappuccino	*	loanword	-1	k a|p u|t ʃ i|n o	manual	Italian loanword
+espresso	*	loanword	-1	ɛ s|p ʁ ɛ|s o	manual	Italian loanword
+pasta	*	loanword	-1	p a s|t a	manual	Italian loanword
+risotto	*	loanword	-1	ʁ i|z ɔ|t o	manual	Italian loanword
+mozzarella	*	loanword	-1	m ɔ|d z a|ʁ ɛ|l a	manual	Italian loanword
+tiramisu	*	loanword	-1	t i|ʁ a|m i|s u	manual	Italian loanword
+piano	*	loanword	-1	p j a|n o	manual	Italian loanword
+soprano	*	loanword	-1	s ɔ|p ʁ a|n o	manual	Italian loanword
+allegro	*	loanword	-1	a|l e|ɡ ʁ o	manual	Italian loanword
+tempo	*	loanword	-1	t ɛ̃|p o	manual	Italian loanword
+graffiti	*	loanword	-1	ɡ ʁ a|f i|t i	manual	Italian loanword
+paparazzi	*	loanword	-1	p a|p a|ʁ a|d z i	manual	Italian loanword
+concerto	*	loanword	-1	k ɔ̃|s ɛ ʁ|t o	manual	Italian loanword
+fiasco	*	loanword	-1	f j a s|k o	manual	Italian loanword
+scenario	*	loanword	-1	s e|n a|ʁ j o	manual	Italian loanword
+bravo	*	loanword	-1	b ʁ a|v o	manual	Italian loanword
+gusto	*	loanword	-1	ɡ y s|t o	manual	Italian loanword
+maestro	*	loanword	-1	m a|ɛ s|t ʁ o	manual	Italian loanword
+virtuoso	*	loanword	-1	v i ʁ|t ɥ o|z o	manual	Italian loanword
+solo	*	loanword	-1	s o|l o	manual	Italian loanword
+latte	*	loanword	-1	l a|t e	manual	Italian loanword
+panini	*	loanword	-1	p a|n i|n i	manual	Italian loanword
+gnocchi	*	loanword	-1	ɲ ɔ|k i	manual	Italian loanword
+# --- ドイツ語由来 ---
+kitsch	*	loanword	-1	k i t ʃ	manual	German loanword
+leitmotiv	*	loanword	-1	l a j t|m ɔ|t i f	manual	German loanword
+blitz	*	loanword	-1	b l i ts	manual	German loanword
+ersatz	*	loanword	-1	ɛ ʁ|z a ts	manual	German loanword
+kindergarten	*	loanword	-1	k ɛ̃|d ɛ ʁ|ɡ a ʁ|t ɛ n	manual	German loanword
+diktat	*	loanword	-1	d i k|t a t	manual	German loanword
+waltz	*	loanword	-1	v a l s	manual	German loanword (valse)
+# --- 日本語由来 ---
+karate	*	loanword	-1	k a|ʁ a|t e	manual	Japanese loanword
+sushi	*	loanword	-1	s u|ʃ i	manual	Japanese loanword
+tsunami	*	loanword	-1	ts u|n a|m i	manual	Japanese loanword
+judo	*	loanword	-1	ʒ y|d o	manual	Japanese loanword
+sake	*	loanword	-1	s a|k e	manual	Japanese loanword
+tofu	*	loanword	-1	t ɔ|f u	manual	Japanese loanword
+wasabi	*	loanword	-1	w a|z a|b i	manual	Japanese loanword
+kimono	*	loanword	-1	k i|m ɔ|n o	manual	Japanese loanword
+samurai	*	loanword	-1	s a|m u|ʁ a j	manual	Japanese loanword
+manga	*	loanword	-1	m ɑ̃|ɡ a	manual	Japanese loanword
+anime	*	loanword	-1	a|n i|m e	manual	Japanese loanword
+sumo	*	loanword	-1	s u|m o	manual	Japanese loanword
+# --- その他外来語 ---
+yoga	*	loanword	-1	j ɔ|ɡ a	manual	Sanskrit loanword
+guru	*	loanword	-1	ɡ u|ʁ u	manual	Sanskrit loanword
+karma	*	loanword	-1	k a ʁ|m a	manual	Sanskrit loanword
+nirvana	*	loanword	-1	n i ʁ|v a|n a	manual	Sanskrit loanword
+kebab	*	loanword	-1	k ə|b a b	manual	Turkish loanword
+bazar	*	loanword	-1	b a|z a ʁ	manual	Persian loanword
+shah	*	loanword	-1	ʃ a	manual	Persian loanword
+kiosk	*	loanword	-1	k j ɔ s k	manual	Turkish loanword
+paella	*	loanword	-1	p a|ɛ|l a	manual	Spanish loanword
+gazpacho	*	loanword	-1	ɡ a s|p a|t ʃ o	manual	Spanish loanword
+chorizo	*	loanword	-1	t ʃ ɔ|ʁ i|z o	manual	Spanish loanword
+tequila	*	loanword	-1	t e|k i|l a	manual	Spanish loanword
+# ===== 学術語・語末子音例外 (academic) =====
+# --- 語末 -us 発音 ---
+bus	*	academic	-1	b y s	manual	Final -s pronounced
+campus	*	academic	-1	k ɑ̃|p y s	manual	Latin, final -us pronounced
+virus	*	academic	-1	v i|ʁ y s	manual	Latin, final -us pronounced
+plus	*	academic	-1	p l y s	manual	Final -s pronounced
+bonus	*	academic	-1	b ɔ|n y s	manual	Latin, final -us pronounced
+consensus	*	academic	-1	k ɔ̃|s ɑ̃|s y s	manual	Latin, final -us pronounced
+hiatus	*	academic	-1	j a|t y s	manual	Latin, final -us pronounced
+terminus	*	academic	-1	t ɛ ʁ|m i|n y s	manual	Latin, final -us pronounced
+prospectus	*	academic	-1	p ʁ ɔ s|p ɛ k|t y s	manual	Latin, final -us pronounced
+stimulus	*	academic	-1	s t i|m y|l y s	manual	Latin, final -us pronounced
+calculus	*	academic	-1	k a l|k y|l y s	manual	Latin, final -us pronounced
+chorus	*	academic	-1	k ɔ|ʁ y s	manual	Latin, final -us pronounced
+cactus	*	academic	-1	k a k|t y s	manual	Latin, final -us pronounced
+humus	*	academic	-1	y|m y s	manual	Latin, final -us pronounced
+lotus	*	academic	-1	l ɔ|t y s	manual	Latin, final -us pronounced
+mucus	*	academic	-1	m y|k y s	manual	Latin, final -us pronounced
+opus	*	academic	-1	ɔ|p y s	manual	Latin, final -us pronounced
+radius	*	academic	-1	ʁ a|d j y s	manual	Latin, final -us pronounced
+rictus	*	academic	-1	ʁ i k|t y s	manual	Latin, final -us pronounced
+sinus	*	academic	-1	s i|n y s	manual	Latin, final -us pronounced
+typhus	*	academic	-1	t i|f y s	manual	Latin/Greek, final -us pronounced
+venus	*	academic	-1	v e|n y s	manual	Latin, final -us pronounced
+versus	*	academic	-1	v ɛ ʁ|s y s	manual	Latin, final -us pronounced
+# --- 語末 -um 発音 ---
+album	*	academic	-1	a l|b ɔ m	manual	Latin, final -um pronounced
+forum	*	academic	-1	f ɔ|ʁ ɔ m	manual	Latin, final -um pronounced
+maximum	*	academic	-1	m a k|s i|m ɔ m	manual	Latin, final -um pronounced
+minimum	*	academic	-1	m i|n i|m ɔ m	manual	Latin, final -um pronounced
+optimum	*	academic	-1	ɔ p|t i|m ɔ m	manual	Latin, final -um pronounced
+aquarium	*	academic	-1	a|k w a|ʁ j ɔ m	manual	Latin, final -um pronounced
+museum	*	academic	-1	m y|z e|ɔ m	manual	Latin, final -um pronounced
+opium	*	academic	-1	ɔ|p j ɔ m	manual	Latin, final -um pronounced
+medium	*	academic	-1	m e|d j ɔ m	manual	Latin, final -um pronounced
+premium	*	academic	-1	p ʁ e|m j ɔ m	manual	Latin, final -um pronounced
+podium	*	academic	-1	p ɔ|d j ɔ m	manual	Latin, final -um pronounced
+stadium	*	academic	-1	s t a|d j ɔ m	manual	Latin, final -um pronounced
+uranium	*	academic	-1	y|ʁ a|n j ɔ m	manual	Latin, final -um pronounced
+calcium	*	academic	-1	k a l|s j ɔ m	manual	Latin, final -um pronounced
+magnesium	*	academic	-1	m a|ɲ e|z j ɔ m	manual	Latin, final -um pronounced
+aluminium	*	academic	-1	a|l y|m i|n j ɔ m	manual	Latin, final -um pronounced
+titanium	*	academic	-1	t i|t a|n j ɔ m	manual	Latin, final -um pronounced
+helium	*	academic	-1	e|l j ɔ m	manual	Latin, final -um pronounced
+lithium	*	academic	-1	l i|t j ɔ m	manual	Latin, final -um pronounced
+selenium	*	academic	-1	s e|l e|n j ɔ m	manual	Latin, final -um pronounced
+symposium	*	academic	-1	s ɛ̃|p o|z j ɔ m	manual	Latin, final -um pronounced
+curriculum	*	academic	-1	k y|ʁ i|k y|l ɔ m	manual	Latin, final -um pronounced
+memorandum	*	academic	-1	m e|m ɔ|ʁ ɑ̃|d ɔ m	manual	Latin, final -um pronounced
+referendum	*	academic	-1	ʁ e|f e|ʁ ɑ̃|d ɔ m	manual	Latin, final -um pronounced
+pensum	*	academic	-1	p ɛ̃|s ɔ m	manual	Latin, final -um pronounced
+serum	*	academic	-1	s e|ʁ ɔ m	manual	Latin, final -um pronounced
+# --- 語末 -al 発音 ---
+festival	*	academic	-1	f ɛ s|t i|v a l	manual	Final -l pronounced
+carnaval	*	academic	-1	k a ʁ|n a|v a l	manual	Final -l pronounced
+chacal	*	academic	-1	ʃ a|k a l	manual	Final -l pronounced
+canal	*	academic	-1	k a|n a l	manual	Final -l pronounced
+inal	*	academic	-1	f i|n a l	manual	Final -l pronounced
+signal	*	academic	-1	s i|ɲ a l	manual	Final -l pronounced
+terminal	*	academic	-1	t ɛ ʁ|m i|n a l	manual	Final -l pronounced
+# --- 語末 -er 非動詞 ---
+cancer	*	academic	-1	k ɑ̃|s ɛ ʁ	manual	Final -er pronounced as /ɛʁ/
+hiver	*	academic	-1	i|v ɛ ʁ	manual	Final -er pronounced
+amer	*	academic	-1	a|m ɛ ʁ	manual	Final -er pronounced
+fier	*	academic	-1	f j ɛ ʁ	manual	Final -er pronounced
+enfer	*	academic	-1	ɑ̃|f ɛ ʁ	manual	Final -er pronounced
+super	*	academic	-1	s y|p ɛ ʁ	manual	Final -er pronounced
+master	*	academic	-1	m a s|t ɛ ʁ	manual	English loanword, -er pronounced
+transfer	*	academic	-1	t ʁ ɑ̃ s|f ɛ ʁ	manual	Final -er pronounced
+cher	*	academic	-1	ʃ ɛ ʁ	manual	Final -er pronounced
+cuiller	*	academic	-1	k ɥ i|j ɛ ʁ	manual	Final -er pronounced
+mer	*	academic	-1	m ɛ ʁ	manual	Final -er pronounced
+fer	*	academic	-1	f ɛ ʁ	manual	Final -er pronounced
+ver	*	academic	-1	v ɛ ʁ	manual	Final -er pronounced
+# --- 語末 -c 例外 ---
+tabac	*	academic	-1	t a|b a	manual	Final -c silent
+estomac	*	academic	-1	ɛ s|t ɔ|m a	manual	Final -c silent
+blanc	*	academic	-1	b l ɑ̃	manual	Final -c silent
+franc	*	academic	-1	f ʁ ɑ̃	manual	Final -c silent (adj masc)
+porc	*	academic	-1	p ɔ ʁ	manual	Final -c silent
+jonc	*	academic	-1	ʒ ɔ̃	manual	Final -c silent
+tronc	*	academic	-1	t ʁ ɔ̃	manual	Final -c silent
+banc	*	academic	-1	b ɑ̃	manual	Final -c silent
+flanc	*	academic	-1	f l ɑ̃	manual	Final -c silent
+# --- 語末 -l 例外 ---
+fusil	*	academic	-1	f y|z i	manual	Final -l silent
+outil	*	academic	-1	u|t i	manual	Final -l silent
+gentil	*	academic	-1	ʒ ɑ̃|t i	manual	Final -l silent
+sourcil	*	academic	-1	s u ʁ|s i	manual	Final -l silent
+persil	*	academic	-1	p ɛ ʁ|s i	manual	Final -l silent
+chenil	*	academic	-1	ʃ ə|n i	manual	Final -l silent
+nombril	*	academic	-1	n ɔ̃|b ʁ i	manual	Final -l silent
+gril	*	academic	-1	ɡ ʁ i	manual	Final -l silent
+baril	*	academic	-1	b a|ʁ i	manual	Final -l silent
+coutil	*	academic	-1	k u|t i	manual	Final -l silent
+# --- 語末 -t 例外 ---
+sept	*	academic	-1	s ɛ t	manual	Final -t pronounced
+huit	*	academic	-1	ɥ i t	manual	Final -t pronounced
+net	*	academic	-1	n ɛ t	manual	Final -t pronounced
+brut	*	academic	-1	b ʁ y t	manual	Final -t pronounced
+correct	*	academic	-1	k ɔ|ʁ ɛ k t	manual	Final -ct pronounced
+direct	*	academic	-1	d i|ʁ ɛ k t	manual	Final -ct pronounced
+contact	*	academic	-1	k ɔ̃|t a k t	manual	Final -ct pronounced
+impact	*	academic	-1	ɛ̃|p a k t	manual	Final -ct pronounced
+abrupt	*	academic	-1	a|b ʁ y p t	manual	Final -pt pronounced
+concept	*	academic	-1	k ɔ̃|s ɛ p t	manual	Final -pt pronounced
+# --- 語末 -f 例外 ---
+chef	*	academic	-1	ʃ ɛ f	manual	Final -f pronounced
+bref	*	academic	-1	b ʁ ɛ f	manual	Final -f pronounced
+# ===== 動詞3人称複数 (verb_3pl) =====
+# -ent語尾が黙字の動詞活用形
+parlent	*	verb_3pl	-1	p a ʁ l	manual	3pl, -ent silent
+chantent	*	verb_3pl	-1	ʃ ɑ̃ t	manual	3pl, -ent silent
+mangent	*	verb_3pl	-1	m ɑ̃ ʒ	manual	3pl, -ent silent
+dansent	*	verb_3pl	-1	d ɑ̃ s	manual	3pl, -ent silent
+jouent	*	verb_3pl	-1	ʒ u	manual	3pl, -ent silent
+marchent	*	verb_3pl	-1	m a ʁ ʃ	manual	3pl, -ent silent
+trouvent	*	verb_3pl	-1	t ʁ u v	manual	3pl, -ent silent
+aiment	*	verb_3pl	-1	ɛ m	manual	3pl, -ent silent
+pensent	*	verb_3pl	-1	p ɑ̃ s	manual	3pl, -ent silent
+disent	*	verb_3pl	-1	d i z	manual	3pl, -ent silent
+font	*	verb_3pl	-1	f ɔ̃	manual	3pl irregular (faire)
+sont	*	verb_3pl	-1	s ɔ̃	manual	3pl irregular (être)
+ont	*	verb_3pl	-1	ɔ̃	manual	3pl irregular (avoir)
+vont	*	verb_3pl	-1	v ɔ̃	manual	3pl irregular (aller)
+peuvent	*	verb_3pl	-1	p œ v	manual	3pl, -ent silent
+veulent	*	verb_3pl	-1	v œ l	manual	3pl, -ent silent
+doivent	*	verb_3pl	-1	d w a v	manual	3pl, -ent silent
+savent	*	verb_3pl	-1	s a v	manual	3pl, -ent silent
+voient	*	verb_3pl	-1	v w a	manual	3pl, -ent silent
+croient	*	verb_3pl	-1	k ʁ w a	manual	3pl, -ent silent
+prennent	*	verb_3pl	-1	p ʁ ɛ n	manual	3pl, -ent silent
+viennent	*	verb_3pl	-1	v j ɛ n	manual	3pl, -ent silent
+tiennent	*	verb_3pl	-1	t j ɛ n	manual	3pl, -ent silent
+mettent	*	verb_3pl	-1	m ɛ t	manual	3pl, -ent silent
+lisent	*	verb_3pl	-1	l i z	manual	3pl, -ent silent
+boivent	*	verb_3pl	-1	b w a v	manual	3pl, -ent silent
+vivent	*	verb_3pl	-1	v i v	manual	3pl, -ent silent
+finissent	*	verb_3pl	-1	f i|n i s	manual	3pl, -ent silent
+choisissent	*	verb_3pl	-1	ʃ w a|z i s	manual	3pl, -ent silent
+remplissent	*	verb_3pl	-1	ʁ ɑ̃|p l i s	manual	3pl, -ent silent
+obéissent	*	verb_3pl	-1	ɔ|b e|i s	manual	3pl, -ent silent
+grandissent	*	verb_3pl	-1	ɡ ʁ ɑ̃|d i s	manual	3pl, -ent silent
+réussissent	*	verb_3pl	-1	ʁ e|y|s i s	manual	3pl, -ent silent
+applaudissent	*	verb_3pl	-1	a|p l o|d i s	manual	3pl, -ent silent
+connaissent	*	verb_3pl	-1	k ɔ|n ɛ s	manual	3pl, -ent silent
+paraissent	*	verb_3pl	-1	p a|ʁ ɛ s	manual	3pl, -ent silent
+naissent	*	verb_3pl	-1	n ɛ s	manual	3pl, -ent silent
+écrivent	*	verb_3pl	-1	e|k ʁ i v	manual	3pl, -ent silent
+suivent	*	verb_3pl	-1	s ɥ i v	manual	3pl, -ent silent
+attendent	*	verb_3pl	-1	a|t ɑ̃ d	manual	3pl, -ent silent
+vendent	*	verb_3pl	-1	v ɑ̃ d	manual	3pl, -ent silent
+perdent	*	verb_3pl	-1	p ɛ ʁ d	manual	3pl, -ent silent
+rendent	*	verb_3pl	-1	ʁ ɑ̃ d	manual	3pl, -ent silent
+entendent	*	verb_3pl	-1	ɑ̃|t ɑ̃ d	manual	3pl, -ent silent
+répondent	*	verb_3pl	-1	ʁ e|p ɔ̃ d	manual	3pl, -ent silent
+descendent	*	verb_3pl	-1	d e|s ɑ̃ d	manual	3pl, -ent silent
+partent	*	verb_3pl	-1	p a ʁ t	manual	3pl, -ent silent
+sortent	*	verb_3pl	-1	s ɔ ʁ t	manual	3pl, -ent silent
+dorment	*	verb_3pl	-1	d ɔ ʁ m	manual	3pl, -ent silent
+servent	*	verb_3pl	-1	s ɛ ʁ v	manual	3pl, -ent silent
+ouvrent	*	verb_3pl	-1	u v ʁ	manual	3pl, -ent silent
+couvrent	*	verb_3pl	-1	k u v ʁ	manual	3pl, -ent silent
+offrent	*	verb_3pl	-1	ɔ f ʁ	manual	3pl, -ent silent
+souffrent	*	verb_3pl	-1	s u f ʁ	manual	3pl, -ent silent
+craignent	*	verb_3pl	-1	k ʁ ɛ ɲ	manual	3pl, -ent silent
+plaignent	*	verb_3pl	-1	p l ɛ ɲ	manual	3pl, -ent silent
+peignent	*	verb_3pl	-1	p ɛ ɲ	manual	3pl, -ent silent
+joignent	*	verb_3pl	-1	ʒ w a ɲ	manual	3pl, -ent silent
+conduisent	*	verb_3pl	-1	k ɔ̃|d ɥ i z	manual	3pl, -ent silent
+produisent	*	verb_3pl	-1	p ʁ ɔ|d ɥ i z	manual	3pl, -ent silent
+traduisent	*	verb_3pl	-1	t ʁ a|d ɥ i z	manual	3pl, -ent silent
+construisent	*	verb_3pl	-1	k ɔ̃ s|t ʁ ɥ i z	manual	3pl, -ent silent
+détruisent	*	verb_3pl	-1	d e|t ʁ ɥ i z	manual	3pl, -ent silent
+# ===== 不規則語 (irregular) =====
+monsieur	*	irregular	-1	m ə|s j ø	manual	Irregular pronunciation
+madame	*	irregular	-1	m a|d a m	manual	Irregular pronunciation
+femme	*	irregular	-1	f a m	manual	e→/a/ irregular
+fils	*	irregular	-1	f i s	manual	Final -ls pronounced /s/
+oignon	*	irregular	-1	ɔ|ɲ ɔ̃	manual	Initial oi→/ɔ/ irregular
+second	*	irregular	-1	s ə|ɡ ɔ̃	manual	c→/ɡ/ irregular
+compte	*	irregular	-1	k ɔ̃ t	manual	mp→nasal irregular
+dompter	*	irregular	-1	d ɔ̃|t e	manual	mp→nasal + silent p
+examen	*	irregular	-1	ɛ ɡ|z a|m ɛ̃	manual	x→/ɡz/ irregular
+exact	*	irregular	-1	ɛ ɡ|z a k t	manual	x→/ɡz/ irregular
+exercice	*	irregular	-1	ɛ ɡ|z ɛ ʁ|s i s	manual	x→/ɡz/ irregular
+yacht	*	irregular	-1	j ɔ t	manual	Foreign-origin irregular
+clef	*	irregular	-1	k l e	manual	Final -f silent
+cerf	*	irregular	-1	s ɛ ʁ	manual	Final -f silent
+nerf	*	irregular	-1	n ɛ ʁ	manual	Final -f silent
+œuf	*	irregular	-1	œ f	manual	Irregular singular
+bœuf	*	irregular	-1	b œ f	manual	Irregular singular
+os	*	irregular	-1	ɔ s	manual	Singular: final -s pronounced
+automne	*	irregular	-1	o|t ɔ n	manual	mn→/n/ irregular
+condamner	*	irregular	-1	k ɔ̃|d a|n e	manual	mn→/n/ irregular
+damner	*	irregular	-1	d a|n e	manual	mn→/n/ irregular
+solennel	*	irregular	-1	s ɔ|l a|n ɛ l	manual	enn→/an/ irregular
+ennui	*	irregular	-1	ɑ̃|n ɥ i	manual	enn→/ɑ̃n/ irregular
+ennuyer	*	irregular	-1	ɑ̃|n ɥ i|j e	manual	enn→/ɑ̃n/ irregular
+enivrer	*	irregular	-1	ɑ̃|n i|v ʁ e	manual	en→/ɑ̃n/ irregular
+ennemi	*	irregular	-1	ɛ n|m i	manual	Irregular, enn→/ɛn/
+parfum	*	irregular	-1	p a ʁ|f œ̃	manual	um→nasal
+quelque	*	irregular	-1	k ɛ l|k ə	manual	Irregular qu
+lorsque	*	irregular	-1	l ɔ ʁ s|k ə	manual	Irregular qu
+puisque	*	irregular	-1	p ɥ i s|k ə	manual	Irregular qu
+presque	*	irregular	-1	p ʁ ɛ s|k ə	manual	Irregular qu
+jusque	*	irregular	-1	ʒ y s|k ə	manual	Irregular qu
+avec	*	irregular	-1	a|v ɛ k	manual	Final -c pronounced
+bec	*	irregular	-1	b ɛ k	manual	Final -c pronounced
+sec	*	irregular	-1	s ɛ k	manual	Final -c pronounced
+sac	*	irregular	-1	s a k	manual	Final -c pronounced
+lac	*	irregular	-1	l a k	manual	Final -c pronounced
+parc	*	irregular	-1	p a ʁ k	manual	Final -c pronounced
+choc	*	irregular	-1	ʃ ɔ k	manual	Final -c pronounced
+truc	*	irregular	-1	t ʁ y k	manual	Final -c pronounced
+grec	*	irregular	-1	ɡ ʁ ɛ k	manual	Final -c pronounced
+turc	*	irregular	-1	t y ʁ k	manual	Final -c pronounced
+trafic	*	irregular	-1	t ʁ a|f i k	manual	Final -c pronounced
+public	*	irregular	-1	p y|b l i k	manual	Final -c pronounced
+diagnostic	*	irregular	-1	d j a ɡ|n ɔ s|t i k	manual	Final -c pronounced
+donc	*	irregular	-1	d ɔ̃ k	manual	Final -c pronounced (common usage)
+cinq	*	irregular	-1	s ɛ̃ k	manual	Final -q pronounced
+coq	*	irregular	-1	k ɔ k	manual	Final -q pronounced
+aiguille	*	irregular	-1	e|ɡ ɥ i j	manual	gu→/ɡɥ/ irregular
+poêle	*	irregular	-1	p w a l	manual	oê→/wa/ irregular
+moelle	*	irregular	-1	m w a l	manual	oe→/wa/ irregular
+chorale	*	irregular	-1	k ɔ|ʁ a l	manual	ch→/k/ (Greek origin)
+orchestre	*	irregular	-1	ɔ ʁ|k ɛ s|t ʁ ə	manual	ch→/k/ (Greek origin)
+orchidée	*	irregular	-1	ɔ ʁ|k i|d e	manual	ch→/k/ (Greek origin)
+écho	*	irregular	-1	e|k o	manual	ch→/k/ (Greek origin)
+chaos	*	irregular	-1	k a|o s	manual	ch→/k/ (Greek origin)
+chrétien	*	irregular	-1	k ʁ e|t j ɛ̃	manual	ch→/k/ (Greek origin)
+psychologie	*	irregular	-1	p s i|k ɔ|l ɔ|ʒ i	manual	ch→/k/ + psy- prefix
+archéologie	*	irregular	-1	a ʁ|k e|ɔ|l ɔ|ʒ i	manual	ch→/k/ (Greek origin)
+technique	*	irregular	-1	t ɛ k|n i k	manual	ch→/k/ (Greek origin)
+# ===== 同綴異音語 (homograph) =====
+# --- est: 動詞 vs 方位 ---
+est	*	homograph	-1	ɛ	manual	Verb être 3sg (default reading)
+# --- os: 単数 vs 複数 ---
+# os singular already covered in irregular
+# --- fier: 動詞 vs 形容詞 ---
+# fier adj already covered in academic
+# --- plus: 肯定 vs 否定 ---
+# plus already covered in academic
+# --- couvent: 名詞 vs 動詞 ---
+couvent	*	homograph	-1	k u|v ɑ̃	manual	Noun: monastery (verb 3pl would be /kuv/)
+# --- fils: fil複数 vs 息子 ---
+# fils already covered in irregular
+# --- vis: 名詞 vs 動詞 ---
+vis	*	homograph	-1	v i s	manual	Noun: screw
+# --- portions: 名詞 vs 動詞 ---
+portions	*	homograph	-1	p ɔ ʁ|s j ɔ̃	manual	Noun plural
+# --- content: 形容詞 vs 動詞 ---
+content	*	homograph	-1	k ɔ̃|t ɑ̃	manual	Adjective: happy
+# --- président: 名詞 vs 動詞 ---
+président	*	homograph	-1	p ʁ e|z i|d ɑ̃	manual	Noun: president
+# --- résident: 名詞 vs 動詞 ---
+résident	*	homograph	-1	ʁ e|z i|d ɑ̃	manual	Noun: resident
+# --- violent: 形容詞 vs 動詞 ---
+violent	*	homograph	-1	v j ɔ|l ɑ̃	manual	Adjective: violent
+# --- patient: 名詞/形容詞 vs 動詞 ---
+patient	*	homograph	-1	p a|s j ɑ̃	manual	Noun/adj: patient
+# --- accident: 名詞 ---
+accident	*	homograph	-1	a k|s i|d ɑ̃	manual	Noun: accident
+# --- moment: 名詞 ---
+moment	*	homograph	-1	m ɔ|m ɑ̃	manual	Noun: moment
+# --- souvent: 副詞 ---
+souvent	*	homograph	-1	s u|v ɑ̃	manual	Adverb: often
+# --- comment: 副詞 ---
+comment	*	homograph	-1	k ɔ|m ɑ̃	manual	Adverb: how
+# --- autrement: 副詞 ---
+autrement	*	homograph	-1	o|t ʁ ə|m ɑ̃	manual	Adverb: otherwise
+# --- sentiment: 名詞 ---
+sentiment	*	homograph	-1	s ɑ̃|t i|m ɑ̃	manual	Noun: feeling
+# --- argument: 名詞 ---
+argument	*	homograph	-1	a ʁ|ɡ y|m ɑ̃	manual	Noun: argument
+# --- document: 名詞 ---
+document	*	homograph	-1	d ɔ|k y|m ɑ̃	manual	Noun: document
+# --- instrument: 名詞 ---
+instrument	*	homograph	-1	ɛ̃ s|t ʁ y|m ɑ̃	manual	Noun: instrument
+# --- appartement: 名詞 ---
+appartement	*	homograph	-1	a|p a ʁ|t ə|m ɑ̃	manual	Noun: apartment
+# --- gouvernement: 名詞 ---
+gouvernement	*	homograph	-1	ɡ u|v ɛ ʁ|n ə|m ɑ̃	manual	Noun: government
+# --- également: 副詞 ---
+également	*	homograph	-1	e|ɡ a l|m ɑ̃	manual	Adverb: equally
+# --- certainement: 副詞 ---
+certainement	*	homograph	-1	s ɛ ʁ|t ɛ n|m ɑ̃	manual	Adverb: certainly
+# --- justement: 副詞 ---
+justement	*	homograph	-1	ʒ y s|t ə|m ɑ̃	manual	Adverb: exactly
+# --- -ment 名詞/副詞 (homograph with verb_3pl -ent) ---
+logement	*	homograph	-1	l ɔ|ʒ ə|m ɑ̃	manual	Noun: housing
+changement	*	homograph	-1	ʃ ɑ̃ ʒ|m ɑ̃	manual	Noun: change
+mouvement	*	homograph	-1	m u v|m ɑ̃	manual	Noun: movement
+traitement	*	homograph	-1	t ʁ ɛ t|m ɑ̃	manual	Noun: treatment
+bâtiment	*	homograph	-1	b a|t i|m ɑ̃	manual	Noun: building
+événement	*	homograph	-1	e|v ɛ n|m ɑ̃	manual	Noun: event
+environnement	*	homograph	-1	ɑ̃|v i|ʁ ɔ n|m ɑ̃	manual	Noun: environment
+comportement	*	homograph	-1	k ɔ̃|p ɔ ʁ|t ə|m ɑ̃	manual	Noun: behavior
+développement	*	homograph	-1	d e|v l ɔ p|m ɑ̃	manual	Noun: development
+enseignement	*	homograph	-1	ɑ̃|s ɛ ɲ|m ɑ̃	manual	Noun: teaching
+fonctionnement	*	homograph	-1	f ɔ̃ k|s j ɔ n|m ɑ̃	manual	Noun: functioning
+renseignement	*	homograph	-1	ʁ ɑ̃|s ɛ ɲ|m ɑ̃	manual	Noun: information
+investissement	*	homograph	-1	ɛ̃|v ɛ s|t i s|m ɑ̃	manual	Noun: investment
+# ===== 追加外来語 (loanword) =====
+byte	*	loanword	-1	b a j t	manual	English IT loanword
+pixel	*	loanword	-1	p i k|s ɛ l	manual	English IT loanword
+wifi	*	loanword	-1	w i|f i	manual	English IT loanword
+smartphone	*	loanword	-1	s m a ʁ t|f o n	manual	English loanword
+software	*	loanword	-1	s ɔ f t|w ɛ ʁ	manual	English IT loanword
+hardware	*	loanword	-1	a ʁ d|w ɛ ʁ	manual	English IT loanword
+startup	*	loanword	-1	s t a ʁ|t œ p	manual	English loanword
+workshop	*	loanword	-1	w ɔ ʁ k|ʃ ɔ p	manual	English loanword
+feedback	*	loanword	-1	f i d|b a k	manual	English loanword
+laptop	*	loanword	-1	l a p|t ɔ p	manual	English loanword
+podcast	*	loanword	-1	p ɔ d|k a s t	manual	English loanword
+hashtag	*	loanword	-1	a ʃ|t a ɡ	manual	English loanword
+vintage	*	loanword	-1	v ɛ̃|t a ʒ	manual	English loanword
+badge	*	loanword	-1	b a d ʒ	manual	English loanword
+dressing	*	loanword	-1	d ʁ ɛ|s i ŋ	manual	English loanword
+pressing	*	loanword	-1	p ʁ ɛ|s i ŋ	manual	English loanword
+footing	*	loanword	-1	f u|t i ŋ	manual	English loanword (jogging in French usage)
+listing	*	loanword	-1	l i s|t i ŋ	manual	English loanword
+planning	*	loanword	-1	p l a|n i ŋ	manual	English loanword
+briefing	*	loanword	-1	b ʁ i|f i ŋ	manual	English loanword
+catering	*	loanword	-1	k a|t ə|ʁ i ŋ	manual	English loanword
+tuning	*	loanword	-1	t y|n i ŋ	manual	English loanword
+piercing	*	loanword	-1	p i ʁ|s i ŋ	manual	English loanword
+lifting	*	loanword	-1	l i f|t i ŋ	manual	English loanword
+rafting	*	loanword	-1	ʁ a f|t i ŋ	manual	English loanword
+karting	*	loanword	-1	k a ʁ|t i ŋ	manual	English loanword
+kitesurfing	*	loanword	-1	k a j t|s œ ʁ|f i ŋ	manual	English loanword
+# --- アラビア語由来 ---
+algèbre	*	loanword	-1	a l|ʒ ɛ b ʁ	manual	Arabic loanword (al-jabr)
+algorithme	*	loanword	-1	a l|ɡ ɔ|ʁ i t m	manual	Arabic loanword
+alcool	*	loanword	-1	a l|k ɔ l	manual	Arabic loanword (al-kuhl)
+couscous	*	loanword	-1	k u s|k u s	manual	Arabic loanword
+taboulé	*	loanword	-1	t a|b u|l e	manual	Arabic loanword
+houmous	*	loanword	-1	u|m u s	manual	Arabic loanword
+falafel	*	loanword	-1	f a|l a|f ɛ l	manual	Arabic loanword
+# --- ポルトガル語由来 ---
+samba	*	loanword	-1	s ɑ̃|b a	manual	Portuguese loanword
+bossa-nova	*	loanword	-1	b ɔ|s a|n ɔ|v a	manual	Portuguese loanword
+# ===== 追加不規則語 (irregular) =====
+aiguiser	*	irregular	-1	e|ɡ i|z e	manual	gu→/ɡ/ (not /ɡɥ/)
+aiguillon	*	irregular	-1	e|ɡ i|j ɔ̃	manual	gu→/ɡ/ irregular
+aiguillage	*	irregular	-1	e|ɡ i|j a ʒ	manual	gu→/ɡ/ irregular
+poignée	*	irregular	-1	p w a|ɲ e	manual	oi→/wa/ + gn→/ɲ/ irregular
+poignet	*	irregular	-1	p w a|ɲ ɛ	manual	oi→/wa/ + gn→/ɲ/ irregular
+oignons	*	irregular	-1	ɔ|ɲ ɔ̃	manual	Plural, same as singular
+faisan	*	irregular	-1	f ə|z ɑ̃	manual	ai→/ə/ irregular
+faisait	*	irregular	-1	f ə|z ɛ	manual	ai→/ə/ in faire conjugations
+faisons	*	irregular	-1	f ə|z ɔ̃	manual	ai→/ə/ in faire conjugations
+faisant	*	irregular	-1	f ə|z ɑ̃	manual	ai→/ə/ in faire conjugations
+monnaie	*	irregular	-1	m ɔ|n ɛ	manual	ai→/ɛ/ (not /aj/)
+# ===== 追加学術語 (academic) =====
+index	*	academic	-1	ɛ̃|d ɛ k s	manual	Final -x pronounced /ks/
+latex	*	academic	-1	l a|t ɛ k s	manual	Final -x pronounced /ks/
+apex	*	academic	-1	a|p ɛ k s	manual	Final -x pronounced /ks/
+silex	*	academic	-1	s i|l ɛ k s	manual	Final -x pronounced /ks/
+sphinx	*	academic	-1	s f ɛ̃ k s	manual	Greek, final -x pronounced
+lynx	*	academic	-1	l ɛ̃ k s	manual	Final -x pronounced
+onyx	*	academic	-1	ɔ|n i k s	manual	Greek, final -x pronounced
+phoenix	*	academic	-1	f e|n i k s	manual	Greek, final -x pronounced
+thorax	*	academic	-1	t ɔ|ʁ a k s	manual	Greek, final -x pronounced
+larynx	*	academic	-1	l a|ʁ ɛ̃ k s	manual	Greek, final -x pronounced
+pharynx	*	academic	-1	f a|ʁ ɛ̃ k s	manual	Greek, final -x pronounced
+borax	*	academic	-1	b ɔ|ʁ a k s	manual	Latin/Arabic, final -x pronounced
+# --- 語末 -s 発音 ---
+ours	*	academic	-1	u ʁ s	manual	Final -s pronounced
+mars	*	academic	-1	m a ʁ s	manual	Final -s pronounced
+as	*	academic	-1	a s	manual	Final -s pronounced
+atlas	*	academic	-1	a t|l a s	manual	Final -s pronounced
+cosmos	*	academic	-1	k ɔ s|m ɔ s	manual	Final -s pronounced
+albatros	*	academic	-1	a l|b a|t ʁ ɔ s	manual	Final -s pronounced
+hélas	*	academic	-1	e|l a s	manual	Final -s pronounced
+ananas	*	academic	-1	a|n a|n a s	manual	Final -s pronounced
+rhinocéros	*	academic	-1	ʁ i|n ɔ|s e|ʁ ɔ s	manual	Final -s pronounced
+# ===== 追加動詞3人称複数 (verb_3pl) =====
+tombent	*	verb_3pl	-1	t ɔ̃ b	manual	3pl, -ent silent
+passent	*	verb_3pl	-1	p a s	manual	3pl, -ent silent
+restent	*	verb_3pl	-1	ʁ ɛ s t	manual	3pl, -ent silent
+portent	*	verb_3pl	-1	p ɔ ʁ t	manual	3pl, -ent silent
+montrent	*	verb_3pl	-1	m ɔ̃ t ʁ	manual	3pl, -ent silent
+entrent	*	verb_3pl	-1	ɑ̃ t ʁ	manual	3pl, -ent silent
+changent	*	verb_3pl	-1	ʃ ɑ̃ ʒ	manual	3pl, -ent silent
+appellent	*	verb_3pl	-1	a|p ɛ l	manual	3pl, -ent silent
+rappellent	*	verb_3pl	-1	ʁ a|p ɛ l	manual	3pl, -ent silent
+jettent	*	verb_3pl	-1	ʒ ɛ t	manual	3pl, -ent silent
+achètent	*	verb_3pl	-1	a|ʃ ɛ t	manual	3pl, -ent silent

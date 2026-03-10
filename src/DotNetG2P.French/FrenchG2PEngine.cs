@@ -59,6 +59,8 @@ namespace DotNetG2P.French
             for (var i = 0; i < words.Count; i++)
             {
                 var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect, _options.EnableExceptionDictionary);
+                if (_options.EnableAllophones)
+                    pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures);
                 result.AddRange(pronunciation.PhonemesInternal);
             }
 
@@ -75,6 +77,8 @@ namespace DotNetG2P.French
 
             var normalized = Normalize(word).Replace(" ", string.Empty);
             var pronunciation = GraphemeToPhonemeRules.ConvertWord(normalized, _options.Dialect, _options.EnableExceptionDictionary);
+            if (_options.EnableAllophones)
+                pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures);
             var (syllableOffsets, phonemesWithNucleus) = FrenchSyllabifier.Syllabify(
                 GetRawPhonemes(pronunciation));
 
@@ -152,7 +156,8 @@ namespace DotNetG2P.French
                     builder.Append(' ');
 
                 var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect, _options.EnableExceptionDictionary);
-                // F2 で AllophoneProcessor を追加予定
+                if (_options.EnableAllophones)
+                    pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures);
                 builder.Append(formatter(pronunciation));
             }
 

@@ -15,16 +15,15 @@ namespace DotNetG2P.French.Rules
         /// </summary>
         /// <param name="word">変換対象の単語（小文字化推奨）</param>
         /// <param name="dialect">フランス語方言</param>
-        /// <param name="enableExceptionDictionary">例外辞書を使用するか（F2で実装予定）</param>
+        /// <param name="enableExceptionDictionary">例外辞書を使用するか</param>
         /// <returns>音素列・音節分割情報を含む発音情報</returns>
         public static FrenchPronunciation ConvertWord(string word, FrenchDialect dialect, bool enableExceptionDictionary = true)
         {
             if (string.IsNullOrEmpty(word))
                 return new FrenchPronunciation(Array.Empty<FrenchPhoneme>(), Array.Empty<int>(), -1);
 
-            // F2で例外辞書ルックアップを実装予定
-            // if (enableExceptionDictionary && FrenchExceptionDictionary.TryLookup(word, out var exception))
-            //     return exception;
+            if (enableExceptionDictionary && Data.FrenchExceptionDictionary.TryLookup(word, dialect, out var exception))
+                return exception;
 
             // 1. 書記素→音素変換（Phase1〜3, 5, 6を統合）
             var phonemes = ConvertGraphemes(word, dialect);
