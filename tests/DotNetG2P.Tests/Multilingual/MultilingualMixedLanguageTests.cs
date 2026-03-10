@@ -281,5 +281,179 @@ namespace DotNetG2P.Tests.Multilingual
                 Assert.Equal(phonemeResults[i], string.Join(" ", segmentResults[i].Select(s => s.Phonemes)));
             }
         }
+
+        // ===== 仏西 2言語混在テスト =====
+
+        [Fact]
+        public void TextSegmenter_仏西2言語混在_正しく分割される()
+        {
+            // DefaultLatinLanguage = English の場合:
+            // café は é のみ（acute-e only）→ フランス語と判定
+            // canción は ó（スペイン語特有アクセント）→ スペイン語と判定
+            var result = TextSegmenter.Segment("café canción", Language.Japanese, Language.English);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal(Language.French, result[0].Language);
+            Assert.Equal("café ", result[0].Text);
+            Assert.Equal(Language.Spanish, result[1].Language);
+            Assert.Equal("canción", result[1].Text);
+        }
+
+        [Fact]
+        public void Engine_仏西混在_bonjour_señor()
+        {
+            // DefaultLatinLanguage = English で、bonjour はフランス語高頻度語シグナル、
+            // señor は ñ（スペイン語特有文字）でスペイン語に分割される
+            var result = TextSegmenter.Segment("bonjour señor", Language.Japanese, Language.English);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal(Language.French, result[0].Language);
+            Assert.Equal("bonjour ", result[0].Text);
+            Assert.Equal(Language.Spanish, result[1].Language);
+            Assert.Equal("señor", result[1].Text);
+        }
+
+        [Fact]
+        public void Engine_DefaultLatinEnglish_仏西混在_アクセント付きフランス語はFrenchに分類()
+        {
+            // DefaultLatinLanguage = English で:
+            // résumé は é のみ（acute-e only）→ フランス語と判定
+            // amigo はスペイン語高頻度語シグナル → スペイン語と判定
+            var result = TextSegmenter.Segment("résumé amigo", Language.Japanese, Language.English);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal(Language.French, result[0].Language);
+            Assert.Equal("résumé ", result[0].Text);
+            Assert.Equal(Language.Spanish, result[1].Language);
+            Assert.Equal("amigo", result[1].Text);
+        }
+
+        // ===== 3言語混在テスト =====
+
+        [Fact]
+        public void TextSegmenter_日仏英3言語混在_正しく分割される()
+        {
+            // DefaultLatinLanguage = English:
+            // 東京で → 日本語（ひらがな・漢字）
+            // bonjour → フランス語（高頻度語シグナル）
+            // hello → 英語（英語高頻度語シグナル）
+            var result = TextSegmenter.Segment("東京で bonjour hello", Language.Japanese, Language.English);
+
+            Assert.Equal(3, result.Count);
+            Assert.Equal(Language.Japanese, result[0].Language);
+            Assert.Equal("東京で ", result[0].Text);
+            Assert.Equal(Language.French, result[1].Language);
+            Assert.Equal("bonjour ", result[1].Text);
+            Assert.Equal(Language.English, result[2].Language);
+            Assert.Equal("hello", result[2].Text);
+        }
+
+        [Fact]
+        public void TextSegmenter_仏英中3言語混在_正しく分割される()
+        {
+            // DefaultLatinLanguage = English, DefaultCjkLanguage = Chinese:
+            // café → フランス語（é: acute-e only）
+            // hello → 英語（英語高頻度語シグナル）
+            // 你好 → 中国語（CJK既定 = Chinese）
+            var result = TextSegmenter.Segment("café hello 你好", Language.Chinese, Language.English);
+
+            Assert.Equal(3, result.Count);
+            Assert.Equal(Language.French, result[0].Language);
+            Assert.Equal("café ", result[0].Text);
+            Assert.Equal(Language.English, result[1].Language);
+            Assert.Equal("hello ", result[1].Text);
+            Assert.Equal(Language.Chinese, result[2].Language);
+            Assert.Equal("你好", result[2].Text);
+        }
+
+        [Fact]
+        public void TextSegmenter_仏西中3言語混在_正しく分割される()
+        {
+            // DefaultLatinLanguage = English, DefaultCjkLanguage = Chinese:
+            // café → フランス語（é: acute-e only）
+            // canción → スペイン語（ó: スペイン語特有アクセント）
+            // 你好 → 中国語（CJK既定 = Chinese）
+            var result = TextSegmenter.Segment("café canción 你好", Language.Chinese, Language.English);
+
+            Assert.Equal(3, result.Count);
+            Assert.Equal(Language.French, result[0].Language);
+            Assert.Equal("café ", result[0].Text);
+            Assert.Equal(Language.Spanish, result[1].Language);
+            Assert.Equal("canción ", result[1].Text);
+            Assert.Equal(Language.Chinese, result[2].Language);
+            Assert.Equal("你好", result[2].Text);
+        }
+
+        // ===== 仏西・3言語混在エンジン統合テスト =====
+
+        [SkippableFact]
+        public void Engine_仏西混在_各セグメントが単独エンジンと一致()
+        {
+            SkipIfNoDictionary();
+
+            // DefaultEngine（English既定）で café → French、señor → Spanish
+            var segments = _fixture.DefaultEngine!.ToSegments("café señor");
+
+            Assert.Equal(2, segments.Count);
+            Assert.Equal(Language.French, segments[0].Language);
+            Assert.Equal(Language.Spanish, segments[1].Language);
+
+            Assert.Equal(_fixture.FrenchEngine.ToPhonemes(segments[0].SourceText), segments[0].Phonemes);
+            Assert.Equal(_fixture.SpanishEngine.ToPhonemes(segments[1].SourceText), segments[1].Phonemes);
+        }
+
+        [SkippableFact]
+        public void Engine_日仏英3言語混在_ToPhonemesとToSegmentsが整合()
+        {
+            SkipIfNoDictionary();
+
+            const string input = "東京で café hello";
+            var engine = _fixture.ChineseDefaultEngine!;
+            var phonemes = engine.ToPhonemes(input);
+            var segments = engine.ToSegments(input);
+            var joined = string.Join(" ", segments.Select(s => s.Phonemes));
+
+            Assert.Equal(phonemes, joined);
+            Assert.Equal(input, string.Concat(segments.Select(s => s.SourceText)));
+            Assert.Contains(segments, s => s.Language == Language.Japanese);
+            Assert.Contains(segments, s => s.Language == Language.French);
+            Assert.Contains(segments, s => s.Language == Language.English);
+        }
+
+        [SkippableFact]
+        public void Engine_仏英中3言語混在_ToPhonemesとToSegmentsが整合()
+        {
+            SkipIfNoDictionary();
+
+            const string input = "café hello 你好";
+            var engine = _fixture.ChineseDefaultEngine!;
+            var phonemes = engine.ToPhonemes(input);
+            var segments = engine.ToSegments(input);
+            var joined = string.Join(" ", segments.Select(s => s.Phonemes));
+
+            Assert.Equal(phonemes, joined);
+            Assert.Equal(input, string.Concat(segments.Select(s => s.SourceText)));
+            Assert.Contains(segments, s => s.Language == Language.French);
+            Assert.Contains(segments, s => s.Language == Language.English);
+            Assert.Contains(segments, s => s.Language == Language.Chinese);
+        }
+
+        [SkippableFact]
+        public void Engine_仏西中3言語混在_ToPhonemesとToSegmentsが整合()
+        {
+            SkipIfNoDictionary();
+
+            const string input = "café canción 你好";
+            var engine = _fixture.ChineseDefaultEngine!;
+            var phonemes = engine.ToPhonemes(input);
+            var segments = engine.ToSegments(input);
+            var joined = string.Join(" ", segments.Select(s => s.Phonemes));
+
+            Assert.Equal(phonemes, joined);
+            Assert.Equal(input, string.Concat(segments.Select(s => s.SourceText)));
+            Assert.Contains(segments, s => s.Language == Language.French);
+            Assert.Contains(segments, s => s.Language == Language.Spanish);
+            Assert.Contains(segments, s => s.Language == Language.Chinese);
+        }
     }
 }
