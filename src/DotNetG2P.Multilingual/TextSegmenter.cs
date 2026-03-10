@@ -64,12 +64,6 @@ namespace DotNetG2P.Multilingual
             "株式会社", "新宿", "渋谷", "山手線", "電車", "地下鉄", "改札", "ホーム"
         };
 
-        private static readonly Lazy<PinyinPhraseDictionary?> s_chinesePhraseDictionary =
-            new Lazy<PinyinPhraseDictionary?>(TryLoadChinesePhraseDictionary);
-
-        private static readonly Lazy<PinyinCharDictionary?> s_chineseCharDictionary =
-            new Lazy<PinyinCharDictionary?>(TryLoadChineseCharDictionary);
-
         /// <summary>テキストを言語セグメントに分割する（後方互換: CJK漢字はJapanese扱い）。</summary>
         public static IReadOnlyList<TextSegment> Segment(string text)
         {
@@ -650,7 +644,7 @@ namespace DotNetG2P.Multilingual
 
         private static int ComputeChinesePhraseCoverage(string surface)
         {
-            var phraseDictionary = s_chinesePhraseDictionary.Value;
+            var phraseDictionary = EmbeddedChineseDictionaryCache.TryGetPhraseDictionary();
             if (phraseDictionary == null || surface.Length < 2)
                 return 0;
 
@@ -673,7 +667,7 @@ namespace DotNetG2P.Multilingual
 
         private static bool AllCharsHaveChineseReadings(ReadOnlySpan<char> token)
         {
-            var charDictionary = s_chineseCharDictionary.Value;
+            var charDictionary = EmbeddedChineseDictionaryCache.TryGetCharDictionary();
             if (charDictionary == null || token.IsEmpty)
                 return false;
 
@@ -684,30 +678,6 @@ namespace DotNetG2P.Multilingual
             }
 
             return true;
-        }
-
-        private static PinyinPhraseDictionary? TryLoadChinesePhraseDictionary()
-        {
-            try
-            {
-                return PinyinPhraseDictionary.LoadEmbedded();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static PinyinCharDictionary? TryLoadChineseCharDictionary()
-        {
-            try
-            {
-                return PinyinCharDictionary.LoadEmbedded();
-            }
-            catch
-            {
-                return null;
-            }
         }
 
         private static byte ResolveStandaloneDigitLanguage(char c, byte defaultCjkByte, byte defaultLatinByte)

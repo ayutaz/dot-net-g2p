@@ -13,6 +13,8 @@
   - `DotNetG2P.Spanish` パッケージ、UPMメタデータ、ソリューション接続、Spanish専用テスト群を追加済み
 - **S2: 完了**
   - `SpanishNormalizer` を段階型パイプラインへ整理し、日付/時刻/単位/略語/記号の正規化語彙を拡張済み
+  - 桁区切りと小数点の解釈を分離し、`1.234` のような数値を小数ではなく千区切りとして扱うよう修正済み
+  - 不正な日付/時刻は意味的に展開せず、トークン列として安全にフォールバックするよう修正済み
   - `NumberToWords` に文脈依存の性・省略形（`un/uno`, `una`, `veintiún/veintiuna`）を追加済み
   - 例外辞書を `spanish_exceptions.master.tsv` ソース + `generate_spanish_exceptions.ps1` 生成運用へ移行済み
   - `AllophoneProcessor` を `SpanishAllophoneFeatures` で必須規則と可変規則に分離済み
@@ -31,14 +33,18 @@
   - `TextSegmenter` を補強し、standalone `ASCII数字 / ASCII記号` は `DefaultLatinLanguage`、`全角数字` は `DefaultCjkLanguage` に寄せるよう更新済み
   - `TextSegmenter` を補強し、純CJK漢字runは `Chinese strong/weak markers` と `Japanese markers` を見て `DefaultCjkLanguage` より前に判定するよう更新済み
   - `TextSegmenter` を補強し、純CJK漢字runは埋め込み中国語 phrase/char 辞書と日本語語彙ヒントを使って `DefaultCjkLanguage` より前に判定するよう更新済み
+  - `TextSegmenter` と `ChineseG2PEngine` が埋め込み中国語辞書を共有するようにし、純CJK判定時の辞書二重ロードを解消済み
   - `MultilingualSpanishTests` を追加済み
   - `MultilingualMixedLanguageTests` を追加し、日英中西4言語混在、句読点・数字入り混在、バッチAPI整合性を検証済み
+  - 重い Multilingual 統合テストは shared fixture 化し、辞書とエンジン初期化をテストごとに繰り返さないよう整理済み
   - 日本語辞書は `tools/install_naist_jdic.ps1` でダウンロード可能になり、`MeCabTokenizer()` / `MultilingualG2PEngine()` は `NaistJdicLocator` により既定パスから自動解決可能
 - **検証状況**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter SpanishG2P`
-  - 結果: **223 passed**
+  - 結果: **227 passed**
   - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual`
-  - 結果: **340 passed**
+  - 結果: **341 passed**
+  - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter "FullyQualifiedName~EmbeddedChineseDictionaryCacheTests|FullyQualifiedName~TextSegmenterTests|FullyQualifiedName~MultilingualSpanishTests|FullyQualifiedName~MultilingualMixedLanguageTests|FullyQualifiedName~MultilingualChineseTests"`
+  - 結果: **110 passed**
 - **未実装**
   - S1-S4 の計画範囲は実装済み
   - 既知制約: phrase 辞書・語彙ヒント・marker のいずれにも当たらない曖昧な純漢字runは `DefaultCjkLanguage` に従う
@@ -202,17 +208,20 @@ tests/DotNetG2P.Tests/SpanishG2P/
   SpanishAccuracyTests.cs           # 精度・回帰テスト [S3]
 ```
 
-現行テスト数: 223件（2026-03-10 時点）
+現行テスト数: 227件（2026-03-10 時点）
 
 追加の Multilingual 検証（2026-03-10）:
 
 - `MultilingualMixedLanguageTests`: 6件追加
-- `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --no-build --filter "FullyQualifiedName~DotNetG2P.Tests.Multilingual&FullyQualifiedName!~Performance"`
-  - **320 passed**
+- `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --no-build --filter "FullyQualifiedName~EmbeddedChineseDictionaryCacheTests|FullyQualifiedName~TextSegmenterTests|FullyQualifiedName~MultilingualSpanishTests|FullyQualifiedName~MultilingualMixedLanguageTests|FullyQualifiedName~MultilingualChineseTests"`
+  - **110 passed**
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --no-build --filter Multilingual`
-  - **340 passed**
+  - **341 passed**
 - `MultilingualPerformanceTests.メモリ圧迫なし`
   - ウォームアップと `PerformanceThresholds` ベースの relaxed 閾値へ調整済み
+  - shared fixture 化後も **8 passed**
+- `TextSegmenter` の中国語辞書追加常駐
+  - `ChineseG2PEngine` 読み込み後の追加メモリは実測 **約0.02MB** まで低減
 
 ### 全量評価の実行方法
 

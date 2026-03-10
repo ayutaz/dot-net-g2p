@@ -13,72 +13,19 @@ namespace DotNetG2P.Tests.Multilingual
     /// <summary>
     /// 日英中西の4言語同時混在パターンを検証する。
     /// </summary>
-    public class MultilingualMixedLanguageTests : IDisposable
+    [Collection(MultilingualSharedCollection.Name)]
+    public class MultilingualMixedLanguageTests
     {
-        private static string? FindDictPath()
+        private readonly MultilingualSharedFixture _fixture;
+
+        public MultilingualMixedLanguageTests(MultilingualSharedFixture fixture)
         {
-            var envPath = Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
-            if (!string.IsNullOrEmpty(envPath) && Directory.Exists(envPath))
-                return envPath;
-
-            var candidates = new[]
-            {
-                @"C:\Users\yuta\Desktop\Private\open_jtalk_dic_utf_8-1.11",
-                @"C:\naist-jdic",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "naist-jdic"),
-                "/usr/local/share/naist-jdic",
-                "/usr/share/naist-jdic",
-            };
-
-            foreach (var path in candidates)
-            {
-                if (Directory.Exists(path))
-                    return path;
-            }
-
-            return null;
-        }
-
-        private static readonly string? DictPath = FindDictPath();
-
-        private readonly bool _hasDictionary;
-        private readonly MultilingualG2PEngine? _engine;
-        private readonly MultilingualG2PEngine? _spanishDefaultEngine;
-        private readonly G2PEngine? _japaneseEngine;
-        private readonly EnglishG2PEngine _englishEngine = new EnglishG2PEngine();
-        private readonly ChineseG2PEngine _chineseEngine = new ChineseG2PEngine();
-        private readonly SpanishG2PEngine _spanishEngine = new SpanishG2PEngine();
-
-        public MultilingualMixedLanguageTests()
-        {
-            _hasDictionary = DictPath != null;
-            if (_hasDictionary)
-            {
-                var chineseCjkOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
-                _engine = new MultilingualG2PEngine(DictPath!, chineseCjkOptions);
-
-                var chineseAndSpanishDefaults = new MultilingualG2POptions(
-                    defaultCjkLanguage: Language.Chinese,
-                    defaultLatinLanguage: Language.Spanish);
-                _spanishDefaultEngine = new MultilingualG2PEngine(DictPath!, chineseAndSpanishDefaults);
-
-                _japaneseEngine = new G2PEngine(new MeCabTokenizer(DictPath!), G2POptions.Default);
-            }
-        }
-
-        public void Dispose()
-        {
-            _engine?.Dispose();
-            _spanishDefaultEngine?.Dispose();
-            _japaneseEngine?.Dispose();
-            _englishEngine.Dispose();
-            _chineseEngine.Dispose();
-            _spanishEngine.Dispose();
+            _fixture = fixture;
         }
 
         private void SkipIfNoDictionary()
         {
-            Skip.If(!_hasDictionary, "naist-jdic辞書が見つかりません");
+            Skip.If(!_fixture.HasDictionary, "naist-jdic辞書が見つかりません");
         }
 
         [Fact]
@@ -102,17 +49,17 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
 
-            var segments = _engine!.ToSegments("今日は canción 你好 world");
+            var segments = _fixture.ChineseDefaultEngine!.ToSegments("今日は canción 你好 world");
             Assert.Equal(4, segments.Count);
 
             foreach (var segment in segments)
             {
                 var standalone = segment.Language switch
                 {
-                    Language.Japanese => _japaneseEngine!.ToPhonemes(segment.SourceText),
-                    Language.English => _englishEngine.ToPhonemes(segment.SourceText),
-                    Language.Chinese => _chineseEngine.ToPinyin(segment.SourceText),
-                    Language.Spanish => _spanishEngine.ToPhonemes(segment.SourceText),
+                    Language.Japanese => _fixture.JapaneseEngine!.ToPhonemes(segment.SourceText),
+                    Language.English => _fixture.EnglishEngine.ToPhonemes(segment.SourceText),
+                    Language.Chinese => _fixture.ChineseEngine!.ToPinyin(segment.SourceText),
+                    Language.Spanish => _fixture.SpanishEngine.ToPhonemes(segment.SourceText),
                     _ => throw new InvalidOperationException($"Unexpected language: {segment.Language}"),
                 };
 
@@ -126,8 +73,8 @@ namespace DotNetG2P.Tests.Multilingual
             SkipIfNoDictionary();
 
             const string input = "今日は canción 你好 world";
-            var phonemes = _engine!.ToPhonemes(input);
-            var segments = _engine.ToSegments(input);
+            var phonemes = _fixture.ChineseDefaultEngine!.ToPhonemes(input);
+            var segments = _fixture.ChineseDefaultEngine.ToSegments(input);
             var joined = string.Join(" ", segments.Select(s => s.Phonemes));
 
             Assert.Equal(phonemes, joined);
@@ -140,7 +87,7 @@ namespace DotNetG2P.Tests.Multilingual
             SkipIfNoDictionary();
 
             const string input = "今日は canción, 你好 API2026";
-            var segments = _engine!.ToSegments(input);
+            var segments = _fixture.ChineseDefaultEngine!.ToSegments(input);
 
             Assert.Equal(input, string.Concat(segments.Select(s => s.SourceText)));
             Assert.Contains(segments, s => s.Language == Language.Japanese);
@@ -156,7 +103,7 @@ namespace DotNetG2P.Tests.Multilingual
             SkipIfNoDictionary();
 
             const string input = "東京で hola 你好 señor";
-            var segments = _spanishDefaultEngine!.ToSegments(input);
+            var segments = _fixture.ChineseSpanishDefaultEngine!.ToSegments(input);
 
             Assert.Equal(input, string.Concat(segments.Select(s => s.SourceText)));
             Assert.Equal(Language.Japanese, segments[0].Language);
@@ -177,8 +124,8 @@ namespace DotNetG2P.Tests.Multilingual
                 "今日は canción, 你好 API2026",
             };
 
-            var phonemeResults = _engine!.ToPhonemesBatch(texts);
-            var segmentResults = _engine.ToSegmentsBatch(texts);
+            var phonemeResults = _fixture.ChineseDefaultEngine!.ToPhonemesBatch(texts);
+            var segmentResults = _fixture.ChineseDefaultEngine.ToSegmentsBatch(texts);
 
             Assert.Equal(texts.Length, phonemeResults.Count);
             Assert.Equal(texts.Length, segmentResults.Count);

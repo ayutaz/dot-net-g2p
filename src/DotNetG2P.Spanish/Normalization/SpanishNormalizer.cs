@@ -176,10 +176,12 @@ namespace DotNetG2P.Spanish.Normalization
             if (!int.TryParse(dayText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var day)
                 || !int.TryParse(monthText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var month)
                 || !long.TryParse(yearText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var year)
+                || year < 1
+                || year > 9999
                 || day < 1
-                || day > 31
                 || month < 1
-                || month > 12)
+                || month > 12
+                || day > DateTime.DaysInMonth((int)year, month))
             {
                 return fallback;
             }
@@ -197,6 +199,9 @@ namespace DotNetG2P.Spanish.Normalization
                     return ExpandMeasuredValue(m.Groups[1].Value, s_units["h"]);
 
                 var minutes = long.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
+                if (hours > 23 || minutes > 59)
+                    return m.Value;
+
                 return NumberToWords.ConvertAttributed(hours, SpanishNumberGender.Feminine, apocopate: false) + " y " + NumberToWords.Convert(minutes);
             });
 
@@ -204,6 +209,9 @@ namespace DotNetG2P.Spanish.Normalization
             {
                 var hours = long.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
                 var minutes = long.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
+                if (hours > 23 || minutes > 59)
+                    return m.Value;
+
                 var spokenHours = NumberToWords.ConvertAttributed(hours, SpanishNumberGender.Feminine, apocopate: false);
                 return minutes == 0
                     ? spokenHours + " en punto"
@@ -213,7 +221,7 @@ namespace DotNetG2P.Spanish.Normalization
 
         private static string ExpandDecimals(string text)
         {
-            return Regex.Replace(text, @"\b(\d+)([.,])(\d+)\b", m => ExpandDecimalNumber(m.Groups[1].Value, m.Groups[3].Value));
+            return Regex.Replace(text, @"\b\d[\d.,]*\d\b", m => ExpandNumberToken(m.Value));
         }
 
         private static string ExpandPercentages(string text)
@@ -345,9 +353,18 @@ namespace DotNetG2P.Spanish.Normalization
             if (string.IsNullOrWhiteSpace(token))
                 return false;
 
-            var lastSeparator = Math.Max(token.LastIndexOf('.'), token.LastIndexOf(','));
-            if (lastSeparator < 0)
+            var lastDot = token.LastIndexOf('.');
+            var lastComma = token.LastIndexOf(',');
+            if (lastDot < 0 && lastComma < 0)
                 return long.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out wholePart);
+
+            var decimalSeparator = GetDecimalSeparator(token, lastDot, lastComma);
+            if (decimalSeparator == '\0')
+                return long.TryParse(ExtractDigits(token), NumberStyles.Integer, CultureInfo.InvariantCulture, out wholePart);
+
+            var lastSeparator = decimalSeparator == '.'
+                ? lastDot
+                : lastComma;
 
             var integerDigits = ExtractDigits(token.Substring(0, lastSeparator));
             fractionalDigits = ExtractDigits(token.Substring(lastSeparator + 1));
@@ -355,6 +372,52 @@ namespace DotNetG2P.Spanish.Normalization
                 return false;
 
             return long.TryParse(integerDigits, NumberStyles.Integer, CultureInfo.InvariantCulture, out wholePart);
+        }
+
+        private static char GetDecimalSeparator(string token, int lastDot, int lastComma)
+        {
+            if (lastDot >= 0 && lastComma >= 0)
+                return lastDot > lastComma ? '.' : ',';
+
+            if (lastDot >= 0)
+                return IsGroupingPattern(token, '.') ? '\0' : '.';
+
+            if (lastComma >= 0)
+                return ',';
+
+            return '\0';
+        }
+
+        private static bool IsGroupingPattern(string token, char separator)
+        {
+            var parts = token.Split(separator);
+            if (parts.Length < 2)
+                return false;
+
+            if (parts[0].Length < 1 || parts[0].Length > 3 || !AllDigits(parts[0]))
+                return false;
+
+            for (var i = 1; i < parts.Length; i++)
+            {
+                if (parts[i].Length != 3 || !AllDigits(parts[i]))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static bool AllDigits(string value)
+        {
+            if (value.Length == 0)
+                return false;
+
+            for (var i = 0; i < value.Length; i++)
+            {
+                if (!char.IsDigit(value[i]))
+                    return false;
+            }
+
+            return true;
         }
 
         private static string ExtractDigits(string text)

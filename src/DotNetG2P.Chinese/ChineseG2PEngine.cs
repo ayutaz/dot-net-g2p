@@ -19,11 +19,15 @@ namespace DotNetG2P.Chinese
         private readonly ChineseG2POptions _options;
         private int _disposed;
 
+        internal PinyinCharDictionary CharDictionaryInternal => _charDictionary;
+
+        internal PinyinPhraseDictionary? PhraseDictionaryInternal => _phraseDictionary;
+
         /// <summary>
         /// 埋め込み辞書（単字+フレーズ）とデフォルトオプションでエンジンを初期化する。
         /// </summary>
         public ChineseG2PEngine()
-            : this(PinyinCharDictionary.LoadEmbedded(), PinyinPhraseDictionary.LoadEmbedded(), ChineseG2POptions.Default)
+            : this(EmbeddedChineseDictionaryCache.CharDictionary, EmbeddedChineseDictionaryCache.PhraseDictionary, ChineseG2POptions.Default)
         {
         }
 
@@ -32,7 +36,7 @@ namespace DotNetG2P.Chinese
         /// </summary>
         /// <param name="options">処理オプション</param>
         public ChineseG2PEngine(ChineseG2POptions options)
-            : this(PinyinCharDictionary.LoadEmbedded(), PinyinPhraseDictionary.LoadEmbedded(), options)
+            : this(EmbeddedChineseDictionaryCache.CharDictionary, EmbeddedChineseDictionaryCache.PhraseDictionary, options)
         {
         }
 

@@ -9,63 +9,19 @@ namespace DotNetG2P.Tests.Multilingual
     /// <summary>
     /// Multilingual のスペイン語統合テスト。
     /// </summary>
-    public class MultilingualSpanishTests : IDisposable
+    [Collection(MultilingualSharedCollection.Name)]
+    public class MultilingualSpanishTests
     {
-        private static string? FindDictPath()
+        private readonly MultilingualSharedFixture _fixture;
+
+        public MultilingualSpanishTests(MultilingualSharedFixture fixture)
         {
-            var envPath = Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
-            if (!string.IsNullOrEmpty(envPath) && Directory.Exists(envPath))
-                return envPath;
-
-            var candidates = new[]
-            {
-                @"C:\Users\yuta\Desktop\Private\open_jtalk_dic_utf_8-1.11",
-                @"C:\naist-jdic",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "naist-jdic"),
-                "/usr/local/share/naist-jdic",
-                "/usr/share/naist-jdic",
-            };
-
-            foreach (var path in candidates)
-            {
-                if (Directory.Exists(path))
-                    return path;
-            }
-
-            return null;
-        }
-
-        private static readonly string? DictPath = FindDictPath();
-
-        private readonly MultilingualG2PEngine? _engine;
-        private readonly MultilingualG2PEngine? _spanishDefaultEngine;
-        private readonly SpanishG2PEngine _spanishEngine;
-        private readonly bool _hasDictionary;
-
-        public MultilingualSpanishTests()
-        {
-            _spanishEngine = new SpanishG2PEngine();
-            _hasDictionary = DictPath != null;
-
-            if (_hasDictionary)
-            {
-                _engine = new MultilingualG2PEngine(DictPath!);
-                _spanishDefaultEngine = new MultilingualG2PEngine(
-                    DictPath!,
-                    new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish));
-            }
-        }
-
-        public void Dispose()
-        {
-            _engine?.Dispose();
-            _spanishDefaultEngine?.Dispose();
-            _spanishEngine.Dispose();
+            _fixture = fixture;
         }
 
         private void SkipIfNoDictionary()
         {
-            Skip.If(!_hasDictionary, "naist-jdic辞書が見つかりません");
+            Skip.If(!_fixture.HasDictionary, "naist-jdic辞書が見つかりません");
         }
 
         [Fact]
@@ -212,11 +168,11 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
 
-            var result = _spanishDefaultEngine!.ToSegments("hola mundo");
+            var result = _fixture.SpanishDefaultEngine!.ToSegments("hola mundo");
 
             Assert.Single(result);
             Assert.Equal(Language.Spanish, result[0].Language);
-            Assert.Equal(_spanishEngine.ToPhonemes("hola mundo"), result[0].Phonemes);
+            Assert.Equal(_fixture.SpanishEngine.ToPhonemes("hola mundo"), result[0].Phonemes);
         }
 
         [SkippableFact]
@@ -224,12 +180,12 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
 
-            var result = _spanishDefaultEngine!.ToSegments("東京hola");
+            var result = _fixture.SpanishDefaultEngine!.ToSegments("東京hola");
 
             Assert.Equal(2, result.Count);
             Assert.Equal(Language.Japanese, result[0].Language);
             Assert.Equal(Language.Spanish, result[1].Language);
-            Assert.Equal(_spanishEngine.ToPhonemes(result[1].SourceText), result[1].Phonemes);
+            Assert.Equal(_fixture.SpanishEngine.ToPhonemes(result[1].SourceText), result[1].Phonemes);
         }
 
         [SkippableFact]
@@ -237,11 +193,11 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
 
-            var result = _engine!.ToSegments("canción");
+            var result = _fixture.DefaultEngine!.ToSegments("canción");
 
             Assert.Single(result);
             Assert.Equal(Language.Spanish, result[0].Language);
-            Assert.Equal(_spanishEngine.ToPhonemes("canción"), result[0].Phonemes);
+            Assert.Equal(_fixture.SpanishEngine.ToPhonemes("canción"), result[0].Phonemes);
         }
 
         [SkippableFact]
@@ -250,7 +206,7 @@ namespace DotNetG2P.Tests.Multilingual
             SkipIfNoDictionary();
 
             const string input = "hola 世界";
-            var engine = _spanishDefaultEngine!;
+            var engine = _fixture.SpanishDefaultEngine!;
             var phonemes = engine.ToPhonemes(input);
             var segments = engine.ToSegments(input);
             var joined = string.Join(" ", segments.Select(s => s.Phonemes));

@@ -17,6 +17,7 @@
   - `y / guion / truhan / whisky / wifi / show / México / Xochimilco / Wagner` などに加え、loanword / 固有名詞の追加例外辞書
   - `/b d g/` 弱化、鼻音同化、`/s/` 有声化、語末 `/d/` 軟化を切り替え可能な異音処理
   - 略語・数値・割合・通貨・記号・日付・時刻・単位展開を含む `SpanishNormalizer`
+  - 桁区切りと小数点の解釈分離、および不正な日付/時刻を安全にフォールバックする `SpanishNormalizer` の追加修正
   - 文脈依存数詞（`un/uno`, `una`, `veintiún/veintiuna`）
   - `XSampaConverter` と `ToXSampa / ToXSampaWithoutStress / ToXSampaBatch`
   - X-SAMPA / エッジケース / パフォーマンス / 精度・回帰テスト
@@ -28,6 +29,8 @@
   - `DotNetG2P.Multilingual` への統合（`Language.Spanish`, `DefaultLatinLanguage`, `MultilingualSpanishTests`）
   - `MultilingualMixedLanguageTests` による日英中西4言語混在、句読点・数字入り混在、バッチ整合性テスト
   - `TextSegmenter` を補強し、ASCII Spanish 高頻度語・接尾辞・`güe/güi`、standalone ASCII neutral token、CJK marker ベース判定、埋め込み中国語 phrase/char 辞書と日本語語彙ヒントによる純漢字run判定を追加
+  - `TextSegmenter` と `ChineseG2PEngine` の埋め込み中国語辞書共有キャッシュを追加し、純CJK判定時の二重ロードを解消
+  - 重い Multilingual 統合テストを shared fixture 化し、辞書・エンジン初期化コストを一度に集約
   - `tools/install_naist_jdic.ps1` と `NaistJdicLocator` により、日本語辞書をダウンロードして `MeCabTokenizer()` / `MultilingualG2PEngine()` から既定パスで自動解決可能
 - 実測値
   - `ipa_dict_es_es_full/base`: PER `1.69%`, WER `16.49%`
@@ -40,9 +43,11 @@
   - S1-S4 計画範囲は実装済み
   - 既知制約: marker・語彙ヒント・埋め込み辞書根拠のいずれも弱い曖昧な純漢字runは `DefaultCjkLanguage` に依存
 - 検証状況
-  - `SpanishG2P` テスト: **223 passed**
-  - `Multilingual` テスト: **340 passed**
-  - `Multilingual` 機能系テスト: **320 passed**
+  - `SpanishG2P` テスト: **227 passed**
+  - `Multilingual` テスト: **341 passed**
+  - 代表 Multilingual 回帰: **110 passed**
+  - `MultilingualPerformanceTests`: **8 passed**
+  - `ChineseG2PEngine` 初期化後に `TextSegmenter` が追加で確保する中国語辞書メモリ: **約0.02MB**
 
 調査本文はルール設計の根拠として維持し、最新の実装状態は [spanish-g2p-implementation-plan.md](spanish-g2p-implementation-plan.md) を正とする。
 

@@ -11,53 +11,19 @@ namespace DotNetG2P.Tests.Multilingual
     /// Language enum、ScriptKind/LanguageDetector、TextSegmenter、
     /// MultilingualG2PEngine、MultilingualG2POptionsの中国語対応を検証する。
     /// </summary>
-    public class MultilingualChineseTests : IDisposable
+    [Collection(MultilingualSharedCollection.Name)]
+    public class MultilingualChineseTests
     {
-        private static string? FindDictPath()
-        {
-            var envPath = Environment.GetEnvironmentVariable("NAIST_JDIC_PATH");
-            if (!string.IsNullOrEmpty(envPath) && Directory.Exists(envPath))
-                return envPath;
-            var candidates = new[]
-            {
-                @"C:\Users\yuta\Desktop\Private\open_jtalk_dic_utf_8-1.11",
-                @"C:\naist-jdic",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "naist-jdic"),
-                "/usr/local/share/naist-jdic",
-                "/usr/share/naist-jdic",
-            };
-            foreach (var path in candidates)
-                if (Directory.Exists(path))
-                    return path;
-            return null;
-        }
+        private readonly MultilingualSharedFixture _fixture;
 
-        private static readonly string? DictPath = FindDictPath();
-        private readonly MultilingualG2PEngine? _engine;
-        private readonly MultilingualG2PEngine? _chineseDefaultEngine;
-        private readonly bool _hasDictionary;
-
-        public MultilingualChineseTests()
+        public MultilingualChineseTests(MultilingualSharedFixture fixture)
         {
-            _hasDictionary = DictPath != null;
-            if (_hasDictionary)
-            {
-                _engine = new MultilingualG2PEngine(DictPath!);
-                var chineseOptions = new MultilingualG2POptions(
-                    defaultCjkLanguage: Language.Chinese);
-                _chineseDefaultEngine = new MultilingualG2PEngine(DictPath!, chineseOptions);
-            }
-        }
-
-        public void Dispose()
-        {
-            _engine?.Dispose();
-            _chineseDefaultEngine?.Dispose();
+            _fixture = fixture;
         }
 
         private void SkipIfNoDictionary()
         {
-            Skip.If(!_hasDictionary, "naist-jdic辞書が見つかりません（環境変数 NAIST_JDIC_PATH を設定してください）");
+            Skip.If(!_fixture.HasDictionary, "naist-jdic辞書が見つかりません（環境変数 NAIST_JDIC_PATH を設定してください）");
         }
 
         // =================================================================
@@ -258,7 +224,7 @@ namespace DotNetG2P.Tests.Multilingual
         public void Engine_DefaultChinese_漢字テキスト_ピンイン出力()
         {
             SkipIfNoDictionary();
-            var result = _chineseDefaultEngine!.ToPhonemes("你好");
+            var result = _fixture.ChineseDefaultEngine!.ToPhonemes("你好");
             Assert.NotNull(result);
             Assert.NotEmpty(result);
             // ピンインのアルファベットが含まれる
@@ -270,7 +236,7 @@ namespace DotNetG2P.Tests.Multilingual
         public void Engine_DefaultJapanese_漢字テキスト_日本語音素出力()
         {
             SkipIfNoDictionary();
-            var result = _engine!.ToPhonemes("東京");
+            var result = _fixture.DefaultEngine!.ToPhonemes("東京");
             Assert.NotNull(result);
             Assert.NotEmpty(result);
             // 日本語音素が含まれる
@@ -282,7 +248,7 @@ namespace DotNetG2P.Tests.Multilingual
         public void Engine_DefaultChinese_英語と中国語混在()
         {
             SkipIfNoDictionary();
-            var result = _chineseDefaultEngine!.ToPhonemes("Hello你好");
+            var result = _fixture.ChineseDefaultEngine!.ToPhonemes("Hello你好");
             Assert.NotNull(result);
             Assert.NotEmpty(result);
             Assert.True(result.Length > 3,
@@ -293,7 +259,7 @@ namespace DotNetG2P.Tests.Multilingual
         public void Engine_ToSegments_DefaultChinese_漢字セグメントがChinese()
         {
             SkipIfNoDictionary();
-            var result = _chineseDefaultEngine!.ToSegments("Hello你好");
+            var result = _fixture.ChineseDefaultEngine!.ToSegments("Hello你好");
             Assert.True(result.Count >= 2, $"セグメント数が2未満: {result.Count}");
             Assert.Contains(result, s => s.Language == Language.English);
             Assert.Contains(result, s => s.Language == Language.Chinese);
@@ -303,7 +269,7 @@ namespace DotNetG2P.Tests.Multilingual
         public void Engine_ToSegments_DefaultJapanese_漢字セグメントがJapanese()
         {
             SkipIfNoDictionary();
-            var result = _engine!.ToSegments("Hello東京");
+            var result = _fixture.DefaultEngine!.ToSegments("Hello東京");
             Assert.True(result.Count >= 2, $"セグメント数が2未満: {result.Count}");
             Assert.Contains(result, s => s.Language == Language.English);
             Assert.Contains(result, s => s.Language == Language.Japanese);
@@ -314,7 +280,7 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
             var texts = new[] { "Hello", "你好", "こんにちは" };
-            var result = _chineseDefaultEngine!.ToPhonemesBatch(texts);
+            var result = _fixture.ChineseDefaultEngine!.ToPhonemesBatch(texts);
             Assert.Equal(3, result.Count);
             foreach (var phonemes in result)
             {
@@ -328,7 +294,7 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
             var texts = new[] { "Hello你好", "こんにちはworld" };
-            var result = _chineseDefaultEngine!.ToSegmentsBatch(texts);
+            var result = _fixture.ChineseDefaultEngine!.ToSegmentsBatch(texts);
             Assert.Equal(2, result.Count);
             foreach (var segments in result)
             {
@@ -342,9 +308,9 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
             var input = "你好世界";
-            var result1 = _chineseDefaultEngine!.ToPhonemes(input);
-            var result2 = _chineseDefaultEngine.ToPhonemes(input);
-            var result3 = _chineseDefaultEngine.ToPhonemes(input);
+            var result1 = _fixture.ChineseDefaultEngine!.ToPhonemes(input);
+            var result2 = _fixture.ChineseDefaultEngine.ToPhonemes(input);
+            var result3 = _fixture.ChineseDefaultEngine.ToPhonemes(input);
             Assert.Equal(result1, result2);
             Assert.Equal(result2, result3);
         }
@@ -353,7 +319,7 @@ namespace DotNetG2P.Tests.Multilingual
         public void Engine_DefaultChinese_空文字列_空文字列()
         {
             SkipIfNoDictionary();
-            var result = _chineseDefaultEngine!.ToPhonemes("");
+            var result = _fixture.ChineseDefaultEngine!.ToPhonemes("");
             Assert.Equal("", result);
         }
 
@@ -361,7 +327,7 @@ namespace DotNetG2P.Tests.Multilingual
         public void Engine_DefaultChinese_null_空文字列()
         {
             SkipIfNoDictionary();
-            var result = _chineseDefaultEngine!.ToPhonemes(null!);
+            var result = _fixture.ChineseDefaultEngine!.ToPhonemes(null!);
             Assert.Equal("", result);
         }
 
@@ -424,7 +390,7 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
             var options = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
-            var engine = new MultilingualG2PEngine(DictPath!, options);
+            var engine = new MultilingualG2PEngine(_fixture.DictPath!, options);
             engine.Dispose();
             Assert.Throws<ObjectDisposedException>(() => engine.ToPhonemes("你好"));
         }
@@ -434,7 +400,7 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
             var options = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
-            var engine = new MultilingualG2PEngine(DictPath!, options);
+            var engine = new MultilingualG2PEngine(_fixture.DictPath!, options);
             engine.Dispose();
             Assert.Throws<ObjectDisposedException>(() => engine.ToSegments("你好Hello"));
         }
@@ -444,7 +410,7 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
             var options = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
-            var engine = new MultilingualG2PEngine(DictPath!, options);
+            var engine = new MultilingualG2PEngine(_fixture.DictPath!, options);
             engine.Dispose();
             var exception = Record.Exception(() => engine.Dispose());
             Assert.Null(exception);
@@ -455,7 +421,7 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
             var options = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese);
-            using var engine = new MultilingualG2PEngine(DictPath!, options);
+            using var engine = new MultilingualG2PEngine(_fixture.DictPath!, options);
 
             // 正常動作を確認
             var phonemes = engine.ToPhonemes("你好Hello");
@@ -504,10 +470,12 @@ namespace DotNetG2P.Tests.Multilingual
         {
             SkipIfNoDictionary();
             string input = "Hello你好world";
-            var phonemes = _chineseDefaultEngine!.ToPhonemes(input);
-            var segments = _chineseDefaultEngine.ToSegments(input);
+            var phonemes = _fixture.ChineseDefaultEngine!.ToPhonemes(input);
+            var segments = _fixture.ChineseDefaultEngine.ToSegments(input);
             var segmentPhonemes = string.Join(" ", segments.Select(s => s.Phonemes));
             Assert.Equal(phonemes, segmentPhonemes);
         }
     }
 }
+
+

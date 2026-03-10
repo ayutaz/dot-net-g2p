@@ -108,10 +108,11 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - テスト実装済み
   - **S2（精度向上・異音規則・テキスト正規化）**: 完了
     - `SpanishNormalizer` をカテゴリ別展開へ整理し、日付・時刻・単位・略語・記号を拡張
+    - 桁区切りと小数点の解釈分離、不正な日付/時刻の安全なフォールバックを追加
     - `NumberToWords` に文脈依存数詞（`un/uno`, `una`, `veintiún/veintiuna`）を追加
     - `SpanishAllophoneFeatures` により必須規則と可変規則を切替可能
     - `spanish_exceptions.master.tsv` + `tools/generate_spanish_exceptions.ps1` による例外辞書運用へ移行
-    - SpanishG2P テスト 222件通過
+    - SpanishG2P テスト 227件通過
   - **S3（X-SAMPA・大規模精度評価・拡張テスト）**: 完了
     - XSampaConverter、`ToXSampa()`, `ToXSampaWithoutStress()`, `ToXSampaBatch()` を追加
     - SpanishXSampaTests / SpanishEdgeCaseTests / SpanishPerformanceTests / SpanishAccuracyTests を追加
@@ -122,13 +123,15 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
       - `ipa_dict_es_mx_full/base` PER `1.69%`, `allophones` PER `1.37%`
       - `wikipron_ca_full/base` PER `1.38%`
       - `wikipron_la_full/base` PER `1.43%`
-    - SpanishG2P テスト 223件通過
+    - SpanishG2P テスト 227件通過
   - **S4（Multilingual統合・パッケージング拡張）**: 完了
     - `DotNetG2P.Multilingual` に `Language.Spanish` と `DefaultLatinLanguage` を追加
     - `TextSegmenter` を英語/スペイン語のラテン文字振り分けに対応
     - `TextSegmenter` を補強し、ASCII Spanish 高頻度語・接尾辞・`güe/güi`、standalone neutral token、CJK marker ベース判定、埋め込み中国語 phrase/char 辞書と日本語語彙ヒントによる純漢字run判定を追加
+    - `TextSegmenter` と `ChineseG2PEngine` の埋め込み中国語辞書共有キャッシュを追加し、純CJK判定時の辞書二重ロードを解消
     - `MultilingualG2PEngine` に `SpanishG2PEngine` を統合
-    - `MultilingualSpanishTests` / `MultilingualMixedLanguageTests` を追加し、Multilingual テスト 340件通過
+    - `MultilingualSpanishTests` / `MultilingualMixedLanguageTests` を追加し、重い Multilingual 統合テストは shared fixture 化
+    - Multilingual テスト 341件通過、代表 Multilingual 回帰 110件通過、Multilingual performance テスト 8件通過
 
 ## ビルド・実行
 
@@ -299,7 +302,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── StressAssigner.cs        # ストレス位置決定
 │   │   │   └── AllophoneProcessor.cs    # 異音規則 (β,ð,ɣ弱化, 鼻音同化) [S2]
 │   │   ├── Normalization/
-│   │   │   └── SpanishNormalizer.cs     # テキスト正規化 (NFC, 小文字化, 句読点)
+│   │   │   └── SpanishNormalizer.cs     # テキスト正規化 (数値/日付/時刻/単位/略語/記号)
 │   │   ├── Conversion/
 │   │   │   ├── IpaConverter.cs          # IPA変換
 │   │   │   └── XSampaConverter.cs       # X-SAMPA変換 [S3]
@@ -397,7 +400,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── SpanishEdgeCaseTests.cs     # エッジケーステスト [S3]
 │       │   ├── SpanishPerformanceTests.cs  # パフォーマンステスト [S3]
 │       │   └── SpanishAccuracyTests.cs     # 精度・回帰テスト [S3]
-│       ├── Multilingual/               # 多言語G2Pテスト（2026-03-10時点 340 passed）
+│       ├── Multilingual/               # 多言語G2Pテスト（2026-03-10時点 代表110 passed + perf 8 passed）
 │       │   ├── LanguageDetectorTests.cs  # 言語判定テスト
 │       │   ├── TextSegmenterTests.cs     # セグメント分割テスト
 │       │   ├── MultilingualEngineTests.cs # エンジン統合テスト
@@ -407,6 +410,8 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── LanguageConsistencyTests.cs # 言語検出一貫性テスト
 │       │   ├── MultilingualChineseTests.cs # 中国語統合テスト
 │       │   ├── MultilingualSpanishTests.cs # スペイン語統合テスト
+│       │   ├── MultilingualSharedFixture.cs # 重い統合テスト用 shared fixture
+│       │   ├── EmbeddedChineseDictionaryCacheTests.cs # 中国語辞書共有キャッシュ検証
 │       │   ├── MixedTextBasicTests.cs    # 混在テキスト基本テスト
 │       │   ├── MixedTextAdvancedTests.cs # 混在テキスト応用テスト
 │       │   └── MultilingualMixedLanguageTests.cs # 4言語混在回帰テスト
