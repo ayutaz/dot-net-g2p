@@ -16,7 +16,7 @@ namespace DotNetG2P.Portuguese.Rules
         /// </summary>
         /// <param name="word">変換対象の単語</param>
         /// <param name="dialect">ポルトガル語方言</param>
-        /// <param name="enableExceptionDictionary">例外辞書を使用するか（P2で実装予定）</param>
+        /// <param name="enableExceptionDictionary">例外辞書を使用するか</param>
         /// <returns>音素列・音節分割情報を含む発音情報</returns>
         public static PortuguesePronunciation ConvertWord(string word, PortugueseDialect dialect, bool enableExceptionDictionary = true)
         {
@@ -27,31 +27,26 @@ namespace DotNetG2P.Portuguese.Rules
             var lower = word.ToLowerInvariant();
             lower = lower.Normalize(System.Text.NormalizationForm.FormC);
 
-            // P2で例外辞書チェックを追加予定
-            // if (enableExceptionDictionary && ExceptionDictionary.TryLookup(lower, dialect, out var exception))
-            //     return exception;
+            // 例外辞書チェック
+            if (enableExceptionDictionary && Data.PortugueseExceptionDictionary.TryLookup(lower, dialect, out var exception))
+                return exception;
 
             // 音節分割 + ストレス決定
             var syllables = PortugueseSyllabifier.Syllabify(lower);
             var stressedSyllables = StressAssigner.MarkStress(lower, syllables);
 
-            // 各音節を音素に変換
-            var phonemes = new List<PortuguesePhoneme>(lower.Length + 4);
-            var syllableOffsets = new int[stressedSyllables.Count];
+            // ストレス音節インデックスを事前計算
             var stressedIndex = -1;
-
             for (var i = 0; i < stressedSyllables.Count; i++)
             {
-                syllableOffsets[i] = phonemes.Count;
                 if (stressedSyllables[i].IsStressed)
                     stressedIndex = i;
             }
 
-            // 統合走査で全フェーズを処理
-            ConvertGraphemes(lower, stressedSyllables, dialect, phonemes);
-
-            // 音節オフセットの再計算（実際の音素出力に基づく）
-            syllableOffsets = RecalculateSyllableOffsets(lower, stressedSyllables, dialect);
+            // 統合走査で全フェーズを処理（音節オフセットも同時追跡）
+            var phonemes = new List<PortuguesePhoneme>(lower.Length + 4);
+            var syllableOffsets = new int[stressedSyllables.Count];
+            ConvertGraphemes(lower, stressedSyllables, dialect, phonemes, syllableOffsets);
 
             return new PortuguesePronunciation(phonemes.ToArray(), syllableOffsets, stressedIndex);
         }
@@ -65,14 +60,35 @@ namespace DotNetG2P.Portuguese.Rules
             string word,
             IReadOnlyList<PortugueseSyllable> syllables,
             PortugueseDialect dialect,
-            List<PortuguesePhoneme> phonemes)
+            List<PortuguesePhoneme> phonemes,
+            int[]? syllableOffsets = null)
         {
             var i = 0;
             var len = word.Length;
 
+            // 音節オフセット追跡用: 次に記録すべき音節のインデックス
+            var nextSyllableIdx = 0;
+
+            // 最初の音節オフセットを記録
+            if (syllableOffsets != null && syllables.Count > 0)
+            {
+                syllableOffsets[0] = 0;
+                nextSyllableIdx = 1;
+            }
+
             while (i < len)
             {
                 var c = word[i];
+
+                // 音節境界チェック: 現在の文字位置が次の音節の開始位置に達したらオフセットを記録
+                if (syllableOffsets != null && nextSyllableIdx < syllables.Count)
+                {
+                    if (i >= syllables[nextSyllableIdx].StartIndex)
+                    {
+                        syllableOffsets[nextSyllableIdx] = phonemes.Count;
+                        nextSyllableIdx++;
+                    }
+                }
 
                 // Phase 5: 語頭 h → 黙字
                 if (c == 'h' && i == 0)
@@ -81,7 +97,17 @@ namespace DotNetG2P.Portuguese.Rules
                     continue;
                 }
 
-                // Phase 1: ダイグラフ + 鼻母音化（最長一致）
+                // Phase 1: チルダ付き母音（語末単独を含む）
+                if (c == '\u00E3' || c == '\u00F5') // ã, õ
+                {
+                    if (TryTildeVowel(word, i, len, syllables, phonemes, out var tildeConsumed))
+                    {
+                        i += tildeConsumed;
+                        continue;
+                    }
+                }
+
+                // Phase 1: ダイグラフ + 鼻母音化（最長一致、i+1 < len が必要）
                 if (i + 1 < len)
                 {
                     if (TryDigraphOrNasal(word, i, len, syllables, dialect, phonemes, out var consumed))
@@ -116,7 +142,72 @@ namespace DotNetG2P.Portuguese.Rules
 
         #region Phase 1: ダイグラフ + 鼻母音化
 
-        /// <summary>ダイグラフまたは鼻母音化パターンを判定・変換する。</summary>
+        /// <summary>チルダ付き母音（ã, õ）を処理する。語末単独を含む。</summary>
+        private static bool TryTildeVowel(
+            string word, int i, int len,
+            IReadOnlyList<PortugueseSyllable> syllables,
+            List<PortuguesePhoneme> phonemes,
+            out int consumed)
+        {
+            consumed = 0;
+            var c0 = word[i];
+
+            // ã → 常に鼻母音
+            if (c0 == '\u00E3') // ã
+            {
+                var stressed = IsInStressedSyllable(word, i, syllables);
+                // ão (鼻二重母音)
+                if (i + 1 < len && word[i + 1] == 'o')
+                {
+                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ANasal, stressed));
+                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.WNasal));
+                    consumed = 2;
+                    return true;
+                }
+                // ãe / ães (鼻二重母音)
+                if (i + 1 < len && word[i + 1] == 'e')
+                {
+                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ANasal, stressed));
+                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.JNasal));
+                    consumed = 2;
+                    return true;
+                }
+                // ãi (鼻二重母音)
+                if (i + 1 < len && word[i + 1] == 'i')
+                {
+                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ANasal, stressed));
+                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.JNasal));
+                    consumed = 2;
+                    return true;
+                }
+                // ã 単独（語末含む）
+                phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ANasal, stressed));
+                consumed = 1;
+                return true;
+            }
+
+            // õe / õ → 鼻母音
+            if (c0 == '\u00F5') // õ
+            {
+                var stressed = IsInStressedSyllable(word, i, syllables);
+                // õe /ões (鼻二重母音)
+                if (i + 1 < len && word[i + 1] == 'e')
+                {
+                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ONasal, stressed));
+                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.JNasal));
+                    consumed = 2;
+                    return true;
+                }
+                // õ 単独（語末含む）
+                phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ONasal, stressed));
+                consumed = 1;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>ダイグラフまたは鼻母音化パターンを判定・変換する。i+1 &lt; len が保証されていること。</summary>
         private static bool TryDigraphOrNasal(
             string word, int i, int len,
             IReadOnlyList<PortugueseSyllable> syllables,
@@ -195,6 +286,13 @@ namespace DotNetG2P.Portuguese.Rules
                     consumed = 2;
                     return true;
                 }
+                // qu 語末 → /k/ のみ（S8修正: 後続文字なしの場合 /w/ を出力しない）
+                if (i + 2 >= len)
+                {
+                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.K));
+                    consumed = 2;
+                    return true;
+                }
                 // qu + 非前舌母音 → /kw/
                 phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.K));
                 phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.W));
@@ -226,58 +324,7 @@ namespace DotNetG2P.Portuguese.Rules
             }
 
             // --- 鼻母音化 ---
-
-            // ã → 常に鼻母音
-            if (c0 == '\u00E3') // ã
-            {
-                var stressed = IsInStressedSyllable(word, i, syllables);
-                // ão (鼻二重母音)
-                if (c1 == 'o')
-                {
-                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ANasal, stressed));
-                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.WNasal));
-                    consumed = 2;
-                    return true;
-                }
-                // ãe / ães (鼻二重母音)
-                if (c1 == 'e')
-                {
-                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ANasal, stressed));
-                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.JNasal));
-                    consumed = 2;
-                    return true;
-                }
-                // ãi (鼻二重母音)
-                if (c1 == 'i')
-                {
-                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ANasal, stressed));
-                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.JNasal));
-                    consumed = 2;
-                    return true;
-                }
-                // ã 単独
-                phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ANasal, stressed));
-                consumed = 1;
-                return true;
-            }
-
-            // õe / õ → 鼻母音
-            if (c0 == '\u00F5') // õ
-            {
-                var stressed = IsInStressedSyllable(word, i, syllables);
-                // õe /ões (鼻二重母音)
-                if (c1 == 'e')
-                {
-                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ONasal, stressed));
-                    phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.JNasal));
-                    consumed = 2;
-                    return true;
-                }
-                // õ 単独
-                phonemes.Add(new PortuguesePhoneme(PortugueseIpaPhoneme.ONasal, stressed));
-                consumed = 1;
-                return true;
-            }
+            // 注: チルダ付き母音(ã, õ)はTryTildeVowelで既に処理済み
 
             // 母音 + n/m → 鼻母音化判定
             // ただし n+h の場合は nh ダイグラフとして扱うため鼻母音化しない
@@ -644,31 +691,6 @@ namespace DotNetG2P.Portuguese.Rules
                     return syl.IsStressed;
             }
             return false;
-        }
-
-        /// <summary>音節オフセットを再計算する（実際の音素変換後の位置に基づく）。</summary>
-        private static int[] RecalculateSyllableOffsets(
-            string word,
-            IReadOnlyList<PortugueseSyllable> syllables,
-            PortugueseDialect dialect)
-        {
-            // 各音節の先頭文字インデックスから、音素列内のオフセットを推定する
-            // 簡易実装: 各音節ごとに個別に変換し、オフセットを計算
-            var offsets = new int[syllables.Count];
-            var currentOffset = 0;
-
-            for (var i = 0; i < syllables.Count; i++)
-            {
-                offsets[i] = currentOffset;
-                var tempPhonemes = new List<PortuguesePhoneme>(8);
-                var singleSyllable = new[] { syllables[i] };
-                ConvertGraphemes(word.Substring(syllables[i].StartIndex, syllables[i].Length),
-                    new[] { new PortugueseSyllable(0, syllables[i].Length, syllables[i].Text, syllables[i].IsStressed) },
-                    dialect, tempPhonemes);
-                currentOffset += tempPhonemes.Count;
-            }
-
-            return offsets;
         }
 
         #endregion

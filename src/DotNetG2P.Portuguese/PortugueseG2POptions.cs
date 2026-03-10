@@ -38,7 +38,7 @@ namespace DotNetG2P.Portuguese
             PortugueseDialect dialect = default,
             bool includeStress = true,
             bool enableAllophones = false,
-            PortugueseAllophoneFeatures allophoneFeatures = default,
+            PortugueseAllophoneFeatures? allophoneFeatures = null,
             bool enableTextNormalization = true,
             bool enableExceptionDictionary = true,
             string separator = " ")
@@ -46,11 +46,11 @@ namespace DotNetG2P.Portuguese
             Dialect = dialect;
             IncludeStress = includeStress;
             EnableAllophones = enableAllophones;
-            AllophoneFeatures = allophoneFeatures == default
-                ? (dialect == PortugueseDialect.European
+            AllophoneFeatures = allophoneFeatures.HasValue
+                ? allophoneFeatures.Value
+                : (dialect == PortugueseDialect.European
                     ? PortugueseAllophoneFeatures.EuropeanDefault
-                    : PortugueseAllophoneFeatures.BrazilianDefault)
-                : allophoneFeatures;
+                    : PortugueseAllophoneFeatures.BrazilianDefault);
             EnableTextNormalization = enableTextNormalization;
             EnableExceptionDictionary = enableExceptionDictionary;
             Separator = separator ?? throw new ArgumentNullException(nameof(separator));

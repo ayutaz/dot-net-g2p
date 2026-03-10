@@ -69,17 +69,17 @@ namespace DotNetG2P.Tests.PortugueseG2P
         // ================================================================
 
         [Fact]
-        public void VowelReduction_BP_UnstressedE_BecomesSchwa()
+        public void VowelReduction_BP_UnstressedE_BecomesI()
         {
-            // BP: 非ストレス E → Schwa
+            // BP: 非ストレス E → I
             // /n o m e/ (ストレスは o=index 1)
             var input = MakePronWithStress(
                 new[] { PortugueseIpaPhoneme.N, PortugueseIpaPhoneme.O, PortugueseIpaPhoneme.M, PortugueseIpaPhoneme.E },
                 new[] { 0, 2 }, stressIndex: 0, stressedPositions: new[] { 1 });
             var result = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.VowelReduction, PortugueseDialect.Brazilian);
             var phonemes = GetPhonemes(result);
-            // 非ストレスの E(index 3) は Schwa になる（BP実装による）
-            Assert.Equal(PortugueseIpaPhoneme.Schwa, phonemes[3]);
+            // 非ストレスの E(index 3) は I になる（BP）
+            Assert.Equal(PortugueseIpaPhoneme.I, phonemes[3]);
         }
 
         [Fact]
@@ -110,15 +110,15 @@ namespace DotNetG2P.Tests.PortugueseG2P
         }
 
         [Fact]
-        public void VowelReduction_BP_UnstressedFinalA_Preserved()
+        public void VowelReduction_BP_UnstressedFinalA_BecomesSchwa()
         {
-            // BP: A の弱化はなし（EPのみ語末位置で弱化）
+            // BP: 語末の非ストレス A → Schwa (/ɐ/) (例: casa→[ˈkazɐ])
             var input = MakePronWithStress(
                 new[] { PortugueseIpaPhoneme.K, PortugueseIpaPhoneme.A, PortugueseIpaPhoneme.Z, PortugueseIpaPhoneme.A },
                 new[] { 0, 2 }, stressIndex: 0, stressedPositions: new[] { 1 });
             var result = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.VowelReduction, PortugueseDialect.Brazilian);
             var phonemes = GetPhonemes(result);
-            Assert.Equal(PortugueseIpaPhoneme.A, phonemes[3]);
+            Assert.Equal(PortugueseIpaPhoneme.Schwa, phonemes[3]);
         }
 
         // ================================================================
@@ -162,18 +162,17 @@ namespace DotNetG2P.Tests.PortugueseG2P
         }
 
         [Fact]
-        public void VowelReduction_EP_NonFinalUnstressedA_AlsoBecomesSchwa()
+        public void VowelReduction_EP_NonFinalUnstressedA_BecomesSchwa()
         {
-            // EP: 語末でない非ストレス A も弱化する（EPでは語末位置のみ）
+            // EP: 語末でない非ストレス A も弱化する (例: falar→[fɐˈlaɾ])
             // /a m a r/ (ストレスは 2番目の a=index 2)
             var input = MakePronWithStress(
                 new[] { PortugueseIpaPhoneme.A, PortugueseIpaPhoneme.M, PortugueseIpaPhoneme.A, PortugueseIpaPhoneme.R },
                 new[] { 0, 2 }, stressIndex: 1, stressedPositions: new[] { 2 });
             var result = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.VowelReduction, PortugueseDialect.European);
             var phonemes = GetPhonemes(result);
-            // EP の実装では語末母音のみ A→Schwa。最初の a(index 0) は語末ではないので保持
-            // ただし最後の母音が a(index 2) でストレス付きなので弱化しない
-            Assert.Equal(PortugueseIpaPhoneme.A, phonemes[0]);
+            // EP では全非ストレス位置で A→Schwa。最初の a(index 0) は非ストレス語中なので弱化する
+            Assert.Equal(PortugueseIpaPhoneme.Schwa, phonemes[0]);
         }
 
         [Fact]
@@ -274,8 +273,8 @@ namespace DotNetG2P.Tests.PortugueseG2P
         public void VowelReduction_Then_TDPalatalization_Chain_BP()
         {
             // "gente" 的パターン: /ʒ e t e/
-            // 母音弱化(BP): E(index 3, 非ストレス語末) → Schwa (BPでは E→Schwa)
-            // ※BP実装では E→Schwa であり E→I ではないため、T+Schwa では破擦音化は起きない
+            // 母音弱化(BP): E(index 3, 非ストレス語末) → I (BPでは E→I)
+            // 破擦音化: T(index 2) + I(index 3) → Ch
             // ただし語中の E(index 1) はストレス音節内なので変化しない
             var input = MakePronWithStress(
                 new[] { PortugueseIpaPhoneme.Zh, PortugueseIpaPhoneme.E, PortugueseIpaPhoneme.T, PortugueseIpaPhoneme.E },
@@ -283,9 +282,9 @@ namespace DotNetG2P.Tests.PortugueseG2P
             var features = PortugueseAllophoneFeatures.VowelReduction | PortugueseAllophoneFeatures.TDPalatalization;
             var result = AllophoneProcessor.Apply(input, features, PortugueseDialect.Brazilian);
             var phonemes = GetPhonemes(result);
-            // 母音弱化で語末 E(index 3) → Schwa。T+Schwa なので破擦音化は適用されない
-            Assert.Equal(PortugueseIpaPhoneme.Schwa, phonemes[3]);
-            Assert.Equal(PortugueseIpaPhoneme.T, phonemes[2]);
+            // 母音弱化で語末 E(index 3) → I。T+I なので破擦音化が適用される
+            Assert.Equal(PortugueseIpaPhoneme.I, phonemes[3]);
+            Assert.Equal(PortugueseIpaPhoneme.Ch, phonemes[2]);
         }
 
         [Fact]
@@ -743,13 +742,13 @@ namespace DotNetG2P.Tests.PortugueseG2P
         [Fact]
         public void DialectDifference_VowelReduction_BP_vs_EP()
         {
-            // 同じ非ストレス E が BP=Schwa, EP=HighCentral になる
+            // 同じ非ストレス E が BP=I, EP=HighCentral になる
             var input = MakePronWithStress(
                 new[] { PortugueseIpaPhoneme.N, PortugueseIpaPhoneme.O, PortugueseIpaPhoneme.M, PortugueseIpaPhoneme.E },
                 new[] { 0, 2 }, stressIndex: 0, stressedPositions: new[] { 1 });
             var bpResult = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.VowelReduction, PortugueseDialect.Brazilian);
             var epResult = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.VowelReduction, PortugueseDialect.European);
-            Assert.Equal(PortugueseIpaPhoneme.Schwa, bpResult.Phonemes[3].Phoneme);
+            Assert.Equal(PortugueseIpaPhoneme.I, bpResult.Phonemes[3].Phoneme);
             Assert.Equal(PortugueseIpaPhoneme.HighCentral, epResult.Phonemes[3].Phoneme);
         }
 
@@ -818,6 +817,70 @@ namespace DotNetG2P.Tests.PortugueseG2P
             var phonemes = GetPhonemes(result);
             // 有声性同化 S→Z、その後後部歯茎化 Z→Zh
             Assert.Equal(PortugueseIpaPhoneme.Zh, phonemes[1]);
+        }
+
+        // ================================================================
+        // 追加: 歯擦音有声性同化 Sh/Zh テスト (S1)
+        // ================================================================
+
+        [Fact]
+        public void SibilantVoicing_Sh_BeforeVoicedConsonant_BecomesZh()
+        {
+            // /a ʃ b a/ → /a ʒ b a/
+            var input = MakePron(
+                new[] { PortugueseIpaPhoneme.A, PortugueseIpaPhoneme.Sh, PortugueseIpaPhoneme.B, PortugueseIpaPhoneme.A },
+                new[] { 0, 2 }, stressIndex: 0);
+            var result = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.SibilantVoicingAssimilation, PortugueseDialect.Brazilian);
+            var phonemes = GetPhonemes(result);
+            Assert.Equal(PortugueseIpaPhoneme.Zh, phonemes[1]);
+        }
+
+        [Fact]
+        public void SibilantVoicing_Zh_BeforeVoicelessConsonant_BecomesSh()
+        {
+            // /a ʒ p a/ → /a ʃ p a/
+            var input = MakePron(
+                new[] { PortugueseIpaPhoneme.A, PortugueseIpaPhoneme.Zh, PortugueseIpaPhoneme.P, PortugueseIpaPhoneme.A },
+                new[] { 0, 2 }, stressIndex: 0);
+            var result = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.SibilantVoicingAssimilation, PortugueseDialect.Brazilian);
+            var phonemes = GetPhonemes(result);
+            Assert.Equal(PortugueseIpaPhoneme.Sh, phonemes[1]);
+        }
+
+        [Fact]
+        public void SibilantVoicing_Sh_BeforeVowel_NoChange()
+        {
+            // /ʃ a/ → /ʃ a/ (母音前は変化しない)
+            var input = MakePron(
+                new[] { PortugueseIpaPhoneme.Sh, PortugueseIpaPhoneme.A },
+                new[] { 0 }, stressIndex: 0);
+            var result = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.SibilantVoicingAssimilation, PortugueseDialect.Brazilian);
+            var phonemes = GetPhonemes(result);
+            Assert.Equal(PortugueseIpaPhoneme.Sh, phonemes[0]);
+        }
+
+        [Fact]
+        public void SibilantVoicing_Zh_BeforeVoicedConsonant_NoChange()
+        {
+            // /a ʒ d a/ → /a ʒ d a/ (ʒ は有声、次も有声なので変化なし)
+            var input = MakePron(
+                new[] { PortugueseIpaPhoneme.A, PortugueseIpaPhoneme.Zh, PortugueseIpaPhoneme.D, PortugueseIpaPhoneme.A },
+                new[] { 0, 2 }, stressIndex: 0);
+            var result = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.SibilantVoicingAssimilation, PortugueseDialect.Brazilian);
+            var phonemes = GetPhonemes(result);
+            Assert.Equal(PortugueseIpaPhoneme.Zh, phonemes[1]);
+        }
+
+        [Fact]
+        public void SibilantVoicing_Sh_BeforeVoicelessConsonant_NoChange()
+        {
+            // /a ʃ t a/ → /a ʃ t a/ (ʃ は無声、次も無声なので変化なし)
+            var input = MakePron(
+                new[] { PortugueseIpaPhoneme.A, PortugueseIpaPhoneme.Sh, PortugueseIpaPhoneme.T, PortugueseIpaPhoneme.A },
+                new[] { 0, 2 }, stressIndex: 0);
+            var result = AllophoneProcessor.Apply(input, PortugueseAllophoneFeatures.SibilantVoicingAssimilation, PortugueseDialect.Brazilian);
+            var phonemes = GetPhonemes(result);
+            Assert.Equal(PortugueseIpaPhoneme.Sh, phonemes[1]);
         }
     }
 }

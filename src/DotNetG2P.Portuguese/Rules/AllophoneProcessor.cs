@@ -64,9 +64,9 @@ namespace DotNetG2P.Portuguese.Rules
         /// <summary>
         /// 母音弱化: ストレスのない音節の母音を弱化する。
         /// <list type="bullet">
-        ///   <item>非ストレスの E → Schwa (BP) / HighCentral (EP)</item>
+        ///   <item>非ストレスの E → I (BP) / HighCentral (EP)</item>
         ///   <item>非ストレスの O → U (両方言)</item>
-        ///   <item>非ストレスの A → Schwa (EPのみ、語末位置)</item>
+        ///   <item>非ストレスの A → Schwa (EP: 全非ストレス位置, BP: 語末のみ)</item>
         /// </list>
         /// SyllableOffsetsInternal で音節境界を判定し、StressedSyllableIndex で強勢音節を特定する。
         /// </summary>
@@ -90,9 +90,9 @@ namespace DotNetG2P.Portuguese.Rules
                 switch (p)
                 {
                     case PortugueseIpaPhoneme.E:
-                        // BP: 非ストレス e→/ɐ/, EP: 非ストレス e→/ɨ/
+                        // BP: 非ストレス e→/i/, EP: 非ストレス e→/ɨ/
                         phonemes[i] = dialect == PortugueseDialect.Brazilian
-                            ? new PortuguesePhoneme(PortugueseIpaPhoneme.Schwa, false)
+                            ? new PortuguesePhoneme(PortugueseIpaPhoneme.I, false)
                             : new PortuguesePhoneme(PortugueseIpaPhoneme.HighCentral, false);
                         break;
 
@@ -102,8 +102,11 @@ namespace DotNetG2P.Portuguese.Rules
                         break;
 
                     case PortugueseIpaPhoneme.A:
-                        // EP のみ、語末位置の 非ストレス a→/ɐ/
-                        if (dialect == PortugueseDialect.European && isWordFinal)
+                        // EP: 全非ストレス位置で a→/ɐ/ (例: falar→[fɐˈlaɾ])
+                        // BP: 語末位置のみ a→/ɐ/ (例: casa→[ˈkazɐ])
+                        if (dialect == PortugueseDialect.European)
+                            phonemes[i] = new PortuguesePhoneme(PortugueseIpaPhoneme.Schwa, false);
+                        else if (isWordFinal)
                             phonemes[i] = new PortuguesePhoneme(PortugueseIpaPhoneme.Schwa, false);
                         break;
                 }
@@ -199,14 +202,16 @@ namespace DotNetG2P.Portuguese.Rules
         // ===== 規則 5: 歯擦音有声性同化 =====
 
         /// <summary>
-        /// 歯擦音有声性同化: S + 有声子音 → Z, Z + 無声子音 → S。
+        /// 歯擦音有声性同化: S + 有声子音 → Z, Z + 無声子音 → S,
+        /// Sh + 有声子音 → Zh, Zh + 無声子音 → Sh。
         /// </summary>
         private static void ApplySibilantVoicingAssimilation(PortuguesePhoneme[] phonemes)
         {
             for (var i = 0; i < phonemes.Length - 1; i++)
             {
                 var p = phonemes[i].Phoneme;
-                if (p != PortugueseIpaPhoneme.S && p != PortugueseIpaPhoneme.Z)
+                if (p != PortugueseIpaPhoneme.S && p != PortugueseIpaPhoneme.Z
+                    && p != PortugueseIpaPhoneme.Sh && p != PortugueseIpaPhoneme.Zh)
                     continue;
 
                 var next = phonemes[i + 1].Phoneme;
@@ -217,6 +222,10 @@ namespace DotNetG2P.Portuguese.Rules
                     phonemes[i] = new PortuguesePhoneme(PortugueseIpaPhoneme.Z, phonemes[i].IsStressed);
                 else if (p == PortugueseIpaPhoneme.Z && !IsVoicedConsonant(next))
                     phonemes[i] = new PortuguesePhoneme(PortugueseIpaPhoneme.S, phonemes[i].IsStressed);
+                else if (p == PortugueseIpaPhoneme.Sh && IsVoicedConsonant(next))
+                    phonemes[i] = new PortuguesePhoneme(PortugueseIpaPhoneme.Zh, phonemes[i].IsStressed);
+                else if (p == PortugueseIpaPhoneme.Zh && !IsVoicedConsonant(next))
+                    phonemes[i] = new PortuguesePhoneme(PortugueseIpaPhoneme.Sh, phonemes[i].IsStressed);
             }
         }
 

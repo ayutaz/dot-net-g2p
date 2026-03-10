@@ -141,6 +141,7 @@ namespace DotNetG2P.Portuguese.Data
                 case "d": return PortugueseIpaPhoneme.D;
                 case "k": return PortugueseIpaPhoneme.K;
                 case "\u0261": return PortugueseIpaPhoneme.G;           // ɡ (U+0261)
+                case "g": return PortugueseIpaPhoneme.G;               // g (U+0067, ASCII fallback)
 
                 // 摩擦音
                 case "f": return PortugueseIpaPhoneme.F;

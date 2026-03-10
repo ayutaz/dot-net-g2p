@@ -152,8 +152,8 @@ namespace DotNetG2P.Portuguese.Normalization
 
         private static string ExpandAbbreviations(string text)
         {
-            text = Regex.Replace(text, @"\bsr\.\s", "senhor ");
-            text = Regex.Replace(text, @"\bsra\.", "senhora");
+            text = Regex.Replace(text, @"\bsr\.(?=\s|$)", "senhor ");
+            text = Regex.Replace(text, @"\bsra\.(?=\s|$)", "senhora ");
             text = Regex.Replace(text, @"\bsrta\.", "senhorita");
             text = Regex.Replace(text, @"\bdr\.", "doutor");
             text = Regex.Replace(text, @"\bdra\.", "doutora");
@@ -183,9 +183,10 @@ namespace DotNetG2P.Portuguese.Normalization
 
         private static string ExpandDates(string text, PortugueseDialect dialect)
         {
-            // DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
-            text = Regex.Replace(text, @"\b(\d{1,2})/(\d{1,2})/(\d{2,4})\b", m =>
+            // DD/MM/YYYY or DD-MM-YYYY
+            text = Regex.Replace(text, @"\b(\d{1,2})[/\-](\d{1,2})[/\-](\d{2,4})\b", m =>
                 ExpandDateParts(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, m.Value, dialect));
+            // DD.MM.YYYY
             text = Regex.Replace(text, @"\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b", m =>
                 ExpandDateParts(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, m.Value, dialect));
             return text;
@@ -359,7 +360,7 @@ namespace DotNetG2P.Portuguese.Normalization
 
             // 複合単位を先に
             text = Regex.Replace(text, @"(\d+)\s*km/h\b", m =>
-                NumberToWords.Convert(m.Groups[1].Value, dialect) + " quil\u00f4metros por hora");
+                NumberToWords.Convert(m.Groups[1].Value, dialect) + (m.Groups[1].Value == "1" ? " quil\u00f4metro por hora" : " quil\u00f4metros por hora"));
             text = Regex.Replace(text, @"(\d+)\s*km\b", m =>
                 NumberToWords.Convert(m.Groups[1].Value, dialect) + (m.Groups[1].Value == "1" ? " quil\u00f4metro" : " quil\u00f4metros"));
             text = Regex.Replace(text, @"(\d+)\s*kg\b", m =>
@@ -386,7 +387,7 @@ namespace DotNetG2P.Portuguese.Normalization
 
         private static string ExpandNumericRanges(string text, PortugueseDialect dialect)
         {
-            return Regex.Replace(text, @"\b(\d+)\s*[-\u2013]\s*(\d+)\b", m =>
+            return Regex.Replace(text, @"\b(\d{1,3})\s*[-\u2013]\s*(\d{1,3})\b", m =>
             {
                 var left = NumberToWords.Convert(m.Groups[1].Value, dialect);
                 var right = NumberToWords.Convert(m.Groups[2].Value, dialect);
@@ -396,6 +397,14 @@ namespace DotNetG2P.Portuguese.Normalization
 
         private static string ExpandDecimals(string text, PortugueseDialect dialect)
         {
+            // 桁区切りピリオド除去: 1.000,50 → 1000,50 (ポルトガル語では"."が桁区切り)
+            text = Regex.Replace(text, @"\b(\d{1,3})(?:\.(\d{3}))+\b", m =>
+            {
+                // 後続にカンマ小数部があるか、または純粋な桁区切り整数かを問わずピリオドを除去
+                var digits = m.Value.Replace(".", "");
+                return digits;
+            });
+
             // N,N → N vírgula N (ポルトガル語では","が小数点)
             return Regex.Replace(text, @"\b(\d+),(\d+)\b", m =>
                 NumberToWords.Convert(m.Groups[1].Value, dialect) + " v\u00edrgula " + NumberToWords.ConvertDigits(m.Groups[2].Value, dialect));

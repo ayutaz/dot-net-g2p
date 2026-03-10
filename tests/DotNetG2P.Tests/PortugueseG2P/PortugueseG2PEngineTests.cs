@@ -15,8 +15,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         public void Constructor_Default_CreatesInstance()
         {
             using var engine = new PortugueseG2PEngine();
-            var result = engine.ToIPA("casa");
-            Assert.NotEmpty(result);
+            Assert.Equal("\u02C8kaza", engine.ToIPA("casa"));
         }
 
         [Fact]
@@ -24,8 +23,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         {
             var options = new PortugueseG2POptions(dialect: PortugueseDialect.European);
             using var engine = new PortugueseG2PEngine(options);
-            var result = engine.ToIPA("casa");
-            Assert.NotEmpty(result);
+            Assert.Equal("\u02C8kaza", engine.ToIPA("casa"));
         }
 
         [Fact]
@@ -34,45 +32,62 @@ namespace DotNetG2P.Tests.PortugueseG2P
             Assert.Throws<ArgumentNullException>(() => new PortugueseG2PEngine(null!));
         }
 
-        // ========== ToIPA 基本動作 ==========
+        // ========== ToIPA 基本動作（T1: 具体的IPA期待値） ==========
 
-        [Fact]
-        public void ToIPA_SimpleWord_ReturnsNonEmpty()
+        [Theory]
+        [InlineData("casa", "\u02C8kaza")]
+        [InlineData("gato", "\u02C8\u0261ato")]
+        [InlineData("mundo", "\u02C8mu\u0303do")]
+        [InlineData("tempo", "\u02C8te\u0303po")]
+        [InlineData("bonito", "bo\u02C8nito")]
+        [InlineData("feliz", "fe\u02C8liz")]
+        [InlineData("sol", "\u02C8sol")]
+        [InlineData("lua", "\u02C8lwa")]
+        [InlineData("amor", "a\u02C8mo\u027E")]
+        [InlineData("caf\u00E9", "k\u0250\u02C8f\u025B")]
+        public void ToIPA_BasicWords_MatchExpectedOutput(string word, string expected)
         {
-            var result = _engine.ToIPA("casa");
-            Assert.NotEmpty(result);
+            Assert.Equal(expected, _engine.ToIPA(word));
         }
 
         [Fact]
-        public void ToIPA_NasalDiphthong_ReturnsNonEmpty()
+        public void ToIPA_NasalDiphthong_ReturnsExpected()
         {
-            // "não" には鼻母音が含まれる
-            var result = _engine.ToIPA("não");
-            Assert.NotEmpty(result);
+            // "n\u00E3o" -> /n\u0250\u0303w\u0303/
+            Assert.Equal("\u02C8n\u0250\u0303w\u0303", _engine.ToIPA("n\u00E3o"));
         }
 
         [Fact]
-        public void ToIPA_AccentedWord_ReturnsNonEmpty()
+        public void ToIPA_NasalWord_Pao_ReturnsExpected()
         {
-            var result = _engine.ToIPA("café");
-            Assert.NotEmpty(result);
+            // "p\u00E3o" -> /p\u0250\u0303w\u0303/ (例外辞書により単音節語はストレスマーク省略)
+            Assert.Equal("p\u0250\u0303w\u0303", _engine.ToIPA("p\u00E3o"));
+        }
+
+        [Fact]
+        public void ToIPA_NasalWord_Coracao_ReturnsExpected()
+        {
+            Assert.Equal("ku\u027E\u0250\u02C8s\u0250\u0303w\u0303", _engine.ToIPA("cora\u00E7\u00E3o"));
+        }
+
+        [Fact]
+        public void ToIPA_Agua_ReturnsExpected()
+        {
+            Assert.Equal("\u02C8a\u0261wa", _engine.ToIPA("\u00E1gua"));
         }
 
         [Fact]
         public void ToIPA_MultipleWords_ReturnsSpaceSeparated()
         {
             var result = _engine.ToIPA("o gato");
-            Assert.NotEmpty(result);
-            // 複数単語はスペースで区切られる
             Assert.Contains(" ", result);
+            Assert.Equal("\u02C8o \u02C8\u0261ato", result);
         }
 
         [Fact]
         public void ToIPA_UpperCase_NormalizesToLower()
         {
-            var lower = _engine.ToIPA("casa");
-            var upper = _engine.ToIPA("CASA");
-            Assert.Equal(lower, upper);
+            Assert.Equal(_engine.ToIPA("casa"), _engine.ToIPA("CASA"));
         }
 
         // ========== 空文字列・null・空白のみ ==========
@@ -97,30 +112,33 @@ namespace DotNetG2P.Tests.PortugueseG2P
 
         // ========== ToIPAWithoutStress ==========
 
-        [Fact]
-        public void ToIPAWithoutStress_ReturnsNonEmpty()
+        [Theory]
+        [InlineData("casa", "kaza")]
+        [InlineData("gato", "\u0261ato")]
+        [InlineData("bonito", "bonito")]
+        [InlineData("feliz", "feliz")]
+        public void ToIPAWithoutStress_MatchesExpected(string word, string expected)
         {
-            var result = _engine.ToIPAWithoutStress("casa");
-            Assert.NotEmpty(result);
+            Assert.Equal(expected, _engine.ToIPAWithoutStress(word));
         }
 
         [Fact]
         public void ToIPAWithoutStress_NoStressMarks()
         {
             var result = _engine.ToIPAWithoutStress("casa");
-            Assert.DoesNotContain("\u02C8", result); // primary stress mark
-            Assert.DoesNotContain("\u02CC", result); // secondary stress mark
+            Assert.DoesNotContain("\u02C8", result);
+            Assert.DoesNotContain("\u02CC", result);
         }
 
         // ========== ToPhonemes ==========
 
-        [Fact]
-        public void ToPhonemes_SimpleWord_ReturnsSpaceSeparated()
+        [Theory]
+        [InlineData("gato", "\u02C8\u0261 a t o")]
+        [InlineData("casa", "\u02C8k a z a")]
+        [InlineData("sol", "\u02C8s o l")]
+        public void ToPhonemes_MatchesExpected(string word, string expected)
         {
-            var result = _engine.ToPhonemes("gato");
-            Assert.NotEmpty(result);
-            // 音素がスペースで区切られている
-            Assert.Contains(" ", result);
+            Assert.Equal(expected, _engine.ToPhonemes(word));
         }
 
         [Fact]
@@ -141,7 +159,6 @@ namespace DotNetG2P.Tests.PortugueseG2P
             var options = new PortugueseG2POptions(separator: "-");
             using var engine = new PortugueseG2PEngine(options);
             var result = engine.ToPhonemes("gato");
-            Assert.NotEmpty(result);
             Assert.Contains("-", result);
         }
 
@@ -151,8 +168,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         public void ToPhonemeList_SimpleWord_ReturnsPhonemes()
         {
             var result = _engine.ToPhonemeList("casa");
-            Assert.NotEmpty(result);
-            Assert.True(result.Count >= 2);
+            Assert.Equal(4, result.Count);
         }
 
         [Fact]
@@ -173,7 +189,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         public void ToPhonemeList_ReturnsPortuguesePhonemes()
         {
             var result = _engine.ToPhonemeList("sol");
-            Assert.NotEmpty(result);
+            Assert.Equal(3, result.Count);
             foreach (var ph in result)
             {
                 Assert.True(Enum.IsDefined(typeof(PortugueseIpaPhoneme), ph.Phoneme));
@@ -206,21 +222,21 @@ namespace DotNetG2P.Tests.PortugueseG2P
         // ========== バッチAPI ==========
 
         [Fact]
-        public void ToIPABatch_ReturnsCorrectCount()
+        public void ToIPABatch_ReturnsCorrectResults()
         {
             var results = _engine.ToIPABatch(new[] { "casa", "gato" });
             Assert.Equal(2, results.Count);
-            Assert.NotEmpty(results[0]);
-            Assert.NotEmpty(results[1]);
+            Assert.Equal("\u02C8kaza", results[0]);
+            Assert.Equal("\u02C8\u0261ato", results[1]);
         }
 
         [Fact]
-        public void ToPhonemesBatch_ReturnsCorrectCount()
+        public void ToPhonemesBatch_ReturnsCorrectResults()
         {
             var results = _engine.ToPhonemesBatch(new[] { "sol", "lua" });
             Assert.Equal(2, results.Count);
-            Assert.NotEmpty(results[0]);
-            Assert.NotEmpty(results[1]);
+            Assert.Equal("\u02C8s o l", results[0]);
+            Assert.Equal("\u02C8l w a", results[1]);
         }
 
         [Fact]
@@ -228,7 +244,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         {
             var results = _engine.ToPhonemeListBatch(new[] { "amor" });
             Assert.Single(results);
-            Assert.NotEmpty(results[0]);
+            Assert.Equal(4, results[0].Count);
         }
 
         [Fact]
@@ -254,6 +270,17 @@ namespace DotNetG2P.Tests.PortugueseG2P
         {
             var results = _engine.ToIPABatch(Array.Empty<string>());
             Assert.Empty(results);
+        }
+
+        [Fact]
+        public void BatchAndSingle_ReturnSameResults()
+        {
+            var texts = new[] { "casa", "gato", "mundo", "sol" };
+            var batchResults = _engine.ToIPABatch(texts);
+            for (var i = 0; i < texts.Length; i++)
+            {
+                Assert.Equal(_engine.ToIPA(texts[i]), batchResults[i]);
+            }
         }
 
         // ========== Dispose ==========
@@ -319,27 +346,106 @@ namespace DotNetG2P.Tests.PortugueseG2P
         {
             var engine = new PortugueseG2PEngine();
             engine.Dispose();
-            engine.Dispose(); // 二重Disposeは例外なし
+            engine.Dispose();
         }
 
-        // ========== 方言切替 ==========
+        // ========== T2: 方言差の具体的検証（異音有効時のみ差が出る） ==========
 
-        [Fact]
-        public void Dialect_Brazilian_ReturnsNonEmpty()
+        [Theory]
+        [InlineData("tipo", "\u02C8t\u0361\u0283ipu", "\u02C8tipu")]
+        [InlineData("cidade", "si\u02C8dad\u0361\u0292i", "si\u02C8\u00F0a\u00F0\u0268")]
+        [InlineData("feliz", "fi\u02C8liz", "f\u0268\u02C8li\u0292")]
+        [InlineData("sol", "\u02C8sow", "\u02C8so\u026B")]
+        [InlineData("leite", "\u02C8lejt\u0361\u0283i", "\u02C8lejt\u0268")]
+        [InlineData("gente", "\u02C8\u0292e\u0303t\u0361\u0283i", "\u02C8\u0292e\u0303t\u0268")]
+        [InlineData("nome", "\u02C8nomi", "\u02C8nom\u0268")]
+        [InlineData("grande", "\u02C8\u0261\u027E\u0250\u0303d\u0361\u0292i", "\u02C8\u0261\u027E\u0250\u0303\u00F0\u0268")]
+        [InlineData("escola", "\u0268s\u02C8k\u0254l\u0250", "\u0268\u0283\u02C8k\u0254l\u0250")]
+        public void Dialect_BP_vs_EP_AllophonesProduceDifferentOutput(
+            string word, string expectedBP, string expectedEP)
         {
-            var options = new PortugueseG2POptions(dialect: PortugueseDialect.Brazilian);
-            using var engine = new PortugueseG2PEngine(options);
-            var result = engine.ToIPA("casa");
-            Assert.NotEmpty(result);
+            using var bp = new PortugueseG2PEngine(new PortugueseG2POptions(
+                dialect: PortugueseDialect.Brazilian, enableAllophones: true));
+            using var ep = new PortugueseG2PEngine(new PortugueseG2POptions(
+                dialect: PortugueseDialect.European, enableAllophones: true));
+
+            var bpResult = bp.ToIPA(word);
+            var epResult = ep.ToIPA(word);
+
+            Assert.NotEqual(bpResult, epResult);
+            Assert.Equal(expectedBP, bpResult);
+            Assert.Equal(expectedEP, epResult);
         }
 
         [Fact]
-        public void Dialect_European_ReturnsNonEmpty()
+        public void Dialect_BaseRules_SameForBothDialects()
         {
-            var options = new PortugueseG2POptions(dialect: PortugueseDialect.European);
-            using var engine = new PortugueseG2PEngine(options);
-            var result = engine.ToIPA("casa");
-            Assert.NotEmpty(result);
+            using var bp = new PortugueseG2PEngine(new PortugueseG2POptions(dialect: PortugueseDialect.Brazilian));
+            using var ep = new PortugueseG2PEngine(new PortugueseG2POptions(dialect: PortugueseDialect.European));
+
+            var words = new[] { "casa", "gato", "mundo", "sol", "porta" };
+            foreach (var word in words)
+            {
+                Assert.Equal(bp.ToIPA(word), ep.ToIPA(word));
+            }
+        }
+
+        // ========== T3: EnableAllophones 統合テスト ==========
+
+        [Theory]
+        [InlineData("casa", "\u02C8kaza", "\u02C8kaz\u0250")]
+        [InlineData("gato", "\u02C8\u0261ato", "\u02C8\u0261atu")]
+        [InlineData("mundo", "\u02C8mu\u0303do", "\u02C8mu\u0303du")]
+        [InlineData("bonito", "bo\u02C8nito", "bu\u02C8nitu")]
+        [InlineData("mesmo", "\u02C8mesmo", "\u02C8mezmu")]
+        [InlineData("sol", "\u02C8sol", "\u02C8sow")]
+        public void EnableAllophones_BP_ChangeOutput(string word, string expectedBase, string expectedAllo)
+        {
+            using var baseEngine = new PortugueseG2PEngine(new PortugueseG2POptions(enableAllophones: false));
+            using var alloEngine = new PortugueseG2PEngine(new PortugueseG2POptions(enableAllophones: true));
+
+            Assert.Equal(expectedBase, baseEngine.ToIPA(word));
+            Assert.Equal(expectedAllo, alloEngine.ToIPA(word));
+            Assert.NotEqual(baseEngine.ToIPA(word), alloEngine.ToIPA(word));
+        }
+
+        [Theory]
+        [InlineData("mundo", "\u02C8mu\u0303do", "\u02C8mu\u0303\u00F0u")]
+        [InlineData("feliz", "fe\u02C8liz", "f\u0268\u02C8li\u0292")]
+        [InlineData("sol", "\u02C8sol", "\u02C8so\u026B")]
+        [InlineData("trabalho", "t\u027Ea\u02C8ba\u028Eo", "t\u027E\u0250\u02C8\u03B2a\u028Eu")]
+        public void EnableAllophones_EP_ChangeOutput(string word, string expectedBase, string expectedAllo)
+        {
+            using var baseEngine = new PortugueseG2PEngine(new PortugueseG2POptions(
+                dialect: PortugueseDialect.European, enableAllophones: false));
+            using var alloEngine = new PortugueseG2PEngine(new PortugueseG2POptions(
+                dialect: PortugueseDialect.European, enableAllophones: true));
+
+            Assert.Equal(expectedBase, baseEngine.ToIPA(word));
+            Assert.Equal(expectedAllo, alloEngine.ToIPA(word));
+        }
+
+        // ========== T4: EnableExceptionDictionary 統合テスト ==========
+
+        [Fact]
+        public void EnableExceptionDictionary_DictionaryChangesOutput()
+        {
+            using var withDict = new PortugueseG2PEngine(new PortugueseG2POptions(enableExceptionDictionary: true));
+            using var noDict = new PortugueseG2PEngine(new PortugueseG2POptions(enableExceptionDictionary: false));
+
+            // 例外辞書に登録されている語（例: belo, terra, festa）
+            // 辞書有効時は開/閉母音の正確な区別が反映されるため出力が異なる
+            var exceptionWords = new[] { "belo", "terra", "festa", "dedo", "bolo", "fogo" };
+            var anyDiffers = false;
+            foreach (var word in exceptionWords)
+            {
+                if (withDict.ToIPA(word) != noDict.ToIPA(word))
+                {
+                    anyDiffers = true;
+                    break;
+                }
+            }
+            Assert.True(anyDiffers, "例外辞書有効化により少なくとも1語の出力が変わるべき");
         }
 
         // ========== IncludeStress ==========
@@ -349,9 +455,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         {
             var options = new PortugueseG2POptions(includeStress: true);
             using var engine = new PortugueseG2PEngine(options);
-            // "casa" は2音節語なのでストレスマークが含まれるはず
-            var result = engine.ToIPA("casa");
-            Assert.Contains("\u02C8", result); // ˈ
+            Assert.Equal("\u02C8kaza", engine.ToIPA("casa"));
         }
 
         [Fact]
@@ -359,8 +463,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         {
             var options = new PortugueseG2POptions(includeStress: false);
             using var engine = new PortugueseG2PEngine(options);
-            var result = engine.ToIPA("casa");
-            Assert.DoesNotContain("\u02C8", result); // ˈ を含まない
+            Assert.Equal("kaza", engine.ToIPA("casa"));
         }
 
         // ========== テキスト正規化 ==========
@@ -374,10 +477,8 @@ namespace DotNetG2P.Tests.PortugueseG2P
         [Fact]
         public void TextNormalization_PunctuationRemoved()
         {
-            var result = _engine.ToIPA("olá, mundo!");
-            Assert.NotEmpty(result);
-            // 句読点は除去されて2単語の結果が返る
-            Assert.Contains(" ", result);
+            var result = _engine.ToIPA("ol\u00E1, mundo!");
+            Assert.Equal("o\u02C8la \u02C8mu\u0303do", result);
         }
 
         // ========== オプションデフォルト値 ==========

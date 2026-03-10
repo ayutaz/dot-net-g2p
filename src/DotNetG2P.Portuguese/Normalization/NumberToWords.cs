@@ -129,7 +129,10 @@ namespace DotNetG2P.Portuguese.Normalization
             if (number < 1_000_000_000)
                 return ConvertMillions(number, units, dialect);
 
-            return ConvertBillions(number, units, dialect);
+            if (number < 1_000_000_000_000)
+                return ConvertBillions(number, units, dialect);
+
+            return ConvertTrillions(number, units, dialect);
         }
 
         private static StringBuilder ConvertTens(long number, string[] units)
@@ -254,6 +257,46 @@ namespace DotNetG2P.Portuguese.Normalization
                 {
                     builder.Append(ConvertPositive(billions, units, dialect));
                     builder.Append(" bilh\u00f5es");
+                }
+            }
+
+            if (rest == 0)
+                return builder;
+
+            AppendWithConnector(builder, rest, units, dialect);
+            return builder;
+        }
+
+        private static StringBuilder ConvertTrillions(long number, string[] units, PortugueseDialect dialect)
+        {
+            var trillions = number / 1_000_000_000_000;
+            var rest = number % 1_000_000_000_000;
+
+            var builder = new StringBuilder();
+            if (dialect == PortugueseDialect.European)
+            {
+                // EP long scale: 10^12 = bilião/biliões
+                if (trillions == 1)
+                {
+                    builder.Append("um bili\u00e3o");
+                }
+                else
+                {
+                    builder.Append(ConvertPositive(trillions, units, dialect));
+                    builder.Append(" bili\u00f5es");
+                }
+            }
+            else
+            {
+                // BP short scale: 10^12 = trilhão/trilhões
+                if (trillions == 1)
+                {
+                    builder.Append("um trilh\u00e3o");
+                }
+                else
+                {
+                    builder.Append(ConvertPositive(trillions, units, dialect));
+                    builder.Append(" trilh\u00f5es");
                 }
             }
 
