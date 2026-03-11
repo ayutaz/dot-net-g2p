@@ -1,0 +1,14 @@
+{
+  "name": "DotNetG2P.Korean",
+  "rootNamespace": "DotNetG2P.Korean",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

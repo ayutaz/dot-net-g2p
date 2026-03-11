@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>DotNetG2P.Korean</PackageId>
+    <AssemblyName>DotNetG2P.Korean</AssemblyName>
+    <RootNamespace>DotNetG2P.Korean</RootNamespace>
+    <Description>Korean Grapheme-to-Phoneme (G2P) library for .NET and Unity. Hangul-first scaffold with Jamo decomposition, batch APIs, and a rule-engine-ready pronunciation model.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>g2p;korean;hangul;tts;phoneme;jamo;unity</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+</Project>
