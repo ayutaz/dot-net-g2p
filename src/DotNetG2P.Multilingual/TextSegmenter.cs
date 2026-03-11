@@ -59,18 +59,17 @@ namespace DotNetG2P.Multilingual
         private static readonly string[] s_portugueseWordSignals =
         {
             "obrigado", "obrigada", "muito", "muita", "também", "sempre",
-            "agora", "aqui", "hoje", "depois", "antes", "porque",
+            "agora", "aqui", "hoje", "depois",
             "onde", "quem", "quanto", "qual", "esse", "essa", "isso",
-            "este", "esta", "isto", "vocês", "nosso", "nossa",
-            "senhor", "senhora", "bom", "boa", "tchau", "tudo", "nada"
+            "isto", "vocês", "nosso", "nossa",
+            "senhor", "senhora", "bom", "boa", "tchau", "tudo"
         };
 
         private static readonly string[] s_portugueseSuffixSignals =
         {
             "ção", "ções", "agem", "agens", "eiro", "eira", "eiros", "eiras",
-            "oso", "osa", "osos", "osas", "ável", "ível", "mente",
-            "ando", "endo", "indo", "ado", "ada", "ados", "adas",
-            "ido", "ida", "idos", "idas"
+            "ável", "ível",
+            "endo", "indo"
         };
 
         private static readonly string[] s_englishWordSignals =
@@ -496,6 +495,10 @@ namespace DotNetG2P.Multilingual
             if (ContainsExplicitPortugueseCharacter(token))
                 return LangPortuguese;
 
+            // ç + ポルトガル語固有パターン（-ço, -ça 等）はフランス語判定より先にチェック
+            if (ContainsPortugueseCedillaPattern(token))
+                return LangPortuguese;
+
             // フランス語特有文字の検出（スペイン語より先に判定）
             if (ContainsExplicitFrenchCharacter(token))
                 return LangFrench;
@@ -711,6 +714,34 @@ namespace DotNetG2P.Multilingual
             return false;
         }
 
+        /// <summary>
+        /// ç + ポルトガル語固有の接尾パターン（-ço, -ça, -ços, -ças）を検出する。
+        /// ç はフランス語にもポルトガル語にもあるが、-ço/-ça パターンはポルトガル語固有。
+        /// </summary>
+        private static bool ContainsPortugueseCedillaPattern(ReadOnlySpan<char> token)
+        {
+            // ç/Ç を含まなければ対象外
+            bool hasCedilla = false;
+            for (int i = 0; i < token.Length; i++)
+            {
+                if (token[i] == '\u00E7' || token[i] == '\u00C7') // ç, Ç
+                {
+                    hasCedilla = true;
+                    break;
+                }
+            }
+
+            if (!hasCedilla)
+                return false;
+
+            // ポルトガル語固有パターン: -ço, -ça, -ços, -ças
+            string lower = new string(token).ToLowerInvariant();
+            return lower.EndsWith("\u00E7o", StringComparison.Ordinal)     // ço
+                || lower.EndsWith("\u00E7a", StringComparison.Ordinal)     // ça
+                || lower.EndsWith("\u00E7os", StringComparison.Ordinal)    // ços
+                || lower.EndsWith("\u00E7as", StringComparison.Ordinal);   // ças
+        }
+
         private static bool LooksLikePortugueseAsciiToken(ReadOnlySpan<char> token)
         {
             if (token.Length < 2 || IsLikelyAcronym(token))
@@ -736,12 +767,6 @@ namespace DotNetG2P.Multilingual
 
             if (lower.Contains("lh", StringComparison.Ordinal) || lower.Contains("nh", StringComparison.Ordinal))
                 score += 1;
-
-            if (lower.Contains("ção", StringComparison.Ordinal) ||
-                lower.Contains("ões", StringComparison.Ordinal))
-            {
-                score += 1;
-            }
 
             return score >= 3;
         }

@@ -1,6 +1,7 @@
 using System;
 using DotNetG2P.Portuguese;
 using DotNetG2P.Portuguese.Conversion;
+using Xunit;
 
 namespace DotNetG2P.Tests.PortugueseG2P
 {
@@ -243,6 +244,52 @@ namespace DotNetG2P.Tests.PortugueseG2P
             Assert.Contains(" ", result);
             // 各単語の出力が含まれている
             Assert.StartsWith("\"kaza", result);
+        }
+
+        // ========== ConvertPhonemeSequence ==========
+
+        [Fact]
+        public void ConvertPhonemeSequence_WithStressAndSeparator_ProducesExpectedOutput()
+        {
+            // "casa" → k a z a (stressed syllable 0)
+            var phonemes = new[]
+            {
+                new PortuguesePhoneme(PortugueseIpaPhoneme.K, false),
+                new PortuguesePhoneme(PortugueseIpaPhoneme.A, false),
+                new PortuguesePhoneme(PortugueseIpaPhoneme.Z, false),
+                new PortuguesePhoneme(PortugueseIpaPhoneme.A, false),
+            };
+            var pronunciation = new PortuguesePronunciation(phonemes, new[] { 0, 2 }, 0);
+
+            var result = XSampaConverter.ConvertPhonemeSequence(pronunciation, includeStress: true, separator: " ");
+            Assert.Equal("\"k a z a", result);
+        }
+
+        [Fact]
+        public void ConvertPhonemeSequence_WithoutStress_OmitsStressMark()
+        {
+            var phonemes = new[]
+            {
+                new PortuguesePhoneme(PortugueseIpaPhoneme.K, false),
+                new PortuguesePhoneme(PortugueseIpaPhoneme.A, false),
+                new PortuguesePhoneme(PortugueseIpaPhoneme.Z, false),
+                new PortuguesePhoneme(PortugueseIpaPhoneme.A, false),
+            };
+            var pronunciation = new PortuguesePronunciation(phonemes, new[] { 0, 2 }, 0);
+
+            var result = XSampaConverter.ConvertPhonemeSequence(pronunciation, includeStress: false, separator: " ");
+            Assert.Equal("k a z a", result);
+            Assert.DoesNotContain("\"", result);
+        }
+
+        [Fact]
+        public void ConvertPhonemeSequence_EmptyPronunciation_ReturnsEmpty()
+        {
+            var pronunciation = new PortuguesePronunciation(
+                Array.Empty<PortuguesePhoneme>(), new[] { 0 }, -1);
+
+            var result = XSampaConverter.ConvertPhonemeSequence(pronunciation, includeStress: true, separator: " ");
+            Assert.Equal(string.Empty, result);
         }
 
         // ========== Dispose ==========

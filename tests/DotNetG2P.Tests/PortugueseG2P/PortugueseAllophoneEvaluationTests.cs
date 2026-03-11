@@ -282,8 +282,8 @@ namespace DotNetG2P.Tests.PortugueseG2P
                 case PortugueseIpaPhoneme.X: return "\u0283"; // →ʃ
                 case PortugueseIpaPhoneme.H: return "h";
                 case PortugueseIpaPhoneme.Xh: return "\u0283"; // →ʃ
-                case PortugueseIpaPhoneme.Ng: return "\u014B"; // ŋ
-                case PortugueseIpaPhoneme.NLabiodental: return "\u0271"; // ɱ
+                case PortugueseIpaPhoneme.Ng: return "n"; // ŋ→n
+                case PortugueseIpaPhoneme.NLabiodental: return "m"; // ɱ→m
                 case PortugueseIpaPhoneme.NDental: return "n";
                 case PortugueseIpaPhoneme.Beta: return "b";
                 case PortugueseIpaPhoneme.Dh: return "d";
@@ -319,6 +319,8 @@ namespace DotNetG2P.Tests.PortugueseG2P
                 case "\u03B2": return "b"; // β→b
                 case "\u00F0": return "d"; // ð→d
                 case "\u0263": return "\u0261"; // ɣ→ɡ
+                case "\u0271": return "m"; // ɱ→m
+                case "\u014B": return "n"; // ŋ→n
                 case "n\u032A": return "n"; // n̪→n
                 case "t\u0361\u0283": return "t\u0283"; // t͡ʃ→tʃ
                 case "d\u0361\u0292": return "d\u0292"; // d͡ʒ→dʒ

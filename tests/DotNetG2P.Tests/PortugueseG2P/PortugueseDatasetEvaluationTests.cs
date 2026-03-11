@@ -84,7 +84,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         [SkippableFact]
         public void WikiPronSample_Pt_Base_PerBelowThreshold()
         {
-            var result = EvaluateCorpus("wikipron_pt_sample.tsv", _baseBp, SourceKind.WikiPron);
+            var result = EvaluateCorpus("wikipron_por_latn_br_broad_filtered_sample.tsv", _baseBp, SourceKind.WikiPron);
             Assert.True(result.Cases >= 100, $"サンプル数が少なすぎます: {result.Cases}");
             Assert.True(result.PhonemeErrorRate < 0.05,
                 $"WikiPron pt sample base PER ({result.PhonemeErrorRate:P2}) が閾値 5% を超えています。");
@@ -95,7 +95,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         [SkippableFact]
         public void WikiPronFull_Pt_Base_PerBelowThreshold()
         {
-            var result = EvaluateCorpus("wikipron_pt_full.tsv", _baseBp, SourceKind.WikiPron);
+            var result = EvaluateCorpus("wikipron_por_latn_br_broad_filtered_full.tsv", _baseBp, SourceKind.WikiPron);
             Assert.True(result.Cases >= 1000, $"フル語数が少なすぎます: {result.Cases}");
             Assert.True(result.PhonemeErrorRate < 0.05,
                 $"WikiPron pt full base PER ({result.PhonemeErrorRate:P2}) が閾値 5% を超えています。");
@@ -106,7 +106,7 @@ namespace DotNetG2P.Tests.PortugueseG2P
         [SkippableFact]
         public void WikiPronFull_Pt_European_PerBelowThreshold()
         {
-            var result = EvaluateCorpus("wikipron_pt_ep_full.tsv", _baseEp, SourceKind.WikiPron);
+            var result = EvaluateCorpus("wikipron_por_latn_pt_broad_filtered_full.tsv", _baseEp, SourceKind.WikiPron);
             Assert.True(result.Cases >= 100, $"EP語数が少なすぎます: {result.Cases}");
             Assert.True(result.PhonemeErrorRate < 0.05,
                 $"WikiPron pt EP full base PER ({result.PhonemeErrorRate:P2}) が閾値 5% を超えています。");
@@ -279,8 +279,8 @@ namespace DotNetG2P.Tests.PortugueseG2P
                 case PortugueseIpaPhoneme.Xh: return "\u0283"; // →ʃ
 
                 // 共通異音（基底形に正規化）
-                case PortugueseIpaPhoneme.Ng: return "\u014B"; // ŋ
-                case PortugueseIpaPhoneme.NLabiodental: return "\u0271"; // ɱ
+                case PortugueseIpaPhoneme.Ng: return "n"; // ŋ→n
+                case PortugueseIpaPhoneme.NLabiodental: return "m"; // ɱ→m
                 case PortugueseIpaPhoneme.NDental: return "n"; // n̪→n
 
                 // 弱化異音（基底形に正規化）
@@ -337,7 +337,10 @@ namespace DotNetG2P.Tests.PortugueseG2P
                 case "\u00F0": return "d";
                 // ɣ → ɡ
                 case "\u0263": return "\u0261";
-                // n̪ → n
+                // ɱ → m
+                case "\u0271": return "m";
+                // ŋ / n̪ → n
+                case "\u014B": return "n";
                 case "n\u032A": return "n";
                 // tie-bar付き破擦音 → tie-barなし
                 case "t\u0361\u0283": return "t\u0283"; // t͡ʃ → tʃ

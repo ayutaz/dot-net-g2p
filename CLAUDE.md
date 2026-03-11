@@ -160,7 +160,7 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - `MultilingualG2PEngine` に `FrenchG2PEngine` を統合
     - `MultilingualFrenchTests` / `MultilingualMixedLanguageTests` に5言語混在テストを追加
     - Multilingual テスト 372件通過、テスト31件追加
-- **ポルトガル語G2P (DotNetG2P.Portuguese)**: P3完了（feature/portuguese-g2p ブランチ）
+- **ポルトガル語G2P (DotNetG2P.Portuguese)**: P4完了（feature/portuguese-g2p ブランチ）
   - **P1（コアG2Pルールエンジン + 基本MVP）**: 完了
     - プロジェクト構成（csproj, package.json, asmdef, slnx更新）
     - モデル定義（PortugueseIpaPhoneme enum 49種, PortuguesePhoneme struct, PortugueseDialect enum）
@@ -186,6 +186,12 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - PortugueseDatasetEvaluationTests / PortugueseAllophoneEvaluationTests（外部TSVコーパスPER閾値テスト）を追加
     - `tools/DotNetG2P.PortugueseEval` + `tools/refresh_portuguese_eval_data.ps1` + `tools/run_portuguese_full_evaluation.ps1` により全量PER/WER/カテゴリ別集計を追加
     - テスト92件追加（累計1310件: 1294 pass + 16 skip）
+  - **P4（Multilingual統合・パッケージング）**: 完了
+    - `DotNetG2P.Multilingual` に `Language.Portuguese` と `PortugueseOptions` を追加
+    - `TextSegmenter` にポルトガル語言語判定（高頻度語+接尾辞+特有文字ã/õ+ç接尾辞パターン）を実装
+    - `MultilingualG2PEngine` に `PortugueseG2PEngine` を統合
+    - `MultilingualPortugueseTests` / 6言語混在テストを追加
+    - Multilingual テスト 412件通過
 
 ## ビルド・実行
 
@@ -421,16 +427,16 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── package.json                   # UPM (com.dotnetg2p.portuguese)
 │   │   └── DotNetG2P.Portuguese.asmdef    # Unity Assembly Definition
 │   │
-│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese + Spanish + French依存）
+│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese + Spanish + French + Portuguese依存）
 │       ├── DotNetG2P.Multilingual.csproj # .NET Standard 2.1
-│       ├── Language.cs                  # Language enum (Japanese/English/Chinese/Spanish/French)
+│       ├── Language.cs                  # Language enum (Japanese/English/Chinese/Spanish/French/Portuguese)
 │       ├── ScriptKind.cs               # ScriptKind enum (8種分類、internal)
 │       ├── TextSegment.cs              # 言語タグ付きテキストセグメント
 │       ├── G2PSegment.cs               # G2P結果セグメント
 │       ├── MultilingualG2POptions.cs   # 多言語G2Pオプション（DefaultCjkLanguage / DefaultLatinLanguage）
 │       ├── LanguageDetector.cs         # Unicode文字種ベース言語判定
-│       ├── TextSegmenter.cs            # テキストセグメント分割（日英西ラテン文字対応）
-│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中西仏ファサード）
+│       ├── TextSegmenter.cs            # テキストセグメント分割（日英西仏葡ラテン文字対応）
+│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中西仏葡ファサード）
 │       ├── package.json                # UPM (com.dotnetg2p.multilingual)
 │       └── DotNetG2P.Multilingual.asmdef # Unity Assembly Definition
 │
@@ -549,7 +555,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── PortugueseXSampaTests.cs         # X-SAMPA変換テスト (76件) [P3]
 │       │   ├── PortugueseDatasetEvaluationTests.cs # 外部TSVコーパスPER閾値テスト (9件) [P3]
 │       │   └── PortugueseAllophoneEvaluationTests.cs # 異音プロファイル別PER評価 (7件) [P3]
-│       ├── Multilingual/               # 多言語G2Pテスト（372件通過）
+│       ├── Multilingual/               # 多言語G2Pテスト（412件通過）
 │       │   ├── LanguageDetectorTests.cs  # 言語判定テスト
 │       │   ├── TextSegmenterTests.cs     # セグメント分割テスト
 │       │   ├── MultilingualEngineTests.cs # エンジン統合テスト
@@ -560,11 +566,12 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── MultilingualChineseTests.cs # 中国語統合テスト
 │       │   ├── MultilingualSpanishTests.cs # スペイン語統合テスト
 │       │   ├── MultilingualFrenchTests.cs # フランス語統合テスト
+│       │   ├── MultilingualPortugueseTests.cs # ポルトガル語統合テスト
 │       │   ├── MultilingualSharedFixture.cs # 重い統合テスト用 shared fixture
 │       │   ├── EmbeddedChineseDictionaryCacheTests.cs # 中国語辞書共有キャッシュ検証
 │       │   ├── MixedTextBasicTests.cs    # 混在テキスト基本テスト
 │       │   ├── MixedTextAdvancedTests.cs # 混在テキスト応用テスト
-│       │   └── MultilingualMixedLanguageTests.cs # 5言語混在回帰テスト
+│       │   └── MultilingualMixedLanguageTests.cs # 6言語混在回帰テスト
 │       └── Integration/                # 統合テスト
 │           ├── G2PPipelineTests.cs
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）

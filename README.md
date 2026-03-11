@@ -68,7 +68,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応
 - **フランス語G2P対応** — ルールベース6フェーズG2P変換（ダイグラフ→文脈依存→鼻母音化→半母音化→位置の法則→黙字）、音素ベース音節分割、Metropolitan/Conservative方言切り替え、異音処理（R無声化・阻害音有声性同化）、例外辞書500+エントリ（外来語/不規則語/動詞3複/学術語/同綴異音語）、テキスト正規化（数値/日付/時刻/通貨/単位/略語/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
 - **ポルトガル語G2P対応** — ルールベースG2P変換 + 例外辞書（560+エントリ）、音節分割、ストレス付与、Brazilian/European方言切り替え、7種の異音規則（母音弱化・鼻音同化・歯擦音有声性同化・閉鎖音弱化・歯擦音後部歯茎化・t/d破擦音化・コーダl異音）、テキスト正規化（13段階パイプライン: 略語/日付/時刻/通貨/%/単位/数値範囲/小数/数値/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
-- **日英中西仏混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、`DefaultLatinLanguage` により英語/スペイン語/フランス語のラテン文字系セグメントを切り替え可能。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
+- **日英中西仏葡混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、`DefaultLatinLanguage` により英語/スペイン語/フランス語/ポルトガル語のラテン文字系セグメントを切り替え可能。ポルトガル語は特有文字(ã/õ)・ç接尾辞パターン・高頻度語彙で自動判定。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
 
 ## インストール
 
@@ -94,7 +94,7 @@ dotnet add package DotNetG2P.French
 # ポルトガル語G2P
 dotnet add package DotNetG2P.Portuguese
 
-# 日英中西仏混在テキスト対応
+# 日英中西仏葡混在テキスト対応
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -109,7 +109,7 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.Spanish` | Apache-2.0 | スペイン語G2Pエンジン（ルールベース + 異音処理オプション） |
 | `DotNetG2P.French` | Apache-2.0 | フランス語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
 | `DotNetG2P.Portuguese` | Apache-2.0 | ポルトガル語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
-| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中西仏混在テキスト対応） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中西仏葡混在テキスト対応） |
 
 ### Unity (UPM)
 
@@ -279,6 +279,12 @@ var frOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.French
 using var multiFrEngine = new MultilingualG2PEngine(frOptions);
 multiFrEngine.ToPhonemes("bonjour世界");
 // フランス語部分→IPA音素、日本語部分→日本語音素
+
+// ポルトガル語テキストを含む場合
+var ptOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Portuguese);
+using var multiPtEngine = new MultilingualG2PEngine(ptOptions);
+multiPtEngine.ToPhonemes("obrigado世界");
+// ポルトガル語部分→IPA音素、日本語部分→日本語音素
 ```
 
 ## API リファレンス
@@ -391,18 +397,18 @@ multiFrEngine.ToPhonemes("bonjour世界");
 
 | メソッド | 戻り値型 | 説明 |
 |---------|---------|------|
-| `ToPhonemes(text)` | `string` | 日英中西仏混在音素列 |
+| `ToPhonemes(text)` | `string` | 日英中西仏葡混在音素列 |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 言語タグ付きセグメント |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | バッチセグメント変換 |
 
 Multilingual の補足:
 
-- ラテン文字列は `DefaultLatinLanguage` を既定にしつつ、アクセント付きスペイン語文字、`güe/güi`、高頻度 ASCII Spanish 語彙、代表的な接尾辞で English / Spanish / French を切り替えます
+- ラテン文字列は `DefaultLatinLanguage` を既定にしつつ、アクセント付きスペイン語文字、`güe/güi`、高頻度 ASCII Spanish 語彙、代表的な接尾辞で English / Spanish / French / Portuguese を切り替えます。ポルトガル語は特有文字(ã/õ)、ç接尾辞パターン(-ço/-ça)、高頻度語彙で判定します
 - 純漢字 run は `Chinese strong/weak markers`、`Japanese markers`、日本語語彙ヒント、埋め込み中国語 phrase/char 辞書を使って JP / ZH を補強判定します
 - 埋め込み中国語辞書は `ChineseG2PEngine` と共有され、`TextSegmenter` 単独の追加辞書常駐は実測で約 `0.02MB` です
 - それでも根拠が弱い曖昧な純漢字 run だけ `DefaultCjkLanguage` にフォールバックします
-- 2026-03-10 時点の Multilingual 回帰: `341 passed`
+- 2026-03-11 時点の Multilingual 回帰: `412 passed`（6言語対応）
 - 代表 Multilingual 回帰: `110 passed`
 - `MultilingualPerformanceTests`: `8 passed`
 
@@ -686,7 +692,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | スペイン語G2Pエンジン |
 | **DotNetG2P.French** | [Apache-2.0](LICENSE) | フランス語G2Pエンジン |
 | **DotNetG2P.Portuguese** | [Apache-2.0](LICENSE) | ポルトガル語G2Pエンジン |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中西仏対応） |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中西仏葡対応） |
 
 全コンポーネントが**Apache-2.0ライセンス**で利用可能です。
 サードパーティコンポーネントのライセンスについては [NOTICE](NOTICE) ファイルを参照してください。
