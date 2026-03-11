@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-C#/.NET向け日英中西仏多言語対応 G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに音素列へ変換します。
+C#/.NET向け日英中西仏葡多言語対応 G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに音素列へ変換します。
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer());
@@ -31,6 +31,10 @@ esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 using var frEngine = new FrenchG2PEngine();
 frEngine.ToIPA("bonjour");  // => "bɔ̃ʒuʁ"
 
+// ポルトガル語G2P
+using var ptEngine = new PortugueseG2PEngine();
+ptEngine.ToIPA("obrigado");  // => "obɾiˈɡadu"
+
 // 日英混在テキスト
 using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本語音素、英語部分はARPAbet
@@ -46,6 +50,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - [辞書の準備](#辞書の準備)
 - [スペイン語評価](#スペイン語評価)
 - [フランス語評価](#フランス語評価)
+- [ポルトガル語評価](#ポルトガル語評価)
 - [オプション設定](#オプション設定)
 - [ビルド](#ビルド)
 - [スレッドセーフティ](#スレッドセーフティ)
@@ -62,6 +67,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力
 - **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応
 - **フランス語G2P対応** — ルールベース6フェーズG2P変換（ダイグラフ→文脈依存→鼻母音化→半母音化→位置の法則→黙字）、音素ベース音節分割、Metropolitan/Conservative方言切り替え、異音処理（R無声化・阻害音有声性同化）、例外辞書500+エントリ（外来語/不規則語/動詞3複/学術語/同綴異音語）、テキスト正規化（数値/日付/時刻/通貨/単位/略語/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
+- **ポルトガル語G2P対応** — ルールベースG2P変換 + 例外辞書（560+エントリ）、音節分割、ストレス付与、Brazilian/European方言切り替え、7種の異音規則（母音弱化・鼻音同化・歯擦音有声性同化・閉鎖音弱化・歯擦音後部歯茎化・t/d破擦音化・コーダl異音）、テキスト正規化（13段階パイプライン: 略語/日付/時刻/通貨/%/単位/数値範囲/小数/数値/記号）、IPA出力を実装
 - **日英中西仏混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、`DefaultLatinLanguage` により英語/スペイン語/フランス語のラテン文字系セグメントを切り替え可能。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
 
 ## インストール
@@ -85,6 +91,9 @@ dotnet add package DotNetG2P.Spanish
 # フランス語G2P
 dotnet add package DotNetG2P.French
 
+# ポルトガル語G2P
+dotnet add package DotNetG2P.Portuguese
+
 # 日英中西仏混在テキスト対応
 dotnet add package DotNetG2P.Multilingual
 ```
@@ -99,6 +108,7 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.Chinese` | Apache-2.0 | 中国語G2Pエンジン（pinyin-data辞書 + 声調変調） |
 | `DotNetG2P.Spanish` | Apache-2.0 | スペイン語G2Pエンジン（ルールベース + 異音処理オプション） |
 | `DotNetG2P.French` | Apache-2.0 | フランス語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
+| `DotNetG2P.Portuguese` | Apache-2.0 | ポルトガル語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
 | `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中西仏混在テキスト対応） |
 
 ### Unity (UPM)
@@ -112,6 +122,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.French
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Portuguese
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -214,6 +225,28 @@ string frAllo = frAlloEngine.ToIPA("autre");
 
 // X-SAMPA出力
 string frXsampa = frEngine.ToXSampa("bonjour");
+
+// === ポルトガル語G2P ===
+using DotNetG2P.Portuguese;
+
+using var ptEngine = new PortugueseG2PEngine();
+string ptIpa = ptEngine.ToIPA("obrigado");
+// => "obɾiˈɡadu"
+
+string ptIpa2 = ptEngine.ToIPA("coração");
+// => "koɾaˈsɐ̃w̃"
+
+// ヨーロッパポルトガル語方言
+using var ptEpEngine = new PortugueseG2PEngine(new PortugueseG2POptions(dialect: PortugueseDialect.European));
+string ptEpIpa = ptEpEngine.ToIPA("obrigado");
+
+// 異音処理有効化
+using var ptAlloEngine = new PortugueseG2PEngine(new PortugueseG2POptions(enableAllophones: true));
+string ptAllo = ptAlloEngine.ToIPA("cidade");
+// => 異音規則適用済みIPA（BP: t/d破擦音化など）
+
+// バッチ処理
+var ptBatch = ptEngine.ToIPABatch(new[] { "bom dia", "boa noite" });
 
 // === 日英中西仏混在テキスト ===
 using DotNetG2P.Multilingual;
@@ -333,6 +366,19 @@ multiFrEngine.ToPhonemes("bonjour世界");
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
 | `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<FrenchPhoneme>>` | バッチ構造化音素リスト変換 |
+
+### PortugueseG2PEngine
+
+| メソッド | 戻り値型 | 説明 |
+|---------|---------|------|
+| `ToPhonemes(text)` | `string` | スペース区切りIPA音素列 |
+| `ToIPA(text)` | `string` | IPA表記（`"obɾiˈɡadu"` のような形式） |
+| `ToIPAWithoutStress(text)` | `string` | ストレスマークなしIPA表記 |
+| `ToPhonemeList(text)` | `IReadOnlyList<PortuguesePhoneme>` | 構造化音素リスト |
+| `ToSyllables(text)` | `IReadOnlyList<PortugueseSyllable>` | 音節分割結果 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<PortuguesePhoneme>>` | バッチ構造化音素リスト変換 |
 
 ### MultilingualG2PEngine
 
@@ -485,6 +531,62 @@ PER閾値設定（`tools/french_eval_thresholds.json`）:
 - `FrenchDatasetEvaluationTests`: 外部TSVコーパスを使ったPER閾値テスト（6件）
 - `FrenchAllophoneEvaluationTests`: 異音プロファイル別PER評価（6件）
 
+## ポルトガル語評価
+
+ポルトガル語G2Pはルールベース変換 + 例外辞書（560+エントリ）で構成されています。
+
+### 音素体系
+
+49種のIPA音素を定義（`PortugueseIpaPhoneme` enum）:
+
+| カテゴリ | 数 | 内容 |
+|---------|-----|------|
+| 口母音 | 9 | /a/, /e/, /ɛ/, /i/, /o/, /ɔ/, /u/, /ɐ/, /ɨ/（EP固有） |
+| 鼻母音 | 5 | /ɐ̃/, /ẽ/, /ĩ/, /õ/, /ũ/ |
+| 半母音 | 2 | /j/, /w/ |
+| 鼻わたり音 | 2 | /w̃/, /j̃/ |
+| 子音 | 20 | 破裂6 + 摩擦6 + 鼻音3 + 側面音2 + ロティック2 + 破擦音1（ChはBP異音兼用） |
+| 異音 | 11 | BP固有4 + EP固有2 + 共通3 + 弱化2 |
+
+### 方言サポート
+
+| 方言 | enum値 | 説明 |
+|------|--------|------|
+| Brazilian | `PortugueseDialect.Brazilian`（デフォルト） | サンパウロ/リオ標準。t/d破擦音化、コーダl半母音化 |
+| European | `PortugueseDialect.European` | リスボン標準。閉鎖音弱化、歯擦音後部歯茎化、コーダl軟口蓋化 |
+
+### 異音規則
+
+`PortugueseAllophoneFeatures` で個別にON/OFF可能な7種の異音規則:
+
+| 規則 | 説明 | BP既定 | EP既定 |
+|------|------|--------|--------|
+| `VowelReduction` | 無ストレス母音の弱化 | ON | ON |
+| `NasalAssimilation` | 鼻音の調音位置同化 | ON | ON |
+| `SibilantVoicingAssimilation` | 歯擦音の有声性同化 | ON | ON |
+| `Lenition` | 閉鎖音弱化 [b→β, d→ð, g→ɣ] | OFF | ON |
+| `SibilantPalatalization` | 歯擦音の後部歯茎化 [s→ʃ, z→ʒ] | OFF | ON |
+| `TDPalatalization` | t/d の破擦音化 [t→tʃ, d→dʒ] + /i/ | ON | OFF |
+| `LAllophony` | コーダ /l/ の異音: BP=半母音化[w] / EP=軟口蓋化[ɫ] | ON | ON |
+
+### テキスト正規化
+
+`PortugueseNormalizer` は13段階のパイプラインでテキストを読み上げ形式に展開します:
+
+1. NFKC正規化 + 小文字化
+2. 略語展開
+3. ISO日付展開
+4. 日付展開
+5. 時刻展開
+6. 通貨展開
+7. パーセント展開
+8. 単位展開
+9. 数値範囲展開
+10. 小数展開
+11. 独立数値展開
+12. 記号展開
+13. 空白正規化
+
 ## オプション設定
 
 `G2POptions` で各処理段階を個別にON/OFFできます（イミュータブル設計）。
@@ -540,7 +642,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 辞書データ（`DictionaryBundle`）は内部でWeakReferenceキャッシュにより自動的に共有されるため、
 複数インスタンスを作成してもメモリ使用量は最小限に抑えられます。
 
-`EnglishG2PEngine`、`ChineseG2PEngine`、`SpanishG2PEngine`、`FrenchG2PEngine` はステートレスな変換を行うため、
+`EnglishG2PEngine`、`ChineseG2PEngine`、`SpanishG2PEngine`、`FrenchG2PEngine`、`PortugueseG2PEngine` はステートレスな変換を行うため、
 単一インスタンスを複数スレッドから呼び出しても安全です。
 
 `MultilingualG2PEngine` は内部の日本語エンジンを `lock` で保護しているため、
@@ -556,6 +658,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | 中国語G2Pエンジン |
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | スペイン語G2Pエンジン |
 | **DotNetG2P.French** | [Apache-2.0](LICENSE) | フランス語G2Pエンジン |
+| **DotNetG2P.Portuguese** | [Apache-2.0](LICENSE) | ポルトガル語G2Pエンジン |
 | **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中西仏対応） |
 
 全コンポーネントが**Apache-2.0ライセンス**で利用可能です。
