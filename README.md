@@ -67,7 +67,7 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力
 - **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応
 - **フランス語G2P対応** — ルールベース6フェーズG2P変換（ダイグラフ→文脈依存→鼻母音化→半母音化→位置の法則→黙字）、音素ベース音節分割、Metropolitan/Conservative方言切り替え、異音処理（R無声化・阻害音有声性同化）、例外辞書500+エントリ（外来語/不規則語/動詞3複/学術語/同綴異音語）、テキスト正規化（数値/日付/時刻/通貨/単位/略語/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
-- **ポルトガル語G2P対応** — ルールベースG2P変換 + 例外辞書（560+エントリ）、音節分割、ストレス付与、Brazilian/European方言切り替え、7種の異音規則（母音弱化・鼻音同化・歯擦音有声性同化・閉鎖音弱化・歯擦音後部歯茎化・t/d破擦音化・コーダl異音）、テキスト正規化（13段階パイプライン: 略語/日付/時刻/通貨/%/単位/数値範囲/小数/数値/記号）、IPA出力を実装
+- **ポルトガル語G2P対応** — ルールベースG2P変換 + 例外辞書（560+エントリ）、音節分割、ストレス付与、Brazilian/European方言切り替え、7種の異音規則（母音弱化・鼻音同化・歯擦音有声性同化・閉鎖音弱化・歯擦音後部歯茎化・t/d破擦音化・コーダl異音）、テキスト正規化（13段階パイプライン: 略語/日付/時刻/通貨/%/単位/数値範囲/小数/数値/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
 - **日英中西仏混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、`DefaultLatinLanguage` により英語/スペイン語/フランス語のラテン文字系セグメントを切り替え可能。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
 
 ## インストール
@@ -245,6 +245,10 @@ using var ptAlloEngine = new PortugueseG2PEngine(new PortugueseG2POptions(enable
 string ptAllo = ptAlloEngine.ToIPA("cidade");
 // => 異音規則適用済みIPA（BP: t/d破擦音化など）
 
+// X-SAMPA出力
+string ptXsampa = ptEngine.ToXSampa("obrigado");
+string ptXsampaNoStress = ptEngine.ToXSampaWithoutStress("obrigado");
+
 // バッチ処理
 var ptBatch = ptEngine.ToIPABatch(new[] { "bom dia", "boa noite" });
 
@@ -374,10 +378,13 @@ multiFrEngine.ToPhonemes("bonjour世界");
 | `ToPhonemes(text)` | `string` | スペース区切りIPA音素列 |
 | `ToIPA(text)` | `string` | IPA表記（`"obɾiˈɡadu"` のような形式） |
 | `ToIPAWithoutStress(text)` | `string` | ストレスマークなしIPA表記 |
+| `ToXSampa(text)` | `string` | X-SAMPA表記 |
+| `ToXSampaWithoutStress(text)` | `string` | ストレスマークなしX-SAMPA表記 |
 | `ToPhonemeList(text)` | `IReadOnlyList<PortuguesePhoneme>` | 構造化音素リスト |
 | `ToSyllables(text)` | `IReadOnlyList<PortugueseSyllable>` | 音節分割結果 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
 | `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<PortuguesePhoneme>>` | バッチ構造化音素リスト変換 |
 
 ### MultilingualG2PEngine
@@ -533,7 +540,27 @@ PER閾値設定（`tools/french_eval_thresholds.json`）:
 
 ## ポルトガル語評価
 
-ポルトガル語G2Pはルールベース変換 + 例外辞書（560+エントリ）で構成されています。
+ポルトガル語G2Pはルールベース変換 + 例外辞書（560+エントリ）で構成されています。全量評価パイプラインも含まれます。
+
+```powershell
+pwsh -File tools/refresh_portuguese_eval_data.ps1 -Mode Full
+pwsh -File tools/run_portuguese_full_evaluation.ps1 -EnforceThresholds
+```
+
+- コーパス出力先: `artifacts/portuguese-eval/corpora`
+- レポート出力先: `artifacts/portuguese-eval/reports/latest`
+- 主な出力:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+PER閾値設定（`tools/portuguese_eval_thresholds.json`）
+
+テスト実績:
+
+- `PortugueseG2P`: `1294 passed, 16 skipped`（合計1310件）
+- `PortugueseDatasetEvaluationTests`: 外部TSVコーパスを使ったPER閾値テスト（9件）
+- `PortugueseAllophoneEvaluationTests`: 異音プロファイル別PER評価（7件）
 
 ### 音素体系
 

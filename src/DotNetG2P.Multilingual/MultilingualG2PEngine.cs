@@ -8,6 +8,7 @@ using DotNetG2P.Chinese;
 using DotNetG2P.English;
 using DotNetG2P.French;
 using DotNetG2P.MeCab;
+using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
 
 namespace DotNetG2P.Multilingual
@@ -26,6 +27,7 @@ namespace DotNetG2P.Multilingual
         private readonly ChineseG2PEngine _chineseEngine;
         private readonly SpanishG2PEngine _spanishEngine;
         private readonly FrenchG2PEngine _frenchEngine;
+        private readonly PortugueseG2PEngine _portugueseEngine;
         private readonly MultilingualG2POptions _options;
         private readonly object _japaneseLock = new object();
         private int _disposed;
@@ -77,6 +79,7 @@ namespace DotNetG2P.Multilingual
             ChineseG2PEngine? chineseEngine = null;
             SpanishG2PEngine? spanishEngine = null;
             FrenchG2PEngine? frenchEngine = null;
+            PortugueseG2PEngine? portugueseEngine = null;
             try
             {
                 japaneseEngine = new G2PEngine(
@@ -95,11 +98,15 @@ namespace DotNetG2P.Multilingual
                 frenchEngine = new FrenchG2PEngine(
                     options.FrenchOptions ?? FrenchG2POptions.Default);
 
+                portugueseEngine = new PortugueseG2PEngine(
+                    options.PortugueseOptions ?? PortugueseG2POptions.Default);
+
                 _japaneseEngine = japaneseEngine;
                 _englishEngine = englishEngine;
                 _chineseEngine = chineseEngine;
                 _spanishEngine = spanishEngine;
                 _frenchEngine = frenchEngine;
+                _portugueseEngine = portugueseEngine;
             }
             catch
             {
@@ -108,6 +115,7 @@ namespace DotNetG2P.Multilingual
                 chineseEngine?.Dispose();
                 spanishEngine?.Dispose();
                 frenchEngine?.Dispose();
+                portugueseEngine?.Dispose();
                 throw;
             }
         }
@@ -217,6 +225,7 @@ namespace DotNetG2P.Multilingual
             _chineseEngine.Dispose();
             _spanishEngine.Dispose();
             _frenchEngine.Dispose();
+            _portugueseEngine.Dispose();
         }
 
         /// <summary>
@@ -243,6 +252,9 @@ namespace DotNetG2P.Multilingual
 
                 case Language.French:
                     return _frenchEngine.ToPhonemes(segment.Text);
+
+                case Language.Portuguese:
+                    return _portugueseEngine.ToPhonemes(segment.Text);
 
                 default:
                     return "";
