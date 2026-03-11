@@ -1,0 +1,7 @@
+input	expected	source	rule_tag	notes
+먹는	멍는	NIKL_QNA_312379	nasalization	Official example cited in the research memo
+국물	궁물	NIKL_QNA_312379	nasalization	Official example cited in the research memo
+깎는	깡는	NIKL_QNA_312379	nasalization	Official example cited in the research memo
+국밥	국빱	NIKL_QNA_312379	tensification	Official example cited in the research memo
+깻잎	깬닙	NIKL_QNA_295984	n-insertion	Starter seed for official n-insertion discussion
+꽃	꼳	NIKL_QNA_318280	neutralization	Starter seed for representative final consonant discussion

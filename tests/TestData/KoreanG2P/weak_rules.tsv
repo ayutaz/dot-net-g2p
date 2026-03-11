@@ -1,0 +1,6 @@
+input	expected	source	rule_tag	notes
+놓는	논는	Mun2022	h-deletion	Starter seed for a weak rule highlighted in the 2022 comparison paper
+깻잎	깬닙	Mun2022	n-insertion	Starter seed for a weak rule highlighted in the 2022 comparison paper
+나의	나에	Mun2022	ui-variation	Starter seed for possessive particle pronunciation variation
+앞문	암문	Mun2022	place-assimilation	Starter seed for place assimilation not tracked well by existing OSS
+않네	안네	Mun2022	h-deletion	Starter seed for h-deletion before nasal onset
