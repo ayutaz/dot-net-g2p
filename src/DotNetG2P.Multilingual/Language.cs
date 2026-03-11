@@ -19,5 +19,8 @@ namespace DotNetG2P.Multilingual
 
         /// <summary>フランス語</summary>
         French = 4,
+
+        /// <summary>ポルトガル語</summary>
+        Portuguese = 5,
     }
 }

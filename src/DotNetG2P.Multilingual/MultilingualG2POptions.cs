@@ -4,6 +4,7 @@ using System;
 using DotNetG2P.Chinese;
 using DotNetG2P.English;
 using DotNetG2P.French;
+using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
 
 namespace DotNetG2P.Multilingual
@@ -25,6 +26,9 @@ namespace DotNetG2P.Multilingual
 
         /// <summary>フランス語G2Pオプション（null時はデフォルト）。</summary>
         public FrenchG2POptions? FrenchOptions { get; }
+
+        /// <summary>ポルトガル語G2Pオプション（null時はデフォルト）。</summary>
+        public PortugueseG2POptions? PortugueseOptions { get; }
 
         /// <summary>CJK漢字のデフォルト言語（周囲にかな文字がない場合に使用、デフォルト: Japanese）。</summary>
         public Language DefaultCjkLanguage { get; }
@@ -49,6 +53,7 @@ namespace DotNetG2P.Multilingual
         /// <param name="spanishOptions">スペイン語G2Pオプション（null時はデフォルト）</param>
         /// <param name="defaultLatinLanguage">ラテン文字列のデフォルト言語（デフォルト: English）</param>
         /// <param name="frenchOptions">フランス語G2Pオプション（null時はデフォルト）</param>
+        /// <param name="portugueseOptions">ポルトガル語G2Pオプション（null時はデフォルト）</param>
         public MultilingualG2POptions(
             G2POptions? japaneseOptions = null,
             EnglishG2POptions? englishOptions = null,
@@ -57,16 +62,18 @@ namespace DotNetG2P.Multilingual
             string segmentSeparator = " ",
             SpanishG2POptions? spanishOptions = null,
             Language defaultLatinLanguage = Language.English,
-            FrenchG2POptions? frenchOptions = null)
+            FrenchG2POptions? frenchOptions = null,
+            PortugueseG2POptions? portugueseOptions = null)
         {
-            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French)
-                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, or French.");
+            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French && defaultLatinLanguage != Language.Portuguese)
+                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, French, or Portuguese.");
 
             JapaneseOptions = japaneseOptions;
             EnglishOptions = englishOptions;
             ChineseOptions = chineseOptions;
             SpanishOptions = spanishOptions;
             FrenchOptions = frenchOptions;
+            PortugueseOptions = portugueseOptions;
             DefaultCjkLanguage = defaultCjkLanguage;
             DefaultLatinLanguage = defaultLatinLanguage;
             SegmentSeparator = segmentSeparator;

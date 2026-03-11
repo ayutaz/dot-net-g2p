@@ -1,0 +1,14 @@
+{
+  "name": "DotNetG2P.Portuguese",
+  "rootNamespace": "DotNetG2P.Portuguese",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

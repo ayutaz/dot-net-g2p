@@ -20,6 +20,7 @@ namespace DotNetG2P.Multilingual
         private const byte LangChinese = 3;   // Language.Chinese
         private const byte LangSpanish = 4;   // Language.Spanish
         private const byte LangFrench = 5;    // Language.French
+        private const byte LangPortuguese = 6; // Language.Portuguese
 
         private static readonly string[] s_frenchWordSignals =
         {
@@ -53,6 +54,22 @@ namespace DotNetG2P.Multilingual
             "cion", "ciones", "mente", "ando", "iendo", "ados", "adas",
             "ado", "ada", "idos", "idas", "ido", "ida", "ista", "istas",
             "ismo", "ismos", "anza", "anzas", "oso", "osa", "osos", "osas"
+        };
+
+        private static readonly string[] s_portugueseWordSignals =
+        {
+            "obrigado", "obrigada", "muito", "muita", "também", "sempre",
+            "agora", "aqui", "hoje", "depois",
+            "onde", "quem", "quanto", "qual", "esse", "essa", "isso",
+            "isto", "vocês", "nosso", "nossa",
+            "senhor", "senhora", "bom", "boa", "tchau", "tudo"
+        };
+
+        private static readonly string[] s_portugueseSuffixSignals =
+        {
+            "ção", "ções", "agem", "agens", "eiro", "eira", "eiros", "eiras",
+            "ável", "ível",
+            "endo", "indo"
         };
 
         private static readonly string[] s_englishWordSignals =
@@ -108,8 +125,8 @@ namespace DotNetG2P.Multilingual
             if (string.IsNullOrEmpty(text))
                 return Array.Empty<TextSegment>();
 
-            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French)
-                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, or French.");
+            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French && defaultLatinLanguage != Language.Portuguese)
+                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, French, or Portuguese.");
 
             int len = text.Length;
 
@@ -145,6 +162,7 @@ namespace DotNetG2P.Multilingual
                                     : LangJapanese;
                 byte defaultLatinByte = defaultLatinLanguage == Language.Spanish ? LangSpanish
                                      : defaultLatinLanguage == Language.French ? LangFrench
+                                     : defaultLatinLanguage == Language.Portuguese ? LangPortuguese
                                      : LangEnglish;
 
                 // まず、日本語確定文字を直接割り当てる。
@@ -444,6 +462,7 @@ namespace DotNetG2P.Multilingual
                 case LangChinese: return Language.Chinese;
                 case LangSpanish: return Language.Spanish;
                 case LangFrench: return Language.French;
+                case LangPortuguese: return Language.Portuguese;
                 default: return Language.English;
             }
         }
@@ -455,7 +474,7 @@ namespace DotNetG2P.Multilingual
 
         private static bool IsLatinLanguage(byte language)
         {
-            return language == LangEnglish || language == LangSpanish || language == LangFrench;
+            return language == LangEnglish || language == LangSpanish || language == LangFrench || language == LangPortuguese;
         }
 
         private static byte ResolveLatinLanguage(string text, int start, int length, byte defaultLatinByte, bool hasLatinExtended)
@@ -466,7 +485,19 @@ namespace DotNetG2P.Multilingual
             if (defaultLatinByte == LangFrench)
                 return LangFrench;
 
+            if (defaultLatinByte == LangPortuguese)
+                return LangPortuguese;
+
             ReadOnlySpan<char> token = text.AsSpan(start, length);
+
+            // ポルトガル語特有文字の検出（ã, õ はスペイン語にもフランス語にもない）
+            // フランス語より先に判定: ç は仏葡共通だが ã/õ はポルトガル語固有
+            if (ContainsExplicitPortugueseCharacter(token))
+                return LangPortuguese;
+
+            // ç + ポルトガル語固有パターン（-ço, -ça 等）はフランス語判定より先にチェック
+            if (ContainsPortugueseCedillaPattern(token))
+                return LangPortuguese;
 
             // フランス語特有文字の検出（スペイン語より先に判定）
             if (ContainsExplicitFrenchCharacter(token))
@@ -484,6 +515,9 @@ namespace DotNetG2P.Multilingual
 
             if (!hasLatinExtended && LooksLikeSpanishAsciiToken(token))
                 return LangSpanish;
+
+            if (!hasLatinExtended && LooksLikePortugueseAsciiToken(token))
+                return LangPortuguese;
 
             return defaultLatinByte;
         }
@@ -659,6 +693,80 @@ namespace DotNetG2P.Multilingual
             {
                 score += 1;
             }
+
+            return score >= 3;
+        }
+
+        private static bool ContainsExplicitPortugueseCharacter(ReadOnlySpan<char> token)
+        {
+            for (int i = 0; i < token.Length; i++)
+            {
+                switch (token[i])
+                {
+                    case '\u00C3': // Ã
+                    case '\u00E3': // ã
+                    case '\u00D5': // Õ
+                    case '\u00F5': // õ
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// ç + ポルトガル語固有の接尾パターン（-ço, -ça, -ços, -ças）を検出する。
+        /// ç はフランス語にもポルトガル語にもあるが、-ço/-ça パターンはポルトガル語固有。
+        /// </summary>
+        private static bool ContainsPortugueseCedillaPattern(ReadOnlySpan<char> token)
+        {
+            // ç/Ç を含まなければ対象外
+            bool hasCedilla = false;
+            for (int i = 0; i < token.Length; i++)
+            {
+                if (token[i] == '\u00E7' || token[i] == '\u00C7') // ç, Ç
+                {
+                    hasCedilla = true;
+                    break;
+                }
+            }
+
+            if (!hasCedilla)
+                return false;
+
+            // ポルトガル語固有パターン: -ço, -ça, -ços, -ças
+            string lower = new string(token).ToLowerInvariant();
+            return lower.EndsWith("\u00E7o", StringComparison.Ordinal)     // ço
+                || lower.EndsWith("\u00E7a", StringComparison.Ordinal)     // ça
+                || lower.EndsWith("\u00E7os", StringComparison.Ordinal)    // ços
+                || lower.EndsWith("\u00E7as", StringComparison.Ordinal);   // ças
+        }
+
+        private static bool LooksLikePortugueseAsciiToken(ReadOnlySpan<char> token)
+        {
+            if (token.Length < 2 || IsLikelyAcronym(token))
+                return false;
+
+            string lower = new string(token).ToLowerInvariant();
+            if (Array.IndexOf(s_englishWordSignals, lower) >= 0)
+                return false;
+
+            int score = 0;
+
+            if (Array.IndexOf(s_portugueseWordSignals, lower) >= 0)
+                score += 4;
+
+            for (int i = 0; i < s_portugueseSuffixSignals.Length; i++)
+            {
+                if (lower.EndsWith(s_portugueseSuffixSignals[i], StringComparison.Ordinal))
+                {
+                    score += 2;
+                    break;
+                }
+            }
+
+            if (lower.Contains("lh", StringComparison.Ordinal) || lower.Contains("nh", StringComparison.Ordinal))
+                score += 1;
 
             return score >= 3;
         }

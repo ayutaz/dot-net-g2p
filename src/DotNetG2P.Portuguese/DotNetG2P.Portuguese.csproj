@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>DotNetG2P.Portuguese</PackageId>
+    <AssemblyName>DotNetG2P.Portuguese</AssemblyName>
+    <RootNamespace>DotNetG2P.Portuguese</RootNamespace>
+    <Description>Portuguese Grapheme-to-Phoneme (G2P) library for .NET and Unity. Rule-based IPA conversion with syllabification, stress assignment, nasal vowels, and Brazilian/European dialect options.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>g2p;portuguese;tts;phoneme;ipa;text-to-speech;unity</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\portuguese_exceptions.master.tsv" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+</Project>

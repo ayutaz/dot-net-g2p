@@ -1,0 +1,563 @@
+surface	dialect	category	stress_index	phonemes	notes
+# ===== 開/閉母音の不規則語 (open_close_vowel) =====
+# --- /ɛ/ 開母音 e 系列 ---
+belo	*	open_close_vowel	0	b ɛ|l u	bonito, /ɛ/ aberto
+cedo	*	open_close_vowel	0	s ɛ|d u	cedo, /ɛ/ aberto
+selo	*	open_close_vowel	0	s ɛ|l u	selo (carimbo), /ɛ/ aberto
+mega	*	open_close_vowel	0	m ɛ|ɡ ɐ	mega (prefixo), /ɛ/ aberto
+peca	*	open_close_vowel	0	p ɛ|k ɐ	peca (de teatro), /ɛ/ aberto
+seta	*	open_close_vowel	0	s ɛ|t ɐ	seta, /ɛ/ aberto
+tela	*	open_close_vowel	0	t ɛ|l ɐ	tela, /ɛ/ aberto
+vela	*	open_close_vowel	0	v ɛ|l ɐ	vela, /ɛ/ aberto
+meta	*	open_close_vowel	0	m ɛ|t ɐ	meta, /ɛ/ aberto
+seca	*	open_close_vowel	0	s ɛ|k ɐ	seca (adj/subst), /ɛ/ aberto
+ela	*	open_close_vowel	0	ɛ|l ɐ	ela (pronome), /ɛ/ aberto
+bela	*	open_close_vowel	0	b ɛ|l ɐ	bela, /ɛ/ aberto
+neta	*	open_close_vowel	0	n ɛ|t ɐ	neta, /ɛ/ aberto
+pena	*	open_close_vowel	0	p ɛ|n ɐ	pena (pluma/castigo), /ɛ/ aberto
+pedra	*	open_close_vowel	0	p ɛ|d ɾ ɐ	pedra, /ɛ/ aberto
+terra	*	open_close_vowel	0	t ɛ|ʁ ɐ	terra, /ɛ/ aberto
+guerra	*	open_close_vowel	0	ɡ ɛ|ʁ ɐ	guerra, /ɛ/ aberto
+serra	*	open_close_vowel	0	s ɛ|ʁ ɐ	serra, /ɛ/ aberto
+letra	*	open_close_vowel	0	l ɛ|t ɾ ɐ	letra, /ɛ/ aberto
+festa	*	open_close_vowel	0	f ɛ s|t ɐ	festa, /ɛ/ aberto
+cesta	*	open_close_vowel	0	s ɛ s|t ɐ	cesta, /ɛ/ aberto
+cresta	*	open_close_vowel	0	k ɾ ɛ s|t ɐ	cresta, /ɛ/ aberto
+gesto	*	open_close_vowel	0	ʒ ɛ s|t u	gesto, /ɛ/ aberto
+resto	*	open_close_vowel	0	ʁ ɛ s|t u	resto, /ɛ/ aberto
+texto	*	open_close_vowel	0	t ɛ s|t u	texto, /ɛ/ aberto
+sexto	*	open_close_vowel	0	s ɛ s|t u	sexto, /ɛ/ aberto
+ferro	*	open_close_vowel	0	f ɛ|ʁ u	ferro, /ɛ/ aberto
+cerco	*	open_close_vowel	0	s ɛ ɾ|k u	cerco, /ɛ/ aberto
+nervo	*	open_close_vowel	0	n ɛ ɾ|v u	nervo, /ɛ/ aberto
+verso	*	open_close_vowel	0	v ɛ ɾ|s u	verso, /ɛ/ aberto
+berco	*	open_close_vowel	0	b ɛ ɾ|s u	berco, /ɛ/ aberto
+erva	*	open_close_vowel	0	ɛ ɾ|v ɐ	erva, /ɛ/ aberto
+perda	*	open_close_vowel	0	p ɛ ɾ|d ɐ	perda, /ɛ/ aberto
+certo	*	open_close_vowel	0	s ɛ ɾ|t u	certo, /ɛ/ aberto
+aberto	*	open_close_vowel	1	a|b ɛ ɾ|t u	aberto, /ɛ/ aberto
+oferta	*	open_close_vowel	1	o|f ɛ ɾ|t ɐ	oferta, /ɛ/ aberto
+conversa	*	open_close_vowel	1	k õ|v ɛ ɾ|s ɐ	conversa, /ɛ/ aberto
+# --- /e/ 閉母音 e 系列 ---
+dedo	*	open_close_vowel	0	d e|d u	dedo, /e/ fechado
+peso	*	open_close_vowel	0	p e|z u	peso, /e/ fechado
+medo	*	open_close_vowel	0	m e|d u	medo, /e/ fechado
+pelo	*	open_close_vowel	0	p e|l u	pelo (cabelo), /e/ fechado
+mesa	*	open_close_vowel	0	m e|z ɐ	mesa, /e/ fechado
+presa	*	open_close_vowel	0	p ɾ e|z ɐ	presa, /e/ fechado
+meses	*	open_close_vowel	0	m e|z ɨ s	meses, /e/ fechado
+sede	*	open_close_vowel	0	s e|d ɨ	sede (thirst), /e/ fechado
+negro	*	open_close_vowel	0	n e|ɡ ɾ u	negro, /e/ fechado
+seco	*	open_close_vowel	0	s e|k u	seco (adjetivo masc), /e/ fechado
+cego	*	open_close_vowel	0	s e|ɡ u	cego, /e/ fechado
+teto	*	open_close_vowel	0	t e|t u	teto, /e/ fechado
+ledo	*	open_close_vowel	0	l e|d u	ledo, /e/ fechado
+espelho	*	open_close_vowel	1	ɨ s|p e|ʎ u	espelho, /e/ fechado
+projeto	*	open_close_vowel	1	p ɾ u|ʒ ɛ|t u	projeto, /ɛ/ aberto
+processo	*	open_close_vowel	1	p ɾ u|s ɛ|s u	processo, /ɛ/ aberto
+# --- /ɔ/ 開母音 o 系列 ---
+ovo	*	open_close_vowel	0	ɔ|v u	ovo, /ɔ/ aberto
+jogo	*	open_close_vowel	0	ʒ ɔ|ɡ u	jogo (subst), /ɔ/ aberto
+fogo	*	open_close_vowel	0	f ɔ|ɡ u	fogo, /ɔ/ aberto
+povo	*	open_close_vowel	0	p ɔ|v u	povo, /ɔ/ aberto
+poco	*	open_close_vowel	0	p ɔ|s u	poco, /ɔ/ aberto
+troco	*	open_close_vowel	0	t ɾ ɔ|k u	troco, /ɔ/ aberto
+rolo	*	open_close_vowel	0	ʁ ɔ|l u	rolo, /ɔ/ aberto
+bola	*	open_close_vowel	0	b ɔ|l ɐ	bola, /ɔ/ aberto
+cola	*	open_close_vowel	0	k ɔ|l ɐ	cola, /ɔ/ aberto
+mola	*	open_close_vowel	0	m ɔ|l ɐ	mola, /ɔ/ aberto
+nota	*	open_close_vowel	0	n ɔ|t ɐ	nota, /ɔ/ aberto
+porta	*	open_close_vowel	0	p ɔ ɾ|t ɐ	porta, /ɔ/ aberto
+torta	*	open_close_vowel	0	t ɔ ɾ|t ɐ	torta, /ɔ/ aberto
+horta	*	open_close_vowel	0	ɔ ɾ|t ɐ	horta, /ɔ/ aberto
+volta	*	open_close_vowel	0	v ɔ l|t ɐ	volta, /ɔ/ aberto
+boca	*	open_close_vowel	0	b ɔ|k ɐ	boca, /ɔ/ aberto
+forca	*	open_close_vowel	0	f ɔ ɾ|s ɐ	forca (patibulo), /ɔ/ aberto
+forma	*	open_close_vowel	0	f ɔ ɾ|m ɐ	forma, /ɔ/ aberto
+norma	*	open_close_vowel	0	n ɔ ɾ|m ɐ	norma, /ɔ/ aberto
+rocha	*	open_close_vowel	0	ʁ ɔ|ʃ ɐ	rocha, /ɔ/ aberto
+roda	*	open_close_vowel	0	ʁ ɔ|d ɐ	roda, /ɔ/ aberto
+cova	*	open_close_vowel	0	k ɔ|v ɐ	cova, /ɔ/ aberto
+fossa	*	open_close_vowel	0	f ɔ|s ɐ	fossa, /ɔ/ aberto
+sola	*	open_close_vowel	0	s ɔ|l ɐ	sola, /ɔ/ aberto
+gota	*	open_close_vowel	0	ɡ ɔ|t ɐ	gota, /ɔ/ aberto
+costa	*	open_close_vowel	0	k ɔ s|t ɐ	costa, /ɔ/ aberto
+posta	*	open_close_vowel	0	p ɔ s|t ɐ	posta, /ɔ/ aberto
+mosca	*	open_close_vowel	0	m ɔ s|k ɐ	mosca, /ɔ/ aberto
+colcha	*	open_close_vowel	0	k ɔ l|ʃ ɐ	colcha, /ɔ/ aberto
+corda	*	open_close_vowel	0	k ɔ ɾ|d ɐ	corda, /ɔ/ aberto
+moda	*	open_close_vowel	0	m ɔ|d ɐ	moda, /ɔ/ aberto
+# --- /o/ 閉母音 o 系列 ---
+todo	*	open_close_vowel	0	t o|d u	todo, /o/ fechado
+lobo	*	open_close_vowel	0	l o|b u	lobo, /o/ fechado
+corpo	*	open_close_vowel	0	k o ɾ|p u	corpo, /o/ fechado
+porto	*	open_close_vowel	0	p o ɾ|t u	porto (singular), /o/ fechado
+morto	*	open_close_vowel	0	m o ɾ|t u	morto, /o/ fechado
+grosso	*	open_close_vowel	0	ɡ ɾ o|s u	grosso, /o/ fechado
+nosso	*	open_close_vowel	0	n o|s u	nosso, /o/ fechado
+forno	*	open_close_vowel	0	f o ɾ|n u	forno, /o/ fechado
+globo	*	open_close_vowel	0	ɡ l o|b u	globo, /o/ fechado
+rosto	*	open_close_vowel	0	ʁ o s|t u	rosto, /o/ fechado
+sopro	*	open_close_vowel	0	s o|p ɾ u	sopro, /o/ fechado
+ponto	*	open_close_vowel	0	p õ|t u	ponto, nasal /õ/
+# ===== Metaphony (metaphony) =====
+# --- 複数形で開母音化するパターン (sing /o/ -> pl /ɔ/) ---
+ovos	*	metaphony	0	ɔ|v u s	ovo pl, metaphony /ɔ/
+portos	*	metaphony	0	p ɔ ɾ|t u s	porto pl, metaphony /ɔ/
+jogos	*	metaphony	0	ʒ ɔ|ɡ u s	jogo pl, metaphony /ɔ/
+fogos	*	metaphony	0	f ɔ|ɡ u s	fogo pl, metaphony /ɔ/
+corpos	*	metaphony	0	k ɔ ɾ|p u s	corpo pl, metaphony /ɔ/
+fornos	*	metaphony	0	f ɔ ɾ|n u s	forno pl, metaphony /ɔ/
+globos	*	metaphony	0	ɡ l ɔ|b u s	globo pl, metaphony /ɔ/
+grossos	*	metaphony	0	ɡ ɾ ɔ|s u s	grosso pl, metaphony /ɔ/
+lobos	*	metaphony	0	l ɔ|b u s	lobo pl, metaphony /ɔ/
+mortos	*	metaphony	0	m ɔ ɾ|t u s	morto pl, metaphony /ɔ/
+novos	*	metaphony	0	n ɔ|v u s	novo pl, metaphony /ɔ/
+olhos	*	metaphony	0	ɔ|ʎ u s	olho pl, metaphony /ɔ/
+ossos	*	metaphony	0	ɔ|s u s	osso pl, metaphony /ɔ/
+postos	*	metaphony	0	p ɔ s|t u s	posto pl, metaphony /ɔ/
+povos	*	metaphony	0	p ɔ|v u s	povo pl, metaphony /ɔ/
+rostos	*	metaphony	0	ʁ ɔ s|t u s	rosto pl, metaphony /ɔ/
+sopros	*	metaphony	0	s ɔ|p ɾ u s	sopro pl, metaphony /ɔ/
+todos	*	metaphony	0	t ɔ|d u s	todo pl, metaphony /ɔ/
+# --- 女性形で開母音化するパターン ---
+nova	*	metaphony	0	n ɔ|v ɐ	novo fem, metaphony /ɔ/
+grossa	*	metaphony	0	ɡ ɾ ɔ|s ɐ	grosso fem, metaphony /ɔ/
+morta	*	metaphony	0	m ɔ ɾ|t ɐ	morto fem, metaphony /ɔ/
+formosa	*	metaphony	1	f u ɾ|m ɔ|z ɐ	formoso fem, metaphony /ɔ/
+novas	*	metaphony	0	n ɔ|v ɐ s	nova pl, metaphony /ɔ/
+grossas	*	metaphony	0	ɡ ɾ ɔ|s ɐ s	grossa pl, metaphony /ɔ/
+mortas	*	metaphony	0	m ɔ ɾ|t ɐ s	morta pl, metaphony /ɔ/
+# --- /e/ -> /ɛ/ metaphony ---
+belos	*	metaphony	0	b ɛ|l u s	belo pl, metaphony /ɛ/
+negros	*	metaphony	0	n ɛ|ɡ ɾ u s	negro pl, metaphony /ɛ/
+secos	*	metaphony	0	s ɛ|k u s	seco pl, metaphony /ɛ/
+cegos	*	metaphony	0	s ɛ|ɡ u s	cego pl, metaphony /ɛ/
+# ===== x の不規則発音 (x_irregular) =====
+# --- x = /z/ (ex + 母音) ---
+exame	*	x_irregular	1	e|z ɐ|m ɨ	exame, x=/z/
+exato	*	x_irregular	1	e|z a|t u	exato, x=/z/
+exemplo	*	x_irregular	1	e|z ẽ|p l u	exemplo, x=/z/
+exibir	*	x_irregular	1	e|z i|b i ɾ	exibir, x=/z/
+exigir	*	x_irregular	1	e|z i|ʒ i ɾ	exigir, x=/z/
+existir	*	x_irregular	1	e|z i s|t i ɾ	existir, x=/z/
+exercer	*	x_irregular	1	e|z ɛ ɾ|s e ɾ	exercer, x=/z/
+exilar	*	x_irregular	1	e|z i|l a ɾ	exilar, x=/z/
+exausto	*	x_irregular	1	e|z a w s|t u	exausto, x=/z/
+exaltar	*	x_irregular	1	e|z a l|t a ɾ	exaltar, x=/z/
+exagero	*	x_irregular	1	e|z a|ʒ e|ɾ u	exagero, x=/z/
+exuberante	*	x_irregular	2	e|z u|b ɨ|ɾ ɐ̃|t ɨ	exuberante, x=/z/
+# --- x = /ks/ ---
+fixo	*	x_irregular	0	f i k|s u	fixo, x=/ks/
+taxi	*	x_irregular	1	t a k|s i	taxi, x=/ks/
+boxe	*	x_irregular	0	b ɔ k|s ɨ	boxe, x=/ks/
+complexo	*	x_irregular	1	k õ|p l ɛ k|s u	complexo, x=/ks/
+nexo	*	x_irregular	0	n ɛ k|s u	nexo, x=/ks/
+reflexo	*	x_irregular	1	ʁ ɨ|f l ɛ k|s u	reflexo, x=/ks/
+sexo	*	x_irregular	0	s ɛ k|s u	sexo, x=/ks/
+texto	*	x_irregular	0	t ɛ s|t u	texto, x=/s/ (special)
+toxina	*	x_irregular	1	t ɔ k|s i|n ɐ	toxina, x=/ks/
+luxo	*	x_irregular	0	l u k|s u	luxo, x=/ks/
+marxismo	*	x_irregular	1	m a ɾ k|s i z|m u	marxismo, x=/ks/
+ortodoxo	*	x_irregular	2	o ɾ|t u|d ɔ k|s u	ortodoxo, x=/ks/
+tórax	*	x_irregular	0	t ɔ|ɾ a k s	torax, x=/ks/ final
+fênix	*	x_irregular	0	f e|n i k s	fenix, x=/ks/ final
+# --- x = /s/ ---
+próximo	*	x_irregular	0	p ɾ ɔ|s i|m u	proximo, x=/s/
+máximo	*	x_irregular	0	m a|s i|m u	maximo, x=/s/
+auxílio	*	x_irregular	1	a w|s i|l j u	auxilio, x=/s/
+sintaxe	*	x_irregular	1	s ĩ|t a|s ɨ	sintaxe, x=/s/
+# --- x = /ʃ/ (default) ---
+xarope	*	x_irregular	1	ʃ ɐ|ɾ ɔ|p ɨ	xarope, x=/ʃ/
+peixe	*	x_irregular	0	p e j|ʃ ɨ	peixe, x=/ʃ/
+baixo	*	x_irregular	0	b a j|ʃ u	baixo, x=/ʃ/
+caixa	*	x_irregular	0	k a j|ʃ ɐ	caixa, x=/ʃ/
+roxo	*	x_irregular	0	ʁ o|ʃ u	roxo, x=/ʃ/
+frouxo	*	x_irregular	0	f ɾ o w|ʃ u	frouxo, x=/ʃ/
+mexer	*	x_irregular	1	m ɨ|ʃ e ɾ	mexer, x=/ʃ/
+lixo	*	x_irregular	0	l i|ʃ u	lixo, x=/ʃ/
+faixa	*	x_irregular	0	f a j|ʃ ɐ	faixa, x=/ʃ/
+ameixa	*	x_irregular	1	ɐ|m e j|ʃ ɐ	ameixa, x=/ʃ/
+enxame	*	x_irregular	1	ẽ|ʃ ɐ|m ɨ	enxame, x=/ʃ/
+enxergar	*	x_irregular	1	ẽ|ʃ ɨ ɾ|ɡ a ɾ	enxergar, x=/ʃ/
+# ===== 外来語 (foreign) =====
+# --- 英語由来 ---
+show	*	foreign	0	ʃ o w	English loanword
+shopping	*	foreign	0	ʃ ɔ|p ĩ	English loanword
+design	*	foreign	1	d ɨ|z a j n	English loanword
+marketing	*	foreign	0	m a ɾ|k ɛ|t ĩ	English loanword
+feedback	*	foreign	0	f i d|b ɛ k	English loanword
+software	*	foreign	0	s ɔ f t|w ɛ ɾ	English loanword
+hardware	*	foreign	0	a ɾ d|w ɛ ɾ	English loanword
+internet	*	foreign	1	ĩ|t ɨ ɾ|n ɛ t	English loanword
+laptop	*	foreign	0	l ɛ p|t ɔ p	English loanword
+email	*	foreign	1	i|m e j l	English loanword
+site	*	foreign	0	s a j t	English loanword
+blog	*	foreign	0	b l ɔ ɡ	English loanword
+web	*	foreign	0	w ɛ b	English loanword
+rock	*	foreign	0	ʁ ɔ k	English loanword
+jazz	*	foreign	0	ʒ ɛ z	English loanword
+pop	*	foreign	0	p ɔ p	English loanword
+rap	*	foreign	0	ʁ ɛ p	English loanword
+hip-hop	*	foreign	1	ʁ i p|ʁ ɔ p	English loanword
+funk	*	foreign	0	f ɐ̃|k i	English loanword (Brazilian usage)
+surf	*	foreign	0	s u ɾ|f ɨ	English loanword
+futebol	*	foreign	2	f u|t ɨ|b ɔ l	English loanword (football)
+basquete	*	foreign	1	b a s|k ɛ|t ɨ	English loanword (basketball)
+volei	*	foreign	1	v ɔ|l e j	English loanword (volleyball)
+golfe	*	foreign	0	ɡ ɔ l|f ɨ	English loanword (golf)
+tênis	*	foreign	0	t ɛ|n i s	English loanword (tennis)
+match	*	foreign	0	m ɛ|t͡ʃ i	English loanword
+pub	*	foreign	0	p ɐ b	English loanword
+bar	*	foreign	0	b a ɾ	English loanword
+club	*	foreign	0	k l u b	English loanword
+steak	*	foreign	0	s t e j k	English loanword
+pizza	*	foreign	0	p i|t s ɐ	Italian loanword
+cappuccino	*	foreign	2	k ɐ|p u|t͡ʃ i|n u	Italian loanword
+espresso	*	foreign	1	ɨ s|p ɾ ɛ|s u	Italian loanword
+pasta	*	foreign	0	p a s|t ɐ	Italian (also Portuguese)
+whisky	*	foreign	0	u i s|k i	English loanword
+vodka	*	foreign	0	v ɔ d|k ɐ	Russian loanword
+sushi	*	foreign	0	s u|ʃ i	Japanese loanword
+karate	*	foreign	1	k ɐ|ɾ a|t ɛ	Japanese loanword
+judo	*	foreign	0	ʒ u|d o	Japanese loanword
+manga	*	foreign	0	m ɐ̃|ɡ ɐ	Japanese loanword
+anime	*	foreign	1	ɐ|n i|m ɨ	Japanese loanword
+samurai	*	foreign	2	s ɐ|m u|ɾ a j	Japanese loanword
+tsunami	*	foreign	1	t s u|n ɐ|m i	Japanese loanword
+yoga	*	foreign	0	j ɔ|ɡ ɐ	Sanskrit loanword
+guru	*	foreign	1	ɡ u|ɾ u	Sanskrit loanword
+karma	*	foreign	0	k a ɾ|m ɐ	Sanskrit loanword
+kebab	*	foreign	1	k ɨ|b a b	Turkish loanword
+samba	*	foreign	0	s ɐ̃|b ɐ	Portuguese (cultural)
+bossa-nova	*	foreign	0	b ɔ|s ɐ|n ɔ|v ɐ	Portuguese (cultural)
+bureau	*	foreign	1	b u|ɾ o	French loanword
+atelier	*	foreign	2	a|t ɨ|l j e	French loanword
+ballet	*	foreign	1	b ɐ|l ɛ	French loanword
+buffet	*	foreign	1	b u|f ɛ	French loanword
+souvenir	*	foreign	2	s u|v ɨ|n i ɾ	French loanword
+croissant	*	foreign	2	k ɾ u|ɐ|s ɐ̃	French loanword
+paella	*	foreign	1	p ɐ|ɛ|ʎ ɐ	Spanish loanword
+tequila	*	foreign	1	t ɨ|k i|l ɐ	Spanish loanword
+wanderlust	*	foreign	0	v ɐ̃|d ɨ ɾ|l u s t	German loanword
+kitsch	*	foreign	0	k i t͡ʃ	German loanword
+hashtag	*	foreign	0	ɛ ʃ|t ɛ ɡ	English loanword
+podcast	*	foreign	0	p ɔ d|k ɛ s t	English loanword
+selfie	*	foreign	0	s ɛ l|f i	English loanword
+smartphone	*	foreign	0	s m a ɾ t|f o n	English loanword
+startup	*	foreign	0	s t a ɾ|t ɐ p	English loanword
+wifi	*	foreign	0	w a j|f a j	English loanword
+cookie	*	foreign	0	k u|k i	English loanword
+brunch	*	foreign	0	b ɾ ɐ̃ ʃ	English loanword
+camping	*	foreign	0	k ɐ̃|p ĩ	English loanword
+jogging	*	foreign	0	ʒ ɔ|ɡ ĩ	English loanword
+fitness	*	foreign	0	f i t|n ɛ s	English loanword
+# ===== 不規則動詞活用形 (verb_irregular) =====
+# --- ser ---
+sou	*	verb_irregular	-1	s o w	ser 1sg pres
+é	*	verb_irregular	-1	ɛ	ser 3sg pres
+somos	*	verb_irregular	-1	s o|m u s	ser 1pl pres
+são	*	verb_irregular	-1	s ɐ̃ w̃	ser 3pl pres
+era	*	verb_irregular	-1	ɛ|ɾ ɐ	ser imperf
+fui	*	verb_irregular	-1	f u j	ser/ir pret 1sg
+foi	*	verb_irregular	-1	f o j	ser/ir pret 3sg
+fomos	*	verb_irregular	-1	f o|m u s	ser/ir pret 1pl
+foram	*	verb_irregular	-1	f ɔ|ɾ ɐ̃ w̃	ser/ir pret 3pl
+# --- ir ---
+vou	*	verb_irregular	-1	v o w	ir 1sg pres
+vai	*	verb_irregular	-1	v a j	ir 3sg pres
+vamos	*	verb_irregular	-1	v ɐ|m u s	ir 1pl pres
+vão	*	verb_irregular	-1	v ɐ̃ w̃	ir 3pl pres
+# --- ter ---
+tenho	*	verb_irregular	-1	t ɛ|ɲ u	ter 1sg pres
+tem	*	verb_irregular	-1	t ɐ̃ j̃	ter 3sg pres
+temos	*	verb_irregular	-1	t e|m u s	ter 1pl pres
+têm	*	verb_irregular	-1	t ɐ̃ j̃|ɐ̃ j̃	ter 3pl pres
+tinha	*	verb_irregular	-1	t i|ɲ ɐ	ter imperf
+tive	*	verb_irregular	-1	t i|v ɨ	ter pret 1sg
+teve	*	verb_irregular	-1	t e|v ɨ	ter pret 3sg
+# --- vir ---
+venho	*	verb_irregular	-1	v ɛ|ɲ u	vir 1sg pres
+vem	*	verb_irregular	-1	v ɐ̃ j̃	vir 3sg pres
+vimos	*	verb_irregular	-1	v i|m u s	vir 1pl pret (also ver 1pl pret)
+vieram	*	verb_irregular	-1	v j ɛ|ɾ ɐ̃ w̃	vir 3pl pret
+# --- pôr ---
+ponho	*	verb_irregular	-1	p o|ɲ u	por 1sg pres
+põe	*	verb_irregular	-1	p õ j	por 3sg pres
+põem	*	verb_irregular	-1	p õ j|ɐ̃ j̃	por 3pl pres
+pus	*	verb_irregular	-1	p u s	por pret 1sg
+pôs	*	verb_irregular	-1	p o s	por pret 3sg
+# --- fazer ---
+faco	*	verb_irregular	-1	f a|s u	fazer 1sg pres
+faz	*	verb_irregular	-1	f a s	fazer 3sg pres
+fez	*	verb_irregular	-1	f e s	fazer pret 3sg
+fiz	*	verb_irregular	-1	f i s	fazer pret 1sg
+# --- dizer ---
+digo	*	verb_irregular	-1	d i|ɡ u	dizer 1sg pres
+diz	*	verb_irregular	-1	d i s	dizer 3sg pres
+disse	*	verb_irregular	-1	d i|s ɨ	dizer pret 3sg
+# --- poder ---
+posso	*	verb_irregular	-1	p ɔ|s u	poder 1sg pres
+pode	*	verb_irregular	-1	p ɔ|d ɨ	poder 3sg pres
+pôde	*	verb_irregular	-1	p o|d ɨ	poder pret 3sg
+# --- querer ---
+quero	*	verb_irregular	-1	k ɛ|ɾ u	querer 1sg pres
+quer	*	verb_irregular	-1	k ɛ ɾ	querer 3sg pres
+quis	*	verb_irregular	-1	k i s	querer pret 1sg/3sg
+# --- saber ---
+sei	*	verb_irregular	-1	s e j	saber 1sg pres
+sabe	*	verb_irregular	-1	s a|b ɨ	saber 3sg pres
+soube	*	verb_irregular	-1	s o w|b ɨ	saber pret 1sg/3sg
+# --- dar ---
+dou	*	verb_irregular	-1	d o w	dar 1sg pres
+dá	*	verb_irregular	-1	d a	dar 3sg pres
+dão	*	verb_irregular	-1	d ɐ̃ w̃	dar 3pl pres
+dei	*	verb_irregular	-1	d e j	dar pret 1sg
+deu	*	verb_irregular	-1	d e w	dar pret 3sg
+# --- estar ---
+estou	*	verb_irregular	-1	ɨ s|t o w	estar 1sg pres
+está	*	verb_irregular	-1	ɨ s|t a	estar 3sg pres
+estão	*	verb_irregular	-1	ɨ s|t ɐ̃ w̃	estar 3pl pres
+estive	*	verb_irregular	-1	ɨ s|t i|v ɨ	estar pret 1sg
+esteve	*	verb_irregular	-1	ɨ s|t e|v ɨ	estar pret 3sg
+# --- haver ---
+há	*	verb_irregular	-1	a	haver 3sg pres (existential)
+hei	*	verb_irregular	-1	e j	haver 1sg pres
+houve	*	verb_irregular	-1	o w|v ɨ	haver pret 3sg
+# --- ver ---
+vejo	*	verb_irregular	-1	v e|ʒ u	ver 1sg pres
+vê	*	verb_irregular	-1	v e	ver 3sg pres
+vi	*	verb_irregular	-1	v i	ver pret 1sg
+viu	*	verb_irregular	-1	v i w	ver pret 3sg
+# --- trazer ---
+trago	*	verb_irregular	-1	t ɾ a|ɡ u	trazer 1sg pres
+traz	*	verb_irregular	-1	t ɾ a s	trazer 3sg pres
+trouxe	*	verb_irregular	-1	t ɾ o w|s ɨ	trazer pret 3sg
+# --- ler ---
+leio	*	verb_irregular	-1	l e j|u	ler 1sg pres
+lê	*	verb_irregular	-1	l e	ler 3sg pres
+# --- crer ---
+creio	*	verb_irregular	-1	k ɾ e j|u	crer 1sg pres
+crê	*	verb_irregular	-1	k ɾ e	crer 3sg pres
+# ===== 鼻母音不規則 (nasal_irregular) =====
+# --- ão 不規則 ---
+mão	*	nasal_irregular	-1	m ɐ̃ w̃	nasal diphthong /ɐ̃w̃/
+pão	*	nasal_irregular	-1	p ɐ̃ w̃	nasal diphthong /ɐ̃w̃/
+cão	*	nasal_irregular	-1	k ɐ̃ w̃	nasal diphthong /ɐ̃w̃/
+chão	*	nasal_irregular	-1	ʃ ɐ̃ w̃	nasal diphthong /ɐ̃w̃/
+grão	*	nasal_irregular	-1	ɡ ɾ ɐ̃ w̃	nasal diphthong /ɐ̃w̃/
+irmão	*	nasal_irregular	1	i ɾ|m ɐ̃ w̃	nasal diphthong /ɐ̃w̃/
+cidadão	*	nasal_irregular	2	s i|d ɐ|d ɐ̃ w̃	nasal diphthong /ɐ̃w̃/
+coração	*	nasal_irregular	2	k u|ɾ ɐ|s ɐ̃ w̃	nasal diphthong /ɐ̃w̃/
+# --- ãe/ães 不規則 ---
+mãe	*	nasal_irregular	-1	m ɐ̃ j̃	nasal diphthong /ɐ̃j̃/
+pães	*	nasal_irregular	-1	p ɐ̃ j̃ s	pao pl, nasal /ɐ̃j̃/
+cães	*	nasal_irregular	-1	k ɐ̃ j̃ s	cao pl, nasal /ɐ̃j̃/
+mães	*	nasal_irregular	-1	m ɐ̃ j̃ s	mae pl, nasal /ɐ̃j̃/
+alemães	*	nasal_irregular	1	ɐ|l ɨ|m ɐ̃ j̃ s	alemao pl
+# --- õe/ões 不規則 ---
+põe	*	nasal_irregular	-1	p õ j	nasal diphthong /õj/
+limões	*	nasal_irregular	1	l i|m õ j s	limao pl
+corações	*	nasal_irregular	2	k u|ɾ ɐ|s õ j s	coracao pl
+# --- em/ém 不規則 ---
+bem	*	nasal_irregular	-1	b ɐ̃ j̃	/ɐ̃j̃/ nasal
+também	*	nasal_irregular	1	t ɐ̃|b ɐ̃ j̃	/ɐ̃j̃/ nasal
+ninguém	*	nasal_irregular	1	n ĩ|ɡ ɐ̃ j̃	/ɐ̃j̃/ nasal
+alguém	*	nasal_irregular	1	a l|ɡ ɐ̃ j̃	/ɐ̃j̃/ nasal
+# --- um/uns 不規則 ---
+um	*	nasal_irregular	-1	ũ	/ũ/ nasal
+uns	*	nasal_irregular	-1	ũ s	/ũ/ nasal
+algum	*	nasal_irregular	1	a l|ɡ ũ	/ũ/ nasal
+nenhum	*	nasal_irregular	1	n ɨ|ɲ ũ	/ũ/ nasal
+# --- 鼻母音+わたり音特殊 ---
+muito	*	nasal_irregular	0	m ũ j̃|t u	nasal + glide
+muita	*	nasal_irregular	0	m ũ j̃|t ɐ	nasal + glide
+muitos	*	nasal_irregular	0	m ũ j̃|t u s	nasal + glide
+# ===== BP/EP方言固有 (dialect-specific) =====
+# --- BP: /t/ + /i/ → /tʃ/, /d/ + /i/ → /dʒ/ ---
+tipo	brazilian	open_close_vowel	0	t͡ʃ i|p u	BP palatalization
+dia	brazilian	open_close_vowel	0	d͡ʒ i|ɐ	BP palatalization
+dica	brazilian	open_close_vowel	0	d͡ʒ i|k ɐ	BP palatalization
+titulo	brazilian	open_close_vowel	0	t͡ʃ i|t u|l u	BP palatalization
+diferente	brazilian	open_close_vowel	2	d͡ʒ i|f ɨ|ɾ ẽ|t͡ʃ i	BP palatalization
+# --- EP: 無強勢母音弱化 ---
+menino	european	open_close_vowel	1	m ɨ|n i|n u	EP vowel reduction
+pequeno	european	open_close_vowel	1	p ɨ|k e|n u	EP vowel reduction
+governo	european	open_close_vowel	1	ɡ u|v ɛ ɾ|n u	EP vowel reduction
+bonito	european	open_close_vowel	1	b u|n i|t u	EP vowel reduction
+# ===== ch = /k/ (Greek origin) =====
+crónica	*	foreign	0	k ɾ ɔ|n i|k ɐ	regular (no ch)
+psicologia	*	foreign	1	p s i|k u|l u|ʒ i|ɐ	psy- prefix
+# ===== 追加の開閉母音不規則 =====
+escola	*	open_close_vowel	1	ɨ s|k ɔ|l ɐ	escola, /ɔ/ aberto
+história	*	open_close_vowel	1	i s|t ɔ|ɾ j ɐ	historia, /ɔ/ aberto
+memória	*	open_close_vowel	1	m ɨ|m ɔ|ɾ j ɐ	memoria, /ɔ/ aberto
+vitória	*	open_close_vowel	1	v i|t ɔ|ɾ j ɐ	vitoria, /ɔ/ aberto
+glória	*	open_close_vowel	0	ɡ l ɔ|ɾ j ɐ	gloria, /ɔ/ aberto
+famoso	*	open_close_vowel	1	f ɐ|m o|z u	famoso, /o/ fechado
+tesouro	*	open_close_vowel	1	t ɨ|z o w|ɾ u	tesouro, /o/ fechado
+touro	*	open_close_vowel	0	t o w|ɾ u	touro, /o/ fechado
+ouro	*	open_close_vowel	0	o w|ɾ u	ouro, /o/ fechado
+couro	*	open_close_vowel	0	k o w|ɾ u	couro, /o/ fechado
+louro	*	open_close_vowel	0	l o w|ɾ u	louro, /o/ fechado
+pouco	*	open_close_vowel	0	p o w|k u	pouco, /o/ fechado
+# ===== 追加外来語 =====
+check-in	*	foreign	0	ʃ ɛ|k ĩ	English loanword
+check-out	*	foreign	0	ʃ ɛ|k a w t	English loanword
+outdoor	*	foreign	1	a w t|d ɔ ɾ	English loanword
+indoor	*	foreign	1	ĩ|d ɔ ɾ	English loanword
+best-seller	*	foreign	1	b ɛ s t|s ɛ|l ɨ ɾ	English loanword
+stand-up	*	foreign	0	s t ɐ̃|d ɐ p	English loanword
+workshop	*	foreign	0	w ɔ ɾ k|ʃ ɔ p	English loanword
+download	*	foreign	0	d a w n|l o d	English loanword
+upload	*	foreign	1	ɐ p|l o d	English loanword
+streaming	*	foreign	0	s t ɾ i|m ĩ	English loanword
+bullying	*	foreign	0	b u|l ĩ	English loanword
+freezer	*	foreign	0	f ɾ i|z ɨ ɾ	English loanword
+scanner	*	foreign	0	s k ɛ|n ɨ ɾ	English loanword
+blazer	*	foreign	0	b l e j|z ɨ ɾ	English loanword
+container	*	foreign	1	k õ|t e j|n ɨ ɾ	English loanword
+trailer	*	foreign	0	t ɾ e j|l ɨ ɾ	English loanword
+thriller	*	foreign	0	t ɾ i|l ɨ ɾ	English loanword
+fashion	*	foreign	1	f ɛ|ʃ õ	English loanword
+vintage	*	foreign	1	v ĩ|t a ʒ	English/French loanword
+cowboy	*	foreign	1	k a w|b ɔ j	English loanword
+gangster	*	foreign	0	ɡ ɐ̃ ɡ s|t ɨ ɾ	English loanword
+blitz	*	foreign	0	b l i t s	German loanword
+strudel	*	foreign	1	s t ɾ u|d ɛ l	German loanword
+mozzarella	*	foreign	2	m u|t s ɐ|ɾ ɛ|l ɐ	Italian loanword
+risotto	*	foreign	1	ʁ i|z ɔ|t u	Italian loanword
+gnocchi	*	foreign	0	ɲ ɔ|k i	Italian loanword
+# ===== h黙字 (silent) =====
+# --- 語頭 h が発音されない ---
+hora	*	silent	0	ɔ|ɾ ɐ	h mudo
+homem	*	silent	0	ɔ|m ɐ̃ j̃	h mudo + nasal
+hoje	*	silent	0	o|ʒ ɨ	h mudo
+haver	*	silent	1	ɐ|v e ɾ	h mudo
+hotel	*	silent	1	o|t ɛ l	h mudo
+hospital	*	silent	2	ɔ s|p i|t a l	h mudo
+humano	*	silent	1	u|m ɐ̃|n u	h mudo
+humilde	*	silent	1	u|m i l|d ɨ	h mudo
+herói	*	silent	1	ɨ|ɾ ɔ j	h mudo
+herança	*	silent	1	ɨ|ɾ ɐ̃|s ɐ	h mudo
+histeria	*	silent	2	i s|t ɨ|ɾ i|ɐ	h mudo
+hiato	*	silent	1	i|a|t u	h mudo
+hino	*	silent	0	i|n u	h mudo
+honra	*	silent	0	õ|ʁ ɐ	h mudo + nasal
+honesto	*	silent	1	o|n ɛ s|t u	h mudo
+horizonte	*	silent	2	o|ɾ i|z õ|t ɨ	h mudo
+hóspede	*	silent	0	ɔ s|p ɨ|d ɨ	h mudo
+hábito	*	silent	0	a|b i|t u	h mudo
+hipótese	*	silent	1	i|p ɔ|t ɨ|z ɨ	h mudo
+húmido	*	silent	0	u|m i|d u	h mudo
+habitante	*	silent	2	ɐ|b i|t ɐ̃|t ɨ	h mudo
+habitual	*	silent	2	ɐ|b i|t w a l	h mudo
+harmonia	*	silent	2	ɐ ɾ|m u|n i|ɐ	h mudo
+herbívoro	*	silent	1	ɛ ɾ|b i|v u|ɾ u	h mudo
+hiperativo	*	silent	3	i|p ɨ|ɾ ɐ|t i|v u	h mudo
+# ===== その他不規則 (misc) =====
+dez	*	misc	-1	d ɛ s	例外的に開母音
+três	*	misc	-1	t ɾ e s	number
+seis	*	misc	-1	s e j s	number
+avó	*	misc	1	a|v ɔ	祖母, /ɔ/ aberto (acento indica)
+avô	*	misc	1	a|v o	祖父, /o/ fechado (circumflexo)
+café	*	misc	1	k ɐ|f ɛ	/ɛ/ indicated by acento
+até	*	misc	1	a|t ɛ	/ɛ/ indicated by acento
+através	*	misc	2	ɐ|t ɾ ɐ|v ɛ s	/ɛ/ indicated by acento
+pé	*	misc	-1	p ɛ	/ɛ/ monosyllable
+só	*	misc	-1	s ɔ	/ɔ/ monosyllable
+nó	*	misc	-1	n ɔ	/ɔ/ monosyllable
+pó	*	misc	-1	p ɔ	/ɔ/ monosyllable
+cipó	*	misc	1	s i|p ɔ	/ɔ/ indicated by acento
+após	*	misc	1	a|p ɔ s	/ɔ/ indicated by acento
+propósito	*	misc	1	p ɾ u|p ɔ|z i|t u	/ɔ/ aberto
+depósito	*	misc	1	d ɨ|p ɔ|z i|t u	/ɔ/ aberto
+índice	*	misc	0	ĩ|d i|s ɨ	proparoxítona
+príncipe	*	misc	0	p ɾ ĩ|s i|p ɨ	proparoxítona
+ônibus	*	misc	0	o|n i|b u s	proparoxítona
+árvore	*	misc	0	a ɾ|v u|ɾ ɨ	proparoxítona
+técnica	*	misc	0	t ɛ|k n i|k ɐ	proparoxítona
+música	*	misc	0	m u|z i|k ɐ	proparoxítona
+fábrica	*	misc	0	f a|b ɾ i|k ɐ	proparoxítona
+público	*	misc	0	p u|b l i|k u	proparoxítona
+módulo	*	misc	0	m ɔ|d u|l u	proparoxítona
+cálculo	*	misc	0	k a l|k u|l u	proparoxítona
+# ===== 追加の開閉母音不規則 =====
+sogro	*	open_close_vowel	0	s o|ɡ ɾ u	sogro, /o/ fechado
+sogra	*	open_close_vowel	0	s ɔ|ɡ ɾ ɐ	sogra, /ɔ/ aberto
+hora	*	open_close_vowel	0	ɔ|ɾ ɐ	hora, /ɔ/ aberto
+folha	*	open_close_vowel	0	f ɔ|ʎ ɐ	folha, /ɔ/ aberto
+bolha	*	open_close_vowel	0	b ɔ|ʎ ɐ	bolha, /ɔ/ aberto
+molho	*	open_close_vowel	0	m ɔ|ʎ u	molho (sauce), /ɔ/ aberto
+olho	*	open_close_vowel	0	ɔ|ʎ u	olho (sing), /ɔ/ aberto
+osso	*	open_close_vowel	0	ɔ|s u	osso (sing), /ɔ/ aberto
+orca	*	open_close_vowel	0	ɔ ɾ|k ɐ	orca, /ɔ/ aberto
+colher	*	open_close_vowel	1	k u|ʎ ɛ ɾ	colher, /ɛ/ aberto
+mulher	*	open_close_vowel	1	m u|ʎ ɛ ɾ	mulher, /ɛ/ aberto
+prazer	*	open_close_vowel	1	p ɾ ɐ|z e ɾ	prazer, /e/ fechado
+poder	*	open_close_vowel	1	p u|d e ɾ	poder (infinitive), /e/ fechado
+comer	*	open_close_vowel	1	k u|m e ɾ	comer, /e/ fechado
+beber	*	open_close_vowel	1	b ɨ|b e ɾ	beber, /e/ fechado
+correr	*	open_close_vowel	1	k u|ʁ e ɾ	correr, /e/ fechado
+# ===== 追加のmetaphony =====
+trocos	*	metaphony	0	t ɾ ɔ|k u s	troco pl, /ɔ/ metaphony
+rolos	*	metaphony	0	ʁ ɔ|l u s	rolo pl, /ɔ/ metaphony
+pocos	*	metaphony	0	p ɔ|s u s	poco pl, /ɔ/ metaphony
+belas	*	metaphony	0	b ɛ|l ɐ s	bela pl, /ɛ/ metaphony
+netas	*	metaphony	0	n ɛ|t ɐ s	neta pl, /ɛ/ metaphony
+secas	*	metaphony	0	s ɛ|k ɐ s	seca pl, /ɛ/ metaphony
+# ===== 追加のx不規則 =====
+oxigênio	*	x_irregular	1	o|s i|ʒ ɛ|n j u	oxigenio, x=/s/
+hexágono	*	x_irregular	1	e|z a|ɡ u|n u	hexagono, x=/z/
+exército	*	x_irregular	1	e|z ɛ ɾ|s i|t u	exercito, x=/z/
+elixir	*	x_irregular	1	e|l i|s i ɾ	elixir, x=/s/
+exímio	*	x_irregular	1	e|z i|m j u	eximio, x=/z/
+êxodo	*	x_irregular	0	e|z u|d u	exodo, x=/z/
+exótico	*	x_irregular	1	e|z ɔ|t i|k u	exotico, x=/z/
+# ===== 追加の不規則動詞 =====
+# --- ouvir ---
+ouço	*	verb_irregular	-1	o w|s u	ouvir 1sg pres
+ouve	*	verb_irregular	-1	o w|v ɨ	ouvir 3sg pres
+# --- pedir ---
+peço	*	verb_irregular	-1	p ɛ|s u	pedir 1sg pres
+pede	*	verb_irregular	-1	p ɛ|d ɨ	pedir 3sg pres
+# --- dormir ---
+durmo	*	verb_irregular	-1	d u ɾ|m u	dormir 1sg pres
+dorme	*	verb_irregular	-1	d ɔ ɾ|m ɨ	dormir 3sg pres
+# --- caber ---
+caibo	*	verb_irregular	-1	k a j|b u	caber 1sg pres
+coube	*	verb_irregular	-1	k o w|b ɨ	caber pret 3sg
+# --- perder ---
+perco	*	verb_irregular	-1	p ɛ ɾ|k u	perder 1sg pres
+perde	*	verb_irregular	-1	p ɛ ɾ|d ɨ	perder 3sg pres
+# --- medir ---
+meço	*	verb_irregular	-1	m ɛ|s u	medir 1sg pres
+mede	*	verb_irregular	-1	m ɛ|d ɨ	medir 3sg pres
+# ===== 追加の鼻母音不規則 =====
+irmã	*	nasal_irregular	1	i ɾ|m ɐ̃	nasal /ɐ̃/
+lã	*	nasal_irregular	-1	l ɐ̃	nasal /ɐ̃/
+romã	*	nasal_irregular	1	ʁ u|m ɐ̃	nasal /ɐ̃/
+manhã	*	nasal_irregular	1	m ɐ|ɲ ɐ̃	nasal /ɐ̃/
+irmãos	*	nasal_irregular	1	i ɾ|m ɐ̃ w̃ s	nasal plural
+cidadãos	*	nasal_irregular	2	s i|d ɐ|d ɐ̃ w̃ s	nasal plural
+ações	*	nasal_irregular	1	ɐ|s õ j s	acao pl
+nações	*	nasal_irregular	1	n ɐ|s õ j s	nacao pl
+lições	*	nasal_irregular	1	l i|s õ j s	licao pl
+opiniões	*	nasal_irregular	2	o|p i|n j õ j s	opiniao pl
+estações	*	nasal_irregular	2	ɨ s|t ɐ|s õ j s	estacao pl
+posições	*	nasal_irregular	2	p u|z i|s õ j s	posicao pl
+# ===== 追加のBP/EP方言固有 =====
+# --- BP palatalization ---
+dente	brazilian	open_close_vowel	0	d ẽ|t͡ʃ i	BP palatalization
+gente	brazilian	open_close_vowel	0	ʒ ẽ|t͡ʃ i	BP palatalization
+forte	brazilian	open_close_vowel	0	f ɔ ɾ|t͡ʃ i	BP palatalization
+norte	brazilian	open_close_vowel	0	n ɔ ɾ|t͡ʃ i	BP palatalization
+noite	brazilian	open_close_vowel	0	n o j|t͡ʃ i	BP palatalization
+leite	brazilian	open_close_vowel	0	l e j|t͡ʃ i	BP palatalization
+cidade	brazilian	open_close_vowel	1	s i|d a|d͡ʒ i	BP palatalization
+verdade	brazilian	open_close_vowel	1	v ɨ ɾ|d a|d͡ʒ i	BP palatalization
+# --- EP vowel reduction additional ---
+momento	european	open_close_vowel	1	m u|m ẽ|t u	EP vowel reduction
+professor	european	open_close_vowel	2	p ɾ u|f ɨ|s o ɾ	EP vowel reduction
+possível	european	open_close_vowel	1	p u|s i|v ɛ l	EP vowel reduction
+problema	european	open_close_vowel	1	p ɾ u|b l e|m ɐ	EP vowel reduction

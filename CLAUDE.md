@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-C#/.NET（Unity対応）向けの日英中西仏多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
+C#/.NET（Unity対応）向けの日英中西仏葡多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
 
 ## 進捗状況
 
@@ -160,6 +160,38 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - `MultilingualG2PEngine` に `FrenchG2PEngine` を統合
     - `MultilingualFrenchTests` / `MultilingualMixedLanguageTests` に5言語混在テストを追加
     - Multilingual テスト 372件通過、テスト31件追加
+- **ポルトガル語G2P (DotNetG2P.Portuguese)**: P4完了（feature/portuguese-g2p ブランチ）
+  - **P1（コアG2Pルールエンジン + 基本MVP）**: 完了
+    - プロジェクト構成（csproj, package.json, asmdef, slnx更新）
+    - モデル定義（PortugueseIpaPhoneme enum 49種, PortuguesePhoneme struct, PortugueseDialect enum）
+    - PortugueseG2PEngine（sealed class, IDisposable）、PortugueseG2POptions
+    - GraphemeToPhonemeRules（5フェーズ: ダイグラフ+鼻母音化→文脈依存子音→母音変換→半母音化→黙字処理）
+    - PortugueseSyllabifier（音節分割、onset maximization）
+    - StressAssigner（ストレス位置決定、アクセント記号 or デフォルトルール）
+    - NasalVowelizer（鼻母音化処理）
+    - PortugueseOrthography（正書法ヘルパー）
+    - IPA出力: ToIPA(), ToPhonemes(), ToPhonemeList(), ToSyllables(), バッチAPI
+    - テスト実装済み
+  - **P2（精度向上・異音規則・テキスト正規化）**: 完了
+    - `PortugueseNormalizer` 13段階テキスト正規化パイプライン
+    - `NumberToWords` BP/EP方言差対応（quatorze/catorze, dezesseis/dezasseis, bilhão/mil milhões, trilhão/bilião等）
+    - `AllophoneProcessor` 7異音規則（VowelReduction, NasalAssimilation, SibilantVoicingAssimilation, Lenition, SibilantPalatalization, TDPalatalization, LAllophony）+ BP/EPプリセット
+    - `PortugueseExceptionDictionary` 例外辞書（560+エントリ、開閉母音/metaphony/x不規則/外来語/動詞/鼻母音/黙字）
+    - `PortugueseAllophoneFeatures` [Flags] enum : byte（7規則 + Obligatory/BrazilianDefault/EuropeanDefault/All プリセット）
+    - レビュー修正: 言語学的正確性向上（母音弱化BP /e/→/i/、EP /a/ 全位置弱化等）
+    - テスト1223件全通過
+  - **P3（X-SAMPA・大規模精度評価・拡張テスト）**: 完了
+    - XSampaConverter（49音素マッピング）、`ToXSampa()`, `ToXSampaWithoutStress()`, `ToXSampaBatch()` を追加
+    - PortugueseXSampaTests / PortugueseEdgeCaseTests / PortuguesePerformanceTests / PortugueseAccuracyTests を追加
+    - PortugueseDatasetEvaluationTests / PortugueseAllophoneEvaluationTests（外部TSVコーパスPER閾値テスト）を追加
+    - `tools/DotNetG2P.PortugueseEval` + `tools/refresh_portuguese_eval_data.ps1` + `tools/run_portuguese_full_evaluation.ps1` により全量PER/WER/カテゴリ別集計を追加
+    - テスト92件追加（累計1310件: 1294 pass + 16 skip）
+  - **P4（Multilingual統合・パッケージング）**: 完了
+    - `DotNetG2P.Multilingual` に `Language.Portuguese` と `PortugueseOptions` を追加
+    - `TextSegmenter` にポルトガル語言語判定（高頻度語+接尾辞+特有文字ã/õ+ç接尾辞パターン）を実装
+    - `MultilingualG2PEngine` に `PortugueseG2PEngine` を統合
+    - `MultilingualPortugueseTests` / 6言語混在テストを追加
+    - Multilingual テスト 412件通過
 
 ## ビルド・実行
 
@@ -365,16 +397,46 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── package.json                 # UPM (com.dotnetg2p.french)
 │   │   └── DotNetG2P.French.asmdef      # Unity Assembly Definition
 │   │
-│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese + Spanish + French依存）
+│   ├── DotNetG2P.Portuguese/            # ポルトガル語G2Pパッケージ（独立、Core参照なし）
+│   │   ├── DotNetG2P.Portuguese.csproj   # .NET Standard 2.1
+│   │   ├── PortugueseG2PEngine.cs        # メインAPI (ToIPA, ToPhonemes, ToPhonemeList, ToSyllables等)
+│   │   ├── PortugueseG2POptions.cs       # オプション (Dialect, IncludeStress, EnableAllophones, EnableExceptionDictionary等)
+│   │   ├── PortugueseAllophoneFeatures.cs # [Flags] enum : byte (7規則 + BP/EPプリセット)
+│   │   ├── Models/
+│   │   │   ├── PortugueseIpaPhoneme.cs   # IPA音素enum : byte (49種)
+│   │   │   ├── PortuguesePhoneme.cs      # ストレス付き音素 readonly struct
+│   │   │   ├── PortuguesePronunciation.cs # 発音クラス (音素配列 + 音節オフセット)
+│   │   │   ├── PortugueseDialect.cs      # 方言enum : byte (Brazilian, European)
+│   │   │   └── PortugueseSyllable.cs     # 音節 readonly struct
+│   │   ├── Rules/
+│   │   │   ├── GraphemeToPhonemeRules.cs  # コアG2Pルール (5フェーズ) [P1]
+│   │   │   ├── PortugueseSyllabifier.cs   # 音節分割 (onset maximization) [P1]
+│   │   │   ├── StressAssigner.cs          # ストレス位置決定 [P1]
+│   │   │   ├── NasalVowelizer.cs          # 鼻母音化処理 [P1]
+│   │   │   ├── PortugueseOrthography.cs   # 正書法ヘルパー [P1]
+│   │   │   └── AllophoneProcessor.cs      # 異音規則 (7規則、BP/EPプリセット) [P2]
+│   │   ├── Normalization/
+│   │   │   ├── PortugueseNormalizer.cs    # テキスト正規化 (13段階パイプライン) [P2]
+│   │   │   └── NumberToWords.cs           # ポルトガル語数詞変換 (BP/EP方言差対応) [P2]
+│   │   ├── Data/
+│   │   │   ├── PortugueseExceptionDictionary.cs # 例外辞書ルックアップ [P2]
+│   │   │   └── portuguese_exceptions.master.tsv # 例外辞書TSV (560+エントリ) [P2]
+│   │   ├── Conversion/
+│   │   │   ├── IpaConverter.cs            # IPA変換 [P1]
+│   │   │   └── XSampaConverter.cs         # X-SAMPA変換 (49音素マッピング) [P3]
+│   │   ├── package.json                   # UPM (com.dotnetg2p.portuguese)
+│   │   └── DotNetG2P.Portuguese.asmdef    # Unity Assembly Definition
+│   │
+│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese + Spanish + French + Portuguese依存）
 │       ├── DotNetG2P.Multilingual.csproj # .NET Standard 2.1
-│       ├── Language.cs                  # Language enum (Japanese/English/Chinese/Spanish/French)
+│       ├── Language.cs                  # Language enum (Japanese/English/Chinese/Spanish/French/Portuguese)
 │       ├── ScriptKind.cs               # ScriptKind enum (8種分類、internal)
 │       ├── TextSegment.cs              # 言語タグ付きテキストセグメント
 │       ├── G2PSegment.cs               # G2P結果セグメント
 │       ├── MultilingualG2POptions.cs   # 多言語G2Pオプション（DefaultCjkLanguage / DefaultLatinLanguage）
 │       ├── LanguageDetector.cs         # Unicode文字種ベース言語判定
-│       ├── TextSegmenter.cs            # テキストセグメント分割（日英西ラテン文字対応）
-│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中西仏ファサード）
+│       ├── TextSegmenter.cs            # テキストセグメント分割（日英西仏葡ラテン文字対応）
+│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中西仏葡ファサード）
 │       ├── package.json                # UPM (com.dotnetg2p.multilingual)
 │       └── DotNetG2P.Multilingual.asmdef # Unity Assembly Definition
 │
@@ -474,7 +536,26 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── FrenchAllophoneEvaluationTests.cs # 異音プロファイル別PER評価 (6件) [F3]
 │       │   ├── NasalVowelizerTests.cs         # 鼻母音化テスト (35件) [F1]
 │       │   └── FrenchOrthographyTests.cs      # 正書法ヘルパーテスト (129件) [F1]
-│       ├── Multilingual/               # 多言語G2Pテスト（372件通過）
+│       ├── PortugueseG2P/             # ポルトガル語G2Pテスト (1310件: 1294 pass + 16 skip)
+│       │   ├── PortugueseG2PEngineTests.cs     # エンジン統合テスト [P1]
+│       │   ├── GraphemeToPhonemeRulesTests.cs   # G2Pルール単体テスト [P1]
+│       │   ├── PortugueseSyllabifierTests.cs    # 音節分割テスト [P1]
+│       │   ├── StressAssignerTests.cs           # ストレステスト [P1]
+│       │   ├── PortugueseIpaTests.cs            # IPA変換テスト [P1]
+│       │   ├── PortuguesePhonemeTests.cs        # 音素モデルテスト [P1]
+│       │   ├── NasalVowelizerTests.cs           # 鼻母音化テスト [P1]
+│       │   ├── PortugueseOrthographyTests.cs    # 正書法ヘルパーテスト [P1]
+│       │   ├── NumberToWordsTests.cs            # 数値→文字列変換テスト [P2]
+│       │   ├── PortugueseNormalizerTests.cs     # 正規化テスト [P2]
+│       │   ├── PortugueseExceptionDictionaryTests.cs # 例外辞書テスト [P2]
+│       │   ├── AllophoneProcessorTests.cs       # 異音テスト [P2]
+│       │   ├── PortugueseEdgeCaseTests.cs       # エッジケーステスト [P2]
+│       │   ├── PortuguesePerformanceTests.cs    # パフォーマンステスト [P2]
+│       │   ├── PortugueseAccuracyTests.cs       # 精度・回帰テスト [P2]
+│       │   ├── PortugueseXSampaTests.cs         # X-SAMPA変換テスト (76件) [P3]
+│       │   ├── PortugueseDatasetEvaluationTests.cs # 外部TSVコーパスPER閾値テスト (9件) [P3]
+│       │   └── PortugueseAllophoneEvaluationTests.cs # 異音プロファイル別PER評価 (7件) [P3]
+│       ├── Multilingual/               # 多言語G2Pテスト（412件通過）
 │       │   ├── LanguageDetectorTests.cs  # 言語判定テスト
 │       │   ├── TextSegmenterTests.cs     # セグメント分割テスト
 │       │   ├── MultilingualEngineTests.cs # エンジン統合テスト
@@ -485,11 +566,12 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── MultilingualChineseTests.cs # 中国語統合テスト
 │       │   ├── MultilingualSpanishTests.cs # スペイン語統合テスト
 │       │   ├── MultilingualFrenchTests.cs # フランス語統合テスト
+│       │   ├── MultilingualPortugueseTests.cs # ポルトガル語統合テスト
 │       │   ├── MultilingualSharedFixture.cs # 重い統合テスト用 shared fixture
 │       │   ├── EmbeddedChineseDictionaryCacheTests.cs # 中国語辞書共有キャッシュ検証
 │       │   ├── MixedTextBasicTests.cs    # 混在テキスト基本テスト
 │       │   ├── MixedTextAdvancedTests.cs # 混在テキスト応用テスト
-│       │   └── MultilingualMixedLanguageTests.cs # 5言語混在回帰テスト
+│       │   └── MultilingualMixedLanguageTests.cs # 6言語混在回帰テスト
 │       └── Integration/                # 統合テスト
 │           ├── G2PPipelineTests.cs
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）
@@ -539,7 +621,7 @@ OpenJTalk用のnaist-jdic辞書フォーマット（IPADIC + アクセント情�
 - **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、Apache-2.0、外部依存なし）
 - **辞書**: naist-jdic（BSD License）
 - **テスト**: xUnit 2.5.3 (net8.0)
-- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.Chinese`, `DotNetG2P.English`, `DotNetG2P.Spanish`, `DotNetG2P.French`, `DotNetG2P.Multilingual`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`, `com.dotnetg2p.chinese`, `com.dotnetg2p.english`, `com.dotnetg2p.spanish`, `com.dotnetg2p.french`, `com.dotnetg2p.multilingual`)
+- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.Chinese`, `DotNetG2P.English`, `DotNetG2P.Spanish`, `DotNetG2P.French`, `DotNetG2P.Portuguese`, `DotNetG2P.Multilingual`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`, `com.dotnetg2p.chinese`, `com.dotnetg2p.english`, `com.dotnetg2p.spanish`, `com.dotnetg2p.french`, `com.dotnetg2p.portuguese`, `com.dotnetg2p.multilingual`)
 - **CI/CD**: GitHub Actions (ci.yml, release.yml)
 - **ソリューション形式**: .slnx（.NET 10）
 

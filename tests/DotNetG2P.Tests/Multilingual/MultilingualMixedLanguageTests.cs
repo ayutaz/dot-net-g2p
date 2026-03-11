@@ -7,12 +7,13 @@ using DotNetG2P.English;
 using DotNetG2P.MeCab;
 using DotNetG2P.Multilingual;
 using DotNetG2P.French;
+using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
 
 namespace DotNetG2P.Tests.Multilingual
 {
     /// <summary>
-    /// 日英中西仏の多言語同時混在パターンを検証する。
+    /// 日英中西仏葡の多言語同時混在パターンを検証する。
     /// </summary>
     [Collection(MultilingualSharedCollection.Name)]
     public class MultilingualMixedLanguageTests
@@ -178,6 +179,7 @@ namespace DotNetG2P.Tests.Multilingual
                     Language.Chinese => _fixture.ChineseEngine!.ToPinyin(segment.SourceText),
                     Language.Spanish => _fixture.SpanishEngine.ToPhonemes(segment.SourceText),
                     Language.French => _fixture.FrenchEngine.ToPhonemes(segment.SourceText),
+                    Language.Portuguese => _fixture.PortugueseEngine.ToPhonemes(segment.SourceText),
                     _ => throw new InvalidOperationException($"Unexpected language: {segment.Language}"),
                 };
 
@@ -454,6 +456,143 @@ namespace DotNetG2P.Tests.Multilingual
             Assert.Contains(segments, s => s.Language == Language.French);
             Assert.Contains(segments, s => s.Language == Language.Spanish);
             Assert.Contains(segments, s => s.Language == Language.Chinese);
+        }
+
+        // ===== 6言語混在テスト（日英中西仏葡） =====
+
+        [Fact]
+        public void TextSegmenter_日英中西仏葡6言語混在_期待順に分割される()
+        {
+            // café → フランス語（é: acute-e only）
+            // canción → スペイン語（ó: スペイン語特有アクセント）
+            // coração → ポルトガル語（ã: ポルトガル語特有文字）
+            var result = TextSegmenter.Segment("今日は café canción 你好 world cora\u00E7\u00E3o", Language.Chinese, Language.English);
+
+            Assert.Equal(6, result.Count);
+            Assert.Equal(Language.Japanese, result[0].Language);
+            Assert.Equal("今日は ", result[0].Text);
+            Assert.Equal(Language.French, result[1].Language);
+            Assert.Equal("café ", result[1].Text);
+            Assert.Equal(Language.Spanish, result[2].Language);
+            Assert.Equal("canción ", result[2].Text);
+            Assert.Equal(Language.Chinese, result[3].Language);
+            Assert.Equal("你好 ", result[3].Text);
+            Assert.Equal(Language.English, result[4].Language);
+            Assert.Equal("world ", result[4].Text);
+            Assert.Equal(Language.Portuguese, result[5].Language);
+            Assert.Equal("cora\u00E7\u00E3o", result[5].Text);
+        }
+
+        [SkippableFact]
+        public void Engine_ToSegments_6言語混在_各セグメントが単独エンジンと一致()
+        {
+            SkipIfNoDictionary();
+
+            var segments = _fixture.ChineseDefaultEngine!.ToSegments("今日は café canción 你好 world cora\u00E7\u00E3o");
+            Assert.Equal(6, segments.Count);
+
+            foreach (var segment in segments)
+            {
+                var standalone = segment.Language switch
+                {
+                    Language.Japanese => _fixture.JapaneseEngine!.ToPhonemes(segment.SourceText),
+                    Language.English => _fixture.EnglishEngine.ToPhonemes(segment.SourceText),
+                    Language.Chinese => _fixture.ChineseEngine!.ToPinyin(segment.SourceText),
+                    Language.Spanish => _fixture.SpanishEngine.ToPhonemes(segment.SourceText),
+                    Language.French => _fixture.FrenchEngine.ToPhonemes(segment.SourceText),
+                    Language.Portuguese => _fixture.PortugueseEngine.ToPhonemes(segment.SourceText),
+                    _ => throw new InvalidOperationException($"Unexpected language: {segment.Language}"),
+                };
+
+                Assert.Equal(standalone, segment.Phonemes);
+            }
+        }
+
+        [SkippableFact]
+        public void Engine_ToPhonemesとToSegmentsが整合_6言語混在()
+        {
+            SkipIfNoDictionary();
+
+            const string input = "今日は café canción 你好 world cora\u00E7\u00E3o";
+            var phonemes = _fixture.ChineseDefaultEngine!.ToPhonemes(input);
+            var segments = _fixture.ChineseDefaultEngine.ToSegments(input);
+            var joined = string.Join(" ", segments.Select(s => s.Phonemes));
+
+            Assert.Equal(phonemes, joined);
+            Assert.Equal(input, string.Concat(segments.Select(s => s.SourceText)));
+        }
+
+        // ===== 葡西・葡仏・葡英 2言語混在テスト =====
+
+        [Fact]
+        public void TextSegmenter_葡西2言語混在_正しく分割される()
+        {
+            // coração → ポルトガル語（ã: ポルトガル語特有文字）
+            // canción → スペイン語（ó: スペイン語特有アクセント）
+            var result = TextSegmenter.Segment("cora\u00E7\u00E3o canción", Language.Japanese, Language.English);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal(Language.Portuguese, result[0].Language);
+            Assert.Equal("cora\u00E7\u00E3o ", result[0].Text);
+            Assert.Equal(Language.Spanish, result[1].Language);
+            Assert.Equal("canción", result[1].Text);
+        }
+
+        [Fact]
+        public void TextSegmenter_葡仏2言語混在_正しく分割される()
+        {
+            // coração → ポルトガル語（ã: ポルトガル語特有文字）
+            // fête → フランス語（ê: フランス語特有文字）
+            var result = TextSegmenter.Segment("cora\u00E7\u00E3o f\u00EAte", Language.Japanese, Language.English);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal(Language.Portuguese, result[0].Language);
+            Assert.Equal("cora\u00E7\u00E3o ", result[0].Text);
+            Assert.Equal(Language.French, result[1].Language);
+            Assert.Equal("f\u00EAte", result[1].Text);
+        }
+
+        [Fact]
+        public void TextSegmenter_葡英2言語混在_正しく分割される()
+        {
+            // coração → ポルトガル語（ã: ポルトガル語特有文字）
+            // hello → 英語（英語高頻度語シグナル）
+            var result = TextSegmenter.Segment("cora\u00E7\u00E3o hello", Language.Japanese, Language.English);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal(Language.Portuguese, result[0].Language);
+            Assert.Equal("cora\u00E7\u00E3o ", result[0].Text);
+            Assert.Equal(Language.English, result[1].Language);
+            Assert.Equal("hello", result[1].Text);
+        }
+
+        // ===== 6言語混在 BatchAPI テスト =====
+
+        [SkippableFact]
+        public void BatchAPI_6言語混在パターン複数_全て整合する()
+        {
+            SkipIfNoDictionary();
+
+            var texts = new[]
+            {
+                "今日は café canción 你好 world cora\u00E7\u00E3o",
+                "東京の café 你好 señor hello cora\u00E7\u00E3o",
+                "cora\u00E7\u00E3o 今日は canción 你好 world café",
+            };
+
+            var phonemeResults = _fixture.ChineseDefaultEngine!.ToPhonemesBatch(texts);
+            var segmentResults = _fixture.ChineseDefaultEngine.ToSegmentsBatch(texts);
+
+            Assert.Equal(texts.Length, phonemeResults.Count);
+            Assert.Equal(texts.Length, segmentResults.Count);
+
+            for (int i = 0; i < texts.Length; i++)
+            {
+                Assert.NotEmpty(phonemeResults[i]);
+                Assert.NotEmpty(segmentResults[i]);
+                Assert.Equal(texts[i], string.Concat(segmentResults[i].Select(s => s.SourceText)));
+                Assert.Equal(phonemeResults[i], string.Join(" ", segmentResults[i].Select(s => s.Phonemes)));
+            }
         }
     }
 }
