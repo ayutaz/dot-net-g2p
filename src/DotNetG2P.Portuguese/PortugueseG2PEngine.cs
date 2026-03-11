@@ -77,6 +77,30 @@ namespace DotNetG2P.Portuguese
             return PortugueseSyllabifier.Syllabify(normalized);
         }
 
+        /// <summary>入力テキストをX-SAMPA表記に変換する。</summary>
+        public string ToXSampa(string text)
+        {
+            return ProcessText(text, pronunciation => XSampaConverter.Convert(pronunciation, _options.IncludeStress));
+        }
+
+        /// <summary>入力テキストをストレスマークなしのX-SAMPA表記に変換する。</summary>
+        public string ToXSampaWithoutStress(string text)
+        {
+            return ProcessText(text, pronunciation => XSampaConverter.Convert(pronunciation, includeStress: false));
+        }
+
+        /// <summary>複数テキストを一括でX-SAMPAに変換する。</summary>
+        public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+
+            var results = new string[texts.Count];
+            for (var i = 0; i < texts.Count; i++)
+                results[i] = ToXSampa(texts[i]);
+            return results;
+        }
+
         /// <summary>複数テキストを一括でIPAに変換する。</summary>
         public IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts)
         {

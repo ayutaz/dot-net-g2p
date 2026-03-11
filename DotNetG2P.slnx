@@ -2,6 +2,7 @@
   <Folder Name="/tools/">
     <Project Path="tools/DotNetG2P.SpanishEval/DotNetG2P.SpanishEval.csproj" />
     <Project Path="tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj" />
+    <Project Path="tools/DotNetG2P.PortugueseEval/DotNetG2P.PortugueseEval.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/DotNetG2P.Console/DotNetG2P.Console.csproj" />
