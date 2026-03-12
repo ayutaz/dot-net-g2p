@@ -40,18 +40,22 @@ namespace DotNetG2P.Korean.Rules
 
         public static void ApplyNInsertion(KoreanSyllable[] syllables)
         {
-            for (var i = 0; i < syllables.Length - 1; i++)
+            for (var i = 0; i < syllables.Length - 2; i++)
             {
                 var current = syllables[i];
-                var next = syllables[i + 1];
-                if (!CanInspectPair(current, next) || !current.HasCoda)
+                var boundary = syllables[i + 1];
+                var next = syllables[i + 2];
+                if (!KoreanOrthography.IsHangulSyllable(current)
+                    || !boundary.IsBoundary
+                    || !KoreanOrthography.IsHangulSyllable(next)
+                    || !current.HasCoda)
                     continue;
 
-                if (!ShouldApplyNInsertion(syllables, i, next))
+                if (!KoreanOrthography.IsNInsertionTarget(next))
                     continue;
 
                 var insertedOnset = BatchimProcessor.GetNInsertionOnset(current.Coda);
-                syllables[i + 1] = new KoreanSyllable(insertedOnset, next.Nucleus, next.Coda);
+                syllables[i + 2] = new KoreanSyllable(insertedOnset, next.Nucleus, next.Coda);
             }
         }
 
@@ -121,6 +125,7 @@ namespace DotNetG2P.Korean.Rules
                 if (!CanInspectPair(current, next) || !current.HasCoda)
                     continue;
 
+                var triggerCoda = BatchimProcessor.GetTensificationTriggerCoda(current, next);
                 var surfaceCoda = BatchimProcessor.GetSurfaceCodaBeforeConsonant(current, next);
                 if (surfaceCoda != current.Coda)
                 {
@@ -128,7 +133,7 @@ namespace DotNetG2P.Korean.Rules
                     syllables[i] = current;
                 }
 
-                if (!BatchimProcessor.CanTriggerTensification(surfaceCoda))
+                if (!BatchimProcessor.CanTriggerTensification(triggerCoda))
                     continue;
 
                 var tensified = BatchimProcessor.TensifyOnset(next.Onset);
@@ -155,26 +160,6 @@ namespace DotNetG2P.Korean.Rules
         {
             return KoreanOrthography.IsHangulSyllable(current)
                 && KoreanOrthography.IsHangulSyllable(next);
-        }
-
-        private static bool ShouldApplyNInsertion(KoreanSyllable[] syllables, int currentIndex, KoreanSyllable next)
-        {
-            if (!KoreanOrthography.IsNInsertionTarget(next))
-                return false;
-
-            if (next.Nucleus != 'ㅣ' || next.HasCoda)
-                return true;
-
-            for (var i = currentIndex + 2; i < syllables.Length; i++)
-            {
-                if (syllables[i].IsBoundary)
-                    return false;
-
-                if (KoreanOrthography.IsHangulSyllable(syllables[i]))
-                    return true;
-            }
-
-            return false;
         }
 
         private static char ApplyPalatalization(char onset, char nextNucleus)

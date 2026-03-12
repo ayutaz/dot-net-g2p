@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-
 namespace DotNetG2P.Korean.Rules
 {
     internal static class KoreanOrthography
@@ -44,15 +43,39 @@ namespace DotNetG2P.Korean.Rules
             if (syllables.Count == 0)
                 return Array.Empty<KoreanPhoneme>();
 
-            var result = new List<KoreanPhoneme>(syllables.Count * 3);
+            var totalPhonemes = 0;
             for (var i = 0; i < syllables.Count; i++)
             {
-                if (syllables[i].IsBoundary)
+                var syllable = syllables[i];
+                if (syllable.IsBoundary)
                     continue;
 
-                result.AddRange(syllables[i].ToPhonemes());
+                totalPhonemes += syllable.HasNucleus
+                    ? (syllable.HasCoda ? 3 : 2)
+                    : 1;
             }
-            return result.ToArray();
+
+            if (totalPhonemes == 0)
+                return Array.Empty<KoreanPhoneme>();
+
+            var result = new KoreanPhoneme[totalPhonemes];
+            var index = 0;
+            for (var i = 0; i < syllables.Count; i++)
+            {
+                var syllable = syllables[i];
+                if (syllable.IsBoundary)
+                    continue;
+
+                result[index++] = new KoreanPhoneme(syllable.Onset);
+                if (!syllable.HasNucleus)
+                    continue;
+
+                result[index++] = new KoreanPhoneme(syllable.Nucleus);
+                if (syllable.HasCoda)
+                    result[index++] = new KoreanPhoneme(syllable.Coda);
+            }
+
+            return result;
         }
 
         public static bool IsCompatibilityJamo(char c)
@@ -116,11 +139,5 @@ namespace DotNetG2P.Korean.Rules
             }
         }
 
-        public static bool IsUiVariationCandidate(KoreanSyllable syllable)
-        {
-            return syllable.Onset == 'ㅇ'
-                && syllable.Nucleus == 'ㅢ'
-                && !syllable.HasCoda;
-        }
     }
 }

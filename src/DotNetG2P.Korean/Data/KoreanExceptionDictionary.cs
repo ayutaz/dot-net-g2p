@@ -29,31 +29,57 @@ namespace DotNetG2P.Korean.Data
                 ?? throw new InvalidOperationException("Embedded resource not found: korean_exceptions.master.tsv");
             using var reader = new StreamReader(stream);
 
+            return ParseEntries(ReadAllLines(reader));
+        }
+
+        internal static Dictionary<string, Dictionary<byte, string>> ParseEntries(IReadOnlyList<string> lines)
+        {
+            if (lines == null) throw new ArgumentNullException(nameof(lines));
+
             var entries = new Dictionary<string, Dictionary<byte, string>>(StringComparer.Ordinal);
-            string? line;
-            while ((line = reader.ReadLine()) != null)
+            for (var index = 0; index < lines.Count; index++)
             {
-                line = line.Trim();
+                var lineNumber = index + 1;
+                var line = lines[index]?.Trim() ?? string.Empty;
                 if (line.Length == 0 || line[0] == '#' || line.StartsWith("surface\t", StringComparison.Ordinal))
                     continue;
 
                 var parts = line.Split('\t');
                 if (parts.Length < 6)
-                    continue;
+                    throw new InvalidDataException($"Expected at least 6 columns in exception dictionary line {lineNumber}, but found {parts.Length}: {line}");
 
-                if (!TryParseMode(parts[1], out var modeKey))
-                    continue;
+                var surface = parts[0].Trim();
+                var modeToken = parts[1].Trim();
+                var pronunciation = parts[2].Trim();
 
-                if (!entries.TryGetValue(parts[0], out var byMode))
+                if (!TryParseMode(modeToken, out var modeKey))
+                    throw new InvalidDataException($"Unknown ui_mode '{parts[1]}' in exception dictionary line {lineNumber}.");
+
+                if (string.IsNullOrWhiteSpace(surface) || string.IsNullOrWhiteSpace(pronunciation))
+                    throw new InvalidDataException($"surface/pronunciation must not be blank in exception dictionary line {lineNumber}.");
+
+                if (!entries.TryGetValue(surface, out var byMode))
                 {
                     byMode = new Dictionary<byte, string>();
-                    entries[parts[0]] = byMode;
+                    entries[surface] = byMode;
                 }
 
-                byMode[modeKey] = parts[2];
+                if (byMode.ContainsKey(modeKey))
+                    throw new InvalidDataException($"Duplicate exception dictionary entry for '{surface}' and mode '{modeToken}' at line {lineNumber}.");
+
+                byMode.Add(modeKey, pronunciation);
             }
 
             return entries;
+        }
+
+        private static IReadOnlyList<string> ReadAllLines(StreamReader reader)
+        {
+            var lines = new List<string>();
+            string? line;
+            while ((line = reader.ReadLine()) != null)
+                lines.Add(line);
+            return lines;
         }
 
         private static bool TryParseMode(string token, out byte mode)

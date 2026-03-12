@@ -22,13 +22,13 @@ namespace DotNetG2P.Korean
         /// <summary>軽量テキスト正規化を有効化するか。</summary>
         public bool EnableTextNormalization { get; }
 
-        /// <summary>例外辞書を有効化するか。</summary>
+        /// <summary>exact surface match の例外辞書を有効化するか。</summary>
         public bool EnableExceptionDictionary { get; }
 
-        /// <summary>非 Hangul 文字をそのまま出力へ残すか。</summary>
+        /// <summary>正規化後に残った非 Hangul 文字をそのまま出力へ残すか。</summary>
         public bool PreserveNonHangul { get; }
 
-        /// <summary>`의` 系変異の返却方針。</summary>
+        /// <summary>例外辞書ベースの発音変異返却方針。</summary>
         public KoreanUiVariationMode UiVariationMode { get; }
 
         /// <summary>

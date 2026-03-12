@@ -67,11 +67,20 @@ namespace DotNetG2P.Tests.KoreanG2P
         [InlineData("막일", "망닐")]
         [InlineData("한여름", "한녀름")]
         [InlineData("솜이불", "솜니불")]
-        public void Analyze_AppliesGeneralizedNInsertion(string input, string expected)
+        [InlineData("깻잎", "깬닙")]
+        public void Analyze_ResolvesLexicalNInsertionCasesWithoutHeuristicOverreach(string input, string expected)
         {
             using var engine = new KoreanG2PEngine();
 
             Assert.Equal(expected, engine.Analyze(input).ToHangulString());
+        }
+
+        [Fact]
+        public void Analyze_DoesNotOverapplyNInsertionToSimpleLexeme()
+        {
+            using var engine = new KoreanG2PEngine();
+
+            Assert.Equal("다밈", engine.Analyze("담임").ToHangulString());
         }
 
         [Theory]
@@ -83,6 +92,26 @@ namespace DotNetG2P.Tests.KoreanG2P
             using var engine = new KoreanG2PEngine();
 
             Assert.Equal(expected, engine.Analyze(input).ToHangulString());
+        }
+
+        [Theory]
+        [InlineData("넓다", "널따")]
+        [InlineData("넓고", "널꼬")]
+        [InlineData("앉다", "안따")]
+        [InlineData("핥다", "할따")]
+        public void Analyze_UsesHiddenObstruentToTriggerTensification(string input, string expected)
+        {
+            using var engine = new KoreanG2PEngine();
+
+            Assert.Equal(expected, engine.Analyze(input).ToHangulString());
+        }
+
+        [Fact]
+        public void Analyze_UsesLexicalExceptionForBieupDominantCompound()
+        {
+            using var engine = new KoreanG2PEngine();
+
+            Assert.Equal("넙쭉하다", engine.Analyze("넓죽하다").ToHangulString());
         }
 
         [Fact]
@@ -109,6 +138,8 @@ namespace DotNetG2P.Tests.KoreanG2P
         [InlineData("좋다", "ㅈ ㅗ ㅌ ㅏ")]
         [InlineData("담요", "ㄷ ㅏ ㅁ ㄴ ㅛ")]
         [InlineData("밟다", "ㅂ ㅏ ㅂ ㄸ ㅏ")]
+        [InlineData("넓다", "ㄴ ㅓ ㄹ ㄸ ㅏ")]
+        [InlineData("담임", "ㄷ ㅏ ㅁ ㅣ ㅁ")]
         public void ToPhonemes_ReflectsAppliedRules(string input, string expected)
         {
             using var engine = new KoreanG2PEngine();

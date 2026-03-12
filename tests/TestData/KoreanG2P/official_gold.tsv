@@ -14,3 +14,9 @@ input	expected	source	rule_tag	notes
 밟다	밥따	Stdict_밟다	tensification	Standard dictionary entry surfaces hidden ㅂ before ㄷ onset
 밟고	밥꼬	Stdict_밟다	tensification	Standard dictionary entry surfaces hidden ㅂ before ㄱ onset
 밟는	밤는	Stdict_밟다	nasalization	Standard dictionary entry surfaces hidden ㅂ and then nasalizes it
+담임	다밈	NIKL_QNA_305134	resyllabification	Simple lexical item should liaison rather than overapply ㄴ insertion
+넓다	널따	NIKL_pronunciation_board_17	tensification	Lieul-dominant ㄼ still triggers following tensification
+넓고	널꼬	NIKL_pronunciation_board_17	tensification	Lieul-dominant ㄼ still triggers following tensification before ㄱ onset
+앉다	안따	Stdict_앉다	tensification	ㄵ cluster keeps ㄴ surface but hidden obstruent tensifies the onset
+핥다	할따	Stdict_핥다	tensification	ㄾ cluster keeps ㄹ surface but hidden obstruent tensifies the onset
+넓죽하다	넙쭉하다	Stdict_넓죽하다	tensification	Lexical bieup-dominant realization should be handled by exception dictionary

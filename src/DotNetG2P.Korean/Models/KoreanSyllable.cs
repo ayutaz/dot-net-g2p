@@ -8,6 +8,13 @@ namespace DotNetG2P.Korean
     /// </summary>
     public readonly struct KoreanSyllable : IEquatable<KoreanSyllable>
     {
+        private enum SyllableKind : byte
+        {
+            Hangul = 0,
+            Standalone = 1,
+            Boundary = 2,
+        }
+
         private const int HangulSyllableBase = 0xAC00;
         private const int HangulSyllableEnd = 0xD7A3;
         private const int VowelCount = 21;
@@ -45,14 +52,22 @@ namespace DotNetG2P.Korean
         /// <summary>終声。終声がなければ <c>'\0'</c>。</summary>
         public char Coda { get; }
 
+        private byte KindValue { get; }
+
         /// <summary>
         /// 音節を初期化する。
         /// </summary>
         public KoreanSyllable(char onset, char nucleus, char coda = '\0')
+            : this(onset, nucleus, coda, nucleus == '\0' ? SyllableKind.Standalone : SyllableKind.Hangul)
+        {
+        }
+
+        private KoreanSyllable(char onset, char nucleus, char coda, SyllableKind kind)
         {
             Onset = onset;
             Nucleus = nucleus;
             Coda = coda;
+            KindValue = (byte)kind;
         }
 
         /// <summary>終声を持つか。</summary>
@@ -62,7 +77,10 @@ namespace DotNetG2P.Korean
         public bool HasNucleus => Nucleus != '\0';
 
         /// <summary>空白などの語境界マーカーか。</summary>
-        public bool IsBoundary => !HasNucleus && char.IsWhiteSpace(Onset);
+        public bool IsBoundary => KindValue == (byte)SyllableKind.Boundary;
+
+        /// <summary>Hangul 音節以外の単独文字か。</summary>
+        public bool IsStandalone => KindValue == (byte)SyllableKind.Standalone;
 
         /// <summary>
         /// Jamo 文字列へ変換する。
@@ -141,7 +159,7 @@ namespace DotNetG2P.Korean
         /// </summary>
         public static KoreanSyllable FromStandaloneJamo(char jamo)
         {
-            return new KoreanSyllable(jamo, '\0', '\0');
+            return new KoreanSyllable(jamo, '\0', '\0', SyllableKind.Standalone);
         }
 
         /// <summary>
@@ -149,7 +167,7 @@ namespace DotNetG2P.Korean
         /// </summary>
         public static KoreanSyllable FromBoundary(char boundary)
         {
-            return new KoreanSyllable(boundary, '\0', '\0');
+            return new KoreanSyllable(boundary, '\0', '\0', SyllableKind.Boundary);
         }
 
         private static Dictionary<char, int> CreateIndexMap(char[] source)
@@ -168,7 +186,8 @@ namespace DotNetG2P.Korean
         {
             return Onset == other.Onset
                 && Nucleus == other.Nucleus
-                && Coda == other.Coda;
+                && Coda == other.Coda
+                && KindValue == other.KindValue;
         }
 
         /// <inheritdoc />
@@ -182,6 +201,7 @@ namespace DotNetG2P.Korean
                 var hash = (int)Onset;
                 hash = (hash * 397) ^ Nucleus;
                 hash = (hash * 397) ^ Coda;
+                hash = (hash * 397) ^ KindValue;
                 return hash;
             }
         }

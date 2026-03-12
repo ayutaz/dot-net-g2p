@@ -9,14 +9,25 @@ namespace DotNetG2P.Tests.KoreanG2P.Benchmarking
     {
         public static KoreanBenchmarkRunResult EvaluateAll()
         {
-            return Evaluate(KoreanBenchmarkDataLoader.LoadAllCases());
+            return Evaluate(KoreanBenchmarkDataLoader.LoadAllCases(), KoreanG2POptions.Default);
+        }
+
+        public static KoreanBenchmarkRunResult EvaluateAll(KoreanG2POptions options)
+        {
+            return Evaluate(KoreanBenchmarkDataLoader.LoadAllCases(), options);
         }
 
         public static KoreanBenchmarkRunResult Evaluate(IReadOnlyList<KoreanBenchmarkCase> benchmarkCases)
         {
-            if (benchmarkCases == null) throw new ArgumentNullException(nameof(benchmarkCases));
+            return Evaluate(benchmarkCases, KoreanG2POptions.Default);
+        }
 
-            using var engine = new KoreanG2PEngine();
+        public static KoreanBenchmarkRunResult Evaluate(IReadOnlyList<KoreanBenchmarkCase> benchmarkCases, KoreanG2POptions options)
+        {
+            if (benchmarkCases == null) throw new ArgumentNullException(nameof(benchmarkCases));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            using var engine = new KoreanG2PEngine(options);
 
             var caseResults = new KoreanBenchmarkCaseResult[benchmarkCases.Count];
             for (var i = 0; i < benchmarkCases.Count; i++)

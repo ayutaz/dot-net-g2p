@@ -5,4 +5,11 @@ surface	ui_mode	pronunciation	category	source	notes
 밟다	*	밥따	lexical-batchim	Stdict_밟다	Lexical bieup-dominant reading before ㄷ onset
 밟고	*	밥꼬	lexical-batchim	Stdict_밟다	Lexical bieup-dominant reading before ㄱ onset
 밟는	*	밤는	lexical-batchim	Stdict_밟다	Lexical bieup-dominant reading before ㄴ onset
+깻잎	*	깬닙	n-insertion	NIKL_Regulation_30	Compound-style ㄴ insertion before 잎
+담요	*	담뇨	n-insertion	NIKL_Regulation_30	Compound-style ㄴ insertion before an iotized vowel
 검열	*	검녈	n-insertion	NIKL_Regulation_30	Prefer the inserted-ㄴ official-facing variant for exact lexical lookup
+색연필	*	생년필	n-insertion	NIKL_Regulation_30	Compound-style ㄴ insertion plus nasalization
+막일	*	망닐	n-insertion	NIKL_Regulation_30	Compound-style ㄴ insertion after a final velar stop
+한여름	*	한녀름	n-insertion	NIKL_Regulation_30	Compound-style ㄴ insertion before 여름
+솜이불	*	솜니불	n-insertion	NIKL_Regulation_30	Compound-style ㄴ insertion before 이불
+넓죽하다	*	넙쭉하다	lexical-batchim	Stdict_넓죽하다	Lexical bieup-dominant reading before ㅈ onset

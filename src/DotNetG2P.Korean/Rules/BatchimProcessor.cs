@@ -215,16 +215,27 @@ namespace DotNetG2P.Korean.Rules
             if (!current.HasCoda || !next.HasNucleus || KoreanOrthography.IsSilentIeung(next))
                 return current.Coda;
 
+            return ToRepresentativeCoda(current.Coda);
+        }
+
+        public static char GetTensificationTriggerCoda(KoreanSyllable current, KoreanSyllable next)
+        {
+            if (!current.HasCoda || !next.HasNucleus || KoreanOrthography.IsSilentIeung(next))
+                return current.Coda;
+
             switch (current.Coda)
             {
-                case 'ㄼ':
-                    if (UsesBieupDominantSurface(current, next))
-                        return 'ㅂ';
+                case 'ㄵ':
+                case 'ㄽ':
+                case 'ㄾ':
+                    return 'ㄷ';
 
-                    return 'ㄹ';
+                case 'ㄼ':
+                case 'ㄿ':
+                    return 'ㅂ';
 
                 default:
-                    return ToRepresentativeCoda(current.Coda);
+                    return GetSurfaceCodaBeforeConsonant(current, next);
             }
         }
 
@@ -264,18 +275,6 @@ namespace DotNetG2P.Korean.Rules
                 default:
                     return onset;
             }
-        }
-
-        private static bool UsesBieupDominantSurface(KoreanSyllable current, KoreanSyllable next)
-        {
-            if (current.Onset == 'ㅂ' && current.Nucleus == 'ㅏ')
-                return true;
-
-            if (current.Onset != 'ㄴ' || current.Nucleus != 'ㅓ')
-                return false;
-
-            return (next.Onset == 'ㅈ' && next.Nucleus == 'ㅜ' && next.Coda == 'ㄱ')
-                || (next.Onset == 'ㄷ' && next.Nucleus == 'ㅜ' && next.Coda == 'ㅇ');
         }
     }
 }

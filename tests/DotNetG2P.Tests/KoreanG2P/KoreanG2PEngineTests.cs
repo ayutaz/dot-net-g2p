@@ -94,6 +94,17 @@ namespace DotNetG2P.Tests.KoreanG2P
         }
 
         [Fact]
+        public void EnableTextNormalizationFalse_StillAppliesCompatibilityUnicodeNormalization()
+        {
+            using var engine = new KoreanG2PEngine(new KoreanG2POptions(enableTextNormalization: false));
+
+            var result = engine.Analyze("ＡＢＣ");
+
+            Assert.Equal("ABC", result.NormalizedText);
+            Assert.Equal("A B C", engine.ToPhonemes("ＡＢＣ"));
+        }
+
+        [Fact]
         public void UiVariationMode_Colloquial_UsesExceptionDictionaryOverride()
         {
             using var standardEngine = new KoreanG2PEngine();
@@ -127,6 +138,24 @@ namespace DotNetG2P.Tests.KoreanG2P
             Assert.Equal("한글", result.ToHangulString());
             Assert.Equal("ㅎㅏㄴ", result.GetJamoSyllables()[0]);
             Assert.Equal("ㄱㅡㄹ", result.GetJamoSyllables()[1]);
+        }
+
+        [Fact]
+        public void Analyze_Collections_AreExposedAsReadOnlyViews()
+        {
+            using var engine = new KoreanG2PEngine();
+
+            var result = engine.Analyze("한글");
+
+            Assert.False(result.Syllables is KoreanSyllable[]);
+            Assert.False(result.Phonemes is KoreanPhoneme[]);
+
+            var syllables = Assert.IsAssignableFrom<System.Collections.Generic.IList<KoreanSyllable>>(result.Syllables);
+            var phonemes = Assert.IsAssignableFrom<System.Collections.Generic.IList<KoreanPhoneme>>(result.Phonemes);
+
+            Assert.Throws<NotSupportedException>(() => syllables[0] = new KoreanSyllable('ㄱ', 'ㅏ'));
+            Assert.Throws<NotSupportedException>(() => phonemes[0] = new KoreanPhoneme('ㄱ'));
+            Assert.Equal("한글", result.ToHangulString());
         }
 
         [Fact]

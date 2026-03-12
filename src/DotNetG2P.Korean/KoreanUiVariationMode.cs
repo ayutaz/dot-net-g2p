@@ -1,7 +1,7 @@
 namespace DotNetG2P.Korean
 {
     /// <summary>
-    /// `의` 系変異の返却方針。
+    /// 例外辞書で管理する発音変異の返却方針。
     /// </summary>
     public enum KoreanUiVariationMode : byte
     {

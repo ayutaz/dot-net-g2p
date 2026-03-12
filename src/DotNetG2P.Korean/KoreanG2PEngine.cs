@@ -142,13 +142,15 @@ namespace DotNetG2P.Korean
 
         private string Normalize(string text)
         {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
             if (_options.EnableTextNormalization)
                 return KoreanNormalizer.Normalize(text, _options.EnableUnicodeNormalization);
 
-            if (!_options.EnableUnicodeNormalization)
-                return text;
-
-            return text.Normalize(NormalizationForm.FormC);
+            return _options.EnableUnicodeNormalization
+                ? text.Normalize(NormalizationForm.FormKC)
+                : text;
         }
 
         private string ApplyExceptionDictionary(string text)
@@ -192,7 +194,7 @@ namespace DotNetG2P.Korean
                 return;
             }
 
-            builder.Append(token);
+            builder.Append(text, tokenStart, tokenEnd - tokenStart);
         }
 
         private void ThrowIfDisposed()

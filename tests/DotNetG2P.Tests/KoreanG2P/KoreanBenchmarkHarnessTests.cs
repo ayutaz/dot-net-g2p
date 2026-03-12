@@ -1,5 +1,7 @@
+using System;
 using System.IO;
 using System.Linq;
+using DotNetG2P.Korean;
 using DotNetG2P.Tests.KoreanG2P.Benchmarking;
 
 namespace DotNetG2P.Tests.KoreanG2P
@@ -41,28 +43,55 @@ namespace DotNetG2P.Tests.KoreanG2P
         }
 
         [Fact]
-        public void WriteReports_CreatesSummaryAndMismatchArtifacts()
+        public void Evaluate_RespectsCustomOptions()
+        {
+            var benchmarkCases = new[]
+            {
+                new KoreanBenchmarkCase("weak_rules.tsv", "나의", "나에", "Test", "ui-variation", "Colloquial mode should be benchmarkable."),
+            };
+
+            var result = KoreanBenchmarkHarness.Evaluate(
+                benchmarkCases,
+                new KoreanG2POptions(uiVariationMode: KoreanUiVariationMode.Colloquial));
+
+            Assert.Equal(1, result.TotalCases);
+            Assert.Equal(1, result.PassedCases);
+            Assert.Empty(result.Mismatches);
+        }
+
+        [Fact]
+        public void WriteReports_CreatesSummaryAndMismatchArtifactsInRequestedDirectory()
         {
             var result = KoreanBenchmarkHarness.EvaluateAll();
+            var outputDirectory = Path.Combine(Path.GetTempPath(), "DotNetG2P.Korean.Tests", Guid.NewGuid().ToString("N"));
 
-            var reportPaths = KoreanBenchmarkReportWriter.Write(result);
+            try
+            {
+                var reportPaths = KoreanBenchmarkReportWriter.Write(result, outputDirectory);
 
-            Assert.True(File.Exists(reportPaths.SummaryJsonPath));
-            Assert.True(File.Exists(reportPaths.DatasetSummaryTsvPath));
-            Assert.True(File.Exists(reportPaths.RuleSummaryTsvPath));
-            Assert.True(File.Exists(reportPaths.MismatchTsvPath));
+                Assert.StartsWith(outputDirectory, reportPaths.SummaryJsonPath, StringComparison.OrdinalIgnoreCase);
+                Assert.True(File.Exists(reportPaths.SummaryJsonPath));
+                Assert.True(File.Exists(reportPaths.DatasetSummaryTsvPath));
+                Assert.True(File.Exists(reportPaths.RuleSummaryTsvPath));
+                Assert.True(File.Exists(reportPaths.MismatchTsvPath));
 
-            var datasetSummaryLines = File.ReadAllLines(reportPaths.DatasetSummaryTsvPath);
-            Assert.Equal("dataset\ttotal\tpassed\tfailed\taccuracy", datasetSummaryLines[0]);
-            Assert.Equal(result.DatasetSummaries.Count + 1, datasetSummaryLines.Length);
+                var datasetSummaryLines = File.ReadAllLines(reportPaths.DatasetSummaryTsvPath);
+                Assert.Equal("dataset\ttotal\tpassed\tfailed\taccuracy", datasetSummaryLines[0]);
+                Assert.Equal(result.DatasetSummaries.Count + 1, datasetSummaryLines.Length);
 
-            var ruleSummaryLines = File.ReadAllLines(reportPaths.RuleSummaryTsvPath);
-            Assert.Equal("rule_tag\ttotal\tpassed\tfailed\taccuracy\tdatasets", ruleSummaryLines[0]);
-            Assert.Equal(result.RuleSummaries.Count + 1, ruleSummaryLines.Length);
+                var ruleSummaryLines = File.ReadAllLines(reportPaths.RuleSummaryTsvPath);
+                Assert.Equal("rule_tag\ttotal\tpassed\tfailed\taccuracy\tdatasets", ruleSummaryLines[0]);
+                Assert.Equal(result.RuleSummaries.Count + 1, ruleSummaryLines.Length);
 
-            var mismatchLines = File.ReadAllLines(reportPaths.MismatchTsvPath);
-            Assert.Equal("dataset\tinput\tactual\texpected\tsource\trule_tag\tnotes", mismatchLines[0]);
-            Assert.Single(mismatchLines);
+                var mismatchLines = File.ReadAllLines(reportPaths.MismatchTsvPath);
+                Assert.Equal("dataset\tinput\tactual\texpected\tsource\trule_tag\tnotes", mismatchLines[0]);
+                Assert.Single(mismatchLines);
+            }
+            finally
+            {
+                if (Directory.Exists(outputDirectory))
+                    Directory.Delete(outputDirectory, recursive: true);
+            }
         }
     }
 }

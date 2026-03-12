@@ -11,14 +11,21 @@ namespace DotNetG2P.Tests.KoreanG2P.Benchmarking
     {
         public static KoreanBenchmarkReportPaths Write(KoreanBenchmarkRunResult result)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
+            return Write(result, KoreanBenchmarkPaths.EnsureResultsDirectory());
+        }
 
-            var resultsDirectory = KoreanBenchmarkPaths.EnsureResultsDirectory();
+        public static KoreanBenchmarkReportPaths Write(KoreanBenchmarkRunResult result, string outputDirectory)
+        {
+            if (result == null) throw new ArgumentNullException(nameof(result));
+            if (string.IsNullOrWhiteSpace(outputDirectory))
+                throw new ArgumentException("Output directory is required.", nameof(outputDirectory));
+
+            Directory.CreateDirectory(outputDirectory);
             var reportPaths = new KoreanBenchmarkReportPaths(
-                Path.Combine(resultsDirectory, "korean-benchmark-summary.json"),
-                Path.Combine(resultsDirectory, "korean-benchmark-dataset-summary.tsv"),
-                Path.Combine(resultsDirectory, "korean-benchmark-rule-summary.tsv"),
-                Path.Combine(resultsDirectory, "korean-benchmark-mismatches.tsv"));
+                Path.Combine(outputDirectory, "korean-benchmark-summary.json"),
+                Path.Combine(outputDirectory, "korean-benchmark-dataset-summary.tsv"),
+                Path.Combine(outputDirectory, "korean-benchmark-rule-summary.tsv"),
+                Path.Combine(outputDirectory, "korean-benchmark-mismatches.tsv"));
 
             WriteSummaryJson(reportPaths.SummaryJsonPath, result);
             WriteDatasetSummaryTsv(reportPaths.DatasetSummaryTsvPath, result);
