@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-面向 C#/.NET 的日英中多语言 + 西班牙语 G2P（Grapheme-to-Phoneme：字素到音素转换）库。
-以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线、基于 CMU 词典的英语 G2P、基于 pinyin-data 词典的中文拼音转换，以及基于规则的西班牙语 G2P，无需依赖 Python 或原生二进制文件即可转换为音素序列。
+面向 C#/.NET 的多语言 G2P（Grapheme-to-Phoneme：字素到音素转换）库，覆盖日语、英语、中文、韩语、西班牙语、法语和葡萄牙语。
+以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线、基于 CMU 词典的英语 G2P、基于 pinyin-data 词典的中文拼音转换、Hangul-first 的韩语 G2P，以及基于规则的罗曼语系 G2P，无需依赖 Python 或原生二进制文件即可转换为音素序列。
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer());
@@ -23,13 +23,17 @@ enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
 using var zhEngine = new ChineseG2PEngine();
 zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 
+// 韩语 G2P
+using var koEngine = new KoreanG2PEngine();
+koEngine.ToPhonemes("좋다");  // => "ㅈ ㅗ ㅌ ㅏ"
+
 // 西班牙语 G2P
 using var esEngine = new SpanishG2PEngine();
 esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
-// 日英混合文本
+// 日韩英混合文本
 using var multiEngine = new MultilingualG2PEngine();
-multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音素，英语部分 => ARPAbet
+multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日语部分 => 日语音素，韩语部分 => Hangul 音素，英语部分 => ARPAbet
 ```
 
 ## 目录
@@ -55,8 +59,10 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日语部分 => 日语音
 - **可扩展设计** — 通过 `ITokenizer` 接口可替换形态素分析引擎
 - **支持英语 G2P** — CMU 词典（135,000 词）+ Flite LTS 规则进行 OOV 推测、IPA/X-SAMPA 输出、文本规范化、同形异音词解析
 - **支持中文 G2P** — pinyin-data 单字词典（44,000 条）+ phrase-pinyin-data 短语词典（411,000 条），自动多音字解析、声调变调（三声连读、一/不变调）、3 种输出风格、IPA（国际音标）与注音符号（ㄅㄆㄇㄈ）输出
+- **支持韩语 G2P** — Hangul-first 的规则驱动转换，包含 Jamo 分解、标准发音法导向的音韵规则、精确例外词典覆盖、轻量文本规范化，以及 `g2pk_parity` / `official_gold` / `weak_rules` benchmark harness
 - **支持西班牙语 G2P** — 提供基于规则的 IPA 转写、音节划分、重音判定、Castilian/Latin American 切换、异音处理选项、文本规范化、例外词典以及全量语料评估工具链。规范化器现已区分千位分隔符与小数点，并对非法日期/时间安全回退
-- **支持日英中西混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，并通过 `DefaultLatinLanguage` 控制英语/西班牙语拉丁文本路由。纯汉字片段会结合 marker、日语词汇提示和内置中文词典进一步判定 JP/ZH，且内置中文词典与 `ChineseG2PEngine` 共享以避免重复常驻
+- **支持法语和葡萄牙语 G2P** — 提供基于规则的 IPA 转写、例外词典、方言选项、规范化管线和数据集驱动的评估工具链
+- **支持日英中韩西法葡混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，Hangul 片段会直接路由到 Korean segment，`DefaultLatinLanguage` 可控制英语/西班牙语/法语/葡萄牙语拉丁文本路由。纯汉字片段会结合 marker、日语词汇提示和内置中文词典进一步判定 JP/ZH，且内置中文词典与 `ChineseG2PEngine` 共享以避免重复常驻
 
 ## 安装
 
@@ -73,10 +79,19 @@ dotnet add package DotNetG2P.English
 # 中文 G2P（拼音转换）
 dotnet add package DotNetG2P.Chinese
 
+# 韩语 G2P
+dotnet add package DotNetG2P.Korean
+
 # 西班牙语 G2P
 dotnet add package DotNetG2P.Spanish
 
-# 日英中西混合文本支持
+# 法语 G2P
+dotnet add package DotNetG2P.French
+
+# 葡萄牙语 G2P
+dotnet add package DotNetG2P.Portuguese
+
+# 日英中韩西法葡混合文本支持
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -88,8 +103,11 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.MeCab` | Apache-2.0 | 自研 MeCab 引擎（无外部依赖） |
 | `DotNetG2P.English` | Apache-2.0 | 英语 G2P 引擎（CMU 词典 + LTS 规则） |
 | `DotNetG2P.Chinese` | Apache-2.0 | 中文 G2P 引擎（pinyin-data 词典 + 声调变调） |
+| `DotNetG2P.Korean` | Apache-2.0 | 韩语 G2P 引擎（Hangul-first rule engine + 例外词典 + 规范化） |
 | `DotNetG2P.Spanish` | Apache-2.0 | 西班牙语 G2P 引擎（规则驱动 + 可选异音处理） |
-| `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中西混合文本支持） |
+| `DotNetG2P.French` | Apache-2.0 | 法语 G2P 引擎（规则驱动 + 例外词典 + 可选异音处理） |
+| `DotNetG2P.Portuguese` | Apache-2.0 | 葡萄牙语 G2P 引擎（规则驱动 + 例外词典 + 可选异音处理） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中韩西法葡混合文本支持） |
 
 ### Unity (UPM)
 
@@ -100,7 +118,10 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Korean
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.French
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Portuguese
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -180,6 +201,21 @@ using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
 
+// === 韩语 G2P ===
+using DotNetG2P.Korean;
+
+using var koEngine = new KoreanG2PEngine();
+string koPhonemes = koEngine.ToPhonemes("좋다");
+// => "ㅈ ㅗ ㅌ ㅏ"
+
+string koJamo = koEngine.ToJamo("한글");
+// => "ㅎㅏㄴ ㄱㅡㄹ"
+
+using var koColloquial = new KoreanG2PEngine(
+    new KoreanG2POptions(uiVariationMode: KoreanUiVariationMode.Colloquial));
+string koColloquialHangul = koColloquial.Analyze("나의").ToHangulString();
+// => "나에"
+
 // === 西班牙语 G2P ===
 using DotNetG2P.Spanish;
 
@@ -187,12 +223,12 @@ using var esEngine = new SpanishG2PEngine();
 string esIpa = esEngine.ToIPA("guion");
 // => "ɡiˈon"
 
-// === 日英中西混合文本 ===
+// === 日英中韩西法葡混合文本 ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine();
-string mixed = multiEngine.ToPhonemes("今日はgood dayです");
-// 日语部分 => 日语音素，英语部分 => ARPAbet 音素
+string mixed = multiEngine.ToPhonemes("今日は안녕하세요 good dayです");
+// 日语部分 => 日语音素，韩语部分 => Hangul 音素，英语部分 => ARPAbet 音素
 
 var segments = multiEngine.ToSegments("今日はgood dayです");
 // 带语言标签的分段列表
@@ -202,6 +238,13 @@ var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese)
 using var multiZhEngine = new MultilingualG2PEngine(zhOptions);
 multiZhEngine.ToPhonemes("你好hello");
 // 中文部分 => 拼音，英语部分 => ARPAbet 音素
+
+// 透传韩语选项的情况
+var koOptions = new MultilingualG2POptions(
+    koreanOptions: new KoreanG2POptions(uiVariationMode: KoreanUiVariationMode.Colloquial));
+using var multiKoEngine = new MultilingualG2PEngine(koOptions);
+multiKoEngine.ToPhonemes("나의 hello");
+// 韩语部分 => KoreanG2PEngine 输出，英语部分 => ARPAbet 音素
 
 // 包含西班牙语文本的情况
 var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
@@ -270,6 +313,16 @@ multiEsEngine.ToPhonemes("hola世界");
 | `ToZhuyinBatch(texts)` | `string[]` | 批量注音转换 |
 | `ToZhuyinBatch(texts, includeTones)` | `string[]` | 批量注音转换（声调控制） |
 
+### KoreanG2PEngine
+
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `ToPhonemes(text)` | `string` | 空格分隔的 compatibility Jamo 音素序列 (`"ㅈ ㅗ ㅌ ㅏ"`) |
+| `ToJamo(text)` | `string` | 带音节分隔的 Jamo 输出 (`"ㅎㅏㄴ ㄱㅡㄹ"`) |
+| `Analyze(text)` | `KoreanPronunciation` | 返回包含规范化文本的结构化发音模型 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
+| `ToJamoBatch(texts)` | `IReadOnlyList<string>` | 批量 Jamo 转换 |
+
 ### SpanishG2PEngine
 
 | 方法 | 返回类型 | 说明 |
@@ -288,18 +341,20 @@ multiEsEngine.ToPhonemes("hola世界");
 
 | 方法 | 返回类型 | 说明 |
 |------|---------|------|
-| `ToPhonemes(text)` | `string` | 日英中西混合音素序列 |
+| `ToPhonemes(text)` | `string` | 日英中韩西法葡混合音素序列 |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 带语言标签的分段 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | 批量分段转换 |
 
 Multilingual 补充说明:
 
-- 拉丁字母 token 以 `DefaultLatinLanguage` 为默认，再根据西班牙语重音字母、`gue/gui/güe/güi` 模式、常见 ASCII 西语词汇和常见后缀在 English / Spanish 间切换
+- Hangul syllables / Jamo / compatibility jamo / halfwidth Hangul 会被判定为 Korean 并路由到 `DotNetG2P.Korean`
+- 拉丁字母 token 以 `DefaultLatinLanguage` 为默认，再根据语言特征和高频词汇模式在 English / Spanish / French / Portuguese 间切换
 - 纯汉字片段会结合 `Chinese strong/weak markers`、`Japanese markers`、日语词汇提示以及内置中文 phrase/char 词典进一步判定 JP / ZH
 - 内置中文词典与 `ChineseG2PEngine` 共享，当前测量下 `TextSegmenter` 额外带来的词典常驻约为 `0.02MB`
 - 只有证据不足的歧义纯汉字片段才会回退到 `DefaultCjkLanguage`
-- 截至 2026-03-10 的 Multilingual 回归结果: `341 passed`
+- `MultilingualG2POptions.KoreanOptions` 可将韩语规范化与 `UiVariationMode` 设置透传给 `KoreanG2PEngine`
+- 截至 2026-03-12 的 Multilingual 回归结果: `432 passed`
 - 代表性 Multilingual 回归子集: `110 passed`
 - `MultilingualPerformanceTests`: `8 passed`
 
@@ -461,7 +516,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 字典数据（`DictionaryBundle`）通过内部 WeakReference 缓存自动共享，
 因此创建多个实例的内存开销极小。
 
-`EnglishG2PEngine`、`ChineseG2PEngine`、`SpanishG2PEngine` 执行无状态转换，
+`EnglishG2PEngine`、`ChineseG2PEngine`、`KoreanG2PEngine`、`SpanishG2PEngine`、`FrenchG2PEngine`、`PortugueseG2PEngine` 执行无状态转换，
 因此可以从多个线程安全地调用单个实例。
 
 `MultilingualG2PEngine` 通过 `lock` 保护内部的日语引擎，
@@ -475,8 +530,11 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 自研 MeCab 引擎 |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | 英语 G2P 引擎 |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | 中文 G2P 引擎 |
+| **DotNetG2P.Korean** | [Apache-2.0](LICENSE) | 韩语 G2P 引擎 |
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | 西班牙语 G2P 引擎 |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎（日英中西对应） |
+| **DotNetG2P.French** | [Apache-2.0](LICENSE) | 法语 G2P 引擎 |
+| **DotNetG2P.Portuguese** | [Apache-2.0](LICENSE) | 葡萄牙语 G2P 引擎 |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎（日英中韩西法葡对应） |
 
 所有组件均以 **Apache-2.0 许可证** 提供。
 有关第三方组件的许可证信息，请参阅 [NOTICE](NOTICE) 文件。

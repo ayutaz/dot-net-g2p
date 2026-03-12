@@ -19,7 +19,7 @@
 
 ## 実装反映状況
 
-2026-03-12 時点で、計画上の `M0` から `M5` までは実装済み。
+2026-03-12 時点で、計画上の `M0` から `M6` までは実装済み。
 
 ### 現在の実装到達点
 
@@ -90,8 +90,17 @@
 - `MultilingualG2POptions` に `KoreanOptions` を追加
 - `MultilingualSharedFixture` に standalone `KoreanG2PEngine` を追加し、multilingual segment 出力との一致を検証
 - `tests/DotNetG2P.Tests/Multilingual/MultilingualKoreanTests.cs` を追加
-- multilingual 全体回帰は `dotnet test ... --filter Multilingual` で `428 passed`
-- Korean 関連全体は `dotnet test ... --filter Korean` で `157 passed`
+- multilingual 全体回帰は `dotnet test ... --filter Multilingual` で `432 passed`
+- Korean 関連全体は `dotnet test ... --filter Korean` で `163 passed`
+
+### M6 で追加した package / docs / release readiness
+
+- `src/DotNetG2P.Korean/README.md` と `src/DotNetG2P.Multilingual/README.md` を追加し、quick start / thread safety / known limitations を package 単位で記述
+- `src/DotNetG2P.Korean/THIRD-PARTY-NOTICES.md` を追加し、third-party code / dataset を bundle しない方針を明記
+- Korean / Multilingual の `.csproj` に `PackageReadmeFile`, `PackageLicenseExpression`, `PackageProjectUrl`, `RepositoryUrl`, `Authors` を追加
+- Korean / Multilingual の `package.json` を release-ready な description / keywords / dependencies に更新
+- root `README.md`, `README_EN.md`, `README_ZH.md` に `DotNetG2P.Korean` と `MultilingualG2POptions.KoreanOptions` の usage sample を追加
+- `tests/DotNetG2P.Tests/KoreanG2P/KoreanReleaseReadinessTests.cs` を追加し、README / metadata / notice / multilingual Korean dependency を CI で監視
 
 ### 残る制約
 
@@ -102,8 +111,9 @@
 
 ### 次に見るべきもの
 
-- `M6`: package / docs / release readiness
 - 숫자 / 英字 / Hanja をどこまで Korean package 単体で持つかの境界整理
+- optional morph analyzer をどの interface で差し込むか
+- `ToIPA` と phone inventory の公開方針
 
 ## 追加調査: 既存 Python / C# ライブラリと精度
 

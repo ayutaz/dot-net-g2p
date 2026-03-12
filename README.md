@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-C#/.NET向け日英中西仏葡多言語対応 G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに音素列へ変換します。
+C#/.NET向け日英中韓西仏葡多言語対応 G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、Hangul-first の韓国語G2P、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに音素列へ変換します。
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer());
@@ -23,6 +23,10 @@ enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
 using var zhEngine = new ChineseG2PEngine();
 zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 
+// 韓国語G2P
+using var koEngine = new KoreanG2PEngine();
+koEngine.ToPhonemes("좋다");  // => "ㅈ ㅗ ㅌ ㅏ"
+
 // スペイン語G2P
 using var esEngine = new SpanishG2PEngine();
 esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
@@ -35,9 +39,9 @@ frEngine.ToIPA("bonjour");  // => "bɔ̃ʒuʁ"
 using var ptEngine = new PortugueseG2PEngine();
 ptEngine.ToIPA("obrigado");  // => "obɾiˈɡadu"
 
-// 日英混在テキスト
+// 日韓英混在テキスト
 using var multiEngine = new MultilingualG2PEngine();
-multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本語音素、英語部分はARPAbet
+multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日本語部分は日本語音素、韓国語部分はHangul phoneme、英語部分はARPAbet
 ```
 
 ## 目次
@@ -65,10 +69,11 @@ multiEngine.ToPhonemes("私はhelloと言った");  // 日本語部分は日本�
 - **拡張可能な設計** — `ITokenizer`インターフェースにより形態素解析エンジンを差し替え可能
 - **英語G2P対応** — CMU辞書（135,000語）+ Flite LTSルールによるOOV推定、IPA/X-SAMPA出力、テキスト正規化、同綴異音語解決
 - **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力
+- **韓国語G2P対応** — Hangul-first の規則ベース変換、Jamo 分解、例外辞書、軽量正規化、`ㅎ` 系変化・終声中和・連音・濃音化・鼻音化・流音化を含む標準発音寄り rule engine、benchmark harness を実装
 - **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応
 - **フランス語G2P対応** — ルールベース6フェーズG2P変換（ダイグラフ→文脈依存→鼻母音化→半母音化→位置の法則→黙字）、音素ベース音節分割、Metropolitan/Conservative方言切り替え、異音処理（R無声化・阻害音有声性同化）、例外辞書500+エントリ（外来語/不規則語/動詞3複/学術語/同綴異音語）、テキスト正規化（数値/日付/時刻/通貨/単位/略語/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
 - **ポルトガル語G2P対応** — ルールベースG2P変換 + 例外辞書（560+エントリ）、音節分割、ストレス付与、Brazilian/European方言切り替え、7種の異音規則（母音弱化・鼻音同化・歯擦音有声性同化・閉鎖音弱化・歯擦音後部歯茎化・t/d破擦音化・コーダl異音）、テキスト正規化（13段階パイプライン: 略語/日付/時刻/通貨/%/単位/数値範囲/小数/数値/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
-- **日英中西仏葡混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、`DefaultLatinLanguage` により英語/スペイン語/フランス語/ポルトガル語のラテン文字系セグメントを切り替え可能。ポルトガル語は特有文字(ã/õ)・ç接尾辞パターン・高頻度語彙で自動判定。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
+- **日英中韓西仏葡混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、Hangul block は Korean segment として自動ルーティング。`DefaultLatinLanguage` により英語/スペイン語/フランス語/ポルトガル語のラテン文字系セグメントを切り替え可能。ポルトガル語は特有文字(ã/õ)・ç接尾辞パターン・高頻度語彙で自動判定。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
 
 ## インストール
 
@@ -85,6 +90,9 @@ dotnet add package DotNetG2P.English
 # 中国語G2P（ピンイン変換）
 dotnet add package DotNetG2P.Chinese
 
+# 韓国語G2P
+dotnet add package DotNetG2P.Korean
+
 # スペイン語G2P
 dotnet add package DotNetG2P.Spanish
 
@@ -94,7 +102,7 @@ dotnet add package DotNetG2P.French
 # ポルトガル語G2P
 dotnet add package DotNetG2P.Portuguese
 
-# 日英中西仏葡混在テキスト対応
+# 日英中韓西仏葡混在テキスト対応
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -106,10 +114,11 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.MeCab` | Apache-2.0 | 独自MeCabエンジン（外部依存なし） |
 | `DotNetG2P.English` | Apache-2.0 | 英語G2Pエンジン（CMU辞書 + LTSルール） |
 | `DotNetG2P.Chinese` | Apache-2.0 | 中国語G2Pエンジン（pinyin-data辞書 + 声調変調） |
+| `DotNetG2P.Korean` | Apache-2.0 | 韓国語G2Pエンジン（Hangul-first rule engine + 例外辞書 + 正規化） |
 | `DotNetG2P.Spanish` | Apache-2.0 | スペイン語G2Pエンジン（ルールベース + 異音処理オプション） |
 | `DotNetG2P.French` | Apache-2.0 | フランス語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
 | `DotNetG2P.Portuguese` | Apache-2.0 | ポルトガル語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
-| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中西仏葡混在テキスト対応） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中韓西仏葡混在テキスト対応） |
 
 ### Unity (UPM)
 
@@ -120,6 +129,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Korean
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.French
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Portuguese
@@ -197,6 +207,21 @@ using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
 
+// === 韓国語G2P ===
+using DotNetG2P.Korean;
+
+using var koEngine = new KoreanG2PEngine();
+string koPhonemes = koEngine.ToPhonemes("좋다");
+// => "ㅈ ㅗ ㅌ ㅏ"
+
+string koJamo = koEngine.ToJamo("한글");
+// => "ㅎㅏㄴ ㄱㅡㄹ"
+
+using var koColloquial = new KoreanG2PEngine(
+    new KoreanG2POptions(uiVariationMode: KoreanUiVariationMode.Colloquial));
+string koColloquialHangul = koColloquial.Analyze("나의").ToHangulString();
+// => "나에"
+
 // === スペイン語G2P ===
 using DotNetG2P.Spanish;
 
@@ -252,12 +277,12 @@ string ptXsampaNoStress = ptEngine.ToXSampaWithoutStress("obrigado");
 // バッチ処理
 var ptBatch = ptEngine.ToIPABatch(new[] { "bom dia", "boa noite" });
 
-// === 日英中西仏混在テキスト ===
+// === 日英中韓西仏葡混在テキスト ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine();
-string mixed = multiEngine.ToPhonemes("今日はgood dayです");
-// 日本語部分→日本語音素、英語部分→ARPAbet音素
+string mixed = multiEngine.ToPhonemes("今日は안녕하세요 good dayです");
+// 日本語部分→日本語音素、韓国語部分→Hangul phoneme、英語部分→ARPAbet音素
 
 var segments = multiEngine.ToSegments("今日はgood dayです");
 // 言語タグ付きセグメントリスト
@@ -267,6 +292,13 @@ var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese)
 using var multiZhEngine = new MultilingualG2PEngine(zhOptions);
 multiZhEngine.ToPhonemes("你好hello");
 // 中国語部分→ピンイン、英語部分→ARPAbet音素
+
+// 韓国語オプションを含む場合
+var koOptions = new MultilingualG2POptions(
+    koreanOptions: new KoreanG2POptions(uiVariationMode: KoreanUiVariationMode.Colloquial));
+using var multiKoEngine = new MultilingualG2PEngine(koOptions);
+multiKoEngine.ToPhonemes("나의 hello");
+// 韓国語部分→KoreanG2PEngine、英語部分→ARPAbet音素
 
 // スペイン語テキストを含む場合
 var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
@@ -347,6 +379,16 @@ multiPtEngine.ToPhonemes("obrigado世界");
 | `ToZhuyinBatch(texts)` | `string[]` | バッチ注音変換 |
 | `ToZhuyinBatch(texts, includeTones)` | `string[]` | バッチ注音変換（声調制御） |
 
+### KoreanG2PEngine
+
+| メソッド | 戻り値型 | 説明 |
+|---------|---------|------|
+| `ToPhonemes(text)` | `string` | スペース区切りの compatibility Jamo 音素列 (`"ㅈ ㅗ ㅌ ㅏ"`) |
+| `ToJamo(text)` | `string` | 音節区切り付き Jamo 列 (`"ㅎㅏㄴ ㄱㅡㄹ"`) |
+| `Analyze(text)` | `KoreanPronunciation` | 正規化後テキストと音節/音素モデルを返す |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
+| `ToJamoBatch(texts)` | `IReadOnlyList<string>` | バッチ Jamo 変換 |
+
 ### SpanishG2PEngine
 
 | メソッド | 戻り値型 | 説明 |
@@ -397,18 +439,20 @@ multiPtEngine.ToPhonemes("obrigado世界");
 
 | メソッド | 戻り値型 | 説明 |
 |---------|---------|------|
-| `ToPhonemes(text)` | `string` | 日英中西仏葡混在音素列 |
+| `ToPhonemes(text)` | `string` | 日英中韓西仏葡混在音素列 |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 言語タグ付きセグメント |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | バッチセグメント変換 |
 
 Multilingual の補足:
 
+- Hangul syllables / Jamo / compatibility jamo / halfwidth Hangul は Korean として分類され、`DotNetG2P.Korean` にルーティングされます
 - ラテン文字列は `DefaultLatinLanguage` を既定にしつつ、アクセント付きスペイン語文字、`güe/güi`、高頻度 ASCII Spanish 語彙、代表的な接尾辞で English / Spanish / French / Portuguese を切り替えます。ポルトガル語は特有文字(ã/õ)、ç接尾辞パターン(-ço/-ça)、高頻度語彙で判定します
 - 純漢字 run は `Chinese strong/weak markers`、`Japanese markers`、日本語語彙ヒント、埋め込み中国語 phrase/char 辞書を使って JP / ZH を補強判定します
 - 埋め込み中国語辞書は `ChineseG2PEngine` と共有され、`TextSegmenter` 単独の追加辞書常駐は実測で約 `0.02MB` です
 - それでも根拠が弱い曖昧な純漢字 run だけ `DefaultCjkLanguage` にフォールバックします
-- 2026-03-11 時点の Multilingual 回帰: `412 passed`（6言語対応）
+- `MultilingualG2POptions.KoreanOptions` で `UiVariationMode` や正規化設定を multilingual 側から渡せます
+- 2026-03-12 時点の Multilingual 回帰: `432 passed`（7言語対応）
 - 代表 Multilingual 回帰: `110 passed`
 - `MultilingualPerformanceTests`: `8 passed`
 
@@ -675,7 +719,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 辞書データ（`DictionaryBundle`）は内部でWeakReferenceキャッシュにより自動的に共有されるため、
 複数インスタンスを作成してもメモリ使用量は最小限に抑えられます。
 
-`EnglishG2PEngine`、`ChineseG2PEngine`、`SpanishG2PEngine`、`FrenchG2PEngine`、`PortugueseG2PEngine` はステートレスな変換を行うため、
+`EnglishG2PEngine`、`ChineseG2PEngine`、`KoreanG2PEngine`、`SpanishG2PEngine`、`FrenchG2PEngine`、`PortugueseG2PEngine` はステートレスな変換を行うため、
 単一インスタンスを複数スレッドから呼び出しても安全です。
 
 `MultilingualG2PEngine` は内部の日本語エンジンを `lock` で保護しているため、
@@ -689,10 +733,11 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | 独自MeCabエンジン |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | 英語G2Pエンジン |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | 中国語G2Pエンジン |
+| **DotNetG2P.Korean** | [Apache-2.0](LICENSE) | 韓国語G2Pエンジン |
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | スペイン語G2Pエンジン |
 | **DotNetG2P.French** | [Apache-2.0](LICENSE) | フランス語G2Pエンジン |
 | **DotNetG2P.Portuguese** | [Apache-2.0](LICENSE) | ポルトガル語G2Pエンジン |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中西仏葡対応） |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中韓西仏葡対応） |
 
 全コンポーネントが**Apache-2.0ライセンス**で利用可能です。
 サードパーティコンポーネントのライセンスについては [NOTICE](NOTICE) ファイルを参照してください。

@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-A Japanese-English-Chinese multilingual + Spanish G2P (Grapheme-to-Phoneme) library for C#/.NET.
-It natively reimplements the OpenJTalk-compatible Japanese G2P pipeline, CMU dictionary-based English G2P, pinyin-data dictionary-based Chinese pinyin conversion, and rule-based Spanish G2P in C#, without depending on Python or native binaries.
+A multilingual G2P (Grapheme-to-Phoneme) library for C#/.NET covering Japanese, English, Chinese, Korean, Spanish, French, and Portuguese.
+It natively reimplements the OpenJTalk-compatible Japanese G2P pipeline, CMU dictionary-based English G2P, pinyin-data dictionary-based Chinese pinyin conversion, Hangul-first Korean G2P, and rule-based Romance-language G2P in C#, without depending on Python or native binaries.
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer());
@@ -23,13 +23,17 @@ enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
 using var zhEngine = new ChineseG2PEngine();
 zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 
+// Korean G2P
+using var koEngine = new KoreanG2PEngine();
+koEngine.ToPhonemes("좋다");  // => "ㅈ ㅗ ㅌ ㅏ"
+
 // Spanish G2P
 using var esEngine = new SpanishG2PEngine();
 esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
-// Mixed Japanese-English-Spanish text
+// Mixed Japanese-Korean-English text
 using var multiEngine = new MultilingualG2PEngine();
-multiEngine.ToPhonemes("私はhelloと言った");  // Japanese => Japanese phonemes, English => ARPAbet
+multiEngine.ToPhonemes("今日は안녕하세요 hello");  // Japanese => Japanese phonemes, Korean => Hangul phonemes, English => ARPAbet
 
 var multiEsOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
 using var multiEsEngine = new MultilingualG2PEngine(multiEsOptions);
@@ -59,8 +63,10 @@ multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese =>
 - **Extensible design** — Swap out the morphological analysis engine via the `ITokenizer` interface
 - **English G2P support** — CMU dictionary (135,000 words) + Flite LTS rules for OOV estimation, IPA/X-SAMPA output, text normalization, and heteronym resolution
 - **Chinese G2P support** — pinyin-data character dictionary (44,000 entries) + phrase-pinyin-data phrase dictionary (411,000 entries) for automatic polyphone resolution, tone sandhi (third tone, 一/不 rules), 3 output styles, IPA (International Phonetic Alphabet) and Zhuyin (Bopomofo) output
+- **Korean G2P support** — Hangul-first rule-based conversion with Jamo decomposition, standard-pronunciation-oriented phonological rules, exact exception dictionary overrides, lightweight normalization, and benchmark harnesses for `g2pk_parity`, `official_gold`, and `weak_rules`
 - **Spanish G2P support** — Rule-based IPA conversion with syllabification, stress assignment, Castilian/Latin American options, optional allophone processing, normalization, an exception dictionary, and a full-corpus evaluation toolchain. The normalizer now also distinguishes grouping separators from decimal separators and safely falls back on invalid dates/times
-- **Mixed Japanese-English-Chinese-Spanish text support** — Automatic language detection and segment splitting based on Unicode character categories, with `DefaultLatinLanguage` for English/Spanish Latin-script routing. Pure CJK ideograph runs are further disambiguated with markers, Japanese lexical hints, and embedded Chinese dictionaries, and the embedded Chinese dictionaries are shared with `ChineseG2PEngine` to avoid duplicate residency
+- **French and Portuguese G2P support** — Rule-based IPA conversion with exception dictionaries, dialect options, normalization pipelines, and dataset-driven evaluation toolchains
+- **Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese text support** — Automatic language detection and segment splitting based on Unicode character categories, with Hangul routed directly to Korean segments and `DefaultLatinLanguage` controlling English/Spanish/French/Portuguese Latin-script routing. Pure CJK ideograph runs are further disambiguated with markers, Japanese lexical hints, and embedded Chinese dictionaries, and the embedded Chinese dictionaries are shared with `ChineseG2PEngine` to avoid duplicate residency
 
 ## Installation
 
@@ -77,10 +83,19 @@ dotnet add package DotNetG2P.English
 # Chinese G2P (Pinyin conversion)
 dotnet add package DotNetG2P.Chinese
 
+# Korean G2P
+dotnet add package DotNetG2P.Korean
+
 # Spanish G2P
 dotnet add package DotNetG2P.Spanish
 
-# Mixed Japanese-English-Chinese-Spanish text support
+# French G2P
+dotnet add package DotNetG2P.French
+
+# Portuguese G2P
+dotnet add package DotNetG2P.Portuguese
+
+# Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese text support
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -92,8 +107,11 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.MeCab` | Apache-2.0 | Built-in MeCab engine (no external dependencies) |
 | `DotNetG2P.English` | Apache-2.0 | English G2P engine (CMU dictionary + LTS rules) |
 | `DotNetG2P.Chinese` | Apache-2.0 | Chinese G2P engine (pinyin-data dictionary + tone sandhi) |
+| `DotNetG2P.Korean` | Apache-2.0 | Korean G2P engine (Hangul-first rule engine + exception dictionary + normalization) |
 | `DotNetG2P.Spanish` | Apache-2.0 | Spanish G2P engine (rule-based + optional allophones) |
-| `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese-Spanish text support) |
+| `DotNetG2P.French` | Apache-2.0 | French G2P engine (rule-based + exception dictionary + optional allophones) |
+| `DotNetG2P.Portuguese` | Apache-2.0 | Portuguese G2P engine (rule-based + exception dictionary + optional allophones) |
+| `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese text support) |
 
 ### Unity (UPM)
 
@@ -104,7 +122,10 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Core
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.MeCab
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.English
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Chinese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Korean
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.French
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Portuguese
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -179,6 +200,21 @@ using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
 
+// === Korean G2P ===
+using DotNetG2P.Korean;
+
+using var koEngine = new KoreanG2PEngine();
+string koPhonemes = koEngine.ToPhonemes("좋다");
+// => "ㅈ ㅗ ㅌ ㅏ"
+
+string koJamo = koEngine.ToJamo("한글");
+// => "ㅎㅏㄴ ㄱㅡㄹ"
+
+using var koColloquial = new KoreanG2PEngine(
+    new KoreanG2POptions(uiVariationMode: KoreanUiVariationMode.Colloquial));
+string koColloquialHangul = koColloquial.Analyze("나의").ToHangulString();
+// => "나에"
+
 // === Spanish G2P ===
 using DotNetG2P.Spanish;
 
@@ -186,12 +222,12 @@ using var esEngine = new SpanishG2PEngine();
 string esIpa = esEngine.ToIPA("guion");
 // => "ɡiˈon"
 
-// === Mixed Japanese-English-Chinese-Spanish Text ===
+// === Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese Text ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine();
-string mixed = multiEngine.ToPhonemes("今日はgood dayです");
-// Japanese segments => Japanese phonemes, English segments => ARPAbet phonemes
+string mixed = multiEngine.ToPhonemes("今日は안녕하세요 good dayです");
+// Japanese segments => Japanese phonemes, Korean segments => Hangul phonemes, English segments => ARPAbet phonemes
 
 var segments = multiEngine.ToSegments("今日はgood dayです");
 // List of segments with language tags
@@ -201,6 +237,13 @@ var zhOptions = new MultilingualG2POptions(defaultCjkLanguage: Language.Chinese)
 using var multiZhEngine = new MultilingualG2PEngine(zhOptions);
 multiZhEngine.ToPhonemes("你好hello");
 // Chinese segments => Pinyin, English segments => ARPAbet phonemes
+
+// Pass Korean-specific options through the multilingual engine
+var koOptions = new MultilingualG2POptions(
+    koreanOptions: new KoreanG2POptions(uiVariationMode: KoreanUiVariationMode.Colloquial));
+using var multiKoEngine = new MultilingualG2PEngine(koOptions);
+multiKoEngine.ToPhonemes("나의 hello");
+// Korean segments => KoreanG2PEngine output, English segments => ARPAbet phonemes
 
 // For text containing Spanish
 var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanish);
@@ -269,6 +312,16 @@ multiEsEngine.ToPhonemes("hola世界");
 | `ToZhuyinBatch(texts)` | `string[]` | Batch Zhuyin conversion |
 | `ToZhuyinBatch(texts, includeTones)` | `string[]` | Batch Zhuyin conversion (tone control) |
 
+### KoreanG2PEngine
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ToPhonemes(text)` | `string` | Space-separated compatibility Jamo phoneme sequence (`"ㅈ ㅗ ㅌ ㅏ"`) |
+| `ToJamo(text)` | `string` | Syllable-separated Jamo output (`"ㅎㅏㄴ ㄱㅡㄹ"`) |
+| `Analyze(text)` | `KoreanPronunciation` | Structured pronunciation model with normalized text |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
+| `ToJamoBatch(texts)` | `IReadOnlyList<string>` | Batch Jamo conversion |
+
 ### SpanishG2PEngine
 
 | Method | Return Type | Description |
@@ -287,18 +340,20 @@ multiEsEngine.ToPhonemes("hola世界");
 
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `ToPhonemes(text)` | `string` | Mixed Japanese-English-Chinese-Spanish phoneme sequence |
+| `ToPhonemes(text)` | `string` | Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese phoneme sequence |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | Language-tagged segments |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | Batch segment conversion |
 
 Multilingual notes:
 
-- Latin-script tokens default to `DefaultLatinLanguage`, then switch English / Spanish using accented Spanish letters, `gue/gui/güe/güi` patterns, common ASCII Spanish words, and common suffixes
+- Hangul syllables / Jamo / compatibility jamo / halfwidth Hangul are classified as Korean and routed to `DotNetG2P.Korean`
+- Latin-script tokens default to `DefaultLatinLanguage`, then switch English / Spanish / French / Portuguese using language-specific markers and high-frequency lexical patterns
 - Pure CJK ideograph runs are further classified with Chinese strong/weak markers, Japanese markers, Japanese lexical hints, and embedded Chinese phrase/character dictionaries
 - The embedded Chinese dictionaries are shared with `ChineseG2PEngine`, so additional `TextSegmenter`-only dictionary residency is about `0.02MB` in the current measurement
 - Only ambiguous pure ideograph runs with weak evidence fall back to `DefaultCjkLanguage`
-- Multilingual regression status as of March 10, 2026: `341 passed`
+- `MultilingualG2POptions.KoreanOptions` passes Korean normalization and `UiVariationMode` settings through to `KoreanG2PEngine`
+- Multilingual regression status as of March 12, 2026: `432 passed`
 - Representative multilingual regression subset: `110 passed`
 - `MultilingualPerformanceTests`: `8 passed`
 
@@ -460,7 +515,7 @@ In multi-threaded environments, create a separate instance for each thread.
 Dictionary data (`DictionaryBundle`) is automatically shared via an internal WeakReference cache,
 so creating multiple instances incurs minimal memory overhead.
 
-`EnglishG2PEngine`, `ChineseG2PEngine`, and `SpanishG2PEngine` perform stateless conversions,
+`EnglishG2PEngine`, `ChineseG2PEngine`, `KoreanG2PEngine`, `SpanishG2PEngine`, `FrenchG2PEngine`, and `PortugueseG2PEngine` perform stateless conversions,
 so a single instance can safely be called from multiple threads.
 
 `MultilingualG2PEngine` protects its internal Japanese engine with a `lock`,
@@ -474,8 +529,11 @@ so it can safely be called from multiple threads. However, Japanese text convers
 | **DotNetG2P.MeCab** | [Apache-2.0](LICENSE) | Built-in MeCab engine |
 | **DotNetG2P.English** | [Apache-2.0](LICENSE) | English G2P engine |
 | **DotNetG2P.Chinese** | [Apache-2.0](LICENSE) | Chinese G2P engine |
+| **DotNetG2P.Korean** | [Apache-2.0](LICENSE) | Korean G2P engine |
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | Spanish G2P engine |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine (Japanese-English-Chinese-Spanish) |
+| **DotNetG2P.French** | [Apache-2.0](LICENSE) | French G2P engine |
+| **DotNetG2P.Portuguese** | [Apache-2.0](LICENSE) | Portuguese G2P engine |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine (Japanese-English-Chinese-Korean-Spanish-French-Portuguese) |
 
 All components are available under the **Apache-2.0 License**.
 For third-party component licenses, see the [NOTICE](NOTICE) file.

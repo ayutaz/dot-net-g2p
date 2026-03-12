@@ -40,11 +40,11 @@
 | M3 | Done | benchmark で品質を見える化する | 2,4,5,10 | parity/gold/weak rules のレポートが出る |
 | M4 | Done | 例外辞書と基本正規化を厚くする | 5,6,7 | Hangul-first v1 の精度が安定する |
 | M5 | Done | multilingual へ統合する | 1,8,9 | Hangul segment が自動で Korean に流れる |
-| M6 | Pending | パッケージ化と release readiness | 7,9,10 | README/API/tests/package metadata が揃う |
+| M6 | Done | パッケージ化と release readiness | 7,9,10 | README/API/tests/package metadata が揃う |
 
 ## 現在地
 
-2026-03-12 時点の進捗は `M0 -> M5 完了`, `M6 次着手`。
+2026-03-12 時点の進捗は `M0 -> M6 完了`。v1 の Hangul-first Korean G2P は release readiness まで到達済み。
 
 直近の M4 完了内容:
 
@@ -71,14 +71,21 @@
 - `src/DotNetG2P.Multilingual/MultilingualG2POptions.cs` に `KoreanOptions` を追加した
 - `tests/DotNetG2P.Tests/Multilingual/MultilingualKoreanTests.cs` を追加し、language enum / detector / segmenter / engine routing を統合テストで固定した
 
+直近の M6 完了内容:
+
+- `src/DotNetG2P.Korean/README.md` と `src/DotNetG2P.Multilingual/README.md` を追加し、quick start / thread safety / known limitations を package 単位で明記した
+- `src/DotNetG2P.Korean/THIRD-PARTY-NOTICES.md` を追加し、Korean package が third-party code / dataset を bundle しないことを明記した
+- `src/DotNetG2P.Korean/*.csproj` と `src/DotNetG2P.Multilingual/*.csproj` に `PackageLicenseExpression`, `PackageReadmeFile`, `RepositoryUrl`, `PackageProjectUrl`, `Authors` を追加した
+- `src/DotNetG2P.Korean/package.json` と `src/DotNetG2P.Multilingual/package.json` を最新 description / keyword / dependency に更新した
+- root `README.md`, `README_EN.md`, `README_ZH.md` に Korean package と `MultilingualG2POptions.KoreanOptions` の usage sample を追加した
+- `tests/DotNetG2P.Tests/KoreanG2P/KoreanReleaseReadinessTests.cs` を追加し、README / package metadata / notice / multilingual Korean dependency を CI で監視するようにした
+
 直近のテストゲート:
 
-- `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter KoreanG2P --no-restore`
-  - `140 passed`
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual --no-restore`
-  - `428 passed`
+  - `432 passed`
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Korean --no-restore`
-  - `157 passed`
+  - `163 passed`
 - `dotnet build DotNetG2P.slnx -m:1 --no-restore`
   - success
 
@@ -291,7 +298,7 @@ Hangul を multilingual パイプラインに組み込み、混在文で自動�
 
 - `Language`, `ScriptKind`, `LanguageDetector`, `TextSegmenter`, `MultilingualG2PEngine`, `MultilingualG2POptions` に Korean を追加済み
 - standalone Korean G2P と multilingual Korean segment の phoneme 出力一致を test で固定済み
-- multilingual 全体回帰は `428 passed` で確認済み
+- multilingual 全体回帰は `432 passed` で確認済み
 
 ### リスク
 
@@ -323,6 +330,14 @@ Hangul を multilingual パイプラインに組み込み、混在文で自動�
 - package description が他言語パッケージと同じ粒度で揃う
 - README に quick start が載る
 - tests, benchmark, known limitations が明記される
+
+### 実装結果
+
+- Korean / Multilingual の NuGet package metadata に readme / license / repository 情報を追加済み
+- Korean / Multilingual の package README に quick start, thread safety, known limitations を追加済み
+- Korean / Multilingual の `package.json` を 최신 description / keyword / dependency へ更新済み
+- root README を日本語 / 英語 / 中国語で Korean 対応に更新済み
+- release-readiness 専用テストを追加し、package surface の回帰を防止済み
 
 ## v1 の定義
 
@@ -369,10 +384,10 @@ v1 で見送るもの:
 
 ## 次の具体タスク
 
-M6 着手の最初の 1 週間分としては以下を推奨する。
+M6 完了後の backlog としては以下を推奨する。
 
-1. multilingual README と package description に Korean usage sample を追加する
-2. `MultilingualG2POptions` の Korean option を public docs に反映する
-3. release note / known limitations に Hangul-first と Hanja 未対応を明記する
-4. package metadata と notice を Korean package 含めて揃える
-5. benchmark / mixed-script sample の説明を docs に寄せる
+1. 숫자 / 英字 / Hanja の正規化境界を `v1.1` として切り出す
+2. `IKoreanMorphAnalyzer` の optional interface を設計し、compound boundary の精度改善余地を作る
+3. `ToIPA` と phone inventory 文書化を追加して後段 TTS 連携を強める
+4. benchmark seed を継続的に拡張し、`official_gold` を国立国語院辞書ベースで厚くする
+5. release note と package publishing 手順を CI / release workflow に接続する

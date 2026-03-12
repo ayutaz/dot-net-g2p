@@ -3,13 +3,16 @@
   "displayName": "DotNetG2P.Korean",
   "version": "1.3.0",
   "unity": "2021.2",
-  "description": "Korean Grapheme-to-Phoneme (G2P) library for .NET and Unity. Hangul-first scaffold with Jamo decomposition, batch APIs, and a rule-engine-ready pronunciation model.",
+  "description": "Korean Grapheme-to-Phoneme (G2P) library for .NET and Unity. Hangul-first rule-based conversion with standard pronunciation rules, exception dictionary support, lightweight normalization, and Jamo decomposition.",
   "keywords": [
     "g2p",
     "korean",
     "hangul",
     "tts",
-    "jamo"
+    "phoneme",
+    "jamo",
+    "normalization",
+    "rule-based"
   ],
   "license": "Apache-2.0",
   "dependencies": {},

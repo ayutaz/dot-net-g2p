@@ -1,7 +1,8 @@
 # Third-Party Notices
 
 DotNetG2P.Multilingual includes software and data from the following projects
-(via its dependencies on DotNetG2P.Core, DotNetG2P.MeCab, DotNetG2P.English, and DotNetG2P.Chinese):
+via its dependencies on DotNetG2P.Core, DotNetG2P.MeCab, DotNetG2P.English, and DotNetG2P.Chinese.
+Its Korean, Spanish, French, and Portuguese dependencies do not bundle third-party code or datasets.
 
 ---
 
