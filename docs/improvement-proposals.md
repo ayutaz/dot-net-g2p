@@ -3,6 +3,7 @@
 > 調査日: 2026-03-13
 > 対象: main ブランチ (ab98163)
 > 調査方法: 9チームによるコードベース並列調査
+> レビュー反映: 2026-03-13（15視点レビューで現行リポジトリとの整合性を補正）
 
 ---
 
@@ -25,50 +26,51 @@
 
 ## 1. エグゼクティブサマリー
 
-DotNetG2P は6言語対応・6,700+テスト・高度なパフォーマンス最適化済みの成熟したプロジェクトであり、C#/.NETエコシステムにおいて**唯一の純C#多言語G2P実装**です。
+DotNetG2P は7言語対応・6,700+テスト・高度なパフォーマンス最適化済みの成熟したプロジェクトであり、.NET/Unity 向けでは**稀少な純C#多言語G2P実装**です。
 
 以下の8領域で改善の機会を特定しました。
 
 | 領域 | 主要課題 | 推定効果 |
 |------|---------|---------|
-| **コード品質** | 共通インターフェース欠如、バッチAPI重複 | 保守性30%向上、新言語追加コスト削減 |
+| **コード品質** | 共通抽象の粒度未整理、バッチAPI重複 | 保守性向上、テスト共通化 |
 | **テスト・CI/CD** | バッチAPIテスト不足、マトリックスビルド未実装 | 品質保証・互換性確保 |
-| **パフォーマンス** | FrozenDictionary/SearchValues未活用、BenchmarkDotNet未導入 | スループット30-45%向上 |
+| **パフォーマンス** | FrozenDictionary/SearchValues未活用、BenchmarkDotNet未導入 | 定量的な最適化判断が可能 |
 | **機能拡張** | SSML/ストリーミング/WebAssembly | 市場競争力大幅向上 |
-| **新言語** | 12言語候補を調査、Tier 1-4に分類 | 最大14言語対応 |
-| **パッケージ** | NativeAOT未対応、Dependabot未導入 | プロダクション対応強化 |
-| **ドキュメント・DX** | NuGet README不足、DocFX/CONTRIBUTING.md欠如 | 新規ユーザー獲得・貢献促進 |
-| **競合対策** | espeak-ng(GPL)との差別化、ユースケース拡大 | 市場認知度向上 |
+| **新言語** | 11言語候補を調査、Tier 1-4に分類 | 最大14言語対応 |
+| **パッケージ** | AOT/trim適合性未検証、Dependabot未導入 | 配布互換性・運用強化 |
+| **ドキュメント・DX** | パッケージ別README不足、DocFX/CONTRIBUTING.md欠如 | 新規ユーザー獲得・貢献促進 |
+| **競合対策** | 比較表の根拠整備、ユースケース訴求 | 市場認知度向上 |
 
 ---
 
 ## 2. 競合分析・市場ポジション
 
+> 注: 外部ツール比較は 2026-03-13 時点の公開 README / 公式ドキュメントベースの概況。細部は継続確認が必要。
+
 ### 2.1 競合G2Pライブラリ比較
 
 | 項目 | espeak-ng | Phonemizer | Gruut | DeepPhonemizer | **DotNetG2P** |
 |------|-----------|-----------|-------|-----------------|-----------|
-| 言語数 | 100+ | 100+ | 複数 | 多言語 | **6言語（深い実装）** |
-| ライセンス | GPL 3.0 | GPL 3.0 | MIT | 複合 | **Apache-2.0** |
+| 言語数 | 100+ | バックエンド依存 | 言語パッケージ依存 | モデル依存 | **7言語（深い実装）** |
+| ライセンス | GPL 3.0 | GPL 3.0 | MIT | Apache-2.0 | **Apache-2.0** |
 | 実装言語 | C | Python | Python | Python | **C# (.NET Standard 2.1)** |
-| 外部依存 | あり | あり | あり | PyTorch/ONNX | **なし** |
+| 実行依存 | ネイティブ実装 | バックエンド依存 | Python依存 | PyTorch/ONNX | **.NETのみ（日本語は辞書必要）** |
 | Unity対応 | ✗ | ✗ | ✗ | ✗ | **✅ (UPM)** |
-| 日本語形態素解析 | ✗ | ✗ | ✗ | ✗ | **✅ (独自MeCab)** |
-| 出力形式 | IPAのみ | IPAのみ | IPAのみ | IPAのみ | **IPA/X-SAMPA/ピンイン/注音/VOICEVOX等** |
+| 出力形式 | IPA/phoneme symbols | backend依存 | phoneme/SSML | phoneme sequence | **IPA/X-SAMPA/ピンイン/注音/VOICEVOX等** |
 | 低遅延・オフライン | ✅ | △ | △ | ✗(GPU推奨) | **✅** |
-| 商用フレンドリー | ✗(GPL) | ✗(GPL) | ✅(MIT) | △ | **✅(Apache-2.0)** |
+| 商用フレンドリー | ✗(GPL) | ✗(GPL) | ✅(MIT) | ✅ | **✅(Apache-2.0)** |
 
 ### 2.2 DotNetG2Pの独自価値
 
-1. **C#/.NETエコシステム唯一の純C#多言語G2P** — Python/ネイティブバイナリ不要
+1. **C#/.NETエコシステムでは稀少な純C#多言語G2P** — Python/ネイティブバイナリ不要
 2. **Unity UPMネイティブ対応** — ゲーム開発者の決定的な差別化ポイント
-3. **Apache-2.0で完全に商用自由** — GPLの制約から解放
+3. **Apache-2.0で商用利用しやすい** — GPLの制約を回避しやすい
 4. **多様な出力形式** — IPA/X-SAMPA/ピンイン/注音/VOICEVOX/HTSラベル等
 5. **深い言語学的実装** — 日本語NJDパイプライン（OpenJTalk互換）、独自MeCabエンジン
 
 ### 2.3 「広さ」vs「深さ」の差別化
 
-espeak-ngは100+言語をカバーするが各言語の実装深度は浅い。DotNetG2Pは6言語に絞り込みつつ、各言語で深い言語学的処理（形態素解析、声調変調、異音規則、方言対応等）を実現。
+競合を一律に「浅い」と断定するより、DotNetG2P は 7 言語に絞り込みつつ各言語で深い言語学的処理（形態素解析、声調変調、異音規則、方言対応等）を提供する、という打ち出しが適切です。
 
 ---
 
@@ -109,34 +111,31 @@ espeak-ngは100+言語をカバーするが各言語の実装深度は浅い。D
 
 ## 4. コード品質・アーキテクチャ
 
-### 4.1 共通インターフェースの導入（優先度: 高）
+### 4.1 Capability-Based 抽象化（優先度: 中）
 
-**現状の問題**: 各言語エンジンが独立した `IDisposable` 実装で、ポリモーフィズムが活用できない。
+**現状の問題**: 各言語エンジンは独立実装だが、API表現が言語ごとに異なる。特に中国語は `ToPinyin()`/`ToZhuyin()` が主APIであり、単純な `ToPhonemes()` への統一は不自然。
 
-**提案**: `IG2PEngine` 基本インターフェースと `IIpaG2PEngine`/`IXSampaG2PEngine` 拡張インターフェースの導入。
+**提案**: 公開APIを無理に一本化せず、内部利用・テスト共通化のために capability 単位の抽象を導入する。
 
 ```csharp
-public interface IG2PEngine : IDisposable
+public interface ITextBatchProcessor<TResult> : IDisposable
 {
-    string ToPhonemes(string text);
-    IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts);
-    ThreadSafetyLevel ThreadSafety { get; }
+    TResult Convert(string text);
+    IReadOnlyList<TResult> ConvertBatch(IReadOnlyList<string> texts);
 }
 
-public interface IIpaG2PEngine : IG2PEngine
+public interface IIpaConvertible
 {
     string ToIPA(string text);
     IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts);
 }
-
-public enum ThreadSafetyLevel { None = 0, ReadOnly = 1, Synchronized = 2 }
 ```
 
-**効果**: MultilingualG2PEngine簡潔化、言語追加時の修正不要、テスト時のモック化容易。
+**効果**: テストヘルパー共通化、内部アダプタ導入、Multilingual 側の整理が可能。中国語の `ToPinyin()` のような言語固有APIも維持できる。
 
 ### 4.2 バッチAPI実装の共通化（優先度: 高）
 
-**現状の問題**: 9言語 x 平均4.5バッチメソッド = 40+個の同一パターンコードが重複。
+**現状の問題**: 8エンジンで複数のバッチメソッドがほぼ同じループ実装になっている。
 
 **提案**: 静的ヘルパーメソッドに集約。
 
@@ -159,38 +158,38 @@ public static class G2PEngineBatchExtensions
 
 ### 4.3 オプションクラスの基底クラス導入（優先度: 中）
 
-**現状の問題**: 共通プロパティ（`IncludeStress`, `Separator`, `EnableTextNormalization`）の扱いが言語ごとに異なる。
+**現状の問題**: `EnableTextNormalization` / `EnableNormalization` のような命名揺れはあるが、各言語で必要なオプション集合はかなり異なる。
 
-**提案**: `BaseG2POptions` 抽象基底クラスで共通プロパティを統一。
+**提案**: `BaseG2POptions` の継承導入よりも、命名規約・XML Doc・README 上の説明を揃える方が低コストで効果的。共通化する場合も継承ではなくガイドライン中心で進める。
 
-### 4.4 ThreadSafetyLevel の明示化（優先度: 中）
+### 4.4 スレッドセーフティ記述の一元化（優先度: 低）
 
-**現状の問題**: スペイン語・フランス語・ポルトガル語エンジンのスレッドセーフティがドキュメント化されていない。
+**現状の問題**: スレッドセーフティは README で説明済みだが、README / XML Doc / テスト観点の対応表が分散している。
 
-**提案**: 各エンジンに `ThreadSafetyLevel` プロパティを追加し、MultilingualG2PEngine で自動ロック判定に活用。
+**提案**: まず README と XML Doc を同期し、必要なら内部メタデータで補う。現時点では公開APIに `ThreadSafetyLevel` を追加する優先度は低い。
 
 ### 4.5 Multilingual パッケージの依存最適化（優先度: 低）
 
-**現状の問題**: Multilingual をインストールすると全言語パッケージが強制インストール。
+**現状の問題**: Multilingual をインストールすると全言語パッケージが強制インストールされる。
 
-**提案**: `DotNetG2P.Multilingual.Core`（LanguageDetector/TextSegmenter のみ）を分離し、言語パッケージはオプション依存に。
+**提案**: `DotNetG2P.Multilingual.Core` 分離は将来的な選択肢だが、現状は `TextSegmenter` が中国語辞書共有などに依存しており設計変更コストが大きい。PoC で依存境界を確認してから着手する。
 
 ---
 
 ## 5. テスト・CI/CD・品質保証
 
-### 5.1 バッチAPIテストの整備（優先度: 高）
+### 5.1 バッチAPIテストの棚卸しと共通化（優先度: 高）
 
 | 言語 | 全テスト数 | バッチテスト | 状況 |
 |------|-----------|-----------|------|
-| 英語 | 511+ | 40 | 完備 |
-| 中国語 | 936 | ~23 | 不足 |
-| スペイン語 | 227 | <5 | 不足 |
-| フランス語 | 719 | <5 | 不足 |
-| ポルトガル語 | 1,310 | <5 | 不足 |
-| Multilingual | 412 | 0 | 未実装 |
+| 英語 | 511+ | 充実 | 共通化の基準として適切 |
+| 中国語 | 936 | 一定数あり | 例外伝播・大規模入力を補強 |
+| スペイン語 | 227 | 基本ケースあり | 境界値を補強 |
+| フランス語 | 719 | 基本ケースあり | 共通ケース横展開が有効 |
+| ポルトガル語 | 1,310 | 基本ケースあり | 共通ケース横展開が有効 |
+| Multilingual | 443 | 基本ケースあり | 混在境界・並列観点を補強 |
 
-**提案**: 共通バッチテストスイート `BatchApiCommonTests<TEngine>` でnull/空配列/大規模配列/例外伝播を統一テスト。
+**提案**: 「未実装」前提ではなく、既存テストを棚卸ししたうえで `null` / 空配列 / 大規模配列 / 例外伝播 / Dispose後動作 を `BatchApiCommonTests` に共通化する。
 
 ### 5.2 CI/CDマトリックスビルド（優先度: 高）
 
@@ -215,9 +214,11 @@ strategy:
 - `DictionaryPathResolver` ユーティリティクラスで辞書パス検出ロジック統一
 - `BaseLanguageEngineFixture<TEngine>` 基底クラスでFixtureパターン統一
 
-### 5.5 CIキャッシング強化（優先度: 中）
+### 5.5 CIキャッシング見直し（優先度: 低）
 
-`.build/` と辞書ファイルを `actions/cache@v4` でキャッシュ。推定 1-2 分/実行の短縮。
+**現状**: NuGet パッケージと naist-jdic 辞書は既に `actions/cache@v4` でキャッシュされている。
+
+**提案**: `.build/` キャッシュは効果測定後に判断する。キャッシュサイズ増加や古い生成物混入のリスクがあるため、先に CI 実行時間の内訳を可視化する。
 
 ### 5.6 テスト結果レポート（優先度: 中）
 
@@ -246,7 +247,7 @@ strategy:
 
 ### 6.1 BenchmarkDotNet 導入（優先度: 高）
 
-**現状の問題**: パフォーマンステストは Stopwatch ベースで統計的な分析ができない。
+**現状の問題**: Stopwatch ベースの性能テストは存在するが、統計的な比較やランタイム差分の可視化には弱い。
 
 **提案**: `tests/DotNetG2P.Benchmarks/` 新設。CI/CD統合でPRごとのリグレッション検出。
 
@@ -283,36 +284,32 @@ strategy:
 | **Dictionary容量プリアロケート** | 全辞書初期化 | 初期化時のリハッシュ削減 | 全ターゲット |
 | **SIMD (Vector128/256)** | UTF-8バイト列スキャン、フォネームマッピング | 処理高速化 | net8.0+ |
 
-### 6.3 バッチAPI の ArrayPool 活用（優先度: 高）
+### 6.3 公開APIに影響しない内部バッファ再利用（優先度: 中）
 
-`ArrayPool<string>.Shared.Rent()` で GC Gen0 圧力 **20-30% 削減**。
+`ArrayPool<string>` をそのままバッチAPIの戻り値に使うのは所有権管理が難しい。代わりに、`List<T>(capacity)`、内部一時バッファ、`ArrayPool<char>` / `ValueStringBuilder` のような hot path に限定して再利用する。
 
 ### 6.4 Parallel.For バッチ処理（優先度: 中）
 
-100件以上のバッチ時に `Parallel.For` 使用。スレッドセーフなエンジンで **2-4倍高速化**。
+100件以上のバッチ時に opt-in で `Parallel.For` を検討する。順序維持・例外伝播・日本語セグメントの直列化コストを考慮し、既定動作は逐次処理のままが安全。
 
 ### 6.5 推定総合効果
 
-| フェーズ | 期間 | スループット向上 | メモリ削減 |
-|---------|------|----------------|----------|
-| Phase 1 | 1-2ヶ月 | +15-20% | -20-30% |
-| Phase 2 | 3-6ヶ月 | +10-15%（累積 25-35%） | -10-15% |
-| Phase 3 | 6-12ヶ月 | +5-10%（累積 30-45%） | -5-10% |
+現時点で「累積 30-45% 向上」のような数値を置くのは推測が強い。まず BenchmarkDotNet を導入し、辞書初期化・正規化・バッチ処理・Multilingual 分岐の4領域でボトルネックを定量化したうえで、効果予測を更新する。
 
 ---
 
 ## 7. 機能拡張
 
-### 7.1 SSMLサポート（優先度: 最高、推定工数: 60h）
+### 7.1 SSMLライトMVP（優先度: 高、推定工数: 40-60h）
 
 **新パッケージ**: `DotNetG2P.Ssml`
 
-W3C SSML 1.1 準拠のXMLパーサを実装し、既存G2Pパイプラインに統合。
+W3C SSML 1.1 全面対応を最初から目指すのではなく、G2Pレイヤーで意味のある要素に絞ったライトMVPを実装する。
 
 **対応レベル**:
-- Level 1（基本）: `<phoneme>`, `<say-as>`, `<sub>` — 発音上書き、読み方指定、置換
-- Level 2（拡張）: `<break>`, `<prosody>`, `<emphasis>` — 間、韻律、強調
-- Level 3（Phase 2）: `<voice>`, `<audio>`, `<mark>` — 話者切替、音声挿入
+- Level 1（MVP）: `<phoneme>`, `<sub>`, `<lang>`, `<break>` — 発音上書き、置換、言語切替、区切り
+- Level 2（拡張）: `<say-as>`, `<prosody>`, `<emphasis>` — 読み方指定、韻律、強調
+- Out of scope（初期）: `<voice>`, `<audio>`, `<mark>` — G2P単体では責務が広すぎる
 
 **XMLパーサ選択**: System.Xml.Linq（netstandard 2.1対応、軽量、依存なし）
 
@@ -382,7 +379,7 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 
 ### 8.1 言語候補一覧（Tier分類）
 
-12言語を実装難易度・工数・市場需要・既存アーキテクチャとの互換性で4段階に分類。
+11言語を実装難易度・工数・市場需要・既存アーキテクチャとの互換性で4段階に分類。
 
 | Tier | 言語 | 難易度 | 工数（週） | ML必須 | 既存互換 | TTS需要 |
 |------|------|--------|-----------|--------|---------|---------|
@@ -392,7 +389,6 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 | **2** | ベトナム語 | 中-高 | 4-5 | ✗ | ◎ | 中-高 |
 | **2** | イタリア語 | 中 | 3-4 | ✗ | ◎ | 中 |
 | **2** | ポーランド語 | 中-高 | 4-5 | ✗ | ◎ | 中 |
-| **2** | 韓国語 | 高 | 5-6 | ✗ | ◎ | 中-高 |
 | **3** | ヒンディー語 | 高 | 5-6 | ▲ | ◎ | 高 |
 | **3** | ロシア語 | 高 | 5-7 | ◎ | ▲ | 高 |
 | **4** | タイ語 | 高 | 6-8 | ◎ | ✗ | 中 |
@@ -441,10 +437,7 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 - **利点**: 音韻規則は複雑だが明確、正書法の信頼性高い
 - **参照**: TransFon論文（MDPI）
 
-#### 韓国語 (Korean)
-- **音素体系**: 子音19種（激音・帯気・双音対立）、母音10種
-- **課題**: ハングル分解、連音化・鼻音化・流音化規則
-- **参照**: g2pK（GitHub Stars 3.4k+）
+**補足**: 韓国語は新規追加候補ではなく既存実装の強化対象として扱うのが適切。追加投資先はベンチマーク拡充・外部コーパス評価・例外辞書拡張。
 
 ### 8.4 Tier 3-4: ML依存または困難
 
@@ -460,15 +453,14 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 
 ## 9. パッケージ・エコシステム・セキュリティ
 
-### 9.1 NativeAOT対応（優先度: 中、推定工数: 3-4日）
+### 9.1 AOT / Trim 互換性検証（優先度: 中、推定工数: 3-5日）
 
-**現状**: 20ファイルで `Assembly.GetManifestResourceStream()` によるリフレクション使用。NativeAOT非対応。
+**現状**: ソース配下で 8 箇所の `Assembly.GetManifestResourceStream()` による埋め込みリソース読み込みがある。これだけで NativeAOT 非対応とは断定できないが、AOT / trimming の実検証は未実施。
 
 **対策**:
-- `DynamicallyAccessedMembers` 属性の適用
-- 埋め込みリソース読み込みのAoT互換化（`ModuleInitializer` or 事前バイナリ化）
-- Trimming用の `.rd.xml` 設定
-- `PublishAot=true` / `PublishTrimmed=true`
+- `PublishAot=true` / `PublishTrimmed=true` の smoke test を追加
+- 問題再現時のみ属性追加やリソース読込方式の変更を行う
+- 実測結果を README / CI に反映し、「対応済み」ではなく「検証済み」状態を作る
 
 ### 9.2 Source Generator活用（優先度: 低、推定工数: 1-2日）
 
@@ -505,11 +497,11 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 
 ## 10. ドキュメント・DX
 
-### 10.1 NuGet PackageReadmeFile 設定（優先度: 最高）
+### 10.1 パッケージ別README拡充（優先度: 高）
 
-**現状**: 11パッケージ中9パッケージで PackageReadmeFile 未設定。
+**現状**: `PackageReadmeFile` 自体は `Directory.Build.props` で既に設定済み。Korean / Multilingual は専用 README を持ち、それ以外はリポジトリ直下 README をパッケージREADMEとして流用している。
 
-**提案**: 各パッケージに 50-80 行の README.md + csproj に `<PackageReadmeFile>` 追加。
+**提案**: 「未設定」対応ではなく、外部向け価値が高いパッケージから専用 README を追加する。優先候補は `DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.English`, `DotNetG2P.Chinese`。
 
 ### 10.2 APIドキュメント生成（優先度: 高）
 
@@ -526,7 +518,9 @@ Prerequisites / Setup / Code Standards / Testing / 新言語追加手順 を含�
 
 ### 10.4 言語別サンプルコード拡充（優先度: 高）
 
-**現状**: `samples/DotNetG2P.Console/` は日本語のみ。各言語の基本使用例 + Multilingual 混在テキスト例を追加。
+**現状**: ルート README には各言語の利用例があるが、実行可能な `samples/DotNetG2P.Console/` は日本語中心。
+
+**提案**: 各言語の基本使用例 + Multilingual 混在テキスト例をサンプルプロジェクトとして追加し、README の断片コードだけで終わらせない。
 
 ### 10.5 ARCHITECTURE.md / MIGRATION.md 新規作成（優先度: 中）
 
@@ -545,14 +539,14 @@ Prerequisites / Setup / Code Standards / Testing / 新言語追加手順 を含�
 
 | # | 項目 | 領域 | 工数 | 効果 |
 |---|------|------|------|------|
-| 1 | NuGet PackageReadmeFile + 言語別README | DX | 2日 | NuGet発見性向上 |
+| 1 | パッケージ別README拡充 | DX | 2日 | NuGet発見性向上 |
 | 2 | CONTRIBUTING.md / MIGRATION.md | DX | 2日 | 貢献促進 |
 | 3 | CI マトリックスビルド | CI/CD | 1日 | 互換性確保 |
 | 4 | コードカバレッジ統合 | CI/CD | 1日 | 品質可視化 |
 | 5 | Dependabot + Deterministic Build | セキュリティ | 1日 | サプライチェーン安全性 |
 | 6 | BenchmarkDotNet 導入 | パフォーマンス | 1-2週 | ボトルネック可視化 |
-| 7 | `IG2PEngine` インターフェース導入 | アーキテクチャ | 2週 | 保守性向上 |
-| 8 | バッチAPI共通化 + テスト整備 | アーキテクチャ | 1-2週 | コード85%削減 |
+| 7 | Capability-based internal adapter 導入 | アーキテクチャ | 1-2週 | テスト/内部整理 |
+| 8 | バッチAPI共通化 + テスト棚卸し | アーキテクチャ | 1-2週 | コード重複削減 |
 
 ### Phase 2: 短期（2-4ヶ月）— 機能拡張 + 新言語Tier 1
 
@@ -560,7 +554,7 @@ Prerequisites / Setup / Code Standards / Testing / 新言語追加手順 を含�
 |---|------|------|------|------|
 | 9 | インドネシア語 G2P | 新言語 | 2-3週 | 最高ROI新言語 |
 | 10 | トルコ語 G2P | 新言語 | 3-4週 | 規則性高い新言語 |
-| 11 | SSML サポート MVP | 機能拡張 | 2-3週 | TTS統合基盤 |
+| 11 | SSML ライトMVP | 機能拡張 | 2-3週 | TTS統合基盤 |
 | 12 | マルチターゲット + FrozenDictionary | パフォーマンス | 2-3週 | 10-20%高速化 |
 | 13 | DocFX + XMLDoc充実化 | DX | 1-2週 | API使いやすさ |
 
@@ -571,15 +565,15 @@ Prerequisites / Setup / Code Standards / Testing / 新言語追加手順 を含�
 | 14 | ドイツ語 G2P | 新言語 | 3-4週 | 欧州主要言語 |
 | 15 | ストリーミングAPI | 機能拡張 | 2-3週 | リアルタイム対応 |
 | 16 | ベトナム語 G2P | 新言語 | 4-5週 | アジア市場拡大 |
-| 17 | NativeAOT対応 | 品質 | 3-4日 | Unity/モバイル |
+| 17 | AOT / Trim 互換性検証 | 品質 | 3-5日 | 配布互換性可視化 |
 | 18 | Unity Editor拡張 | Unity | 4-5週 | ゲーム市場 |
 
 ### Phase 4: 長期（8-12ヶ月）— 大規模展開
 
 | # | 項目 | 領域 | 工数 | 効果 |
 |---|------|------|------|------|
-| 19 | イタリア語 + ポーランド語 G2P | 新言語 | 7-9週 | 12言語対応 |
-| 20 | 韓国語 G2P（強化/新規） | 新言語 | 5-6週 | アジア主要言語 |
+| 19 | イタリア語 + ポーランド語 G2P | 新言語 | 7-9週 | 13言語対応 |
+| 20 | 韓国語評価基盤 / 例外辞書強化 | 既存言語強化 | 3-4週 | 既存品質向上 |
 | 21 | WebAssembly対応 | 機能拡張 | 3-4週 | Web市場 |
 | 22 | 音韻規則エンジン汎用化 | アーキテクチャ | 4-5週 | 新言語追加容易化 |
 | 23 | ロシア語 G2P（ML統合） | 新言語 | 5-7週 | 東欧市場 |
@@ -589,9 +583,9 @@ Prerequisites / Setup / Code Standards / Testing / 新言語追加手順 を含�
 
 | フェーズ完了 | 対応言語数 | 主な新機能 |
 |------------|-----------|-----------|
-| Phase 1 | 6言語（現状維持） | 品質基盤・CI/CD強化 |
-| Phase 2 | 8言語 | SSML、マルチターゲット |
-| Phase 3 | 10言語 | ストリーミング、NativeAOT |
+| Phase 1 | 7言語（現状維持） | 品質基盤・CI/CD強化 |
+| Phase 2 | 9言語 | SSML、マルチターゲット |
+| Phase 3 | 11言語 | ストリーミング、AOT/trim検証 |
 | Phase 4 | 14言語 | WebAssembly、gRPC |
 
 ---
@@ -615,8 +609,8 @@ Prerequisites / Setup / Code Standards / Testing / 新言語追加手順 を含�
 | ツール | 言語 | ライセンス | 用途 |
 |--------|------|-----------|------|
 | espeak-ng | C | GPL 3.0 | 100+言語対応の定番 |
-| Phonemizer | Python | GPL 3.0 | espeak-ngラッパー |
-| Gruut | Python | MIT | lexicon + CRFベース |
+| Phonemizer | Python | GPL 3.0 | 複数バックエンド phonemizer |
+| Gruut | Python | MIT | tokenizer + phonemizer + SSML |
 | DeepPhonemizer | Python | Apache-2.0 | TransformerニューラルG2P |
 | piper-phonemize | C++ | MIT | Piper TTS用 |
 | Epitran | Python | MIT | 多言語IPAマッピング |
