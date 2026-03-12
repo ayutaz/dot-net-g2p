@@ -40,3 +40,15 @@ Notes:
   - `korean-benchmark-dataset-summary.tsv`
   - `korean-benchmark-rule-summary.tsv`
   - `korean-benchmark-mismatches.tsv`
+
+External corpus evaluation:
+
+- `external_corpus.template.tsv` shows the schema expected by `KoreanExternalBenchmarkTests`.
+- Configure external benchmark files with `DOTNETG2P_KOREAN_EXTERNAL_CORPUS_PATHS`.
+  - Use `Path.PathSeparator` delimited paths. On Windows this means `;`.
+- Optional gates:
+  - `DOTNETG2P_KOREAN_EXTERNAL_MIN_CASES`
+  - `DOTNETG2P_KOREAN_EXTERNAL_ACCURACY_THRESHOLD`
+- Recommended official source pipelines:
+  - `한국어기초사전 Open API` pronunciation fields
+  - `표준국어대사전` or `우리말샘` entries curated into the same TSV schema

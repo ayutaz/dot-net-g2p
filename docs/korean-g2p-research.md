@@ -26,9 +26,11 @@
 - `tests/TestData/KoreanG2P/` に `g2pk_parity`, `official_gold`, `weak_rules` の 3 系統 benchmark seed を配置済み
 - `src/DotNetG2P.Korean` に Hangul-first の pure C# Korean core を追加済み
 - `tests/DotNetG2P.Tests/KoreanG2P/Benchmarking/` に benchmark loader / evaluator / report writer を追加済み
+- benchmark loader は repo 外の TSV corpus も読めるようになり、`DOTNETG2P_KOREAN_EXTERNAL_CORPUS_PATHS` 経由で large corpus gate を掛けられる
 - `src/DotNetG2P.Korean/Data/` に exception dictionary を追加済み
 - `src/DotNetG2P.Korean/Normalization/` に lightweight normalizer を追加済み
 - `src/DotNetG2P.Multilingual` に Korean routing を追加済み
+- `tests/DotNetG2P.Tests/KoreanG2P/KoreanPerformanceTests.cs` と `tests/DotNetG2P.Tests/Multilingual/MultilingualKoreanPerformanceTests.cs` を追加し、GC / allocation / memory growth を数値で監視している
 - M2 の rule engine では以下を実装済み
   - 終声中和
   - 連音
@@ -90,8 +92,9 @@
 - `MultilingualG2POptions` に `KoreanOptions` を追加
 - `MultilingualSharedFixture` に standalone `KoreanG2PEngine` を追加し、multilingual segment 出力との一致を検証
 - `tests/DotNetG2P.Tests/Multilingual/MultilingualKoreanTests.cs` を追加
-- multilingual 全体回帰は `dotnet test ... --filter Multilingual` で `432 passed`
-- Korean 関連全体は `dotnet test ... --filter Korean` で `163 passed`
+- `tests/DotNetG2P.Tests/Multilingual/MultilingualKoreanPerformanceTests.cs` を追加し、Korean mixed-language 文の throughput / memory growth を監視
+- multilingual 全体回帰は `dotnet test ... --filter Multilingual` で `443 passed`
+- Korean 関連全体は `dotnet test ... --filter Korean` で `178 passed, 1 skipped`
 
 ### M6 で追加した package / docs / release readiness
 
@@ -102,12 +105,32 @@
 - root `README.md`, `README_EN.md`, `README_ZH.md` に `DotNetG2P.Korean` と `MultilingualG2POptions.KoreanOptions` の usage sample を追加
 - `tests/DotNetG2P.Tests/KoreanG2P/KoreanReleaseReadinessTests.cs` を追加し、README / metadata / notice / multilingual Korean dependency を CI で監視
 
+### M6 後に追加した external corpus / GC hardening
+
+- `KoreanBenchmarkDataLoader` を `File.ReadLines` ベースに寄せ、large TSV を streaming 寄りに読めるようにした
+- `tests/TestData/KoreanG2P/external_corpus.template.tsv` を追加し、seed benchmark と同じ 5 列 schema を external corpus にも使えるようにした
+- `KoreanExternalBenchmarkTests` を追加し、以下の env var で external exact-match gate を掛けられるようにした
+  - `DOTNETG2P_KOREAN_EXTERNAL_CORPUS_PATHS`
+  - `DOTNETG2P_KOREAN_EXTERNAL_MIN_CASES`
+  - `DOTNETG2P_KOREAN_EXTERNAL_ACCURACY_THRESHOLD`
+- `KoreanPerformanceTests` では Korean 単体の throughput / memory growth / allocation / GC collection count を監視する
+- `MultilingualKoreanPerformanceTests` では Korean mixed-language 文の throughput / memory growth を監視する
+- 2026-03-12 の実測例
+  - Korean `ToPhonemes 10000x`: `112ms`
+  - Korean allocation profile: `45.93MB`, `gen0=2`, `gen1=0`, `gen2=0`
+  - Multilingual mixed `1000x`: `86ms`
+  - Multilingual mixed memory growth: `0.24MB`
+- 擬似 external corpus として `official_gold.tsv` を流した smoke test では `21/21`, `100.00%` を確認済み
+
 ### 残る制約
 
 - morphology なしのため、compound/phrase boundary 依存の `ㄴ` 添音は rule 一般化せず lexical exception 優先で運用している
 - `ㄼ` 系 lexical variation は `밟*`, `넓죽하다` などを辞書で回収しているが、一般規則化はまだ限定的
 - `의` 변이 は `Standard` / `Colloquial` の二値 option に固定したが、`나의` 以外を morphology なしでどこまで一般化するかは今後の課題
 - 숫자, 英字, Hanja, descriptive mode は未着手
+- repo には large official corpus 自体は bundle していない
+  - ライセンス、API key、配布サイズの制約があるため
+  - large corpus の品質保証は `KoreanExternalBenchmarkTests` に corpus を接続した CI / ローカル実行で担保する前提
 
 ### 次に見るべきもの
 

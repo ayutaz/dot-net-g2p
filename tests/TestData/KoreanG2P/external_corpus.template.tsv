@@ -1,0 +1,3 @@
+input	expected	source	rule_tag	notes
+좋다	조타	NIKL_or_krdict	h-aspiration	Replace with official or curated corpus rows.
+담임	다밈	NIKL_or_krdict	nasalization	Keep the same 5-column schema for external evaluation.

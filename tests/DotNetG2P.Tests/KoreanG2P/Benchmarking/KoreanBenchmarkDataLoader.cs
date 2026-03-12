@@ -46,35 +46,61 @@ namespace DotNetG2P.Tests.KoreanG2P.Benchmarking
             return cases;
         }
 
+        public static IReadOnlyList<KoreanBenchmarkCase> LoadAllCases(IEnumerable<string> externalPaths)
+        {
+            if (externalPaths == null) throw new ArgumentNullException(nameof(externalPaths));
+
+            var cases = new List<KoreanBenchmarkCase>();
+            foreach (var fileName in s_datasetFiles)
+                cases.AddRange(LoadCases(fileName));
+
+            foreach (var externalPath in externalPaths)
+                cases.AddRange(LoadCasesFromPath(externalPath));
+
+            return cases;
+        }
+
         public static IReadOnlyList<KoreanBenchmarkCase> LoadCases(string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName))
                 throw new ArgumentException("Benchmark file name is required.", nameof(fileName));
 
             var path = KoreanBenchmarkPaths.ResolveDataPath(fileName);
-            if (!File.Exists(path))
-                throw new FileNotFoundException($"Benchmark TSV not found: {path}", path);
+            return LoadCasesFromPath(path);
+        }
 
-            var lines = File.ReadAllLines(path);
-            if (lines.Length == 0)
-                throw new InvalidDataException($"Benchmark TSV is empty: {path}");
+        public static IReadOnlyList<KoreanBenchmarkCase> LoadCasesFromPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                throw new ArgumentException("Benchmark path is required.", nameof(path));
 
-            if (!string.Equals(lines[0], ExpectedHeader, StringComparison.Ordinal))
-                throw new InvalidDataException($"Unexpected benchmark header in {path}: {lines[0]}");
+            var fullPath = ResolveExistingPath(path);
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException($"Benchmark TSV not found: {fullPath}", fullPath);
 
             var cases = new List<KoreanBenchmarkCase>();
-            for (var lineIndex = 1; lineIndex < lines.Length; lineIndex++)
+            using var iterator = File.ReadLines(fullPath).GetEnumerator();
+            if (!iterator.MoveNext())
+                throw new InvalidDataException($"Benchmark TSV is empty: {fullPath}");
+
+            if (!string.Equals(iterator.Current, ExpectedHeader, StringComparison.Ordinal))
+                throw new InvalidDataException($"Unexpected benchmark header in {fullPath}: {iterator.Current}");
+
+            var datasetFileName = Path.GetFileName(fullPath);
+            var lineIndex = 1;
+            while (iterator.MoveNext())
             {
-                var line = lines[lineIndex];
+                lineIndex++;
+                var line = iterator.Current;
                 if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#", StringComparison.Ordinal))
                     continue;
 
                 var parts = line.Split('\t');
                 if (parts.Length != 5)
-                    throw new InvalidDataException($"Expected 5 columns in {path} line {lineIndex + 1}, but found {parts.Length}: {line}");
+                    throw new InvalidDataException($"Expected 5 columns in {fullPath} line {lineIndex}, but found {parts.Length}: {line}");
 
                 cases.Add(new KoreanBenchmarkCase(
-                    fileName,
+                    datasetFileName,
                     parts[0],
                     parts[1],
                     parts[2],
@@ -83,6 +109,22 @@ namespace DotNetG2P.Tests.KoreanG2P.Benchmarking
             }
 
             return cases;
+        }
+
+        private static string ResolveExistingPath(string path)
+        {
+            var candidate = Path.GetFullPath(path);
+            if (File.Exists(candidate))
+                return candidate;
+
+            if (!Path.IsPathRooted(path))
+            {
+                var repoRelativeCandidate = Path.GetFullPath(Path.Combine(KoreanBenchmarkPaths.RepoRoot, path));
+                if (File.Exists(repoRelativeCandidate))
+                    return repoRelativeCandidate;
+            }
+
+            return candidate;
         }
     }
 }

@@ -80,12 +80,20 @@
 - root `README.md`, `README_EN.md`, `README_ZH.md` に Korean package と `MultilingualG2POptions.KoreanOptions` の usage sample を追加した
 - `tests/DotNetG2P.Tests/KoreanG2P/KoreanReleaseReadinessTests.cs` を追加し、README / package metadata / notice / multilingual Korean dependency を CI で監視するようにした
 
+M6 後の hardening で追加した内容:
+
+- `KoreanBenchmarkDataLoader` を `File.ReadLines` ベースに寄せ、large TSV を streaming 寄りに扱えるようにした
+- `KoreanExternalBenchmarkTests` を追加し、`DOTNETG2P_KOREAN_EXTERNAL_CORPUS_PATHS` 経由で external corpus を exact-match 評価できるようにした
+- `tests/TestData/KoreanG2P/external_corpus.template.tsv` を追加し、seed benchmark と同じ schema で external corpus を流せるようにした
+- `KoreanPerformanceTests` を追加し、Korean 単体の throughput / memory growth / allocation / GC collection count を監視するようにした
+- `MultilingualKoreanPerformanceTests` を追加し、Korean mixed-language 文の throughput / memory growth を監視するようにした
+
 直近のテストゲート:
 
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual --no-restore`
-  - `432 passed`
+  - `443 passed`
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Korean --no-restore`
-  - `163 passed`
+  - `178 passed, 1 skipped`
 - `dotnet build DotNetG2P.slnx -m:1 --no-restore`
   - success
 
@@ -389,5 +397,5 @@ M6 完了後の backlog としては以下を推奨する。
 1. 숫자 / 英字 / Hanja の正規化境界を `v1.1` として切り出す
 2. `IKoreanMorphAnalyzer` の optional interface を設計し、compound boundary の精度改善余地を作る
 3. `ToIPA` と phone inventory 文書化を追加して後段 TTS 連携を強める
-4. benchmark seed を継続的に拡張し、`official_gold` を国立国語院辞書ベースで厚くする
+4. external corpus gate に国立国語院辞書系データを継続投入し、`official_gold` と大規模 corpus の両輪で品質監視する
 5. release note と package publishing 手順を CI / release workflow に接続する
