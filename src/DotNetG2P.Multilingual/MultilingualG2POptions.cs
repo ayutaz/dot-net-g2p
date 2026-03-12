@@ -71,6 +71,9 @@ namespace DotNetG2P.Multilingual
             PortugueseG2POptions? portugueseOptions = null,
             KoreanG2POptions? koreanOptions = null)
         {
+            if (defaultCjkLanguage != Language.Japanese && defaultCjkLanguage != Language.Chinese)
+                throw new ArgumentOutOfRangeException(nameof(defaultCjkLanguage), "DefaultCjkLanguage must be Japanese or Chinese.");
+
             if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French && defaultLatinLanguage != Language.Portuguese)
                 throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, French, or Portuguese.");
 

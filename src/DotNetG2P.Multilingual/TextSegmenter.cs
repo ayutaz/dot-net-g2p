@@ -126,6 +126,9 @@ namespace DotNetG2P.Multilingual
             if (string.IsNullOrEmpty(text))
                 return Array.Empty<TextSegment>();
 
+            if (defaultCjkLanguage != Language.Japanese && defaultCjkLanguage != Language.Chinese)
+                throw new ArgumentOutOfRangeException(nameof(defaultCjkLanguage), "DefaultCjkLanguage must be Japanese or Chinese.");
+
             if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French && defaultLatinLanguage != Language.Portuguese)
                 throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, French, or Portuguese.");
 
@@ -159,7 +162,6 @@ namespace DotNetG2P.Multilingual
             {
                 // defaultCjkLanguageに対応するbyte値
                 byte defaultCjkByte = defaultCjkLanguage == Language.Chinese ? LangChinese
-                                    : defaultCjkLanguage == Language.English ? LangEnglish
                                     : LangJapanese;
                 byte defaultLatinByte = defaultLatinLanguage == Language.Spanish ? LangSpanish
                                      : defaultLatinLanguage == Language.French ? LangFrench
@@ -485,15 +487,6 @@ namespace DotNetG2P.Multilingual
 
         private static byte ResolveLatinLanguage(string text, int start, int length, byte defaultLatinByte, bool hasLatinExtended)
         {
-            if (defaultLatinByte == LangSpanish)
-                return LangSpanish;
-
-            if (defaultLatinByte == LangFrench)
-                return LangFrench;
-
-            if (defaultLatinByte == LangPortuguese)
-                return LangPortuguese;
-
             ReadOnlySpan<char> token = text.AsSpan(start, length);
 
             // ポルトガル語特有文字の検出（ã, õ はスペイン語にもフランス語にもない）
