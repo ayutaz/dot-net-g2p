@@ -22,5 +22,8 @@ namespace DotNetG2P.Multilingual
 
         /// <summary>ポルトガル語</summary>
         Portuguese = 5,
+
+        /// <summary>韓国語</summary>
+        Korean = 6,
     }
 }

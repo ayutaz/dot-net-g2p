@@ -19,7 +19,7 @@
 
 ## 実装反映状況
 
-2026-03-12 時点で、計画上の `M0` から `M4` までは実装済み。
+2026-03-12 時点で、計画上の `M0` から `M5` までは実装済み。
 
 ### 現在の実装到達点
 
@@ -28,6 +28,7 @@
 - `tests/DotNetG2P.Tests/KoreanG2P/Benchmarking/` に benchmark loader / evaluator / report writer を追加済み
 - `src/DotNetG2P.Korean/Data/` に exception dictionary を追加済み
 - `src/DotNetG2P.Korean/Normalization/` に lightweight normalizer を追加済み
+- `src/DotNetG2P.Multilingual` に Korean routing を追加済み
 - M2 の rule engine では以下を実装済み
   - 終声中和
   - 連音
@@ -80,6 +81,18 @@
 - `KoreanPronunciation` の syllable / phoneme collection は read-only view として公開
 - dictionary TSV は invalid mode / duplicate entry を fail-fast にするようにした
 
+### M5 で追加した multilingual 統合
+
+- `Language.Korean` と `ScriptKind.Korean` を追加
+- `LanguageDetector` で Hangul syllables / Jamo / compatibility jamo / halfwidth Hangul を Korean に分類
+- `TextSegmenter` で Hangul block を Korean segment として保持
+- `MultilingualG2PEngine` に `KoreanG2PEngine` を追加し、Korean segment を `ToPhonemes` へルーティング
+- `MultilingualG2POptions` に `KoreanOptions` を追加
+- `MultilingualSharedFixture` に standalone `KoreanG2PEngine` を追加し、multilingual segment 出力との一致を検証
+- `tests/DotNetG2P.Tests/Multilingual/MultilingualKoreanTests.cs` を追加
+- multilingual 全体回帰は `dotnet test ... --filter Multilingual` で `428 passed`
+- Korean 関連全体は `dotnet test ... --filter Korean` で `157 passed`
+
 ### 残る制約
 
 - morphology なしのため、compound/phrase boundary 依存の `ㄴ` 添音は rule 一般化せず lexical exception 優先で運用している
@@ -89,7 +102,7 @@
 
 ### 次に見るべきもの
 
-- `M5`: multilingual 統合
+- `M6`: package / docs / release readiness
 - 숫자 / 英字 / Hanja をどこまで Korean package 単体で持つかの境界整理
 
 ## 追加調査: 既存 Python / C# ライブラリと精度

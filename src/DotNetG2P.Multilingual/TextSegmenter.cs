@@ -21,6 +21,7 @@ namespace DotNetG2P.Multilingual
         private const byte LangSpanish = 4;   // Language.Spanish
         private const byte LangFrench = 5;    // Language.French
         private const byte LangPortuguese = 6; // Language.Portuguese
+        private const byte LangKorean = 7;    // Language.Korean
 
         private static readonly string[] s_frenchWordSignals =
         {
@@ -165,13 +166,17 @@ namespace DotNetG2P.Multilingual
                                      : defaultLatinLanguage == Language.Portuguese ? LangPortuguese
                                      : LangEnglish;
 
-                // まず、日本語確定文字を直接割り当てる。
+                // まず、日本語・韓国語の確定文字を直接割り当てる。
                 for (int i = 0; i < len; i++)
                 {
                     var kind = kinds[i];
                     if (kind == ScriptKind.Japanese)
                     {
                         languages[i] = LangJapanese;
+                    }
+                    else if (kind == ScriptKind.Korean)
+                    {
+                        languages[i] = LangKorean;
                     }
                 }
 
@@ -463,6 +468,7 @@ namespace DotNetG2P.Multilingual
                 case LangSpanish: return Language.Spanish;
                 case LangFrench: return Language.French;
                 case LangPortuguese: return Language.Portuguese;
+                case LangKorean: return Language.Korean;
                 default: return Language.English;
             }
         }

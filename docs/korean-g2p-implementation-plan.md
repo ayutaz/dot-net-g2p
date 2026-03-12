@@ -39,12 +39,12 @@
 | M2 | Done | MVP 規則群を実装する | 3,4,5,7 | 必須規則が unit test で通る |
 | M3 | Done | benchmark で品質を見える化する | 2,4,5,10 | parity/gold/weak rules のレポートが出る |
 | M4 | Done | 例外辞書と基本正規化を厚くする | 5,6,7 | Hangul-first v1 の精度が安定する |
-| M5 | Next | multilingual へ統合する | 1,8,9 | Hangul segment が自動で Korean に流れる |
+| M5 | Done | multilingual へ統合する | 1,8,9 | Hangul segment が自動で Korean に流れる |
 | M6 | Pending | パッケージ化と release readiness | 7,9,10 | README/API/tests/package metadata が揃う |
 
 ## 現在地
 
-2026-03-12 時点の進捗は `M0 -> M4 完了`, `M5 次着手`。
+2026-03-12 時点の進捗は `M0 -> M5 完了`, `M6 次着手`。
 
 直近の M4 完了内容:
 
@@ -61,10 +61,24 @@
 - 例外辞書 loader を strict validation に変え、invalid mode / duplicate entry を fail-fast にした
 - benchmark harness に custom options と custom output directory を追加し、test 実行時の worktree 汚染を抑えた
 
+直近の M5 完了内容:
+
+- `src/DotNetG2P.Multilingual/Language.cs` に `Language.Korean` を追加
+- `src/DotNetG2P.Multilingual/ScriptKind.cs` に `ScriptKind.Korean` を追加
+- `src/DotNetG2P.Multilingual/LanguageDetector.cs` で Hangul syllables / Jamo / compatibility jamo / halfwidth Hangul を Korean 分類するようにした
+- `src/DotNetG2P.Multilingual/TextSegmenter.cs` に Korean segment routing を追加し、Hangul block を独立 segment として扱うようにした
+- `src/DotNetG2P.Multilingual/MultilingualG2PEngine.cs` に `KoreanG2PEngine` を接続し、mixed-script input で Korean segment を自動変換できるようにした
+- `src/DotNetG2P.Multilingual/MultilingualG2POptions.cs` に `KoreanOptions` を追加した
+- `tests/DotNetG2P.Tests/Multilingual/MultilingualKoreanTests.cs` を追加し、language enum / detector / segmenter / engine routing を統合テストで固定した
+
 直近のテストゲート:
 
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter KoreanG2P --no-restore`
   - `140 passed`
+- `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual --no-restore`
+  - `428 passed`
+- `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Korean --no-restore`
+  - `157 passed`
 - `dotnet build DotNetG2P.slnx -m:1 --no-restore`
   - success
 
@@ -273,6 +287,12 @@ Hangul を multilingual パイプラインに組み込み、混在文で自動�
 - 日本語/中国語/Latin 系の既存判定を壊さない
 - 混在例で Korean engine に正しくルーティングされる
 
+### 実装結果
+
+- `Language`, `ScriptKind`, `LanguageDetector`, `TextSegmenter`, `MultilingualG2PEngine`, `MultilingualG2POptions` に Korean を追加済み
+- standalone Korean G2P と multilingual Korean segment の phoneme 出力一致を test で固定済み
+- multilingual 全体回帰は `428 passed` で確認済み
+
 ### リスク
 
 - 全角記号や数字を跨ぐ segment merge の挙動
@@ -349,10 +369,10 @@ v1 で見送るもの:
 
 ## 次の具体タスク
 
-M5 着手の最初の 1 週間分としては以下を推奨する。
+M6 着手の最初の 1 週間分としては以下を推奨する。
 
-1. `LanguageDetector` に Hangul block 判定を追加する
-2. `TextSegmenter` で Hangul segment を独立させる
-3. `MultilingualG2PEngine` に Korean routing を追加する
-4. 日本語 / 中国語 / Latin 系の既存 segment merge に回帰がないことを確認する
-5. mixed-script sample を Korean benchmark と別に固定する
+1. multilingual README と package description に Korean usage sample を追加する
+2. `MultilingualG2POptions` の Korean option を public docs に反映する
+3. release note / known limitations に Hangul-first と Hanja 未対応を明記する
+4. package metadata と notice を Korean package 含めて揃える
+5. benchmark / mixed-script sample の説明を docs に寄せる

@@ -6,6 +6,7 @@ using DotNetG2P.English;
 using DotNetG2P.MeCab;
 using DotNetG2P.Multilingual;
 using DotNetG2P.French;
+using DotNetG2P.Korean;
 using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
 
@@ -36,6 +37,8 @@ namespace DotNetG2P.Tests.Multilingual
         public EnglishG2PEngine EnglishEngine { get; } = new EnglishG2PEngine();
 
         public ChineseG2PEngine? ChineseEngine { get; }
+
+        public KoreanG2PEngine KoreanEngine { get; } = new KoreanG2PEngine();
 
         public SpanishG2PEngine SpanishEngine { get; } = new SpanishG2PEngine();
 
@@ -82,6 +85,7 @@ namespace DotNetG2P.Tests.Multilingual
             JapaneseEngine?.Dispose();
             EnglishEngine.Dispose();
             ChineseEngine?.Dispose();
+            KoreanEngine.Dispose();
             SpanishEngine.Dispose();
             FrenchDefaultEngine?.Dispose();
             FrenchEngine.Dispose();

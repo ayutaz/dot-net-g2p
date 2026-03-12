@@ -4,7 +4,7 @@ namespace DotNetG2P.Multilingual
 {
     /// <summary>
     /// Unicode文字種ベースの言語判定。
-    /// 各文字をScriptKind（Japanese/English/Digit/Punctuation/Whitespace/Other）に分類する。
+    /// 各文字をScriptKind（Japanese/Korean/English/Digit/Punctuation/Whitespace/Other）に分類する。
     /// </summary>
     internal static class LanguageDetector
     {
@@ -18,45 +18,55 @@ namespace DotNetG2P.Multilingual
             // 2. カタカナ U+30A0-30FF
             if (c >= '\u30A0' && c <= '\u30FF') return ScriptKind.Japanese;
 
-            // 3. CJK統合漢字 U+4E00-9FFF（日中共用、文脈で判定）
+            // 3. Hangul音節・Jamo
+            if (c >= '\uAC00' && c <= '\uD7AF') return ScriptKind.Korean;
+            if (c >= '\u1100' && c <= '\u11FF') return ScriptKind.Korean;
+            if (c >= '\u3130' && c <= '\u318F') return ScriptKind.Korean;
+            if (c >= '\uA960' && c <= '\uA97F') return ScriptKind.Korean;
+            if (c >= '\uD7B0' && c <= '\uD7FF') return ScriptKind.Korean;
+
+            // 4. CJK統合漢字 U+4E00-9FFF（日中共用、文脈で判定）
             if (c >= '\u4E00' && c <= '\u9FFF') return ScriptKind.CJKIdeograph;
 
-            // 4. CJK拡張A U+3400-4DBF（日中共用、文脈で判定）
+            // 5. CJK拡張A U+3400-4DBF（日中共用、文脈で判定）
             if (c >= '\u3400' && c <= '\u4DBF') return ScriptKind.CJKIdeograph;
 
-            // 5. 半角カナ U+FF65-FF9F
+            // 6. 半角カナ U+FF65-FF9F
             if (c >= '\uFF65' && c <= '\uFF9F') return ScriptKind.Japanese;
 
-            // 6. CJK記号・句読点 U+3000-303F（U+3000 イデオグラフィックスペースはWhitespace扱い）
+            // 7. 半角Hangul互換Jamo U+FFA0-FFDC
+            if (c >= '\uFFA0' && c <= '\uFFDC') return ScriptKind.Korean;
+
+            // 8. CJK記号・句読点 U+3000-303F（U+3000 イデオグラフィックスペースはWhitespace扱い）
             if (c == '\u3000') return ScriptKind.Whitespace;
             if (c >= '\u3001' && c <= '\u303F') return ScriptKind.Japanese;
 
-            // 7. ASCII英字 A-Z, a-z
+            // 9. ASCII英字 A-Z, a-z
             if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return ScriptKind.English;
 
-            // 8. ラテン拡張文字 U+00C0-U+024F (Latin Extended-A/B)
+            // 10. ラテン拡張文字 U+00C0-U+024F (Latin Extended-A/B)
             if (c >= '\u00C0' && c <= '\u024F') return ScriptKind.Latin;
 
-            // 9. ASCII数字 0-9
+            // 11. ASCII数字 0-9
             if (c >= '0' && c <= '9') return ScriptKind.Digit;
 
-            // 10. 空白・タブ・改行
+            // 12. 空白・タブ・改行
             if (c == ' ' || c == '\t' || c == '\n' || c == '\r') return ScriptKind.Whitespace;
 
-            // 11. その他ASCII記号 (0x21-0x7E)
+            // 13. その他ASCII記号 (0x21-0x7E)
             if (c >= '\u0021' && c <= '\u007E') return ScriptKind.Punctuation;
 
-            // 12. 全角数字 U+FF10-FF19
+            // 14. 全角数字 U+FF10-FF19
             if (c >= '\uFF10' && c <= '\uFF19') return ScriptKind.Digit;
 
-            // 13. 全角英字 U+FF21-FF3A (A-Z), U+FF41-FF5A (a-z)
+            // 15. 全角英字 U+FF21-FF3A (A-Z), U+FF41-FF5A (a-z)
             if ((c >= '\uFF21' && c <= '\uFF3A') || (c >= '\uFF41' && c <= '\uFF5A'))
                 return ScriptKind.English;
 
-            // 14. 全角記号 U+FF01-FF0F, U+FF1A-FF20, U+FF3B-FF40, U+FF5B-FF5E
+            // 16. 全角記号 U+FF01-FF0F, U+FF1A-FF20, U+FF3B-FF40, U+FF5B-FF5E
             if (c >= '\uFF01' && c <= '\uFF5E') return ScriptKind.Punctuation;
 
-            // 15. 上記以外
+            // 17. 上記以外
             return ScriptKind.Other;
         }
 
@@ -89,6 +99,8 @@ namespace DotNetG2P.Multilingual
             {
                 case ScriptKind.Japanese:
                     return Language.Japanese;
+                case ScriptKind.Korean:
+                    return Language.Korean;
                 case ScriptKind.English:
                 case ScriptKind.Latin:
                     if (defaultLatinLanguage == Language.Spanish)

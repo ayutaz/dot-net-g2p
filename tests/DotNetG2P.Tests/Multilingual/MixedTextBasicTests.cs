@@ -71,7 +71,7 @@ namespace DotNetG2P.Tests.Multilingual
         // =================================================================
 
         // ScriptKindはinternalなので、Theoryパラメータではint経由でキャストする
-        // ScriptKind: Japanese=0, CJKIdeograph=1, English=2, Latin=3, Digit=4, Punctuation=5, Whitespace=6, Other=7
+        // ScriptKind: Japanese=0, CJKIdeograph=1, English=2, Latin=3, Digit=4, Punctuation=5, Whitespace=6, Other=7, Korean=8
 
         [Theory]
         [InlineData('こ', 0)]  // Japanese

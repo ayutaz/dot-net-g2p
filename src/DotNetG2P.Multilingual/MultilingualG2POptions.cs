@@ -4,6 +4,7 @@ using System;
 using DotNetG2P.Chinese;
 using DotNetG2P.English;
 using DotNetG2P.French;
+using DotNetG2P.Korean;
 using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
 
@@ -20,6 +21,9 @@ namespace DotNetG2P.Multilingual
 
         /// <summary>中国語G2Pオプション（null時はデフォルト）。</summary>
         public ChineseG2POptions? ChineseOptions { get; }
+
+        /// <summary>韓国語G2Pオプション（null時はデフォルト）。</summary>
+        public KoreanG2POptions? KoreanOptions { get; }
 
         /// <summary>スペイン語G2Pオプション（null時はデフォルト）。</summary>
         public SpanishG2POptions? SpanishOptions { get; }
@@ -54,6 +58,7 @@ namespace DotNetG2P.Multilingual
         /// <param name="defaultLatinLanguage">ラテン文字列のデフォルト言語（デフォルト: English）</param>
         /// <param name="frenchOptions">フランス語G2Pオプション（null時はデフォルト）</param>
         /// <param name="portugueseOptions">ポルトガル語G2Pオプション（null時はデフォルト）</param>
+        /// <param name="koreanOptions">韓国語G2Pオプション（null時はデフォルト）</param>
         public MultilingualG2POptions(
             G2POptions? japaneseOptions = null,
             EnglishG2POptions? englishOptions = null,
@@ -63,7 +68,8 @@ namespace DotNetG2P.Multilingual
             SpanishG2POptions? spanishOptions = null,
             Language defaultLatinLanguage = Language.English,
             FrenchG2POptions? frenchOptions = null,
-            PortugueseG2POptions? portugueseOptions = null)
+            PortugueseG2POptions? portugueseOptions = null,
+            KoreanG2POptions? koreanOptions = null)
         {
             if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French && defaultLatinLanguage != Language.Portuguese)
                 throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, French, or Portuguese.");
@@ -71,6 +77,7 @@ namespace DotNetG2P.Multilingual
             JapaneseOptions = japaneseOptions;
             EnglishOptions = englishOptions;
             ChineseOptions = chineseOptions;
+            KoreanOptions = koreanOptions;
             SpanishOptions = spanishOptions;
             FrenchOptions = frenchOptions;
             PortugueseOptions = portugueseOptions;

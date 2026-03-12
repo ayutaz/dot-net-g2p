@@ -28,5 +28,8 @@ namespace DotNetG2P.Multilingual
 
         /// <summary>上記以外</summary>
         Other,
+
+        /// <summary>Hangul音節・Jamo・互換Jamo</summary>
+        Korean,
     }
 }
