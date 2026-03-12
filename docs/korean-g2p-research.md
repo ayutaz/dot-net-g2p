@@ -17,6 +17,50 @@
 - 既存ライブラリの実態としては、Python 側は `g2pK` 系譜が事実上の中心で、`Kss`, `g2pkk`, `g2pk2`, `g2pkiwi`, `kokorog2p`, `misaki` の Korean backend もかなりの部分を `g2pK` 系またはその派生に依存している。
 - 一方で、2026-03-11 時点の手動調査では、C#/.NET には公開精度付きの専用 Korean G2P ライブラリを見つけられなかった。見つかったのは `Naramal` のような Hangul 処理ユーティリティで、G2P 本体ではない。
 
+## 実装反映状況
+
+2026-03-12 時点で、計画上の `M0` から `M2` までは実装済み。
+
+### 現在の実装到達点
+
+- `tests/TestData/KoreanG2P/` に `g2pk_parity`, `official_gold`, `weak_rules` の 3 系統 benchmark seed を配置済み
+- `src/DotNetG2P.Korean` に Hangul-first の pure C# Korean core を追加済み
+- M2 の rule engine では以下を実装済み
+  - 終声中和
+  - 連音
+  - 口蓋化付き resyllabification
+  - 濃音化
+  - 鼻音化
+  - 流音化
+  - `ㅎ` 系変化
+    - 母音前脱落
+    - 後続子音の激音化
+    - 鼻音前処理
+  - 一般化した `ㄴ` 添音
+  - 子音前の `ㄼ` surface coda 処理
+
+### 直近で埋めた M2 の欠落
+
+以前の review で見つかった次の欠落は 2026-03-12 の修正で反映済み。
+
+- `좋아`, `좋다`, `좋지`, `놓고`, `않다`, `싫어` を通す `ㅎ` 系変化
+- `담요`, `검열`, `색연필`, `막일`, `한여름`, `솜이불` を通す一般化 `ㄴ` 添音
+- whitespace を保持し、単語境界を跨いだ規則過剰適用を止める boundary-aware pipeline
+- `밟다`, `밟고`, `밟는` を通す `ㄼ` 系の子音前処理
+- seed benchmark 側の `ui-variation` 復帰と、複数許容発音を `|` で持てる評価形式
+
+### 残る制約
+
+- morphology なしのため、bare `이` 系の `ㄴ` 添音はまだヒューリスティック
+- `ㄼ` 系 lexical variation は一般規則化し切っておらず、M4 の例外辞書でさらに補強が必要
+- `의` 변이 は benchmark では監視しているが、規範上の許容形をどう public API で返すかはまだ固定していない
+- 숫자, 英字, Hanja, descriptive mode は未着手
+
+### 次に見るべきもの
+
+- `M3`: benchmark harness の rule-wise summary と mismatch report
+- `M4`: 例外辞書と正規化層
+
 ## 追加調査: 既存 Python / C# ライブラリと精度
 
 ### 10-agent 追加サマリ

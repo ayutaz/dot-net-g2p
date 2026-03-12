@@ -32,15 +32,37 @@
 
 ## マイルストーン概要
 
-| Milestone | 目的 | 主担当 agent | 完了条件 |
-|---|---|---|---|
-| M0 | 評価土台を先に固定する | 1,2,10 | benchmark ファイル雛形と採点ルールがある |
-| M1 | Korean core の骨組みを作る | 1,3,7,9 | `DotNetG2P.Korean` が build できる |
-| M2 | MVP 規則群を実装する | 3,4,5,7 | 必須規則が unit test で通る |
-| M3 | benchmark で品質を見える化する | 2,4,5,10 | parity/gold/weak rules のレポートが出る |
-| M4 | 例外辞書と基本正規化を厚くする | 5,6,7 | Hangul-first v1 の精度が安定する |
-| M5 | multilingual へ統合する | 1,8,9 | Hangul segment が自動で Korean に流れる |
-| M6 | パッケージ化と release readiness | 7,9,10 | README/API/tests/package metadata が揃う |
+| Milestone | 状態 | 目的 | 主担当 agent | 完了条件 |
+|---|---|---|---|---|
+| M0 | Done | 評価土台を先に固定する | 1,2,10 | benchmark ファイル雛形と採点ルールがある |
+| M1 | Done | Korean core の骨組みを作る | 1,3,7,9 | `DotNetG2P.Korean` が build できる |
+| M2 | Done | MVP 規則群を実装する | 3,4,5,7 | 必須規則が unit test で通る |
+| M3 | Next | benchmark で品質を見える化する | 2,4,5,10 | parity/gold/weak rules のレポートが出る |
+| M4 | Pending | 例外辞書と基本正規化を厚くする | 5,6,7 | Hangul-first v1 の精度が安定する |
+| M5 | Pending | multilingual へ統合する | 1,8,9 | Hangul segment が自動で Korean に流れる |
+| M6 | Pending | パッケージ化と release readiness | 7,9,10 | README/API/tests/package metadata が揃う |
+
+## 現在地
+
+2026-03-12 時点の進捗は `M0 -> M2 完了`, `M3 着手前`。
+
+直近の M2 完了内容:
+
+- `ㅎ` 系変化の本体を追加
+  - 母音前脱落
+  - 後続子音の激音化
+  - 鼻音前処理
+- `ㄴ` 添音を `깻잎` 専用実装から一般化
+- whitespace を保持する boundary-aware pipeline へ変更
+- `ㄼ` 系の子音前 surface coda を導入
+- benchmark seed を拡張し、複数許容発音を `|` で扱えるようにした
+
+直近のテストゲート:
+
+- `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter KoreanG2P --no-restore`
+  - `95 passed`
+- `dotnet build DotNetG2P.slnx -m:1 --no-restore`
+  - success
 
 ## M0: Evaluation First
 
@@ -66,6 +88,7 @@
 - 各 TSV に `input`, `expected`, `source`, `rule_tag`, `notes` 列がある
 - `rule_tag` の最小セットが定義される
 - `official_gold` 優先の判定方針が文章化される
+- `expected` に複数許容発音がある場合は `|` 区切りで保持できる
 
 ### 注意点
 
@@ -100,6 +123,7 @@
 - build が通る
 - 空文字、null guard、batch API の基本挙動が揃う
 - `ToPhonemes`, `ToJamo` の public API 形が固まる
+- Korean core package が独立テスト対象として固定される
 
 ## M2: MVP Rule Engine
 
@@ -122,6 +146,7 @@
 - 鼻音化
 - 流音化
 - ㅎ 系変化
+- ㄴ 添音
 - 二重終声の基本処理
 
 ### 成果物
@@ -134,14 +159,16 @@
 
 ### 完了条件
 
-- M0 の `weak_rules` を除く MVP 主要ケースで pass
+- `g2pk_parity`, `official_gold`, `weak_rules` の current seed cases が pass する
 - 音節境界を跨ぐ規則適用順が固定される
 - 代表規則ごとのテストが読みやすい形で残る
+- boundary-aware な pipeline で whitespace を保持できる
 
 ### リスク
 
 - 規則順序の違いで意図しない回帰が起きやすい
 - 例外辞書で吸収すべきものと rule で吸収すべきものの境界がぶれやすい
+- morphology なしでは `ㄴ` 添音と lexical variation にヒューリスティックが残る
 
 ## M3: Benchmark Harness
 
@@ -161,6 +188,7 @@
 - benchmark 実行テスト
 - rule-wise summary
 - mismatch レポート出力
+- parity/gold/weak をまとめた読みやすい実行結果
 
 ### 完了条件
 
@@ -169,6 +197,8 @@
 - `weak_rules`
 
 の 3 セットで pass/fail と差分が確認できる
+- 許容形が複数あるケースで accepted alternatives を区別できる
+- current implementation の弱点規則が rule tag 単位で集計できる
 
 ### 判定基準
 
@@ -309,10 +339,10 @@ v1 で見送るもの:
 
 ## 次の具体タスク
 
-最初の 1 週間分としては以下を推奨する。
+M3 着手の最初の 1 週間分としては以下を推奨する。
 
-1. M0 の TSV 3 本を作る
-2. `DotNetG2P.Korean` の scaffold を作る
-3. Hangul 分解と `ToJamo` を先に完成させる
-4. 終声中和と連音から rule engine を始める
-5. `g2pK` parity の最小セットで差分を確認する
+1. benchmark 実行結果を parity / gold / weak で分けて出す
+2. rule tag ごとの pass/fail 集計を追加する
+3. mismatch を TSV か JSON で出力できるようにする
+4. `ui-variation` と複数許容発音の採点ルールを固定する
+5. M4 に送る例外候補を benchmark mismatch から抽出する
