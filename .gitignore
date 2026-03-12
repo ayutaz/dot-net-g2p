@@ -23,9 +23,6 @@ ehthumbs.db
 Desktop.ini
 .DS_Store
 
-## Unity
-*.meta
-
 ## Temp
 nul
 temp_*

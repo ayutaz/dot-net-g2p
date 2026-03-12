@@ -129,6 +129,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Portuguese
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
+> **Dependency note:** If you install `DotNetG2P.MeCab`, also add `DotNetG2P.Core`. If you install `DotNetG2P.Multilingual`, add its dependent packages to `manifest.json` as well.
 > **Note:** Japanese and multilingual engines require a separate naist-jdic dictionary. See [Dictionary Setup](#dictionary-setup) for details.
 
 ## Quick Start
