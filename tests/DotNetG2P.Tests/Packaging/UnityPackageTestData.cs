@@ -98,14 +98,21 @@ namespace DotNetG2P.Tests.Packaging
 
             var packageName = packageJson.RootElement.GetProperty("name").GetString()
                 ?? throw new InvalidDataException($"Package name missing in {packageJsonPath}.");
+            var version = packageJson.RootElement.GetProperty("version").GetString()
+                ?? throw new InvalidDataException($"Package version missing in {packageJsonPath}.");
 
             var dependencyNames = new List<string>();
+            var dependencyVersions = new Dictionary<string, string>(StringComparer.Ordinal);
             if (packageJson.RootElement.TryGetProperty("dependencies", out var dependenciesElement))
             {
                 foreach (var dependencyProperty in dependenciesElement.EnumerateObject())
                 {
                     if (dependencyProperty.Name.StartsWith("com.dotnetg2p.", StringComparison.Ordinal))
+                    {
                         dependencyNames.Add(dependencyProperty.Name);
+                        dependencyVersions[dependencyProperty.Name] = dependencyProperty.Value.GetString()
+                            ?? throw new InvalidDataException($"Dependency version missing for {dependencyProperty.Name} in {packageJsonPath}.");
+                    }
                 }
             }
 
@@ -131,9 +138,11 @@ namespace DotNetG2P.Tests.Packaging
 
             return new PackageInfo(
                 packageName,
+                version,
                 packageRoot,
                 assemblyName,
                 dependencyNames,
+                dependencyVersions,
                 assemblyReferences,
                 repositoryUrl,
                 repositoryDirectory);
@@ -142,9 +151,11 @@ namespace DotNetG2P.Tests.Packaging
 
     internal sealed record PackageInfo(
         string PackageName,
+        string Version,
         string PackageRoot,
         string AssemblyName,
         IReadOnlyList<string> InternalDependencies,
+        IReadOnlyDictionary<string, string> InternalDependencyVersions,
         IReadOnlyCollection<string> AssemblyReferences,
         string RepositoryUrl,
         string RepositoryDirectory);

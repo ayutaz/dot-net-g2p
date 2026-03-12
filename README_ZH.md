@@ -31,6 +31,14 @@ koEngine.ToPhonemes("좋다");  // => "ㅈ ㅗ ㅌ ㅏ"
 using var esEngine = new SpanishG2PEngine();
 esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
+// 法语 G2P
+using var frEngine = new FrenchG2PEngine();
+frEngine.ToIPA("bonjour");  // => "bɔ̃ʒuʁ"
+
+// 葡萄牙语 G2P
+using var ptEngine = new PortugueseG2PEngine();
+ptEngine.ToIPA("obrigado");  // => "obɾiˈɡadu"
+
 // 日韩英混合文本
 using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日语部分 => 日语音素，韩语部分 => Hangul 音素，英语部分 => ARPAbet
@@ -45,6 +53,8 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日语部分 => �
 - [处理管线](#处理管线)
 - [词典准备](#词典准备)
 - [西班牙语评估](#西班牙语评估)
+- [法语评估](#法语评估)
+- [葡萄牙语评估](#葡萄牙语评估)
 - [选项配置](#选项配置)
 - [构建](#构建)
 - [线程安全性](#线程安全性)
@@ -224,6 +234,44 @@ using var esEngine = new SpanishG2PEngine();
 string esIpa = esEngine.ToIPA("guion");
 // => "ɡiˈon"
 
+// === 法语 G2P ===
+using DotNetG2P.French;
+
+using var frEngine = new FrenchG2PEngine();
+string frIpa = frEngine.ToIPA("bonjour");
+// => "bɔ̃ʒuʁ"
+
+string frIpa2 = frEngine.ToIPA("merci");
+// => "mɛʁsi"
+
+using var frAlloEngine = new FrenchG2PEngine(new FrenchG2POptions(enableAllophones: true));
+string frAllo = frAlloEngine.ToIPA("autre");
+// => 应用异音规则后的 IPA 表记
+
+string frXsampa = frEngine.ToXSampa("bonjour");
+
+// === 葡萄牙语 G2P ===
+using DotNetG2P.Portuguese;
+
+using var ptEngine = new PortugueseG2PEngine();
+string ptIpa = ptEngine.ToIPA("obrigado");
+// => "obɾiˈɡadu"
+
+string ptIpa2 = ptEngine.ToIPA("coração");
+// => "koɾaˈsɐ̃w̃"
+
+using var ptEpEngine = new PortugueseG2PEngine(new PortugueseG2POptions(dialect: PortugueseDialect.European));
+string ptEpIpa = ptEpEngine.ToIPA("obrigado");
+
+using var ptAlloEngine = new PortugueseG2PEngine(new PortugueseG2POptions(enableAllophones: true));
+string ptAllo = ptAlloEngine.ToIPA("cidade");
+// => 应用异音规则后的 IPA 表记
+
+string ptXsampa = ptEngine.ToXSampa("obrigado");
+string ptXsampaNoStress = ptEngine.ToXSampaWithoutStress("obrigado");
+
+var ptBatch = ptEngine.ToIPABatch(new[] { "bom dia", "boa noite" });
+
 // === 日英中韩西法葡混合文本 ===
 using DotNetG2P.Multilingual;
 
@@ -252,6 +300,18 @@ var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanis
 using var multiEsEngine = new MultilingualG2PEngine(esOptions);
 multiEsEngine.ToPhonemes("hola世界");
 // 西班牙语部分 => IPA 音素，日语部分 => 日语音素
+
+// 包含法语文本的情况
+var frOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.French);
+using var multiFrEngine = new MultilingualG2PEngine(frOptions);
+multiFrEngine.ToPhonemes("bonjour世界");
+// 法语部分 => IPA 音素，日语部分 => 日语音素
+
+// 包含葡萄牙语文本的情况
+var ptOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Portuguese);
+using var multiPtEngine = new MultilingualG2PEngine(ptOptions);
+multiPtEngine.ToPhonemes("obrigado世界");
+// 葡萄牙语部分 => IPA 音素，日语部分 => 日语音素
 ```
 
 ## API 参考
@@ -337,6 +397,38 @@ multiEsEngine.ToPhonemes("hola世界");
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | 批量 IPA 转换 |
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | 批量 X-SAMPA 转换 |
+
+### FrenchG2PEngine
+
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `ToPhonemes(text)` | `string` | 空格分隔的 IPA 音素序列 |
+| `ToIPA(text)` | `string` | IPA 表记（`"bɔ̃ʒuʁ"` 形式） |
+| `ToIPAWithoutStress(text)` | `string` | 无重音标记的 IPA 表记 |
+| `ToXSampa(text)` | `string` | X-SAMPA 表记 |
+| `ToXSampaWithoutStress(text)` | `string` | 无重音标记的 X-SAMPA 表记 |
+| `ToPhonemeList(text)` | `IReadOnlyList<FrenchPhoneme>` | 结构化音素列表 |
+| `ToSyllables(word)` | `IReadOnlyList<FrenchPhoneme[]>` | 音节划分结果 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | 批量 IPA 转换 |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | 批量 X-SAMPA 转换 |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<FrenchPhoneme>>` | 批量结构化音素列表转换 |
+
+### PortugueseG2PEngine
+
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `ToPhonemes(text)` | `string` | 空格分隔的 IPA 音素序列 |
+| `ToIPA(text)` | `string` | IPA 表记（`"obɾiˈɡadu"` 形式） |
+| `ToIPAWithoutStress(text)` | `string` | 无重音标记的 IPA 表记 |
+| `ToXSampa(text)` | `string` | X-SAMPA 表记 |
+| `ToXSampaWithoutStress(text)` | `string` | 无重音标记的 X-SAMPA 表记 |
+| `ToPhonemeList(text)` | `IReadOnlyList<PortuguesePhoneme>` | 结构化音素列表 |
+| `ToSyllables(text)` | `IReadOnlyList<PortugueseSyllable>` | 音节划分结果 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | 批量 IPA 转换 |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | 批量 X-SAMPA 转换 |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<PortuguesePhoneme>>` | 批量结构化音素列表转换 |
 
 ### MultilingualG2PEngine
 
@@ -461,6 +553,57 @@ pwsh -File tools/run_spanish_full_evaluation.ps1 -EnforceThresholds
 
 - `SpanishG2P`: `227 passed`
 - `SpanishNormalizer` 会将 `1.234` 视为千位分隔整数，并且不会对非法日期/时间做语义展开
+
+## 法语评估
+
+法语 G2P 包含基于 `ipa-dict` 与 `WikiPron` 的全量语料评估管线。
+
+```powershell
+pwsh -File tools/refresh_french_eval_data.ps1 -Mode Full
+pwsh -File tools/run_french_full_evaluation.ps1 -EnforceThresholds
+```
+
+- 语料输出目录: `artifacts/french-eval/corpora`
+- 报告输出目录: `artifacts/french-eval/reports/latest`
+- 主要输出:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+阈值配置（`tools/french_eval_thresholds.json`）:
+
+- `ipa_dict_fr_fr_sample`: base/allophones PER `< 8%`，no_exceptions PER `< 12%`
+- `ipa_dict_fr_fr_full`: base/allophones PER `< 12%`，no_exceptions PER `< 18%`
+- `wikipron_fra_latn_broad_filtered_sample`: base PER `< 8%`
+- `wikipron_fra_latn_broad_filtered_full`: base PER `< 12%`
+
+回归覆盖:
+
+- `FrenchG2P`: `707 passed, 12 skipped`（合计 `719`）
+- `FrenchDatasetEvaluationTests`: `6` 个基于阈值的语料测试
+- `FrenchAllophoneEvaluationTests`: `6` 个异音配置测试
+
+## 葡萄牙语评估
+
+葡萄牙语 G2P 由规则驱动转换与 560+ 条例外词典组成，并提供全量语料评估管线。
+
+```powershell
+pwsh -File tools/refresh_portuguese_eval_data.ps1 -Mode Full
+pwsh -File tools/run_portuguese_full_evaluation.ps1 -EnforceThresholds
+```
+
+- 语料输出目录: `artifacts/portuguese-eval/corpora`
+- 报告输出目录: `artifacts/portuguese-eval/reports/latest`
+- 主要输出:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+回归覆盖:
+
+- `PortugueseG2P`: `1294 passed, 16 skipped`（合计 `1310`）
+- `PortugueseDatasetEvaluationTests`: `9` 个基于阈值的语料测试
+- `PortugueseAllophoneEvaluationTests`: `7` 个异音配置测试
 
 ## 选项配置
 

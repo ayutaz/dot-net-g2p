@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-03-12
+
+### Added
+- **フランス語G2Pパッケージ `DotNetG2P.French` 新規追加**
+  - DotNetG2P.Coreに依存しない独立パッケージ（.NET Standard 2.1）
+  - `FrenchG2PEngine`、`FrenchG2POptions`、例外辞書、Metropolitan/Conservative方言、IPA/X-SAMPA出力を追加
+  - 数値/日付/時刻/通貨/単位/略語/記号の正規化と全量コーパス評価ツールを追加
+- **ポルトガル語G2Pパッケージ `DotNetG2P.Portuguese` 新規追加**
+  - DotNetG2P.Coreに依存しない独立パッケージ（.NET Standard 2.1）
+  - `PortugueseG2PEngine`、`PortugueseG2POptions`、例外辞書、Brazilian/European方言、IPA/X-SAMPA出力を追加
+  - 7種の異音規則、13段階の正規化、全量コーパス評価ツールを追加
+- **韓国語G2Pパッケージ `DotNetG2P.Korean` 新規追加**
+  - Hangul-first の規則ベース変換、Jamo分解、例外辞書、軽量正規化、`KoreanUiVariationMode` を追加
+  - `g2pk_parity` / `official_gold` / `weak_rules` benchmark harness、external corpus gate、performance test を追加
+- **多言語統合パッケージ `DotNetG2P.Multilingual` 拡張**
+  - `Language` / `DefaultLatinLanguage` / `KoreanOptions` を拡張し、韓国語・フランス語・ポルトガル語を統合
+  - Hangul直接ルーティング、ポルトガル語固有文字・接尾辞パターンによるラテン文字判定を追加
+- Unity UPM パッケージの install matrix / metadata / workflow coverage を検証する packaging test を追加
+
+### Changed
+- UPMパッケージバージョンを1.4.0に更新
+- GitHub Actions の `ci.yml` / `release.yml` の pack 対象に `DotNetG2P.Korean` と `DotNetG2P.Portuguese` を追加
+- Unity UPM package installability 修正とメタファイル整合性検証を強化
+
 ## [1.3.0] - 2026-03-10
 
 ### Added
@@ -171,7 +195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - LibNMeCab依存を削除
 
-[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.0.0...v1.1.0
