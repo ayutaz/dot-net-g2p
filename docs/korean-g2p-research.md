@@ -19,12 +19,13 @@
 
 ## 実装反映状況
 
-2026-03-12 時点で、計画上の `M0` から `M2` までは実装済み。
+2026-03-12 時点で、計画上の `M0` から `M3` までは実装済み。
 
 ### 現在の実装到達点
 
 - `tests/TestData/KoreanG2P/` に `g2pk_parity`, `official_gold`, `weak_rules` の 3 系統 benchmark seed を配置済み
 - `src/DotNetG2P.Korean` に Hangul-first の pure C# Korean core を追加済み
+- `tests/DotNetG2P.Tests/KoreanG2P/Benchmarking/` に benchmark loader / evaluator / report writer を追加済み
 - M2 の rule engine では以下を実装済み
   - 終声中和
   - 連音
@@ -49,6 +50,21 @@
 - `밟다`, `밟고`, `밟는` を通す `ㄼ` 系の子音前処理
 - seed benchmark 側の `ui-variation` 復帰と、複数許容発音を `|` で持てる評価形式
 
+### M3 で追加した benchmark harness
+
+- `g2pk_parity`, `official_gold`, `weak_rules` を一括評価する harness を追加
+- rule tag 単位の pass/fail 集計を追加
+- `tests/DotNetG2P.Tests/TestResults/KoreanG2P/` に以下の artifact を生成
+  - `korean-benchmark-summary.json`
+  - `korean-benchmark-dataset-summary.tsv`
+  - `korean-benchmark-rule-summary.tsv`
+  - `korean-benchmark-mismatches.tsv`
+- 2026-03-12 時点の current seed 結果
+  - `g2pk_parity`: `8/8`
+  - `official_gold`: `15/15`
+  - `weak_rules`: `14/14`
+  - mismatch report は空
+
 ### 残る制約
 
 - morphology なしのため、bare `이` 系の `ㄴ` 添音はまだヒューリスティック
@@ -58,8 +74,8 @@
 
 ### 次に見るべきもの
 
-- `M3`: benchmark harness の rule-wise summary と mismatch report
 - `M4`: 例外辞書と正規化層
+- multilingual 統合前に `의` 변이 と exception policy を固定する
 
 ## 追加調査: 既存 Python / C# ライブラリと精度
 

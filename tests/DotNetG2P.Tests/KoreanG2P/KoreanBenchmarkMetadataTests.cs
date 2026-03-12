@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using DotNetG2P.Tests.KoreanG2P.Benchmarking;
 
 namespace DotNetG2P.Tests.KoreanG2P
 {
@@ -26,7 +27,7 @@ namespace DotNetG2P.Tests.KoreanG2P
         [InlineData("weak_rules.tsv", 5)]
         public void BenchmarkFile_HasExpectedSchema(string fileName, int minimumRows)
         {
-            var path = ResolveTestDataPath(fileName);
+            var path = KoreanBenchmarkPaths.ResolveDataPath(fileName);
             Assert.True(File.Exists(path), $"Benchmark TSV not found: {path}");
 
             var lines = File.ReadAllLines(path);
@@ -52,7 +53,7 @@ namespace DotNetG2P.Tests.KoreanG2P
         [Fact]
         public void Readme_DescribesExpectedFormatAndBenchmarkFiles()
         {
-            var path = ResolveTestDataPath("README.md");
+            var path = KoreanBenchmarkPaths.ResolveDataPath("README.md");
             Assert.True(File.Exists(path), $"README not found: {path}");
 
             var text = File.ReadAllText(path);
@@ -67,9 +68,9 @@ namespace DotNetG2P.Tests.KoreanG2P
         public void SeedFiles_CoverAllPlannedRuleTags()
         {
             var observed = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var fileName in new[] { "g2pk_parity.tsv", "official_gold.tsv", "weak_rules.tsv" })
+            foreach (var fileName in KoreanBenchmarkDataLoader.DatasetFiles)
             {
-                var path = ResolveTestDataPath(fileName);
+                var path = KoreanBenchmarkPaths.ResolveDataPath(fileName);
                 var tags = File.ReadAllLines(path)
                     .Skip(1)
                     .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#", StringComparison.Ordinal))
@@ -81,33 +82,6 @@ namespace DotNetG2P.Tests.KoreanG2P
 
             Assert.Equal(s_allowedRuleTags.Count, observed.Count);
             Assert.All(s_allowedRuleTags, expectedTag => Assert.Contains(expectedTag, observed));
-        }
-
-        private static string ResolveTestDataPath(string fileName)
-        {
-            var repoRoot = ResolveRepoRoot();
-            return Path.Combine(repoRoot, "tests", "TestData", "KoreanG2P", fileName);
-        }
-
-        private static string ResolveRepoRoot()
-        {
-            var candidates = new[]
-            {
-                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..")),
-                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..")),
-                Path.GetFullPath("."),
-            };
-
-            foreach (var candidate in candidates)
-            {
-                if (Directory.Exists(Path.Combine(candidate, "src"))
-                    && Directory.Exists(Path.Combine(candidate, "tests")))
-                {
-                    return candidate;
-                }
-            }
-
-            throw new DirectoryNotFoundException("Repository root could not be resolved.");
         }
     }
 }

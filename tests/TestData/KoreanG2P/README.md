@@ -35,3 +35,8 @@ Notes:
 - When a rule has multiple standard-accepted outputs, `expected` may store alternatives such as `검녈|거멸`.
 - Current rows are hand-curated starter seeds only. They are intentionally small and must be expanded and source-verified before M3.
 - If `g2pK` parity and official gold disagree, future evaluation should prefer official gold.
+- M3 benchmark reports are generated to `tests/DotNetG2P.Tests/TestResults/KoreanG2P/` as:
+  - `korean-benchmark-summary.json`
+  - `korean-benchmark-dataset-summary.tsv`
+  - `korean-benchmark-rule-summary.tsv`
+  - `korean-benchmark-mismatches.tsv`

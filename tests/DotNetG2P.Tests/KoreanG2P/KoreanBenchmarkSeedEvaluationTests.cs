@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using DotNetG2P.Korean;
+using DotNetG2P.Tests.KoreanG2P.Benchmarking;
 
 namespace DotNetG2P.Tests.KoreanG2P
 {
@@ -10,17 +9,16 @@ namespace DotNetG2P.Tests.KoreanG2P
     {
         public static IEnumerable<object[]> M2SeedCases()
         {
-            foreach (var fileName in new[] { "g2pk_parity.tsv", "official_gold.tsv", "weak_rules.tsv" })
+            foreach (var benchmarkCase in KoreanBenchmarkDataLoader.LoadAllCases())
             {
-                var path = ResolveTestDataPath(fileName);
-                var rows = File.ReadAllLines(path)
-                    .Skip(1)
-                    .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#", StringComparison.Ordinal))
-                    .Select(line => line.Split('\t'))
-                    .Where(parts => parts.Length == 5);
-
-                foreach (var row in rows)
-                    yield return new object[] { fileName, row[0], row[1], row[2], row[3] };
+                yield return new object[]
+                {
+                    benchmarkCase.DatasetFileName,
+                    benchmarkCase.Input,
+                    benchmarkCase.ExpectedDisplay,
+                    benchmarkCase.Source,
+                    benchmarkCase.RuleTag,
+                };
             }
         }
 
@@ -36,33 +34,6 @@ namespace DotNetG2P.Tests.KoreanG2P
             Assert.True(
                 accepted.Any(candidate => string.Equals(candidate, actual, StringComparison.Ordinal)),
                 $"Expected one of '{expected}' but got '{actual}' for '{input}' in {fileName} ({source}, {ruleTag}).");
-        }
-
-        private static string ResolveTestDataPath(string fileName)
-        {
-            var repoRoot = ResolveRepoRoot();
-            return Path.Combine(repoRoot, "tests", "TestData", "KoreanG2P", fileName);
-        }
-
-        private static string ResolveRepoRoot()
-        {
-            var candidates = new[]
-            {
-                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..")),
-                Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..")),
-                Path.GetFullPath("."),
-            };
-
-            foreach (var candidate in candidates)
-            {
-                if (Directory.Exists(Path.Combine(candidate, "src"))
-                    && Directory.Exists(Path.Combine(candidate, "tests")))
-                {
-                    return candidate;
-                }
-            }
-
-            throw new DirectoryNotFoundException("Repository root could not be resolved.");
         }
     }
 }
