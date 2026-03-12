@@ -109,6 +109,12 @@ namespace DotNetG2P.Tests.Packaging
                     continue;
                 }
 
+                if (metaFile.EndsWith("package.json.meta", StringComparison.OrdinalIgnoreCase))
+                {
+                    Assert.Contains("PackageManifestImporter:", lines);
+                    continue;
+                }
+
                 Assert.Contains("DefaultImporter:", lines);
             }
         }
