@@ -31,6 +31,14 @@ koEngine.ToPhonemes("좋다");  // => "ㅈ ㅗ ㅌ ㅏ"
 using var esEngine = new SpanishG2PEngine();
 esEngine.ToIPA("vergüenza");  // => "beɾˈɡwensa"
 
+// French G2P
+using var frEngine = new FrenchG2PEngine();
+frEngine.ToIPA("bonjour");  // => "bɔ̃ʒuʁ"
+
+// Portuguese G2P
+using var ptEngine = new PortugueseG2PEngine();
+ptEngine.ToIPA("obrigado");  // => "obɾiˈɡadu"
+
 // Mixed Japanese-Korean-English text
 using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("今日は안녕하세요 hello");  // Japanese => Japanese phonemes, Korean => Hangul phonemes, English => ARPAbet
@@ -49,6 +57,8 @@ multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese =>
 - [Processing Pipeline](#processing-pipeline)
 - [Dictionary Setup](#dictionary-setup)
 - [Spanish Evaluation](#spanish-evaluation)
+- [French Evaluation](#french-evaluation)
+- [Portuguese Evaluation](#portuguese-evaluation)
 - [Configuration Options](#configuration-options)
 - [Building](#building)
 - [Thread Safety](#thread-safety)
@@ -223,6 +233,44 @@ using var esEngine = new SpanishG2PEngine();
 string esIpa = esEngine.ToIPA("guion");
 // => "ɡiˈon"
 
+// === French G2P ===
+using DotNetG2P.French;
+
+using var frEngine = new FrenchG2PEngine();
+string frIpa = frEngine.ToIPA("bonjour");
+// => "bɔ̃ʒuʁ"
+
+string frIpa2 = frEngine.ToIPA("merci");
+// => "mɛʁsi"
+
+using var frAlloEngine = new FrenchG2PEngine(new FrenchG2POptions(enableAllophones: true));
+string frAllo = frAlloEngine.ToIPA("autre");
+// => IPA transcription with allophone rules applied
+
+string frXsampa = frEngine.ToXSampa("bonjour");
+
+// === Portuguese G2P ===
+using DotNetG2P.Portuguese;
+
+using var ptEngine = new PortugueseG2PEngine();
+string ptIpa = ptEngine.ToIPA("obrigado");
+// => "obɾiˈɡadu"
+
+string ptIpa2 = ptEngine.ToIPA("coração");
+// => "koɾaˈsɐ̃w̃"
+
+using var ptEpEngine = new PortugueseG2PEngine(new PortugueseG2POptions(dialect: PortugueseDialect.European));
+string ptEpIpa = ptEpEngine.ToIPA("obrigado");
+
+using var ptAlloEngine = new PortugueseG2PEngine(new PortugueseG2POptions(enableAllophones: true));
+string ptAllo = ptAlloEngine.ToIPA("cidade");
+// => IPA transcription with allophone rules applied
+
+string ptXsampa = ptEngine.ToXSampa("obrigado");
+string ptXsampaNoStress = ptEngine.ToXSampaWithoutStress("obrigado");
+
+var ptBatch = ptEngine.ToIPABatch(new[] { "bom dia", "boa noite" });
+
 // === Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese Text ===
 using DotNetG2P.Multilingual;
 
@@ -251,6 +299,18 @@ var esOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Spanis
 using var multiEsEngine = new MultilingualG2PEngine(esOptions);
 multiEsEngine.ToPhonemes("hola世界");
 // Spanish segments => IPA phonemes, Japanese segments => Japanese phonemes
+
+// For text containing French
+var frOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.French);
+using var multiFrEngine = new MultilingualG2PEngine(frOptions);
+multiFrEngine.ToPhonemes("bonjour世界");
+// French segments => IPA phonemes, Japanese segments => Japanese phonemes
+
+// For text containing Portuguese
+var ptOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Portuguese);
+using var multiPtEngine = new MultilingualG2PEngine(ptOptions);
+multiPtEngine.ToPhonemes("obrigado世界");
+// Portuguese segments => IPA phonemes, Japanese segments => Japanese phonemes
 ```
 
 ## API Reference
@@ -336,6 +396,38 @@ multiEsEngine.ToPhonemes("hola世界");
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | Batch IPA conversion |
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | Batch X-SAMPA conversion |
+
+### FrenchG2PEngine
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ToPhonemes(text)` | `string` | Space-separated IPA phoneme sequence |
+| `ToIPA(text)` | `string` | IPA transcription (`"bɔ̃ʒuʁ"` style) |
+| `ToIPAWithoutStress(text)` | `string` | IPA transcription without stress marks |
+| `ToXSampa(text)` | `string` | X-SAMPA transcription |
+| `ToXSampaWithoutStress(text)` | `string` | X-SAMPA transcription without stress marks |
+| `ToPhonemeList(text)` | `IReadOnlyList<FrenchPhoneme>` | Structured phoneme list |
+| `ToSyllables(word)` | `IReadOnlyList<FrenchPhoneme[]>` | Syllabification result |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | Batch IPA conversion |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | Batch X-SAMPA conversion |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<FrenchPhoneme>>` | Batch structured phoneme list conversion |
+
+### PortugueseG2PEngine
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ToPhonemes(text)` | `string` | Space-separated IPA phoneme sequence |
+| `ToIPA(text)` | `string` | IPA transcription (`"obɾiˈɡadu"` style) |
+| `ToIPAWithoutStress(text)` | `string` | IPA transcription without stress marks |
+| `ToXSampa(text)` | `string` | X-SAMPA transcription |
+| `ToXSampaWithoutStress(text)` | `string` | X-SAMPA transcription without stress marks |
+| `ToPhonemeList(text)` | `IReadOnlyList<PortuguesePhoneme>` | Structured phoneme list |
+| `ToSyllables(text)` | `IReadOnlyList<PortugueseSyllable>` | Syllabification result |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | Batch IPA conversion |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | Batch X-SAMPA conversion |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<PortuguesePhoneme>>` | Batch structured phoneme list conversion |
 
 ### MultilingualG2PEngine
 
@@ -460,6 +552,57 @@ Additional regression checks on March 10, 2026:
 
 - `SpanishG2P`: `227 passed`
 - `SpanishNormalizer` treats `1.234` as a grouped integer and does not semantically expand invalid dates/times
+
+## French Evaluation
+
+The French G2P package includes a full-corpus evaluation pipeline backed by `ipa-dict` and `WikiPron`.
+
+```powershell
+pwsh -File tools/refresh_french_eval_data.ps1 -Mode Full
+pwsh -File tools/run_french_full_evaluation.ps1 -EnforceThresholds
+```
+
+- Corpus output: `artifacts/french-eval/corpora`
+- Report output: `artifacts/french-eval/reports/latest`
+- Main artifacts:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+Thresholds (`tools/french_eval_thresholds.json`):
+
+- `ipa_dict_fr_fr_sample`: base/allophones PER `< 8%`, no_exceptions PER `< 12%`
+- `ipa_dict_fr_fr_full`: base/allophones PER `< 12%`, no_exceptions PER `< 18%`
+- `wikipron_fra_latn_broad_filtered_sample`: base PER `< 8%`
+- `wikipron_fra_latn_broad_filtered_full`: base PER `< 12%`
+
+Regression coverage:
+
+- `FrenchG2P`: `707 passed, 12 skipped` (`719` total)
+- `FrenchDatasetEvaluationTests`: `6` threshold-backed corpus checks
+- `FrenchAllophoneEvaluationTests`: `6` allophone profile checks
+
+## Portuguese Evaluation
+
+The Portuguese G2P package combines rule-based conversion with a 560+ entry exception dictionary and ships with a full-corpus evaluation pipeline.
+
+```powershell
+pwsh -File tools/refresh_portuguese_eval_data.ps1 -Mode Full
+pwsh -File tools/run_portuguese_full_evaluation.ps1 -EnforceThresholds
+```
+
+- Corpus output: `artifacts/portuguese-eval/corpora`
+- Report output: `artifacts/portuguese-eval/reports/latest`
+- Main artifacts:
+  - `summary.tsv`
+  - `category_summary.tsv`
+  - `mismatches/*.tsv`
+
+Regression coverage:
+
+- `PortugueseG2P`: `1294 passed, 16 skipped` (`1310` total)
+- `PortugueseDatasetEvaluationTests`: `9` threshold-backed corpus checks
+- `PortugueseAllophoneEvaluationTests`: `7` allophone profile checks
 
 ## Configuration Options
 

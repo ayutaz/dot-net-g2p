@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Xml.Linq;
 using DotNetG2P.Tests.KoreanG2P.Benchmarking;
+using DotNetG2P.Tests.Packaging;
 
 namespace DotNetG2P.Tests.KoreanG2P
 {
@@ -89,7 +90,8 @@ namespace DotNetG2P.Tests.KoreanG2P
             Assert.Contains("Korean", root.GetProperty("description").GetString(), System.StringComparison.Ordinal);
 
             var dependencies = root.GetProperty("dependencies");
-            Assert.Equal("1.3.0", dependencies.GetProperty("com.dotnetg2p.korean").GetString());
+            var packageInfos = UnityPackageTestData.LoadPackageInfos();
+            Assert.Equal(packageInfos["com.dotnetg2p.korean"].Version, dependencies.GetProperty("com.dotnetg2p.korean").GetString());
         }
 
         [Theory]
