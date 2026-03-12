@@ -34,8 +34,10 @@ namespace DotNetG2P.Tests.KoreanG2P
         {
             var csprojPath = Path.Combine(KoreanBenchmarkPaths.RepoRoot, "src", "DotNetG2P.Korean", "DotNetG2P.Korean.csproj");
             var packageJsonPath = Path.Combine(KoreanBenchmarkPaths.RepoRoot, "src", "DotNetG2P.Korean", "package.json");
+            var commonPropsPath = Path.Combine(KoreanBenchmarkPaths.RepoRoot, "Directory.Build.props");
 
             var project = XDocument.Load(csprojPath);
+            var commonProps = XDocument.Load(commonPropsPath);
             var propertyGroup = Assert.Single(project.Root!.Elements("PropertyGroup"));
 
             Assert.Equal("Apache-2.0", propertyGroup.Element("PackageLicenseExpression")?.Value);
@@ -51,7 +53,17 @@ namespace DotNetG2P.Tests.KoreanG2P
                 .ToArray();
 
             Assert.Contains("README.md", packedFiles);
-            Assert.Contains("THIRD-PARTY-NOTICES.md", packedFiles);
+
+            var commonPackedFiles = commonProps.Root!.Elements("ItemGroup")
+                .Elements("None")
+                .Select(element => element.Attribute("Include")?.Value)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .ToArray();
+
+            Assert.True(
+                packedFiles.Contains("THIRD-PARTY-NOTICES.md", System.StringComparer.Ordinal) ||
+                commonPackedFiles.Contains("THIRD-PARTY-NOTICES.md", System.StringComparer.Ordinal),
+                "THIRD-PARTY-NOTICES.md must be packed either by the package project or Directory.Build.props.");
 
             using var packageDoc = JsonDocument.Parse(File.ReadAllText(packageJsonPath));
             var root = packageDoc.RootElement;
