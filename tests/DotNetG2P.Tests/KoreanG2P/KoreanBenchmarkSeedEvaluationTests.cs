@@ -17,24 +17,25 @@ namespace DotNetG2P.Tests.KoreanG2P
                     .Skip(1)
                     .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#", StringComparison.Ordinal))
                     .Select(line => line.Split('\t'))
-                    .Where(parts => parts.Length == 5 && !string.Equals(parts[3], "ui-variation", StringComparison.Ordinal));
+                    .Where(parts => parts.Length == 5);
 
                 foreach (var row in rows)
-                    yield return new object[] { row[0], row[1], row[2], row[3] };
+                    yield return new object[] { fileName, row[0], row[1], row[2], row[3] };
             }
         }
 
         [Theory]
         [MemberData(nameof(M2SeedCases))]
-        public void SeedCases_M2SupportedRules_MatchExpectedHangul(string input, string expected, string source, string ruleTag)
+        public void SeedCases_M2SupportedRules_MatchExpectedHangul(string fileName, string input, string expected, string source, string ruleTag)
         {
             using var engine = new KoreanG2PEngine();
 
             var actual = engine.Analyze(input).ToHangulString();
+            var accepted = expected.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
             Assert.True(
-                string.Equals(expected, actual, StringComparison.Ordinal),
-                $"Expected '{expected}' but got '{actual}' for '{input}' ({source}, {ruleTag}).");
+                accepted.Any(candidate => string.Equals(candidate, actual, StringComparison.Ordinal)),
+                $"Expected one of '{expected}' but got '{actual}' for '{input}' in {fileName} ({source}, {ruleTag}).");
         }
 
         private static string ResolveTestDataPath(string fileName)

@@ -15,7 +15,7 @@ Schema:
 
 - header: `input	expected	source	rule_tag	notes`
 - `input`: source spelling in Hangul
-- `expected`: normalized pronunciation in Hangul
+- `expected`: normalized pronunciation in Hangul. Alternate accepted outputs may be joined by `|`
 - `source`: short provenance label such as `g2pK_0.9.4`, `NIKL_QNA_312379`, `Mun2022`
 - `rule_tag`: one of
   - `neutralization`
@@ -32,5 +32,6 @@ Schema:
 Notes:
 
 - M0 stores `expected` as pronunciation Hangul, not final phoneme inventory. This avoids locking the internal phoneme set too early.
+- When a rule has multiple standard-accepted outputs, `expected` may store alternatives such as `검녈|거멸`.
 - Current rows are hand-curated starter seeds only. They are intentionally small and must be expanded and source-verified before M3.
 - If `g2pK` parity and official gold disagree, future evaluation should prefer official gold.

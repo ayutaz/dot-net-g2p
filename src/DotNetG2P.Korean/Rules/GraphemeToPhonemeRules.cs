@@ -14,7 +14,7 @@ namespace DotNetG2P.Korean.Rules
             var result = new KoreanSyllable[syllables.Length];
             Array.Copy(syllables, result, syllables.Length);
 
-            AssimilationProcessor.ApplyHDeletionBeforeNasals(result);
+            AssimilationProcessor.ApplyHTransformations(result);
             AssimilationProcessor.ApplyNInsertion(result);
             AssimilationProcessor.ApplyResyllabification(result);
             AssimilationProcessor.ApplyLiquidization(result);

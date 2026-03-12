@@ -58,12 +58,22 @@ namespace DotNetG2P.Korean
                 return string.Empty;
 
             var builder = new StringBuilder(pronunciation.SyllablesInternal.Length * 3);
+            var appendedSyllable = false;
             for (var i = 0; i < pronunciation.SyllablesInternal.Length; i++)
             {
-                if (i > 0)
+                var syllable = pronunciation.SyllablesInternal[i];
+                if (syllable.IsBoundary)
+                {
+                    builder.Append(syllable.ToJamoString());
+                    appendedSyllable = false;
+                    continue;
+                }
+
+                if (appendedSyllable)
                     builder.Append(_options.SyllableSeparator);
 
-                builder.Append(pronunciation.SyllablesInternal[i].ToJamoString());
+                builder.Append(syllable.ToJamoString());
+                appendedSyllable = true;
             }
 
             return builder.ToString();

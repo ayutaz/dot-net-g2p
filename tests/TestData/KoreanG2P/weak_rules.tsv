@@ -1,6 +1,15 @@
 input	expected	source	rule_tag	notes
 놓는	논는	Mun2022	h-deletion	Starter seed for a weak rule highlighted in the 2022 comparison paper
 깻잎	깬닙	Mun2022	n-insertion	Starter seed for a weak rule highlighted in the 2022 comparison paper
-나의	나에	Mun2022	ui-variation	Starter seed for possessive particle pronunciation variation
+나의	나의|나에	Mun2022	ui-variation	Starter seed for possessive particle pronunciation variation
 앞문	암문	Mun2022	place-assimilation	Starter seed for place assimilation not tracked well by existing OSS
 않네	안네	Mun2022	h-deletion	Starter seed for h-deletion before nasal onset
+좋아	조아	NIKL_Regulation_12	h-deletion	ㅎ coda deletion before an onsetless vowel
+좋다	조타	NIKL_Regulation_12	h-deletion	ㅎ coda deletion with following aspirated onset
+않다	안타	NIKL_Regulation_12	h-deletion	ㄶ cluster loses ㅎ and aspirates following obstruent
+담요	담뇨	NIKL_Regulation_30	n-insertion	Compound-style ㄴ insertion before an iotized vowel
+검열	검녈|거멸	NIKL_Regulation_30	n-insertion	Standard allows ㄴ insertion and optional assimilation variant
+색연필	생년필	NIKL_Regulation_30	n-insertion	ㄴ insertion plus nasalization should both surface
+밟다	밥따	Stdict_밟다	tensification	ㄼ lexical exception must surface hidden ㅂ before consonant
+밟고	밥꼬	Stdict_밟다	tensification	ㄼ lexical exception must retain hidden ㅂ before ㄱ onset
+밟는	밤는	Stdict_밟다	nasalization	ㄼ lexical exception must nasalize from hidden ㅂ before ㄴ onset

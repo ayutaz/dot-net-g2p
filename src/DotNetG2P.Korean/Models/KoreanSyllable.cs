@@ -61,6 +61,9 @@ namespace DotNetG2P.Korean
         /// <summary>中声を持つか。</summary>
         public bool HasNucleus => Nucleus != '\0';
 
+        /// <summary>空白などの語境界マーカーか。</summary>
+        public bool IsBoundary => !HasNucleus && char.IsWhiteSpace(Onset);
+
         /// <summary>
         /// Jamo 文字列へ変換する。
         /// </summary>
@@ -98,6 +101,9 @@ namespace DotNetG2P.Korean
         /// </summary>
         public KoreanPhoneme[] ToPhonemes()
         {
+            if (IsBoundary)
+                return Array.Empty<KoreanPhoneme>();
+
             if (!HasNucleus)
                 return new[] { new KoreanPhoneme(Onset) };
 
@@ -136,6 +142,14 @@ namespace DotNetG2P.Korean
         public static KoreanSyllable FromStandaloneJamo(char jamo)
         {
             return new KoreanSyllable(jamo, '\0', '\0');
+        }
+
+        /// <summary>
+        /// 空白などの語境界マーカーを構成する。
+        /// </summary>
+        public static KoreanSyllable FromBoundary(char boundary)
+        {
+            return new KoreanSyllable(boundary, '\0', '\0');
         }
 
         private static Dictionary<char, int> CreateIndexMap(char[] source)

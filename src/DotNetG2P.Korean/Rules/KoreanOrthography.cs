@@ -15,7 +15,10 @@ namespace DotNetG2P.Korean.Rules
             {
                 var c = text[i];
                 if (char.IsWhiteSpace(c))
+                {
+                    syllables.Add(KoreanSyllable.FromBoundary(c));
                     continue;
+                }
 
                 if (KoreanSyllable.TryDecompose(c, out var syllable))
                 {
@@ -43,7 +46,12 @@ namespace DotNetG2P.Korean.Rules
 
             var result = new List<KoreanPhoneme>(syllables.Count * 3);
             for (var i = 0; i < syllables.Count; i++)
+            {
+                if (syllables[i].IsBoundary)
+                    continue;
+
                 result.AddRange(syllables[i].ToPhonemes());
+            }
             return result.ToArray();
         }
 
@@ -54,7 +62,7 @@ namespace DotNetG2P.Korean.Rules
 
         public static bool IsHangulSyllable(KoreanSyllable syllable)
         {
-            return syllable.HasNucleus;
+            return syllable.HasNucleus && !syllable.IsBoundary;
         }
 
         public static bool IsSilentIeung(KoreanSyllable syllable)
@@ -80,11 +88,33 @@ namespace DotNetG2P.Korean.Rules
             }
         }
 
-        public static bool IsBenchmarkNInsertionPattern(KoreanSyllable next)
+        public static bool IsNInsertionTarget(KoreanSyllable next)
         {
             return next.Onset == 'ㅇ'
-                && next.Nucleus == 'ㅣ'
-                && next.Coda == 'ㅍ';
+                && IsNInsertionVowel(next.Nucleus);
+        }
+
+        public static bool IsNInsertionVowel(char nucleus)
+        {
+            switch (nucleus)
+            {
+                case 'ㅣ':
+                case 'ㅑ':
+                case 'ㅕ':
+                case 'ㅛ':
+                case 'ㅠ':
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        public static bool IsUiVariationCandidate(KoreanSyllable syllable)
+        {
+            return syllable.Onset == 'ㅇ'
+                && syllable.Nucleus == 'ㅢ'
+                && !syllable.HasCoda;
         }
     }
 }

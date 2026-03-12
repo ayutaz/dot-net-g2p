@@ -55,6 +55,11 @@ namespace DotNetG2P.Korean.Rules
             }
         }
 
+        public static char ToNasalCoda(KoreanSyllable current, KoreanSyllable next)
+        {
+            return ToNasalCoda(GetSurfaceCodaBeforeConsonant(current, next));
+        }
+
         public static char ToNasalCoda(char coda)
         {
             switch (ToRepresentativeCoda(coda))
@@ -147,22 +152,79 @@ namespace DotNetG2P.Korean.Rules
             }
         }
 
-        public static bool TryResolveHBeforeNasal(char coda, out char resolvedCoda)
+        public static bool IsHFamily(char coda)
+        {
+            return coda == 'ㅎ'
+                || coda == 'ㄶ'
+                || coda == 'ㅀ';
+        }
+
+        public static char RemoveHComponent(char coda)
         {
             switch (coda)
             {
                 case 'ㅎ':
+                    return '\0';
+
                 case 'ㄶ':
-                    resolvedCoda = 'ㄴ';
-                    return true;
+                    return 'ㄴ';
 
                 case 'ㅀ':
-                    resolvedCoda = 'ㄹ';
+                    return 'ㄹ';
+
+                default:
+                    return coda;
+            }
+        }
+
+        public static bool TryAspirateOnsetAfterH(char onset, out char aspiratedOnset)
+        {
+            switch (onset)
+            {
+                case 'ㄱ':
+                    aspiratedOnset = 'ㅋ';
+                    return true;
+
+                case 'ㄷ':
+                    aspiratedOnset = 'ㅌ';
+                    return true;
+
+                case 'ㅈ':
+                    aspiratedOnset = 'ㅊ';
+                    return true;
+
+                case 'ㅅ':
+                    aspiratedOnset = 'ㅆ';
                     return true;
 
                 default:
-                    resolvedCoda = '\0';
+                    aspiratedOnset = '\0';
                     return false;
+            }
+        }
+
+        public static char GetNInsertionOnset(char currentCoda)
+        {
+            return ToRepresentativeCoda(currentCoda) == 'ㄹ'
+                ? 'ㄹ'
+                : 'ㄴ';
+        }
+
+        public static char GetSurfaceCodaBeforeConsonant(KoreanSyllable current, KoreanSyllable next)
+        {
+            if (!current.HasCoda || !next.HasNucleus || KoreanOrthography.IsSilentIeung(next))
+                return current.Coda;
+
+            switch (current.Coda)
+            {
+                case 'ㄼ':
+                    if (UsesBieupDominantSurface(current, next))
+                        return 'ㅂ';
+
+                    return 'ㄹ';
+
+                default:
+                    return ToRepresentativeCoda(current.Coda);
             }
         }
 
@@ -202,6 +264,18 @@ namespace DotNetG2P.Korean.Rules
                 default:
                     return onset;
             }
+        }
+
+        private static bool UsesBieupDominantSurface(KoreanSyllable current, KoreanSyllable next)
+        {
+            if (current.Onset == 'ㅂ' && current.Nucleus == 'ㅏ')
+                return true;
+
+            if (current.Onset != 'ㄴ' || current.Nucleus != 'ㅓ')
+                return false;
+
+            return (next.Onset == 'ㅈ' && next.Nucleus == 'ㅜ' && next.Coda == 'ㄱ')
+                || (next.Onset == 'ㄷ' && next.Nucleus == 'ㅜ' && next.Coda == 'ㅇ');
         }
     }
 }

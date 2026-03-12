@@ -1,3 +1,4 @@
+using System.Linq;
 using DotNetG2P.Korean;
 using DotNetG2P.Korean.Rules;
 
@@ -46,9 +47,68 @@ namespace DotNetG2P.Tests.KoreanG2P
         }
 
         [Theory]
+        [InlineData("좋아", "조아")]
+        [InlineData("좋다", "조타")]
+        [InlineData("좋지", "조치")]
+        [InlineData("놓고", "노코")]
+        [InlineData("않다", "안타")]
+        [InlineData("싫어", "시러")]
+        public void Analyze_AppliesHFamilyTransformations(string input, string expected)
+        {
+            using var engine = new KoreanG2PEngine();
+
+            Assert.Equal(expected, engine.Analyze(input).ToHangulString());
+        }
+
+        [Theory]
+        [InlineData("담요", "담뇨")]
+        [InlineData("검열", "검녈")]
+        [InlineData("색연필", "생년필")]
+        [InlineData("막일", "망닐")]
+        [InlineData("한여름", "한녀름")]
+        [InlineData("솜이불", "솜니불")]
+        public void Analyze_AppliesGeneralizedNInsertion(string input, string expected)
+        {
+            using var engine = new KoreanG2PEngine();
+
+            Assert.Equal(expected, engine.Analyze(input).ToHangulString());
+        }
+
+        [Theory]
+        [InlineData("밟다", "밥따")]
+        [InlineData("밟고", "밥꼬")]
+        [InlineData("밟는", "밤는")]
+        public void Analyze_ResolvesBieupDominantDoubleBatchimBeforeConsonants(string input, string expected)
+        {
+            using var engine = new KoreanG2PEngine();
+
+            Assert.Equal(expected, engine.Analyze(input).ToHangulString());
+        }
+
+        [Fact]
+        public void DecomposeText_PreservesWhitespaceAsBoundaryMarker()
+        {
+            var syllables = KoreanOrthography.DecomposeText("국밥 신라", preserveNonHangul: false);
+
+            Assert.Contains(syllables, syllable => syllable.IsBoundary);
+            Assert.Equal(" ", syllables.Single(syllable => syllable.IsBoundary).ToHangulString());
+        }
+
+        [Fact]
+        public void Analyze_DoesNotApplyIntraWordRulesAcrossWhitespaceBoundary()
+        {
+            using var engine = new KoreanG2PEngine();
+
+            Assert.Equal("검 열", engine.Analyze("검 열").ToHangulString());
+        }
+
+        [Theory]
         [InlineData("밭이", "ㅂ ㅏ ㅊ ㅣ")]
         [InlineData("먹는", "ㅁ ㅓ ㅇ ㄴ ㅡ ㄴ")]
         [InlineData("국밥", "ㄱ ㅜ ㄱ ㅃ ㅏ ㅂ")]
+        [InlineData("좋다", "ㅈ ㅗ ㅌ ㅏ")]
+        [InlineData("담요", "ㄷ ㅏ ㅁ ㄴ ㅛ")]
+        [InlineData("밟다", "ㅂ ㅏ ㅂ ㄸ ㅏ")]
         public void ToPhonemes_ReflectsAppliedRules(string input, string expected)
         {
             using var engine = new KoreanG2PEngine();

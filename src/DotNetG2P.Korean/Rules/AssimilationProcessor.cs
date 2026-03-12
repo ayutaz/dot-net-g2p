@@ -1,21 +1,38 @@
-using System;
-
 namespace DotNetG2P.Korean.Rules
 {
     internal static class AssimilationProcessor
     {
-        public static void ApplyHDeletionBeforeNasals(KoreanSyllable[] syllables)
+        public static void ApplyHTransformations(KoreanSyllable[] syllables)
         {
             for (var i = 0; i < syllables.Length - 1; i++)
             {
                 var current = syllables[i];
                 var next = syllables[i + 1];
-                if (!CanInspectPair(current, next) || !current.HasCoda)
+                if (!CanInspectPair(current, next) || !current.HasCoda || !BatchimProcessor.IsHFamily(current.Coda))
                     continue;
 
-                if ((next.Onset == 'ㄴ' || next.Onset == 'ㅁ')
-                    && BatchimProcessor.TryResolveHBeforeNasal(current.Coda, out var resolvedCoda))
+                if (KoreanOrthography.IsSilentIeung(next))
                 {
+                    var movedOnset = BatchimProcessor.RemoveHComponent(current.Coda);
+                    syllables[i] = new KoreanSyllable(current.Onset, current.Nucleus, '\0');
+                    if (movedOnset != '\0')
+                        syllables[i + 1] = new KoreanSyllable(movedOnset, next.Nucleus, next.Coda);
+                    continue;
+                }
+
+                if (BatchimProcessor.TryAspirateOnsetAfterH(next.Onset, out var aspiratedOnset))
+                {
+                    var residualCoda = BatchimProcessor.RemoveHComponent(current.Coda);
+                    syllables[i] = new KoreanSyllable(current.Onset, current.Nucleus, residualCoda);
+                    syllables[i + 1] = new KoreanSyllable(aspiratedOnset, next.Nucleus, next.Coda);
+                    continue;
+                }
+
+                if (next.Onset == 'ㄴ' || next.Onset == 'ㅁ')
+                {
+                    var resolvedCoda = current.Coda == 'ㅎ'
+                        ? 'ㄴ'
+                        : BatchimProcessor.RemoveHComponent(current.Coda);
                     syllables[i] = new KoreanSyllable(current.Onset, current.Nucleus, resolvedCoda);
                 }
             }
@@ -30,8 +47,11 @@ namespace DotNetG2P.Korean.Rules
                 if (!CanInspectPair(current, next) || !current.HasCoda)
                     continue;
 
-                if (KoreanOrthography.IsBenchmarkNInsertionPattern(next))
-                    syllables[i + 1] = new KoreanSyllable('ㄴ', next.Nucleus, next.Coda);
+                if (!ShouldApplyNInsertion(syllables, i, next))
+                    continue;
+
+                var insertedOnset = BatchimProcessor.GetNInsertionOnset(current.Coda);
+                syllables[i + 1] = new KoreanSyllable(insertedOnset, next.Nucleus, next.Coda);
             }
         }
 
@@ -62,14 +82,14 @@ namespace DotNetG2P.Korean.Rules
                 if (!CanInspectPair(current, next) || !current.HasCoda)
                     continue;
 
-                var representative = BatchimProcessor.ToRepresentativeCoda(current.Coda);
-                if (representative == 'ㄴ' && next.Onset == 'ㄹ')
+                var surfaceCoda = BatchimProcessor.GetSurfaceCodaBeforeConsonant(current, next);
+                if (surfaceCoda == 'ㄴ' && next.Onset == 'ㄹ')
                 {
                     syllables[i] = new KoreanSyllable(current.Onset, current.Nucleus, 'ㄹ');
                     continue;
                 }
 
-                if (representative == 'ㄹ' && next.Onset == 'ㄴ')
+                if (surfaceCoda == 'ㄹ' && next.Onset == 'ㄴ')
                     syllables[i + 1] = new KoreanSyllable('ㄹ', next.Nucleus, next.Coda);
             }
         }
@@ -86,8 +106,8 @@ namespace DotNetG2P.Korean.Rules
                 if (next.Onset != 'ㄴ' && next.Onset != 'ㅁ')
                     continue;
 
-                var nasalCoda = BatchimProcessor.ToNasalCoda(current.Coda);
-                if (nasalCoda != BatchimProcessor.ToRepresentativeCoda(current.Coda))
+                var nasalCoda = BatchimProcessor.ToNasalCoda(current, next);
+                if (nasalCoda != current.Coda)
                     syllables[i] = new KoreanSyllable(current.Onset, current.Nucleus, nasalCoda);
             }
         }
@@ -101,7 +121,14 @@ namespace DotNetG2P.Korean.Rules
                 if (!CanInspectPair(current, next) || !current.HasCoda)
                     continue;
 
-                if (!BatchimProcessor.CanTriggerTensification(current.Coda))
+                var surfaceCoda = BatchimProcessor.GetSurfaceCodaBeforeConsonant(current, next);
+                if (surfaceCoda != current.Coda)
+                {
+                    current = new KoreanSyllable(current.Onset, current.Nucleus, surfaceCoda);
+                    syllables[i] = current;
+                }
+
+                if (!BatchimProcessor.CanTriggerTensification(surfaceCoda))
                     continue;
 
                 var tensified = BatchimProcessor.TensifyOnset(next.Onset);
@@ -128,6 +155,26 @@ namespace DotNetG2P.Korean.Rules
         {
             return KoreanOrthography.IsHangulSyllable(current)
                 && KoreanOrthography.IsHangulSyllable(next);
+        }
+
+        private static bool ShouldApplyNInsertion(KoreanSyllable[] syllables, int currentIndex, KoreanSyllable next)
+        {
+            if (!KoreanOrthography.IsNInsertionTarget(next))
+                return false;
+
+            if (next.Nucleus != 'ㅣ' || next.HasCoda)
+                return true;
+
+            for (var i = currentIndex + 2; i < syllables.Length; i++)
+            {
+                if (syllables[i].IsBoundary)
+                    return false;
+
+                if (KoreanOrthography.IsHangulSyllable(syllables[i]))
+                    return true;
+            }
+
+            return false;
         }
 
         private static char ApplyPalatalization(char onset, char nextNucleus)
