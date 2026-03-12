@@ -49,10 +49,24 @@ namespace DotNetG2P.Korean
             return result;
         }
 
+        /// <summary>
+        /// 発音を Hangul 表層文字列として返す。
+        /// </summary>
+        public string ToHangulString()
+        {
+            if (SyllablesInternal.Length == 0)
+                return string.Empty;
+
+            var result = new string[SyllablesInternal.Length];
+            for (var i = 0; i < SyllablesInternal.Length; i++)
+                result[i] = SyllablesInternal[i].ToHangulString();
+            return string.Concat(result);
+        }
+
         /// <inheritdoc />
         public override string ToString()
         {
-            return string.Join(" ", GetJamoSyllables());
+            return ToHangulString();
         }
     }
 }

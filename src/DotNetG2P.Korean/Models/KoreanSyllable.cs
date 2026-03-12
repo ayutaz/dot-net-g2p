@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace DotNetG2P.Korean
 {
@@ -30,6 +31,10 @@ namespace DotNetG2P.Korean
             'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ',
             'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ',
         };
+
+        private static readonly Dictionary<char, int> InitialIndices = CreateIndexMap(Initials);
+        private static readonly Dictionary<char, int> MedialIndices = CreateIndexMap(Medials);
+        private static readonly Dictionary<char, int> FinalIndices = CreateIndexMap(Finals);
 
         /// <summary>初声。</summary>
         public char Onset { get; }
@@ -67,6 +72,25 @@ namespace DotNetG2P.Korean
             return HasCoda
                 ? string.Concat(Onset, Nucleus, Coda)
                 : string.Concat(Onset, Nucleus);
+        }
+
+        /// <summary>
+        /// Hangul 音節 문자열へ変換する。
+        /// </summary>
+        public string ToHangulString()
+        {
+            if (!HasNucleus)
+                return Onset.ToString();
+
+            if (!InitialIndices.TryGetValue(Onset, out var onsetIndex)
+                || !MedialIndices.TryGetValue(Nucleus, out var medialIndex)
+                || !FinalIndices.TryGetValue(Coda, out var finalIndex))
+            {
+                return ToJamoString();
+            }
+
+            var codePoint = HangulSyllableBase + ((onsetIndex * VowelCount) + medialIndex) * CodaCount + finalIndex;
+            return ((char)codePoint).ToString();
         }
 
         /// <summary>
@@ -112,6 +136,14 @@ namespace DotNetG2P.Korean
         public static KoreanSyllable FromStandaloneJamo(char jamo)
         {
             return new KoreanSyllable(jamo, '\0', '\0');
+        }
+
+        private static Dictionary<char, int> CreateIndexMap(char[] source)
+        {
+            var result = new Dictionary<char, int>(source.Length);
+            for (var i = 0; i < source.Length; i++)
+                result[source[i]] = i;
+            return result;
         }
 
         /// <inheritdoc />

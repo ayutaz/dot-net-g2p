@@ -1,0 +1,207 @@
+namespace DotNetG2P.Korean.Rules
+{
+    internal static class BatchimProcessor
+    {
+        public static char ToRepresentativeCoda(char coda)
+        {
+            switch (coda)
+            {
+                case '\0':
+                    return '\0';
+
+                case 'ㄱ':
+                case 'ㄲ':
+                case 'ㅋ':
+                case 'ㄳ':
+                case 'ㄺ':
+                    return 'ㄱ';
+
+                case 'ㄴ':
+                case 'ㄵ':
+                case 'ㄶ':
+                    return 'ㄴ';
+
+                case 'ㄷ':
+                case 'ㅅ':
+                case 'ㅆ':
+                case 'ㅈ':
+                case 'ㅊ':
+                case 'ㅌ':
+                case 'ㅎ':
+                    return 'ㄷ';
+
+                case 'ㄹ':
+                case 'ㄼ':
+                case 'ㄽ':
+                case 'ㄾ':
+                case 'ㅀ':
+                    return 'ㄹ';
+
+                case 'ㄻ':
+                case 'ㅁ':
+                    return 'ㅁ';
+
+                case 'ㅂ':
+                case 'ㅄ':
+                case 'ㅍ':
+                case 'ㄿ':
+                    return 'ㅂ';
+
+                case 'ㅇ':
+                    return 'ㅇ';
+
+                default:
+                    return coda;
+            }
+        }
+
+        public static char ToNasalCoda(char coda)
+        {
+            switch (ToRepresentativeCoda(coda))
+            {
+                case 'ㄱ':
+                    return 'ㅇ';
+
+                case 'ㄷ':
+                    return 'ㄴ';
+
+                case 'ㅂ':
+                    return 'ㅁ';
+
+                default:
+                    return ToRepresentativeCoda(coda);
+            }
+        }
+
+        public static bool TrySplitForLiaison(char coda, out char retainedCoda, out char movedOnset)
+        {
+            switch (coda)
+            {
+                case 'ㄳ':
+                    retainedCoda = 'ㄱ';
+                    movedOnset = 'ㅅ';
+                    return true;
+
+                case 'ㄵ':
+                    retainedCoda = 'ㄴ';
+                    movedOnset = 'ㅈ';
+                    return true;
+
+                case 'ㄺ':
+                    retainedCoda = 'ㄹ';
+                    movedOnset = 'ㄱ';
+                    return true;
+
+                case 'ㄻ':
+                    retainedCoda = 'ㄹ';
+                    movedOnset = 'ㅁ';
+                    return true;
+
+                case 'ㄼ':
+                    retainedCoda = 'ㄹ';
+                    movedOnset = 'ㅂ';
+                    return true;
+
+                case 'ㄽ':
+                    retainedCoda = 'ㄹ';
+                    movedOnset = 'ㅅ';
+                    return true;
+
+                case 'ㄾ':
+                    retainedCoda = 'ㄹ';
+                    movedOnset = 'ㅌ';
+                    return true;
+
+                case 'ㄿ':
+                    retainedCoda = 'ㄹ';
+                    movedOnset = 'ㅍ';
+                    return true;
+
+                case 'ㅄ':
+                    retainedCoda = 'ㅂ';
+                    movedOnset = 'ㅅ';
+                    return true;
+
+                case 'ㄱ':
+                case 'ㄲ':
+                case 'ㅋ':
+                case 'ㄴ':
+                case 'ㄷ':
+                case 'ㄹ':
+                case 'ㅁ':
+                case 'ㅂ':
+                case 'ㅅ':
+                case 'ㅆ':
+                case 'ㅈ':
+                case 'ㅊ':
+                case 'ㅌ':
+                case 'ㅍ':
+                    retainedCoda = '\0';
+                    movedOnset = coda;
+                    return true;
+
+                default:
+                    retainedCoda = '\0';
+                    movedOnset = '\0';
+                    return false;
+            }
+        }
+
+        public static bool TryResolveHBeforeNasal(char coda, out char resolvedCoda)
+        {
+            switch (coda)
+            {
+                case 'ㅎ':
+                case 'ㄶ':
+                    resolvedCoda = 'ㄴ';
+                    return true;
+
+                case 'ㅀ':
+                    resolvedCoda = 'ㄹ';
+                    return true;
+
+                default:
+                    resolvedCoda = '\0';
+                    return false;
+            }
+        }
+
+        public static bool CanTriggerTensification(char coda)
+        {
+            switch (ToRepresentativeCoda(coda))
+            {
+                case 'ㄱ':
+                case 'ㄷ':
+                case 'ㅂ':
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        public static char TensifyOnset(char onset)
+        {
+            switch (onset)
+            {
+                case 'ㄱ':
+                    return 'ㄲ';
+
+                case 'ㄷ':
+                    return 'ㄸ';
+
+                case 'ㅂ':
+                    return 'ㅃ';
+
+                case 'ㅅ':
+                    return 'ㅆ';
+
+                case 'ㅈ':
+                    return 'ㅉ';
+
+                default:
+                    return onset;
+            }
+        }
+    }
+}

@@ -85,6 +85,7 @@ namespace DotNetG2P.Tests.KoreanG2P
             Assert.Equal("한글", result.NormalizedText);
             Assert.Equal(2, result.Syllables.Count);
             Assert.Equal(6, result.Phonemes.Count);
+            Assert.Equal("한글", result.ToHangulString());
             Assert.Equal("ㅎㅏㄴ", result.GetJamoSyllables()[0]);
             Assert.Equal("ㄱㅡㄹ", result.GetJamoSyllables()[1]);
         }

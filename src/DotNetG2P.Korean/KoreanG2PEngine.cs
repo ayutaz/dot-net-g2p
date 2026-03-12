@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using DotNetG2P.Korean.Rules;
 
 namespace DotNetG2P.Korean
 {
     /// <summary>
     /// 韓国語 G2P エンジン。
-    /// M1 では Hangul を分解して Jamo / 音素列へ変換する最小スキャフォールドを提供する。
+    /// Hangul-first の規則ベース処理で Jamo / 音素列へ変換する。
     /// </summary>
     public sealed class KoreanG2PEngine : IDisposable
     {
@@ -79,44 +80,15 @@ namespace DotNetG2P.Korean
                 return new KoreanPronunciation(string.Empty, string.Empty, Array.Empty<KoreanSyllable>(), Array.Empty<KoreanPhoneme>());
 
             var normalizedText = Normalize(text);
-            var syllables = new List<KoreanSyllable>(normalizedText.Length);
-            var phonemes = new List<KoreanPhoneme>(normalizedText.Length * 3);
-
-            for (var i = 0; i < normalizedText.Length; i++)
-            {
-                var c = normalizedText[i];
-
-                if (char.IsWhiteSpace(c))
-                    continue;
-
-                if (KoreanSyllable.TryDecompose(c, out var syllable))
-                {
-                    syllables.Add(syllable);
-                    phonemes.AddRange(syllable.ToPhonemes());
-                    continue;
-                }
-
-                if (IsCompatibilityJamo(c))
-                {
-                    var standalone = KoreanSyllable.FromStandaloneJamo(c);
-                    syllables.Add(standalone);
-                    phonemes.Add(new KoreanPhoneme(c));
-                    continue;
-                }
-
-                if (_options.PreserveNonHangul)
-                {
-                    var standalone = KoreanSyllable.FromStandaloneJamo(c);
-                    syllables.Add(standalone);
-                    phonemes.Add(new KoreanPhoneme(c));
-                }
-            }
+            var decomposed = KoreanOrthography.DecomposeText(normalizedText, _options.PreserveNonHangul);
+            var transformed = GraphemeToPhonemeRules.Convert(decomposed);
+            var phonemes = KoreanOrthography.FlattenPhonemes(transformed);
 
             return new KoreanPronunciation(
                 text,
                 normalizedText,
-                syllables.ToArray(),
-                phonemes.ToArray());
+                transformed,
+                phonemes);
         }
 
         /// <summary>
@@ -159,11 +131,6 @@ namespace DotNetG2P.Korean
                 return text;
 
             return text.Normalize(NormalizationForm.FormC);
-        }
-
-        private static bool IsCompatibilityJamo(char c)
-        {
-            return c >= '\u3131' && c <= '\u318E';
         }
 
         private void ThrowIfDisposed()
