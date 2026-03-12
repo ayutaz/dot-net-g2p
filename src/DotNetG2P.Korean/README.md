@@ -45,10 +45,23 @@ string uiVariant = colloquial.Analyze("나의").ToHangulString();
   - `g2pk_parity`: `8/8`
   - `official_gold`: `21/21`
   - `weak_rules`: `14/14`
+- Korean regression status as of 2026-03-12: `178 passed, 1 skipped`
 - Targeted regression command:
 
 ```bash
 dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Korean --no-restore
+```
+
+- Performance guard command:
+
+```bash
+dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter FullyQualifiedName~KoreanPerformanceTests --no-build --no-restore -m:1
+```
+
+- External corpus gate:
+
+```bash
+DOTNETG2P_KOREAN_EXTERNAL_CORPUS_PATHS=tests/TestData/KoreanG2P/official_gold.tsv DOTNETG2P_KOREAN_EXTERNAL_MIN_CASES=20 DOTNETG2P_KOREAN_EXTERNAL_ACCURACY_THRESHOLD=1.0 dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter FullyQualifiedName~KoreanExternalBenchmarkTests --no-build --no-restore -m:1
 ```
 
 ## Thread Safety

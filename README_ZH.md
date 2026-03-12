@@ -59,7 +59,7 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日语部分 => �
 - **可扩展设计** — 通过 `ITokenizer` 接口可替换形态素分析引擎
 - **支持英语 G2P** — CMU 词典（135,000 词）+ Flite LTS 规则进行 OOV 推测、IPA/X-SAMPA 输出、文本规范化、同形异音词解析
 - **支持中文 G2P** — pinyin-data 单字词典（44,000 条）+ phrase-pinyin-data 短语词典（411,000 条），自动多音字解析、声调变调（三声连读、一/不变调）、3 种输出风格、IPA（国际音标）与注音符号（ㄅㄆㄇㄈ）输出
-- **支持韩语 G2P** — Hangul-first 的规则驱动转换，包含 Jamo 分解、标准发音法导向的音韵规则、精确例外词典覆盖、轻量文本规范化，以及 `g2pk_parity` / `official_gold` / `weak_rules` benchmark harness
+- **支持韩语 G2P** — Hangul-first 的规则驱动转换，包含 Jamo 分解、标准发音法导向的音韵规则、精确例外词典覆盖、轻量文本规范化，以及 `g2pk_parity` / `official_gold` / `weak_rules` benchmark harness，并提供 external corpus gate 与 performance test
 - **支持西班牙语 G2P** — 提供基于规则的 IPA 转写、音节划分、重音判定、Castilian/Latin American 切换、异音处理选项、文本规范化、例外词典以及全量语料评估工具链。规范化器现已区分千位分隔符与小数点，并对非法日期/时间安全回退
 - **支持法语和葡萄牙语 G2P** — 提供基于规则的 IPA 转写、例外词典、方言选项、规范化管线和数据集驱动的评估工具链
 - **支持日英中韩西法葡混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，Hangul 片段会直接路由到 Korean segment，`DefaultLatinLanguage` 可控制英语/西班牙语/法语/葡萄牙语拉丁文本路由。纯汉字片段会结合 marker、日语词汇提示和内置中文词典进一步判定 JP/ZH，且内置中文词典与 `ChineseG2PEngine` 共享以避免重复常驻
@@ -354,9 +354,9 @@ Multilingual 补充说明:
 - 内置中文词典与 `ChineseG2PEngine` 共享，当前测量下 `TextSegmenter` 额外带来的词典常驻约为 `0.02MB`
 - 只有证据不足的歧义纯汉字片段才会回退到 `DefaultCjkLanguage`
 - `MultilingualG2POptions.KoreanOptions` 可将韩语规范化与 `UiVariationMode` 设置透传给 `KoreanG2PEngine`
-- 截至 2026-03-12 的 Multilingual 回归结果: `432 passed`
-- 代表性 Multilingual 回归子集: `110 passed`
+- 截至 2026-03-12 的 Multilingual 回归结果: `443 passed`
 - `MultilingualPerformanceTests`: `8 passed`
+- `MultilingualKoreanPerformanceTests`: `2 passed`
 
 ### 日语音素体系
 

@@ -63,7 +63,7 @@ multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese =>
 - **Extensible design** — Swap out the morphological analysis engine via the `ITokenizer` interface
 - **English G2P support** — CMU dictionary (135,000 words) + Flite LTS rules for OOV estimation, IPA/X-SAMPA output, text normalization, and heteronym resolution
 - **Chinese G2P support** — pinyin-data character dictionary (44,000 entries) + phrase-pinyin-data phrase dictionary (411,000 entries) for automatic polyphone resolution, tone sandhi (third tone, 一/不 rules), 3 output styles, IPA (International Phonetic Alphabet) and Zhuyin (Bopomofo) output
-- **Korean G2P support** — Hangul-first rule-based conversion with Jamo decomposition, standard-pronunciation-oriented phonological rules, exact exception dictionary overrides, lightweight normalization, and benchmark harnesses for `g2pk_parity`, `official_gold`, and `weak_rules`
+- **Korean G2P support** — Hangul-first rule-based conversion with Jamo decomposition, standard-pronunciation-oriented phonological rules, exact exception dictionary overrides, lightweight normalization, benchmark harnesses for `g2pk_parity`, `official_gold`, and `weak_rules`, plus external corpus gates and performance tests
 - **Spanish G2P support** — Rule-based IPA conversion with syllabification, stress assignment, Castilian/Latin American options, optional allophone processing, normalization, an exception dictionary, and a full-corpus evaluation toolchain. The normalizer now also distinguishes grouping separators from decimal separators and safely falls back on invalid dates/times
 - **French and Portuguese G2P support** — Rule-based IPA conversion with exception dictionaries, dialect options, normalization pipelines, and dataset-driven evaluation toolchains
 - **Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese text support** — Automatic language detection and segment splitting based on Unicode character categories, with Hangul routed directly to Korean segments and `DefaultLatinLanguage` controlling English/Spanish/French/Portuguese Latin-script routing. Pure CJK ideograph runs are further disambiguated with markers, Japanese lexical hints, and embedded Chinese dictionaries, and the embedded Chinese dictionaries are shared with `ChineseG2PEngine` to avoid duplicate residency
@@ -353,9 +353,9 @@ Multilingual notes:
 - The embedded Chinese dictionaries are shared with `ChineseG2PEngine`, so additional `TextSegmenter`-only dictionary residency is about `0.02MB` in the current measurement
 - Only ambiguous pure ideograph runs with weak evidence fall back to `DefaultCjkLanguage`
 - `MultilingualG2POptions.KoreanOptions` passes Korean normalization and `UiVariationMode` settings through to `KoreanG2PEngine`
-- Multilingual regression status as of March 12, 2026: `432 passed`
-- Representative multilingual regression subset: `110 passed`
+- Multilingual regression status as of March 12, 2026: `443 passed`
 - `MultilingualPerformanceTests`: `8 passed`
+- `MultilingualKoreanPerformanceTests`: `2 passed`
 
 ### Japanese Phoneme System
 

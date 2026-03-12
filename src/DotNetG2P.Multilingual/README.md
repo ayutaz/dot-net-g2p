@@ -43,6 +43,16 @@ var segments = custom.ToSegments("나의 bonjour 世界");
 - `DefaultCjkLanguage`: choose the fallback target for ambiguous CJK ideograph segments
 - `KoreanOptions`: pass Korean-specific normalization and pronunciation options through to `KoreanG2PEngine`
 
+## Validation
+
+- Multilingual regression status as of 2026-03-12: `443 passed`
+- `MultilingualPerformanceTests`: `8 passed`
+- `MultilingualKoreanPerformanceTests`: `2 passed`
+
+```bash
+dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual --no-build --no-restore -m:1
+```
+
 ## Thread Safety
 
 `MultilingualG2PEngine` is safe to call from multiple threads.
