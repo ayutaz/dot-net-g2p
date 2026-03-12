@@ -39,7 +39,7 @@
     - 母音前脱落
     - 後続子音の激音化
     - 鼻音前処理
-  - 一般化した `ㄴ` 添音
+  - exact lexical exception を優先した `ㄴ` 添音対応
   - 子音前の `ㄼ` surface coda 処理
 
 ### 直近で埋めた M2 の欠落
@@ -47,10 +47,11 @@
 以前の review で見つかった次の欠落は 2026-03-12 の修正で反映済み。
 
 - `좋아`, `좋다`, `좋지`, `놓고`, `않다`, `싫어` を通す `ㅎ` 系変化
-- `담요`, `검열`, `색연필`, `막일`, `한여름`, `솜이불` を通す一般化 `ㄴ` 添音
+- `담요`, `검열`, `색연필`, `막일`, `한여름`, `솜이불`, `깻잎` を exact lexical exception で安定化
 - whitespace を保持し、単語境界を跨いだ規則過剰適用を止める boundary-aware pipeline
-- `밟다`, `밟고`, `밟는` を通す `ㄼ` 系の子音前処理
+- `밟다`, `밟고`, `밟는`, `넓다`, `넓고`, `앉다`, `핥다` を通す hidden obstruent tensification
 - seed benchmark 側の `ui-variation` 復帰と、複数許容発音を `|` で持てる評価形式
+- `KoreanPronunciation` collection の read-only 化、strict dictionary validation、benchmark report の temp 出力対応
 
 ### M3 で追加した benchmark harness
 
@@ -61,9 +62,10 @@
   - `korean-benchmark-dataset-summary.tsv`
   - `korean-benchmark-rule-summary.tsv`
   - `korean-benchmark-mismatches.tsv`
+- harness は custom options を受けられ、report writer は custom output directory を受けられる
 - 2026-03-12 時点の current seed 結果
   - `g2pk_parity`: `8/8`
-  - `official_gold`: `15/15`
+  - `official_gold`: `21/21`
   - `weak_rules`: `14/14`
   - mismatch report は空
 
@@ -73,13 +75,16 @@
 - punctuation / repeated whitespace / fullwidth ASCII を整える Hangul-first の軽量 normalizer を追加
 - exact token lookup の exception dictionary を追加
 - `나의` については `Standard` で `나의`, `Colloquial` で `나에` を返す方針に固定
-- lexical fallback として `밟다`, `밟고`, `밟는`, `검열` の exact lookup も辞書に追加
+- lexical fallback として `밟다`, `밟고`, `밟는`, `검열`, `담요`, `색연필`, `막일`, `한여름`, `솜이불`, `깻잎`, `넓죽하다` の exact lookup を追加
+- `EnableTextNormalization=false` でも compatibility Unicode normalization が残るように option 契約を整理
+- `KoreanPronunciation` の syllable / phoneme collection は read-only view として公開
+- dictionary TSV は invalid mode / duplicate entry を fail-fast にするようにした
 
 ### 残る制約
 
-- morphology なしのため、bare `이` 系の `ㄴ` 添音はまだヒューリスティック
-- `ㄼ` 系 lexical variation は一般規則化し切っておらず、M4 の例外辞書でさらに補強が必要
-- `의` 변이 は `Standard` / `Colloquial` の二値 option に固定したが、morphology なしでどこまで一般化するかは今後の課題
+- morphology なしのため、compound/phrase boundary 依存の `ㄴ` 添音は rule 一般化せず lexical exception 優先で運用している
+- `ㄼ` 系 lexical variation は `밟*`, `넓죽하다` などを辞書で回収しているが、一般規則化はまだ限定的
+- `의` 변이 は `Standard` / `Colloquial` の二値 option に固定したが、`나의` 以外を morphology なしでどこまで一般化するかは今後の課題
 - 숫자, 英字, Hanja, descriptive mode は未着手
 
 ### 次に見るべきもの

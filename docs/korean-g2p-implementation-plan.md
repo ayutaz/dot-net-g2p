@@ -55,11 +55,16 @@
 - `나의` の `ui-variation` を `Standard` / `Colloquial` option で切り替えられるようにした
 - punctuation / repeated whitespace / fullwidth ASCII の最小正規化を追加
 - `tests/DotNetG2P.Tests/KoreanG2P/` に normalizer / exception dictionary / engine override tests を追加
+- review 指摘を受けて `담임` のような単純語への `ㄴ` 添音過剰適用を止め、compound 系は exact lexical exception に寄せた
+- `넓다`, `넓고`, `앉다`, `핥다` を通す hidden obstruent tensification を追加した
+- `KoreanPronunciation` の collection を read-only view 化し、外部から内部配列を書き換えられないようにした
+- 例外辞書 loader を strict validation に変え、invalid mode / duplicate entry を fail-fast にした
+- benchmark harness に custom options と custom output directory を追加し、test 実行時の worktree 汚染を抑えた
 
 直近のテストゲート:
 
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter KoreanG2P --no-restore`
-  - `118 passed`
+  - `140 passed`
 - `dotnet build DotNetG2P.slnx -m:1 --no-restore`
   - success
 
@@ -239,6 +244,7 @@ rule engine だけでは取り切れない慣用発音と、v1 に必要な最�
 
 - 既知の慣用発音を例外辞書で回収できる
 - 正規化の有無で API の期待値が一貫する
+- benchmark / dictionary / public model が fail-open にならない
 - 숫자/英字/Hanja は `v1 optional or later` として境界が明文化される
 
 ## M5: Multilingual Integration
