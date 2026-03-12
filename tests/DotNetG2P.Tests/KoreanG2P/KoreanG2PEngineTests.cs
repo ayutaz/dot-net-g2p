@@ -75,6 +75,45 @@ namespace DotNetG2P.Tests.KoreanG2P
         }
 
         [Fact]
+        public void Analyze_DefaultNormalization_StripsPunctuationAndCollapsesWhitespace()
+        {
+            using var engine = new KoreanG2PEngine();
+
+            var result = engine.Analyze("  국밥,  신라!  ");
+
+            Assert.Equal("국밥 신라", result.NormalizedText);
+            Assert.Equal("국빱 실라", result.ToHangulString());
+        }
+
+        [Fact]
+        public void EnableTextNormalizationFalse_PreservesPunctuationAsStandaloneOutput()
+        {
+            using var engine = new KoreanG2PEngine(new KoreanG2POptions(enableTextNormalization: false));
+
+            Assert.Equal("ㅎ ㅏ ㄴ !", engine.ToPhonemes("한!"));
+        }
+
+        [Fact]
+        public void UiVariationMode_Colloquial_UsesExceptionDictionaryOverride()
+        {
+            using var standardEngine = new KoreanG2PEngine();
+            using var colloquialEngine = new KoreanG2PEngine(new KoreanG2POptions(uiVariationMode: KoreanUiVariationMode.Colloquial));
+
+            Assert.Equal("나의", standardEngine.Analyze("나의").ToHangulString());
+            Assert.Equal("나에", colloquialEngine.Analyze("나의").ToHangulString());
+        }
+
+        [Fact]
+        public void EnableExceptionDictionaryFalse_DisablesColloquialOverride()
+        {
+            using var engine = new KoreanG2PEngine(new KoreanG2POptions(
+                enableExceptionDictionary: false,
+                uiVariationMode: KoreanUiVariationMode.Colloquial));
+
+            Assert.Equal("나의", engine.Analyze("나의").ToHangulString());
+        }
+
+        [Fact]
         public void Analyze_ReturnsPronunciationModel()
         {
             using var engine = new KoreanG2PEngine();

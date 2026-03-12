@@ -19,13 +19,15 @@
 
 ## 実装反映状況
 
-2026-03-12 時点で、計画上の `M0` から `M3` までは実装済み。
+2026-03-12 時点で、計画上の `M0` から `M4` までは実装済み。
 
 ### 現在の実装到達点
 
 - `tests/TestData/KoreanG2P/` に `g2pk_parity`, `official_gold`, `weak_rules` の 3 系統 benchmark seed を配置済み
 - `src/DotNetG2P.Korean` に Hangul-first の pure C# Korean core を追加済み
 - `tests/DotNetG2P.Tests/KoreanG2P/Benchmarking/` に benchmark loader / evaluator / report writer を追加済み
+- `src/DotNetG2P.Korean/Data/` に exception dictionary を追加済み
+- `src/DotNetG2P.Korean/Normalization/` に lightweight normalizer を追加済み
 - M2 の rule engine では以下を実装済み
   - 終声中和
   - 連音
@@ -65,17 +67,25 @@
   - `weak_rules`: `14/14`
   - mismatch report は空
 
+### M4 で追加した例外辞書と基本正規化
+
+- `EnableTextNormalization`, `EnableExceptionDictionary`, `UiVariationMode` を `KoreanG2POptions` に追加
+- punctuation / repeated whitespace / fullwidth ASCII を整える Hangul-first の軽量 normalizer を追加
+- exact token lookup の exception dictionary を追加
+- `나의` については `Standard` で `나의`, `Colloquial` で `나에` を返す方針に固定
+- lexical fallback として `밟다`, `밟고`, `밟는`, `검열` の exact lookup も辞書に追加
+
 ### 残る制約
 
 - morphology なしのため、bare `이` 系の `ㄴ` 添音はまだヒューリスティック
 - `ㄼ` 系 lexical variation は一般規則化し切っておらず、M4 の例外辞書でさらに補強が必要
-- `의` 변이 は benchmark では監視しているが、規範上の許容形をどう public API で返すかはまだ固定していない
+- `의` 변이 は `Standard` / `Colloquial` の二値 option に固定したが、morphology なしでどこまで一般化するかは今後の課題
 - 숫자, 英字, Hanja, descriptive mode は未着手
 
 ### 次に見るべきもの
 
-- `M4`: 例外辞書と正規化層
-- multilingual 統合前に `의` 변이 と exception policy を固定する
+- `M5`: multilingual 統合
+- 숫자 / 英字 / Hanja をどこまで Korean package 単体で持つかの境界整理
 
 ## 追加調査: 既存 Python / C# ライブラリと精度
 

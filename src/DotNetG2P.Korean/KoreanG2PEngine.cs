@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using DotNetG2P.Korean.Data;
+using DotNetG2P.Korean.Normalization;
 using DotNetG2P.Korean.Rules;
 
 namespace DotNetG2P.Korean
@@ -89,7 +91,10 @@ namespace DotNetG2P.Korean
             if (string.IsNullOrWhiteSpace(text))
                 return new KoreanPronunciation(string.Empty, string.Empty, Array.Empty<KoreanSyllable>(), Array.Empty<KoreanPhoneme>());
 
-            var normalizedText = Normalize(text);
+            var normalizedText = ApplyExceptionDictionary(Normalize(text));
+            if (string.IsNullOrWhiteSpace(normalizedText))
+                return new KoreanPronunciation(text, normalizedText, Array.Empty<KoreanSyllable>(), Array.Empty<KoreanPhoneme>());
+
             var decomposed = KoreanOrthography.DecomposeText(normalizedText, _options.PreserveNonHangul);
             var transformed = GraphemeToPhonemeRules.Convert(decomposed);
             var phonemes = KoreanOrthography.FlattenPhonemes(transformed);
@@ -137,10 +142,57 @@ namespace DotNetG2P.Korean
 
         private string Normalize(string text)
         {
+            if (_options.EnableTextNormalization)
+                return KoreanNormalizer.Normalize(text, _options.EnableUnicodeNormalization);
+
             if (!_options.EnableUnicodeNormalization)
                 return text;
 
             return text.Normalize(NormalizationForm.FormC);
+        }
+
+        private string ApplyExceptionDictionary(string text)
+        {
+            if (!_options.EnableExceptionDictionary || string.IsNullOrWhiteSpace(text))
+                return text;
+
+            if (KoreanExceptionDictionary.TryLookup(text, _options.UiVariationMode, out var wholeMatch))
+                return wholeMatch;
+
+            var builder = new StringBuilder(text.Length);
+            var tokenStart = -1;
+
+            for (var i = 0; i < text.Length; i++)
+            {
+                if (char.IsWhiteSpace(text[i]))
+                {
+                    AppendResolvedToken(text, tokenStart, i, builder);
+                    tokenStart = -1;
+                    builder.Append(text[i]);
+                    continue;
+                }
+
+                if (tokenStart < 0)
+                    tokenStart = i;
+            }
+
+            AppendResolvedToken(text, tokenStart, text.Length, builder);
+            return builder.ToString();
+        }
+
+        private void AppendResolvedToken(string text, int tokenStart, int tokenEnd, StringBuilder builder)
+        {
+            if (tokenStart < 0 || tokenEnd <= tokenStart)
+                return;
+
+            var token = text.Substring(tokenStart, tokenEnd - tokenStart);
+            if (KoreanExceptionDictionary.TryLookup(token, _options.UiVariationMode, out var replacement))
+            {
+                builder.Append(replacement);
+                return;
+            }
+
+            builder.Append(token);
         }
 
         private void ThrowIfDisposed()

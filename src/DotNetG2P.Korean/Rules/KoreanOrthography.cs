@@ -26,7 +26,7 @@ namespace DotNetG2P.Korean.Rules
                     continue;
                 }
 
-                if (IsCompatibilityJamo(c))
+                if (IsStandaloneJamo(c))
                 {
                     syllables.Add(KoreanSyllable.FromStandaloneJamo(c));
                     continue;
@@ -58,6 +58,12 @@ namespace DotNetG2P.Korean.Rules
         public static bool IsCompatibilityJamo(char c)
         {
             return c >= '\u3131' && c <= '\u318E';
+        }
+
+        public static bool IsStandaloneJamo(char c)
+        {
+            return IsCompatibilityJamo(c)
+                || (c >= '\u1100' && c <= '\u11FF');
         }
 
         public static bool IsHangulSyllable(KoreanSyllable syllable)

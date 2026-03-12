@@ -1,0 +1,8 @@
+# surface	ui_mode	pronunciation	category	source	notes
+surface	ui_mode	pronunciation	category	source	notes
+나의	standard	나의	ui-variation	Mun2022	Preserve the possessive particle spelling as the standard-facing output
+나의	colloquial	나에	ui-variation	Mun2022	Allow the reduced possessive particle pronunciation in colloquial mode
+밟다	*	밥따	lexical-batchim	Stdict_밟다	Lexical bieup-dominant reading before ㄷ onset
+밟고	*	밥꼬	lexical-batchim	Stdict_밟다	Lexical bieup-dominant reading before ㄱ onset
+밟는	*	밤는	lexical-batchim	Stdict_밟다	Lexical bieup-dominant reading before ㄴ onset
+검열	*	검녈	n-insertion	NIKL_Regulation_30	Prefer the inserted-ㄴ official-facing variant for exact lexical lookup

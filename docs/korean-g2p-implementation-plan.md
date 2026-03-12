@@ -38,33 +38,28 @@
 | M1 | Done | Korean core の骨組みを作る | 1,3,7,9 | `DotNetG2P.Korean` が build できる |
 | M2 | Done | MVP 規則群を実装する | 3,4,5,7 | 必須規則が unit test で通る |
 | M3 | Done | benchmark で品質を見える化する | 2,4,5,10 | parity/gold/weak rules のレポートが出る |
-| M4 | Next | 例外辞書と基本正規化を厚くする | 5,6,7 | Hangul-first v1 の精度が安定する |
-| M5 | Pending | multilingual へ統合する | 1,8,9 | Hangul segment が自動で Korean に流れる |
+| M4 | Done | 例外辞書と基本正規化を厚くする | 5,6,7 | Hangul-first v1 の精度が安定する |
+| M5 | Next | multilingual へ統合する | 1,8,9 | Hangul segment が自動で Korean に流れる |
 | M6 | Pending | パッケージ化と release readiness | 7,9,10 | README/API/tests/package metadata が揃う |
 
 ## 現在地
 
-2026-03-12 時点の進捗は `M0 -> M3 完了`, `M4 次着手`。
+2026-03-12 時点の進捗は `M0 -> M4 完了`, `M5 次着手`。
 
-直近の M3 完了内容:
+直近の M4 完了内容:
 
-- `tests/DotNetG2P.Tests/KoreanG2P/Benchmarking/` に benchmark loader / evaluator / report writer を追加
-- `g2pk_parity`, `official_gold`, `weak_rules` をまとめて採点する harness を追加
-- 許容形が複数あるケースを accepted alternatives として採点できるように固定
-- `tests/DotNetG2P.Tests/TestResults/KoreanG2P/` に以下の artifact を生成するようにした
-  - `korean-benchmark-summary.json`
-  - `korean-benchmark-dataset-summary.tsv`
-  - `korean-benchmark-rule-summary.tsv`
-  - `korean-benchmark-mismatches.tsv`
-- current seed の集計結果
-  - `g2pk_parity`: `8/8`
-  - `official_gold`: `15/15`
-  - `weak_rules`: `14/14`
+- `src/DotNetG2P.Korean/Data/korean_exceptions.master.tsv` と `KoreanExceptionDictionary.cs` を追加
+- `src/DotNetG2P.Korean/Normalization/KoreanNormalizer.cs` を追加
+- `EnableTextNormalization`, `EnableExceptionDictionary`, `UiVariationMode` を `KoreanG2POptions` に追加
+- engine に `Normalize -> ExceptionDictionary -> Rules` の流れを追加
+- `나의` の `ui-variation` を `Standard` / `Colloquial` option で切り替えられるようにした
+- punctuation / repeated whitespace / fullwidth ASCII の最小正規化を追加
+- `tests/DotNetG2P.Tests/KoreanG2P/` に normalizer / exception dictionary / engine override tests を追加
 
 直近のテストゲート:
 
 - `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter KoreanG2P --no-restore`
-  - `98 passed`
+  - `118 passed`
 - `dotnet build DotNetG2P.slnx -m:1 --no-restore`
   - success
 
@@ -348,10 +343,10 @@ v1 で見送るもの:
 
 ## 次の具体タスク
 
-M4 着手の最初の 1 週間分としては以下を推奨する。
+M5 着手の最初の 1 週間分としては以下を推奨する。
 
-1. `Data/korean_exceptions.master.tsv` の初版 schema を固定する
-2. `ㄼ` lexical variation と bare `이` 系の曖昧ケースを例外辞書候補として整理する
-3. benchmark mismatch report から例外候補を拾える導線を追加する
-4. `의` 변이 を public API でどう返すか方針を決める
-5. Hangul-first v1 に必要な最小正規化の範囲を `M4` スコープで固定する
+1. `LanguageDetector` に Hangul block 判定を追加する
+2. `TextSegmenter` で Hangul segment を独立させる
+3. `MultilingualG2PEngine` に Korean routing を追加する
+4. 日本語 / 中国語 / Latin 系の既存 segment merge に回帰がないことを確認する
+5. mixed-script sample を Korean benchmark と別に固定する
