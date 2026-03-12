@@ -7,7 +7,7 @@ Files:
 - `g2pk_parity.tsv`
   - starter cases intended to mirror `g2pK` behavior on stable Hangul-only words
 - `official_gold.tsv`
-  - starter cases seeded from examples cited in National Institute of Korean Language references already listed in `docs/korean-g2p-research.md`
+  - starter cases seeded from National Institute of Korean Language references curated for this repository
 - `weak_rules.tsv`
   - starter cases for rules called out as weak spots in the 2022 comparison paper
 
