@@ -1,0 +1,9 @@
+input	expected	source	rule_tag	notes
+꽃	꼳	g2pK_0.9.4	neutralization	Starter seed for representative final consonant neutralization
+먹는	멍는	g2pK_0.9.4	nasalization	Starter seed for velar plus nasal assimilation
+국물	궁물	g2pK_0.9.4	nasalization	Starter seed for batchim assimilation before nasal onset
+국밥	국빱	g2pK_0.9.4	tensification	Starter seed for obstruent-triggered tensification
+신라	실라	g2pK_0.9.4	liquidization	Starter seed for ㄴ plus ㄹ liquidization
+깻잎	깬닙	g2pK_0.9.4	n-insertion	Starter seed for compound boundary n-insertion
+밭이	바치	g2pK_0.9.4	resyllabification	Starter seed for liaison with palatalized realization
+앞문	암문	g2pK_0.9.4	place-assimilation	Starter seed for bilabial place assimilation

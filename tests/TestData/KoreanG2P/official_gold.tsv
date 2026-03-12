@@ -1,0 +1,22 @@
+input	expected	source	rule_tag	notes
+먹는	멍는	NIKL_QNA_312379	nasalization	Official example cited in the research memo
+국물	궁물	NIKL_QNA_312379	nasalization	Official example cited in the research memo
+깎는	깡는	NIKL_QNA_312379	nasalization	Official example cited in the research memo
+국밥	국빱	NIKL_QNA_312379	tensification	Official example cited in the research memo
+깻잎	깬닙	NIKL_QNA_295984	n-insertion	Starter seed for official n-insertion discussion
+꽃	꼳	NIKL_QNA_318280	neutralization	Starter seed for representative final consonant discussion
+좋아	조아	NIKL_Regulation_12	h-deletion	ㅎ coda is deleted before an onsetless vowel
+좋다	조타	NIKL_Regulation_12	h-deletion	ㅎ coda deletes and the following onset is aspirated
+않다	안타	NIKL_Regulation_12	h-deletion	ㄶ cluster deletes ㅎ and aspirates the following onset
+담요	담뇨	NIKL_Regulation_30	n-insertion	Official ㄴ insertion example for compound-like pronunciation
+검열	검녈|거멸	NIKL_Regulation_30	n-insertion	Official rule lists both inserted and assimilated variants
+색연필	생년필	NIKL_Regulation_30	n-insertion	Compound-like ㄴ insertion plus nasalization
+밟다	밥따	Stdict_밟다	tensification	Standard dictionary entry surfaces hidden ㅂ before ㄷ onset
+밟고	밥꼬	Stdict_밟다	tensification	Standard dictionary entry surfaces hidden ㅂ before ㄱ onset
+밟는	밤는	Stdict_밟다	nasalization	Standard dictionary entry surfaces hidden ㅂ and then nasalizes it
+담임	다밈	NIKL_QNA_305134	resyllabification	Simple lexical item should liaison rather than overapply ㄴ insertion
+넓다	널따	NIKL_pronunciation_board_17	tensification	Lieul-dominant ㄼ still triggers following tensification
+넓고	널꼬	NIKL_pronunciation_board_17	tensification	Lieul-dominant ㄼ still triggers following tensification before ㄱ onset
+앉다	안따	Stdict_앉다	tensification	ㄵ cluster keeps ㄴ surface but hidden obstruent tensifies the onset
+핥다	할따	Stdict_핥다	tensification	ㄾ cluster keeps ㄹ surface but hidden obstruent tensifies the onset
+넓죽하다	넙쭉하다	Stdict_넓죽하다	tensification	Lexical bieup-dominant realization should be handled by exception dictionary

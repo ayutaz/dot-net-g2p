@@ -7,6 +7,7 @@ using System.Threading;
 using DotNetG2P.Chinese;
 using DotNetG2P.English;
 using DotNetG2P.French;
+using DotNetG2P.Korean;
 using DotNetG2P.MeCab;
 using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
@@ -18,13 +19,14 @@ namespace DotNetG2P.Multilingual
     /// テキストを言語セグメントに自動分割し、各言語のG2Pエンジンで変換する。
     /// </summary>
     /// <remarks>
-    /// 英語エンジンはスレッドセーフ（共有）。日本語エンジンはスレッドセーフでないためlockで保護。
+    /// 英語・韓国語エンジンはスレッドセーフ。日本語エンジンはスレッドセーフでないためlockで保護。
     /// </remarks>
     public sealed class MultilingualG2PEngine : IDisposable
     {
         private readonly G2PEngine _japaneseEngine;
         private readonly EnglishG2PEngine _englishEngine;
         private readonly ChineseG2PEngine _chineseEngine;
+        private readonly KoreanG2PEngine _koreanEngine;
         private readonly SpanishG2PEngine _spanishEngine;
         private readonly FrenchG2PEngine _frenchEngine;
         private readonly PortugueseG2PEngine _portugueseEngine;
@@ -77,6 +79,7 @@ namespace DotNetG2P.Multilingual
             G2PEngine? japaneseEngine = null;
             EnglishG2PEngine? englishEngine = null;
             ChineseG2PEngine? chineseEngine = null;
+            KoreanG2PEngine? koreanEngine = null;
             SpanishG2PEngine? spanishEngine = null;
             FrenchG2PEngine? frenchEngine = null;
             PortugueseG2PEngine? portugueseEngine = null;
@@ -92,6 +95,9 @@ namespace DotNetG2P.Multilingual
                 chineseEngine = new ChineseG2PEngine(
                     options.ChineseOptions ?? ChineseG2POptions.Default);
 
+                koreanEngine = new KoreanG2PEngine(
+                    options.KoreanOptions ?? KoreanG2POptions.Default);
+
                 spanishEngine = new SpanishG2PEngine(
                     options.SpanishOptions ?? SpanishG2POptions.Default);
 
@@ -104,6 +110,7 @@ namespace DotNetG2P.Multilingual
                 _japaneseEngine = japaneseEngine;
                 _englishEngine = englishEngine;
                 _chineseEngine = chineseEngine;
+                _koreanEngine = koreanEngine;
                 _spanishEngine = spanishEngine;
                 _frenchEngine = frenchEngine;
                 _portugueseEngine = portugueseEngine;
@@ -113,6 +120,7 @@ namespace DotNetG2P.Multilingual
                 japaneseEngine?.Dispose();
                 englishEngine?.Dispose();
                 chineseEngine?.Dispose();
+                koreanEngine?.Dispose();
                 spanishEngine?.Dispose();
                 frenchEngine?.Dispose();
                 portugueseEngine?.Dispose();
@@ -121,7 +129,7 @@ namespace DotNetG2P.Multilingual
         }
 
         /// <summary>
-        /// 日英混在テキストを音素文字列に変換する。
+        /// 多言語混在テキストを音素文字列に変換する。
         /// テキストを自動的に言語セグメントに分割し、各言語のG2Pエンジンで変換後、結合して返す。
         /// </summary>
         /// <param name="text">入力テキスト</param>
@@ -223,6 +231,7 @@ namespace DotNetG2P.Multilingual
             _japaneseEngine.Dispose();
             _englishEngine.Dispose();
             _chineseEngine.Dispose();
+            _koreanEngine.Dispose();
             _spanishEngine.Dispose();
             _frenchEngine.Dispose();
             _portugueseEngine.Dispose();
@@ -246,6 +255,9 @@ namespace DotNetG2P.Multilingual
 
                 case Language.Chinese:
                     return _chineseEngine.ToPinyin(segment.Text);
+
+                case Language.Korean:
+                    return _koreanEngine.ToPhonemes(segment.Text);
 
                 case Language.Spanish:
                     return _spanishEngine.ToPhonemes(segment.Text);

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>DotNetG2P.Korean</PackageId>
+    <AssemblyName>DotNetG2P.Korean</AssemblyName>
+    <RootNamespace>DotNetG2P.Korean</RootNamespace>
+    <Description>Korean Grapheme-to-Phoneme (G2P) library for .NET and Unity. Hangul-first rule-based conversion with Jamo decomposition, exception dictionary support, and lightweight text normalization.</Description>
+    <Authors>ayutaz</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ayutaz/dot-net-g2p</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ayutaz/dot-net-g2p.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>g2p;korean;hangul;tts;phoneme;jamo;unity</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\korean_exceptions.master.tsv" LogicalName="DotNetG2P.Korean.Data.korean_exceptions.master.tsv" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
