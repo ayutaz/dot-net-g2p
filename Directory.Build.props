@@ -12,6 +12,8 @@
     <IsPackable>false</IsPackable>
     <Version>0.0.0-local</Version>
     <PackageVersion>$(Version)</PackageVersion>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' Or '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     <Authors>ayutaz</Authors>
     <PackageTags>g2p;japanese;tts;phoneme;openjtalk;text-to-speech</PackageTags>
     <PackageProjectUrl>https://github.com/ayutaz/dot-net-g2p</PackageProjectUrl>
@@ -30,6 +32,7 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="$(MSBuildProjectDirectory)\README.md" Pack="true" PackagePath="\" Condition="Exists('$(MSBuildProjectDirectory)\README.md')" />
     <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="\" />
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Condition="!Exists('$(MSBuildProjectDirectory)\README.md')" />
     <None Include="$(MSBuildThisFileDirectory)NOTICE" Pack="true" PackagePath="\" />

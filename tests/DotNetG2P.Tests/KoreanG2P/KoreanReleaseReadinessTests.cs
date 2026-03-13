@@ -52,13 +52,16 @@ namespace DotNetG2P.Tests.KoreanG2P
                 .Where(value => !string.IsNullOrWhiteSpace(value))
                 .ToArray();
 
-            Assert.Contains("README.md", packedFiles);
-
             var commonPackedFiles = commonProps.Root!.Elements("ItemGroup")
                 .Elements("None")
                 .Select(element => element.Attribute("Include")?.Value)
                 .Where(value => !string.IsNullOrWhiteSpace(value))
                 .ToArray();
+
+            Assert.True(
+                packedFiles.Contains("README.md", System.StringComparer.Ordinal) ||
+                commonPackedFiles.Contains(@"$(MSBuildProjectDirectory)\README.md", System.StringComparer.Ordinal),
+                "README.md must be packed either by the package project or Directory.Build.props.");
 
             Assert.True(
                 packedFiles.Contains("THIRD-PARTY-NOTICES.md", System.StringComparer.Ordinal) ||

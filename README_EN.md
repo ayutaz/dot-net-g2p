@@ -60,6 +60,7 @@ multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese =>
 - [French Evaluation](#french-evaluation)
 - [Portuguese Evaluation](#portuguese-evaluation)
 - [Configuration Options](#configuration-options)
+- [Related Documentation](#related-documentation)
 - [Building](#building)
 - [Thread Safety](#thread-safety)
 - [License](#license)
@@ -122,6 +123,22 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.French` | Apache-2.0 | French G2P engine (rule-based + exception dictionary + optional allophones) |
 | `DotNetG2P.Portuguese` | Apache-2.0 | Portuguese G2P engine (rule-based + exception dictionary + optional allophones) |
 | `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese text support) |
+
+## Related Documentation
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): contributor setup, build/test workflow, and PR expectations
+- [MIGRATION.md](MIGRATION.md): compatibility notes and future migration guidance
+- [CHANGELOG.md](CHANGELOG.md): release history, including unreleased infrastructure and API updates
+- Package-specific READMEs:
+  - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
+  - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
+  - [`DotNetG2P.English`](src/DotNetG2P.English/README.md)
+  - [`DotNetG2P.Chinese`](src/DotNetG2P.Chinese/README.md)
+  - [`DotNetG2P.Korean`](src/DotNetG2P.Korean/README.md)
+  - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
+  - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
+  - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
+  - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
 
 ### Unity (UPM)
 
@@ -446,7 +463,7 @@ Multilingual notes:
 - The embedded Chinese dictionaries are shared with `ChineseG2PEngine`, so additional `TextSegmenter`-only dictionary residency is about `0.02MB` in the current measurement
 - Only ambiguous pure ideograph runs with weak evidence fall back to `DefaultCjkLanguage`
 - `MultilingualG2POptions.KoreanOptions` passes Korean normalization and `UiVariationMode` settings through to `KoreanG2PEngine`
-- Multilingual regression status as of March 12, 2026: `443 passed`
+- Multilingual regression status as of March 14, 2026: `446 passed`
 - `MultilingualPerformanceTests`: `8 passed`
 - `MultilingualKoreanPerformanceTests`: `2 passed`
 
@@ -627,7 +644,8 @@ using var engine = new G2PEngine(tokenizer, options);
 
 ### Requirements
 
-- .NET SDK 9.0 or later
+- `.slnx` contributor workflows require .NET SDK 9.0 or later
+- CI also validates .NET 8 compatibility by building `tests/`, `samples/`, and `tools/` project files directly
 
 ### Commands
 

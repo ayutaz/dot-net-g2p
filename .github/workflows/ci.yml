@@ -9,31 +9,53 @@ on:
 
 permissions:
   contents: read
+  checks: write
+  pull-requests: write
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  DOTNET_VERSION: '9.0.x'
-
 jobs:
   build-test-and-validate:
-    name: Build/Test (${{ matrix.os }})
+    name: Build/Test (${{ matrix.os }}, .NET ${{ matrix.dotnet_major }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
+            dotnet_version: '8.0.x'
+            dotnet_major: '8'
+            collect_coverage: false
+            validate_pack: false
+          - os: ubuntu-latest
+            dotnet_version: '9.0.x'
+            dotnet_major: '9'
             collect_coverage: true
             validate_pack: true
           - os: windows-latest
+            dotnet_version: '8.0.x'
+            dotnet_major: '8'
+            collect_coverage: false
+            validate_pack: false
+          - os: windows-latest
+            dotnet_version: '9.0.x'
+            dotnet_major: '9'
             collect_coverage: false
             validate_pack: false
           - os: macos-latest
+            dotnet_version: '8.0.x'
+            dotnet_major: '8'
             collect_coverage: false
             validate_pack: false
+          - os: macos-latest
+            dotnet_version: '9.0.x'
+            dotnet_major: '9'
+            collect_coverage: false
+            validate_pack: false
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,20 +63,46 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: ${{ matrix.dotnet_version }}
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: ${{ runner.os }}-nuget-
+          path: ${{ env.NUGET_PACKAGES }}
+          key: ${{ runner.os }}-dotnet-${{ matrix.dotnet_major }}-nuget-${{ hashFiles('**/*.csproj', 'Directory.Build.props', 'global.json') }}
+          restore-keys: ${{ runner.os }}-dotnet-${{ matrix.dotnet_major }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore DotNetG2P.slnx
+        shell: pwsh
+        run: |
+          $projects = @(
+            'tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj',
+            'tests/DotNetG2P.Benchmarks/DotNetG2P.Benchmarks.csproj',
+            'samples/DotNetG2P.Console/DotNetG2P.Console.csproj',
+            'tools/DotNetG2P.SpanishEval/DotNetG2P.SpanishEval.csproj',
+            'tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj',
+            'tools/DotNetG2P.PortugueseEval/DotNetG2P.PortugueseEval.csproj'
+          )
+
+          foreach ($project in $projects) {
+            dotnet restore $project
+          }
 
       - name: Build
-        run: dotnet build DotNetG2P.slnx --configuration Release --no-restore
+        shell: pwsh
+        run: |
+          $projects = @(
+            'tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj',
+            'tests/DotNetG2P.Benchmarks/DotNetG2P.Benchmarks.csproj',
+            'samples/DotNetG2P.Console/DotNetG2P.Console.csproj',
+            'tools/DotNetG2P.SpanishEval/DotNetG2P.SpanishEval.csproj',
+            'tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj',
+            'tools/DotNetG2P.PortugueseEval/DotNetG2P.PortugueseEval.csproj'
+          )
+
+          foreach ($project in $projects) {
+            dotnet build $project --configuration Release --no-restore
+          }
 
       - name: Setup dictionary
         uses: ./.github/actions/setup-dictionary
@@ -62,10 +110,10 @@ jobs:
       - name: Test
         if: ${{ !matrix.collect_coverage }}
         run: >
-          dotnet test DotNetG2P.slnx
+          dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj
           --configuration Release
           --no-build
-          --verbosity normal
+          --verbosity minimal
           --filter "Category!=Performance"
           --logger "trx;LogFileName=results.trx"
           --results-directory ./test-results
@@ -73,20 +121,29 @@ jobs:
       - name: Test with coverage
         if: ${{ matrix.collect_coverage }}
         run: >
-          dotnet test DotNetG2P.slnx
+          dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj
           --configuration Release
           --no-build
-          --verbosity normal
+          --verbosity minimal
           --filter "Category!=Performance"
           --collect:"XPlat Code Coverage"
           --logger "trx;LogFileName=results.trx"
           --results-directory ./test-results
 
+      - name: Publish unit test results
+        if: ${{ always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        continue-on-error: true
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: test-results/**/*.trx
+          check_name: Test Results (${{ matrix.os }}, .NET ${{ matrix.dotnet_major }})
+          comment_mode: "off"
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ matrix.os }}
+          name: test-results-${{ matrix.os }}-dotnet-${{ matrix.dotnet_major }}
           path: ./test-results/
           retention-days: 30
 
@@ -112,7 +169,57 @@ jobs:
         shell: bash
         run: |
           echo "## Coverage Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Target: ${{ matrix.os }} / .NET ${{ matrix.dotnet_major }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
           cat coverage-report/Summary.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment coverage summary on PR
+        if: ${{ matrix.collect_coverage && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- dotnet-g2p-coverage-summary -->';
+            const summary = fs.readFileSync('coverage-report/Summary.txt', 'utf8').trim();
+            const body = [
+              marker,
+              '## Coverage Summary',
+              '',
+              'Target: ${{ matrix.os }} / .NET ${{ matrix.dotnet_major }}',
+              '',
+              '```text',
+              summary,
+              '```',
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) =>
+              comment.user.type === 'Bot' && comment.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
 
       - name: Upload coverage report
         if: ${{ matrix.collect_coverage }}
