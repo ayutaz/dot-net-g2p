@@ -16,6 +16,9 @@
     <EmbeddedResource Include="Dictionary\Data\pinyin_phrase.txt" LogicalName="pinyin_phrase.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Shared\BatchConversionHelper.cs" Link="Internal\BatchConversionHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
     <InternalsVisibleTo Include="DotNetG2P.Multilingual" />
   </ItemGroup>

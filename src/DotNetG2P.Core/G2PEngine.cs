@@ -255,14 +255,7 @@ namespace DotNetG2P
         public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Count);
-            for (int i = 0; i < texts.Count; i++)
-            {
-                results.Add(ToPhonemes(texts[i]));
-            }
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToPhonemes);
         }
 
         /// <summary>
@@ -274,14 +267,7 @@ namespace DotNetG2P
         public IReadOnlyList<string> ToKanaBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Count);
-            for (int i = 0; i < texts.Count; i++)
-            {
-                results.Add(ToKana(texts[i]));
-            }
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToKana);
         }
 
         /// <summary>
@@ -293,14 +279,7 @@ namespace DotNetG2P
         public IReadOnlyList<string> ToProsodyBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Count);
-            for (int i = 0; i < texts.Count; i++)
-            {
-                results.Add(ToProsody(texts[i]));
-            }
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToProsody);
         }
 
         /// <summary>
@@ -312,14 +291,7 @@ namespace DotNetG2P
         public IReadOnlyList<IReadOnlyList<string>> ToFullContextLabelsBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<IReadOnlyList<string>>(texts.Count);
-            for (int i = 0; i < texts.Count; i++)
-            {
-                results.Add(ToFullContextLabels(texts[i]));
-            }
-            return results;
+            return BatchConversionHelper.ConvertToList<IReadOnlyList<string>>(texts, ToFullContextLabels);
         }
 
         /// <summary>
@@ -331,14 +303,7 @@ namespace DotNetG2P
         public IReadOnlyList<ProsodyFeatures> ToProsodyFeaturesBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<ProsodyFeatures>(texts.Count);
-            for (int i = 0; i < texts.Count; i++)
-            {
-                results.Add(ToProsodyFeatures(texts[i]));
-            }
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToProsodyFeatures);
         }
 
         public void Dispose()

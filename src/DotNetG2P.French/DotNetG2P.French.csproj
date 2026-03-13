@@ -14,6 +14,9 @@
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Shared\BatchConversionHelper.cs" Link="Internal\BatchConversionHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Data\french_exceptions.master.tsv" LogicalName="DotNetG2P.French.Data.french_exceptions.master.tsv" />
   </ItemGroup>
 </Project>

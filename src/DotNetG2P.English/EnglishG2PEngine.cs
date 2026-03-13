@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using DotNetG2P.Internal;
 using DotNetG2P.English.Conversion;
 using DotNetG2P.English.LTS;
 using DotNetG2P.English.Homograph;
@@ -217,12 +218,7 @@ namespace DotNetG2P.English
         public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Count);
-            for (var i = 0; i < texts.Count; i++)
-                results.Add(ToPhonemes(texts[i]));
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToPhonemes);
         }
 
         /// <summary>
@@ -233,12 +229,7 @@ namespace DotNetG2P.English
         public IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Count);
-            for (var i = 0; i < texts.Count; i++)
-                results.Add(ToIPA(texts[i]));
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToIPA);
         }
 
         /// <summary>
@@ -249,12 +240,7 @@ namespace DotNetG2P.English
         public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Count);
-            for (var i = 0; i < texts.Count; i++)
-                results.Add(ToXSampa(texts[i]));
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToXSampa);
         }
 
         /// <summary>
@@ -265,12 +251,7 @@ namespace DotNetG2P.English
         public IReadOnlyList<IReadOnlyList<EnglishPhoneme>> ToPhonemeListBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<IReadOnlyList<EnglishPhoneme>>(texts.Count);
-            for (var i = 0; i < texts.Count; i++)
-                results.Add(ToPhonemeList(texts[i]));
-            return results;
+            return BatchConversionHelper.ConvertToList<IReadOnlyList<EnglishPhoneme>>(texts, ToPhonemeList);
         }
 
         /// <inheritdoc />

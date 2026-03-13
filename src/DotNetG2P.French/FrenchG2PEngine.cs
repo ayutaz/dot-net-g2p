@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using DotNetG2P.Internal;
 using DotNetG2P.French.Conversion;
 using DotNetG2P.French.Normalization;
 using DotNetG2P.French.Rules;
@@ -103,24 +104,14 @@ namespace DotNetG2P.French
         public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new string[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToPhonemes(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray(texts, ToPhonemes);
         }
 
         /// <summary>複数テキストを一括でIPAに変換する。</summary>
         public IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new string[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToIPA(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray(texts, ToIPA);
         }
 
         /// <summary>入力テキストをX-SAMPA表記に変換する。</summary>
@@ -139,24 +130,14 @@ namespace DotNetG2P.French
         public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new string[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToXSampa(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray(texts, ToXSampa);
         }
 
         /// <summary>複数テキストを一括で音素リストに変換する。</summary>
         public IReadOnlyList<IReadOnlyList<FrenchPhoneme>> ToPhonemeListBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new IReadOnlyList<FrenchPhoneme>[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToPhonemeList(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray<IReadOnlyList<FrenchPhoneme>>(texts, ToPhonemeList);
         }
 
         /// <summary>リソースを解放する。</summary>

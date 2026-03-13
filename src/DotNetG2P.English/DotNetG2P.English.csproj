@@ -16,6 +16,9 @@
     <EmbeddedResource Include="LTS\cmu_lts_model.bin" LogicalName="DotNetG2P.English.LTS.cmu_lts_model.bin" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Shared\BatchConversionHelper.cs" Link="Internal\BatchConversionHelper.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
   </ItemGroup>
 </Project>
