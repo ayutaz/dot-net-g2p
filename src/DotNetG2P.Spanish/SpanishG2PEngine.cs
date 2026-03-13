@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using DotNetG2P.Internal;
 using DotNetG2P.Spanish.Conversion;
 using DotNetG2P.Spanish.Normalization;
 using DotNetG2P.Spanish.Rules;
@@ -93,48 +94,28 @@ namespace DotNetG2P.Spanish
         public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new string[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToPhonemes(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray(texts, ToPhonemes);
         }
 
         /// <summary>複数テキストを一括でIPAに変換する。</summary>
         public IReadOnlyList<string> ToIPABatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new string[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToIPA(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray(texts, ToIPA);
         }
 
         /// <summary>複数テキストを一括で音素リストに変換する。</summary>
         public IReadOnlyList<IReadOnlyList<SpanishPhoneme>> ToPhonemeListBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new IReadOnlyList<SpanishPhoneme>[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToPhonemeList(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray<IReadOnlyList<SpanishPhoneme>>(texts, ToPhonemeList);
         }
 
         /// <summary>複数テキストを一括で X-SAMPA に変換する。</summary>
         public IReadOnlyList<string> ToXSampaBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new string[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToXSampa(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray(texts, ToXSampa);
         }
 
         /// <summary>リソースを解放する。</summary>

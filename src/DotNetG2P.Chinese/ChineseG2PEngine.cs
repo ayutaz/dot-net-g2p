@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using DotNetG2P.Internal;
 
 namespace DotNetG2P.Chinese
 {
@@ -245,12 +246,7 @@ namespace DotNetG2P.Chinese
         public IReadOnlyList<string> ToPinyinBatch(string[] texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Length);
-            for (var i = 0; i < texts.Length; i++)
-                results.Add(ToPinyin(texts[i]));
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToPinyin);
         }
 
         /// <summary>
@@ -262,12 +258,11 @@ namespace DotNetG2P.Chinese
         public IReadOnlyList<string> ToPinyinBatch(string[] texts, PinyinStyle style)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Length);
-            for (var i = 0; i < texts.Length; i++)
-                results.Add(ToPinyin(texts[i], style));
-            return results;
+            return BatchConversionHelper.ConvertToList(
+                texts,
+                this,
+                style,
+                ConvertPinyinBatchItem);
         }
 
         /// <summary>
@@ -278,12 +273,7 @@ namespace DotNetG2P.Chinese
         public IReadOnlyList<string[]> ToPinyinListBatch(string[] texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string[]>(texts.Length);
-            for (var i = 0; i < texts.Length; i++)
-                results.Add(ToPinyinList(texts[i]));
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToPinyinList);
         }
 
         /// <summary>
@@ -295,12 +285,11 @@ namespace DotNetG2P.Chinese
         public IReadOnlyList<string[]> ToPinyinListBatch(string[] texts, PinyinStyle style)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string[]>(texts.Length);
-            for (var i = 0; i < texts.Length; i++)
-                results.Add(ToPinyinList(texts[i], style));
-            return results;
+            return BatchConversionHelper.ConvertToList(
+                texts,
+                this,
+                style,
+                ConvertPinyinListBatchItem);
         }
 
         /// <summary>
@@ -311,12 +300,7 @@ namespace DotNetG2P.Chinese
         public IReadOnlyList<string> ToIPABatch(string[] texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Length);
-            for (var i = 0; i < texts.Length; i++)
-                results.Add(ToIPA(texts[i]));
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToIPA);
         }
 
         /// <summary>
@@ -328,12 +312,11 @@ namespace DotNetG2P.Chinese
         public IReadOnlyList<string> ToIPABatch(string[] texts, bool includeTones)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Length);
-            for (var i = 0; i < texts.Length; i++)
-                results.Add(ToIPA(texts[i], includeTones));
-            return results;
+            return BatchConversionHelper.ConvertToList(
+                texts,
+                this,
+                includeTones,
+                ConvertIpaBatchItem);
         }
 
         /// <summary>
@@ -344,12 +327,7 @@ namespace DotNetG2P.Chinese
         public IReadOnlyList<string> ToZhuyinBatch(string[] texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Length);
-            for (var i = 0; i < texts.Length; i++)
-                results.Add(ToZhuyin(texts[i]));
-            return results;
+            return BatchConversionHelper.ConvertToList(texts, ToZhuyin);
         }
 
         /// <summary>
@@ -361,12 +339,11 @@ namespace DotNetG2P.Chinese
         public IReadOnlyList<string> ToZhuyinBatch(string[] texts, bool includeTones)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Length);
-            for (var i = 0; i < texts.Length; i++)
-                results.Add(ToZhuyin(texts[i], includeTones));
-            return results;
+            return BatchConversionHelper.ConvertToList(
+                texts,
+                this,
+                includeTones,
+                ConvertZhuyinBatchItem);
         }
 
         /// <inheritdoc />
@@ -642,6 +619,26 @@ namespace DotNetG2P.Chinese
                 default:
                     return pinyin;
             }
+        }
+
+        private static string ConvertPinyinBatchItem(ChineseG2PEngine engine, string text, PinyinStyle style)
+        {
+            return engine.ToPinyin(text, style);
+        }
+
+        private static string[] ConvertPinyinListBatchItem(ChineseG2PEngine engine, string text, PinyinStyle style)
+        {
+            return engine.ToPinyinList(text, style);
+        }
+
+        private static string ConvertIpaBatchItem(ChineseG2PEngine engine, string text, bool includeTones)
+        {
+            return engine.ToIPA(text, includeTones);
+        }
+
+        private static string ConvertZhuyinBatchItem(ChineseG2PEngine engine, string text, bool includeTones)
+        {
+            return engine.ToZhuyin(text, includeTones);
         }
 
         /// <summary>

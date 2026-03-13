@@ -280,6 +280,21 @@ namespace DotNetG2P.Tests
         }
 
         [SkippableFact]
+        public void BatchApis_AfterDispose_ThrowObjectDisposedException()
+        {
+            Skip.IfNot(DictionaryExists, "辞書が見つかりません");
+            using var tokenizer = new MeCabTokenizer(DicPath!);
+            var engine = new G2PEngine(tokenizer);
+            engine.Dispose();
+
+            Assert.Throws<ObjectDisposedException>(() => engine.ToPhonemesBatch(new[] { "テスト" }));
+            Assert.Throws<ObjectDisposedException>(() => engine.ToKanaBatch(new[] { "テスト" }));
+            Assert.Throws<ObjectDisposedException>(() => engine.ToProsodyBatch(new[] { "テスト" }));
+            Assert.Throws<ObjectDisposedException>(() => engine.ToFullContextLabelsBatch(new[] { "テスト" }));
+            Assert.Throws<ObjectDisposedException>(() => engine.ToProsodyFeaturesBatch(new[] { "テスト" }));
+        }
+
+        [SkippableFact]
         public void ToProsodyFeatures_WhitespaceOnly_ReturnsEmptyFeatures()
         {
             Skip.IfNot(DictionaryExists, "辞書が見つかりません");

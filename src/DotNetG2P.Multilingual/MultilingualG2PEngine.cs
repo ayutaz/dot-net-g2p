@@ -196,12 +196,7 @@ namespace DotNetG2P.Multilingual
         public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<string>(texts.Count);
-            for (int i = 0; i < texts.Count; i++)
-                results.Add(ToPhonemes(texts[i]));
-            return results;
+            return ConvertBatch(texts, ToPhonemes);
         }
 
         /// <summary>
@@ -214,12 +209,7 @@ namespace DotNetG2P.Multilingual
         public IReadOnlyList<IReadOnlyList<G2PSegment>> ToSegmentsBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new List<IReadOnlyList<G2PSegment>>(texts.Count);
-            for (int i = 0; i < texts.Count; i++)
-                results.Add(ToSegments(texts[i]));
-            return results;
+            return ConvertBatch<IReadOnlyList<G2PSegment>>(texts, ToSegments);
         }
 
         /// <inheritdoc />
@@ -271,6 +261,18 @@ namespace DotNetG2P.Multilingual
                 default:
                     return "";
             }
+        }
+
+        private static List<TResult> ConvertBatch<TResult>(IReadOnlyList<string> texts, Func<string, TResult> converter)
+        {
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+            if (converter == null) throw new ArgumentNullException(nameof(converter));
+
+            var results = new List<TResult>(texts.Count);
+            for (var i = 0; i < texts.Count; i++)
+                results.Add(converter(texts[i]));
+
+            return results;
         }
 
         /// <summary>

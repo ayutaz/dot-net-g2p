@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using DotNetG2P.Internal;
 using DotNetG2P.Korean.Data;
 using DotNetG2P.Korean.Normalization;
 using DotNetG2P.Korean.Rules;
@@ -112,12 +113,7 @@ namespace DotNetG2P.Korean
         public IReadOnlyList<string> ToPhonemesBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new string[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToPhonemes(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray(texts, ToPhonemes);
         }
 
         /// <summary>
@@ -126,12 +122,7 @@ namespace DotNetG2P.Korean
         public IReadOnlyList<string> ToJamoBatch(IReadOnlyList<string> texts)
         {
             ThrowIfDisposed();
-            if (texts == null) throw new ArgumentNullException(nameof(texts));
-
-            var results = new string[texts.Count];
-            for (var i = 0; i < texts.Count; i++)
-                results[i] = ToJamo(texts[i]);
-            return results;
+            return BatchConversionHelper.ConvertToArray(texts, ToJamo);
         }
 
         /// <inheritdoc />

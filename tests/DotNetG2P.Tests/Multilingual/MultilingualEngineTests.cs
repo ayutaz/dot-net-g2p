@@ -84,6 +84,37 @@ namespace DotNetG2P.Tests.Multilingual
             Assert.Throws<ArgumentNullException>(() => engine.ToSegmentsBatch(null!));
         }
 
+        [SkippableFact]
+        public void BatchApis_EmptyInput_ReturnEmptyCollections()
+        {
+            SkipIfNoDictionary();
+            using var engine = new MultilingualG2PEngine(DictPath!);
+
+            Assert.Empty(engine.ToPhonemesBatch(Array.Empty<string>()));
+            Assert.Empty(engine.ToSegmentsBatch(Array.Empty<string>()));
+        }
+
+        [SkippableFact]
+        public void BatchApis_MixedInput_HandleAllElements()
+        {
+            SkipIfNoDictionary();
+            using var engine = new MultilingualG2PEngine(DictPath!);
+
+            var texts = new string[] { "こんにちは hello", "", null! };
+            var phonemeResults = engine.ToPhonemesBatch(texts);
+            var segmentResults = engine.ToSegmentsBatch(texts);
+
+            Assert.Equal(3, phonemeResults.Count);
+            Assert.False(string.IsNullOrWhiteSpace(phonemeResults[0]));
+            Assert.Equal(string.Empty, phonemeResults[1]);
+            Assert.Equal(string.Empty, phonemeResults[2]);
+
+            Assert.Equal(3, segmentResults.Count);
+            Assert.NotEmpty(segmentResults[0]);
+            Assert.Empty(segmentResults[1]);
+            Assert.Empty(segmentResults[2]);
+        }
+
         // =====================================================================
         // ToPhonemes テスト（辞書依存）
         // =====================================================================
