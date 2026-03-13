@@ -26,7 +26,4 @@
   <ItemGroup>
     <EmbeddedResource Include="Data\korean_exceptions.master.tsv" LogicalName="DotNetG2P.Korean.Data.korean_exceptions.master.tsv" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
 </Project>

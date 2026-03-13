@@ -56,6 +56,7 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日本語部分は
 - [フランス語評価](#フランス語評価)
 - [ポルトガル語評価](#ポルトガル語評価)
 - [オプション設定](#オプション設定)
+- [関連ドキュメント](#関連ドキュメント)
 - [ビルド](#ビルド)
 - [スレッドセーフティ](#スレッドセーフティ)
 - [ライセンス](#ライセンス)
@@ -119,6 +120,21 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.French` | Apache-2.0 | フランス語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
 | `DotNetG2P.Portuguese` | Apache-2.0 | ポルトガル語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
 | `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中韓西仏葡混在テキスト対応） |
+
+## 関連ドキュメント
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): 開発環境構築、ビルド、テスト、PR の基本方針
+- [MIGRATION.md](MIGRATION.md): 互換性メモと将来の移行ガイド
+- パッケージ別 README:
+  - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
+  - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
+  - [`DotNetG2P.English`](src/DotNetG2P.English/README.md)
+  - [`DotNetG2P.Chinese`](src/DotNetG2P.Chinese/README.md)
+  - [`DotNetG2P.Korean`](src/DotNetG2P.Korean/README.md)
+  - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
+  - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
+  - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
+  - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
 
 ### Unity (UPM)
 
@@ -688,7 +704,8 @@ using var engine = new G2PEngine(tokenizer, options);
 
 ### 要件
 
-- .NET SDK 9.0 以上
+- `DotNetG2P.slnx` を使う場合は .NET SDK 9.0 以上
+- CI では `tests/` `samples/` `tools/` の project file を使って .NET 8 互換性も検証
 
 ### コマンド
 

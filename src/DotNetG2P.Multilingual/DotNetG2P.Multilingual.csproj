@@ -30,7 +30,4 @@
   <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
 </Project>
