@@ -30,6 +30,10 @@ test_output.txt
 artifacts/spanish-eval/
 .cache/spanish-eval/
 tests/**/TestResults/
+BenchmarkDotNet.Artifacts/
+coverage-report/
+test-results/
+test-results-coverage/
 
 ## Dictionary (large binary)
 open_jtalk_dic_utf_8-*/

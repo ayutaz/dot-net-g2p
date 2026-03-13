@@ -18,8 +18,22 @@ env:
   DOTNET_VERSION: '9.0.x'
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+  build-test-and-validate:
+    name: Build/Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            collect_coverage: true
+            validate_pack: true
+          - os: windows-latest
+            collect_coverage: false
+            validate_pack: false
+          - os: macos-latest
+            collect_coverage: false
+            validate_pack: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,6 +60,7 @@ jobs:
         uses: ./.github/actions/setup-dictionary
 
       - name: Test
+        if: ${{ !matrix.collect_coverage }}
         run: >
           dotnet test DotNetG2P.slnx
           --configuration Release
@@ -55,34 +70,60 @@ jobs:
           --logger "trx;LogFileName=results.trx"
           --results-directory ./test-results
 
+      - name: Test with coverage
+        if: ${{ matrix.collect_coverage }}
+        run: >
+          dotnet test DotNetG2P.slnx
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --filter "Category!=Performance"
+          --collect:"XPlat Code Coverage"
+          --logger "trx;LogFileName=results.trx"
+          --results-directory ./test-results
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
+          name: test-results-${{ matrix.os }}
           path: ./test-results/
           retention-days: 30
 
-  pack:
-    needs: build-and-test
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Add .NET tools to PATH
+        if: ${{ matrix.collect_coverage }}
+        shell: bash
+        run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - name: Install ReportGenerator
+        if: ${{ matrix.collect_coverage }}
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        if: ${{ matrix.collect_coverage }}
+        run: >
+          reportgenerator
+          "-reports:test-results/**/coverage.cobertura.xml"
+          "-targetdir:coverage-report"
+          "-reporttypes:HtmlSummary;Cobertura;TextSummary"
+
+      - name: Publish coverage summary
+        if: ${{ matrix.collect_coverage }}
+        shell: bash
+        run: |
+          echo "## Coverage Summary" >> "$GITHUB_STEP_SUMMARY"
+          cat coverage-report/Summary.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        if: ${{ matrix.collect_coverage }}
+        uses: actions/upload-artifact@v4
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore dependencies
-        run: dotnet restore DotNetG2P.slnx
-
-      - name: Build
-        run: dotnet build DotNetG2P.slnx --configuration Release --no-restore
+          name: coverage-report
+          path: coverage-report/
+          retention-days: 30
 
       - name: Pack
+        if: ${{ matrix.validate_pack }}
         run: |
           dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj --configuration Release --no-build --output ./artifacts
           dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj --configuration Release --no-build --output ./artifacts
@@ -95,7 +136,8 @@ jobs:
           dotnet pack src/DotNetG2P.Multilingual/DotNetG2P.Multilingual.csproj --configuration Release --no-build --output ./artifacts
 
       - name: Upload NuGet packages
+        if: ${{ matrix.validate_pack }}
         uses: actions/upload-artifact@v4
         with:
-          name: nuget-packages
+          name: nuget-packages-validation
           path: artifacts/*.nupkg
