@@ -141,7 +141,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.os }}-dotnet-${{ matrix.dotnet_major }}
           path: ./test-results/
@@ -223,7 +223,7 @@ jobs:
 
       - name: Upload coverage report
         if: ${{ matrix.collect_coverage }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage-report/
@@ -244,7 +244,7 @@ jobs:
 
       - name: Upload NuGet packages
         if: ${{ matrix.validate_pack }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nuget-packages-validation
           path: artifacts/*.nupkg
