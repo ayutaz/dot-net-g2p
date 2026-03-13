@@ -1,9 +1,10 @@
 # DotNetG2P 改善提案書
 
-> 調査日: 2026-03-13
-> 対象: main ブランチ (ab98163)
-> 調査方法: 9チームによるコードベース並列調査
+> 調査日: 2026-03-14
+> 対象: 作業ツリー（dx-ci-package-hardening 782857b）
+> 調査方法: 15視点レビューによるコードベース・文書整合調査
 > レビュー反映: 2026-03-13（15視点レビューで現行リポジトリとの整合性を補正）
+> 実装反映: 2026-03-14（PR #29 マージ済み + dx-ci-package-hardening ブランチ差分まで反映）
 
 ---
 
@@ -26,20 +27,27 @@
 
 ## 1. エグゼクティブサマリー
 
-DotNetG2P は7言語対応・6,700+テスト・高度なパフォーマンス最適化済みの成熟したプロジェクトであり、.NET/Unity 向けでは**稀少な純C#多言語G2P実装**です。
+DotNetG2P は 7 言語対応・6,285 テスト定義を持つ、.NET/Unity 向けでは**稀少な純 C# 多言語 G2P 実装**です。2026-03-14 時点では、CI は 3 OS x .NET 8/9 matrix、PR テスト結果公開、coverage summary/comment、NuGet pack 検証まで導入済みで、BenchmarkDotNet 基盤、batch API 共通化、パッケージ別 README、`CONTRIBUTING.md`、`MIGRATION.md`、Dependabot、deterministic build も揃いました。次の主戦場は capability-based internal adapter、AOT/trim 検証、DocFX/API ドキュメント、サンプル拡充、新言語拡張です。
 
 以下の8領域で改善の機会を特定しました。
 
 | 領域 | 主要課題 | 推定効果 |
 |------|---------|---------|
-| **コード品質** | 共通抽象の粒度未整理、バッチAPI重複 | 保守性向上、テスト共通化 |
-| **テスト・CI/CD** | バッチAPIテスト不足、マトリックスビルド未実装 | 品質保証・互換性確保 |
-| **パフォーマンス** | FrozenDictionary/SearchValues未活用、BenchmarkDotNet未導入 | 定量的な最適化判断が可能 |
+| **コード品質** | Capability-based internal adapter 未着手、バッチAPI共通化は完了 | 保守性向上、テスト共通化 |
+| **テスト・CI/CD** | 3OS x .NET 8/9 CI / coverage / PR結果公開 / pack検証は導入済み | 品質保証・互換性確保 |
+| **パフォーマンス** | BenchmarkDotNet基盤は導入済み。測定対象拡大とCI比較が未完了 | 定量的な最適化判断が可能 |
 | **機能拡張** | SSML/ストリーミング/WebAssembly | 市場競争力大幅向上 |
 | **新言語** | 11言語候補を調査、Tier 1-4に分類 | 最大14言語対応 |
-| **パッケージ** | AOT/trim適合性未検証、Dependabot未導入 | 配布互換性・運用強化 |
-| **ドキュメント・DX** | パッケージ別README不足、DocFX/CONTRIBUTING.md欠如 | 新規ユーザー獲得・貢献促進 |
+| **パッケージ** | Dependabot / deterministic build は導入済み。残りは AOT/trim、Package Validation、Signing、SBOM | 配布互換性・運用強化 |
+| **ドキュメント・DX** | パッケージ別README、CONTRIBUTING、MIGRATION は整備済み。残りは DocFX、サンプル拡充、ARCHITECTURE | 新規ユーザー獲得・貢献促進 |
 | **競合対策** | 比較表の根拠整備、ユースケース訴求 | 市場認知度向上 |
+
+### 1.1 直近の進捗スナップショット
+
+- 完了: 3 OS x .NET 8/9 CI、PR テスト結果公開、coverage summary/comment、pack 検証
+- 完了: BenchmarkDotNet 基盤、batch API 共通化、Core / Multilingual の batch contract テスト補強
+- 完了: パッケージ別 README、`CONTRIBUTING.md`、`MIGRATION.md`、Dependabot、deterministic build
+- 次の優先: capability-based internal adapter、AOT/trim smoke test、DocFX / XML Doc、実行可能サンプル拡充
 
 ---
 
@@ -135,26 +143,24 @@ public interface IIpaConvertible
 
 ### 4.2 バッチAPI実装の共通化（優先度: 高）
 
-**現状の問題**: 8エンジンで複数のバッチメソッドがほぼ同じループ実装になっている。
+**現状**: `src/Shared/BatchConversionHelper.cs` を追加し、Core / English / Chinese / Spanish / French / Portuguese / Korean のバッチ実装は共通 helper に集約済み。`IReadOnlyList<T>` の public シグネチャは維持しつつ、従来の戻り値実体（`List<T>` / 配列）も保っている。Chinese の `style` / `includeTones` 付き batch API は state 付き helper で capture を避ける形まで反映済み。Multilingual はアセンブリ境界での型競合を避けるため、現時点ではクラス内 helper を使用している。
 
-**提案**: 静的ヘルパーメソッドに集約。
+**現行実装の形**:
 
 ```csharp
-public static class G2PEngineBatchExtensions
+internal static class BatchConversionHelper
 {
-    public static IReadOnlyList<T> BatchProcess<T>(
-        IReadOnlyList<string> texts, Func<string, T> processor)
-    {
-        if (texts == null) throw new ArgumentNullException(nameof(texts));
-        var results = new T[texts.Count];
-        for (int i = 0; i < texts.Count; i++)
-            results[i] = processor(texts[i]);
-        return results;
-    }
+    public static List<TResult> ConvertToList<TResult>(...);
+    public static TResult[] ConvertToArray<TResult>(...);
 }
 ```
 
-**効果**: コード重複 ~85% 削減。
+**残課題**:
+- Multilingual を shared helper へ統一するか、現状の局所 helper を維持するかの判断
+- `null` / 空配列 / Dispose後 / 例外伝播 / 大規模入力 の contract test を全言語へ横展開
+- capability-based internal adapter と組み合わせて、テスト共通化をもう一段進める
+
+**効果**: コード重複削減を進めつつ、ランタイム互換性リスクを抑制できる。
 
 ### 4.3 オプションクラスの基底クラス導入（優先度: 中）
 
@@ -180,34 +186,32 @@ public static class G2PEngineBatchExtensions
 
 ### 5.1 バッチAPIテストの棚卸しと共通化（優先度: 高）
 
-| 言語 | 全テスト数 | バッチテスト | 状況 |
-|------|-----------|-----------|------|
-| 英語 | 511+ | 充実 | 共通化の基準として適切 |
-| 中国語 | 936 | 一定数あり | 例外伝播・大規模入力を補強 |
-| スペイン語 | 227 | 基本ケースあり | 境界値を補強 |
-| フランス語 | 719 | 基本ケースあり | 共通ケース横展開が有効 |
-| ポルトガル語 | 1,310 | 基本ケースあり | 共通ケース横展開が有効 |
-| Multilingual | 443 | 基本ケースあり | 混在境界・並列観点を補強 |
+| 対象 | 2026-03-13時点の状態 | 直近の補強 | 残課題 |
+|------|----------------------|-----------|--------|
+| 日本語(Core API) | API統合テストあり | `null` / 空 / mixed input / Dispose後 の batch 契約テストを追加 | 大規模入力・例外伝播の共通ケース |
+| 英語 / 中国語 / スペイン語 / フランス語 / ポルトガル語 / 韓国語 | 各言語で基本ケースあり | 棚卸し基準として利用可能 | 共通 fixture への寄せ直し |
+| Multilingual | 混在テキスト系のAPIテストあり | `null` / 空 / mixed input の batch ケースを追加 | 並列実行・高負荷・言語境界ケース |
 
-**提案**: 「未実装」前提ではなく、既存テストを棚卸ししたうえで `null` / 空配列 / 大規模配列 / 例外伝播 / Dispose後動作 を `BatchApiCommonTests` に共通化する。
+**提案**: `BatchApiContractTests` のような共通 fixture を導入し、`null` / 空配列 / 大規模配列 / 例外伝播 / Dispose後動作 を全言語で同じ観点から検証する。現時点では Core と Multilingual の基準ケースが先行している。
 
 ### 5.2 CI/CDマトリックスビルド（優先度: 高）
 
-**現状の問題**: ubuntu-latest + .NET 9.0.x の単一環境のみ。
+**現状**: `CI` workflow は `ubuntu-latest` / `windows-latest` / `macos-latest` と `.NET 8` / `.NET 9` の matrix で動作している。`.NET 8` は project file 直接ビルドで互換性確認、Ubuntu `.NET 9` ジョブではカバレッジ収集、ReportGenerator、PR 向け coverage comment、NuGet pack 検証まで実施している。
 
-**提案**:
-```yaml
-strategy:
-  matrix:
-    os: [ubuntu-latest, windows-latest, macos-latest]
-    dotnet: ['8.0.x', '9.0.x']
-```
+**残課題**: AOT/trim の smoke test、scheduled benchmark、より厳密な quality gate は未実装。
+
+**次の一手**:
+- `dotnet publish /p:PublishTrimmed=true` と `PublishAot=true` の最小 smoke test を追加
+- ベースライン安定後に coverage / package validation の fail 条件を導入
+- benchmark は別 workflow に切り出し、CI 本線の所要時間を増やしすぎない
 
 ### 5.3 コードカバレッジ統合（優先度: 高）
 
-**現状の問題**: `coverlet.collector` パッケージ参照はあるが、CI/CDでの出力設定なし。
+**現状**: Ubuntu `.NET 9` ジョブで `dotnet test --collect:"XPlat Code Coverage"` を実行し、`reportgenerator` で HTML / Cobertura / TextSummary を生成、artifact・GitHub Step Summary・PR コメントに公開している。
 
-**提案**: `dotnet test --collect:"XPlat Code Coverage"` + `reportgenerator` + CodeCov アップロード。
+**残課題**: coverage しきい値ゲート、履歴トレンド、外部サービス連携は未実装。
+
+**提案**: 現行の `XPlat Code Coverage` + `reportgenerator` を維持しつつ、ベースラインが安定した段階で threshold を導入する。外部サービス連携は必須ではなく、まずは PR 内での可視性を保ち続ける方針が妥当。
 
 ### 5.4 テスト構造の共通化（優先度: 中）
 
@@ -222,7 +226,9 @@ strategy:
 
 ### 5.6 テスト結果レポート（優先度: 中）
 
-`EnricoMi/publish-unit-test-result-action@v2` で PR コメントにテスト結果を自動表示。
+**現状**: `EnricoMi/publish-unit-test-result-action@v2` で matrix ごとのテスト結果を PR に自動表示し、TRX も artifact として保持している。
+
+**残課題**: flaky test ラベル付け、coverage とテスト結果の統合ビュー、失敗時のトリアージ導線整備。
 
 ### 5.7 高度なテスト手法の導入（優先度: 中-低）
 
@@ -247,9 +253,14 @@ strategy:
 
 ### 6.1 BenchmarkDotNet 導入（優先度: 高）
 
-**現状の問題**: Stopwatch ベースの性能テストは存在するが、統計的な比較やランタイム差分の可視化には弱い。
+**現状**: `tests/DotNetG2P.Benchmarks/` は導入済みで、English / Chinese / Korean の代表シナリオを `BenchmarkSwitcher` から実行できる。README と入力データの整理も含めて、基盤としては着地している。
 
-**提案**: `tests/DotNetG2P.Benchmarks/` 新設。CI/CD統合でPRごとのリグレッション検出。
+**残課題**:
+- Japanese / Multilingual / Romance 言語群のベンチマーク不足
+- CI での定期実行や baseline 比較未導入
+- 辞書初期化と steady-state 変換の計測を明確に分離していない
+
+**提案**: 新設ではなく拡張フェーズに移し、主要言語の hot path を増やしたうえで、手動 workflow か scheduled workflow でベンチ結果を保管する。
 
 ### 6.2 マルチターゲット化 + .NET 8+ API活用（優先度: 高）
 
@@ -473,23 +484,23 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 **既に優れている点**:
 - ✅ SourceLink完全実装
 - ✅ Symbol Package (snupkg) 実装済み
+- ✅ Deterministic Build / `ContinuousIntegrationBuild` 設定済み
 
 **改善項目**:
 
 | 項目 | 工数 | 効果 |
 |------|------|------|
 | MinVer / Nerdbank.GitVersioning | 1-2日 | gitタグからバージョン自動検出 |
-| Deterministic Build | 0.5日 | バイナリ再現可能性 |
 | NuGet Package Validation (.NET 8+) | 0.5日 | 互換性レポート自動生成 |
 | SBOM生成 (CycloneDX) | 1日 | セキュリティ監査対応 |
 
 ### 9.4 セキュリティ（優先度: 中）
 
-**現状**: Dependabot/Renovate未導入、Strong Naming未実装、SBOM未生成。
+**現状**: Dependabot は NuGet / .NET SDK / GitHub Actions 向けに導入済み。Strong Naming、NuGet Package Signing、SBOM、AOT/trim の安全側検証は未実装。
 
 | 施策 | 工数 | 効果 |
 |------|------|------|
-| `.github/dependabot.yml` 追加 | 0.5日 | NuGet依存関係の自動監視・PR自動作成 |
+| Dependabotルールの調整（grouping / cadence） | 0.5日 | ノイズ抑制と更新追従の両立 |
 | NuGet Package Signing | 1日 | パッケージ改ざん防止 |
 | SBOM生成（CycloneDX） | 0.5日 | サプライチェーン安全性 |
 
@@ -499,9 +510,9 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 
 ### 10.1 パッケージ別README拡充（優先度: 高）
 
-**現状**: `PackageReadmeFile` 自体は `Directory.Build.props` で既に設定済み。Korean / Multilingual は専用 README を持ち、それ以外はリポジトリ直下 README をパッケージREADMEとして流用している。
+**現状**: `PackageReadmeFile` は `Directory.Build.props` で共通化済み。現在は 9 公開パッケージすべてで pack 時に README が付与され、`DotNetG2P` / `MeCab` / `English` / `Chinese` / `Spanish` / `French` / `Portuguese` に専用 README を追加済み。Korean / Multilingual の既存 README も維持している。
 
-**提案**: 「未設定」対応ではなく、外部向け価値が高いパッケージから専用 README を追加する。優先候補は `DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.English`, `DotNetG2P.Chinese`。
+**残課題**: root README・パッケージ README・NuGet 表示の drift を防ぐ運用、実行可能サンプルへの導線追加、主要 README の翻訳方針整理。
 
 ### 10.2 APIドキュメント生成（優先度: 高）
 
@@ -514,7 +525,9 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 
 ### 10.3 CONTRIBUTING.md 新規作成（優先度: 高）
 
-Prerequisites / Setup / Code Standards / Testing / 新言語追加手順 を含む 150-200行のガイド。
+**現状**: `CONTRIBUTING.md` は追加済みで、`.slnx` contributor workflow、辞書セットアップ、targeted test / benchmark コマンド、PR 方針まで記載している。
+
+**残課題**: release checklist、アーキテクチャ判断への導線、doc lint ルール整備。
 
 ### 10.4 言語別サンプルコード拡充（優先度: 高）
 
@@ -522,31 +535,40 @@ Prerequisites / Setup / Code Standards / Testing / 新言語追加手順 を含�
 
 **提案**: 各言語の基本使用例 + Multilingual 混在テキスト例をサンプルプロジェクトとして追加し、README の断片コードだけで終わらせない。
 
-### 10.5 ARCHITECTURE.md / MIGRATION.md 新規作成（優先度: 中）
+### 10.5 ARCHITECTURE.md 整備と MIGRATION.md 維持（優先度: 中）
 
-- ARCHITECTURE.md: 設計判断の背景（なぜ独立パッケージか / なぜ純C#か / なぜ EmbeddedResource か）
-- MIGRATION.md: v1.0→1.4 の段階的マイグレーションガイド
+- MIGRATION.md: 追加済み。辞書要件、batch API の collection contract、`.slnx` / .NET 8 project file 併用方針を記録
+- ARCHITECTURE.md: 未着手。設計判断の背景（なぜ独立パッケージか / なぜ純C#か / なぜ EmbeddedResource か）を整理する余地が大きい
 
 ### 10.6 CHANGELOG の Unreleased セクション（優先度: 低）
 
-ロードマップ・計画中機能を記載し、ユーザーが今後の方向性を把握可能に。
+**現状**: `CHANGELOG.md` の `Unreleased` に batch API、CI/DX、package README などの未リリース変更を記載する運用へ更新済み。
+
+**残課題**: tag / release note 生成との連携、change category の粒度統一。
 
 ---
 
 ## 11. 統合ロードマップ
 
-### Phase 1: 即時実施（1-2ヶ月）— 品質基盤整備
+### Phase 1: 品質基盤整備（ほぼ完了）
 
-| # | 項目 | 領域 | 工数 | 効果 |
-|---|------|------|------|------|
-| 1 | パッケージ別README拡充 | DX | 2日 | NuGet発見性向上 |
-| 2 | CONTRIBUTING.md / MIGRATION.md | DX | 2日 | 貢献促進 |
-| 3 | CI マトリックスビルド | CI/CD | 1日 | 互換性確保 |
-| 4 | コードカバレッジ統合 | CI/CD | 1日 | 品質可視化 |
-| 5 | Dependabot + Deterministic Build | セキュリティ | 1日 | サプライチェーン安全性 |
-| 6 | BenchmarkDotNet 導入 | パフォーマンス | 1-2週 | ボトルネック可視化 |
-| 7 | Capability-based internal adapter 導入 | アーキテクチャ | 1-2週 | テスト/内部整理 |
-| 8 | バッチAPI共通化 + テスト棚卸し | アーキテクチャ | 1-2週 | コード重複削減 |
+| # | 項目 | 状態 | 次アクション |
+|---|------|------|-------------|
+| 1 | パッケージ別README拡充 | 完了 | drift 防止とサンプル導線の整備を継続 |
+| 2 | CONTRIBUTING.md / MIGRATION.md | 完了 | release checklist と architecture 導線を追加検討 |
+| 3 | CI マトリックスビルド | 完了 | AOT/trim smoke test を次段に追加 |
+| 4 | コードカバレッジ統合 | 完了 | threshold 運用はベースライン安定後に導入 |
+| 5 | Dependabot + Deterministic Build | 完了 | signing / SBOM / package validation を次段へ |
+| 6 | BenchmarkDotNet 導入 | 完了 | 日本語 / Multilingual / Romance言語へ計測対象を拡張 |
+| 7 | Capability-based internal adapter 導入 | 未着手 | batch helper の次段で内部抽象を整理 |
+| 8 | バッチAPI共通化 + テスト棚卸し | 完了 | 共通 contract test を全言語へ横展開 |
+
+### Phase 1 の残タスク
+
+1. capability-based internal adapter を設計し、batch helper / 共通 fixture と接続する
+2. Japanese / Multilingual / Romance 言語群へ benchmark 対象を拡張する
+3. AOT/trim smoke test、Package Validation、Signing、SBOM を追加する
+4. DocFX / XML Doc / 実行可能サンプルを整備して DX を次段へ進める
 
 ### Phase 2: 短期（2-4ヶ月）— 機能拡張 + 新言語Tier 1
 
@@ -583,7 +605,7 @@ Prerequisites / Setup / Code Standards / Testing / 新言語追加手順 を含�
 
 | フェーズ完了 | 対応言語数 | 主な新機能 |
 |------------|-----------|-----------|
-| Phase 1 | 7言語（現状維持） | 品質基盤・CI/CD強化 |
+| Phase 1 | 7言語（現状維持） | 品質基盤・CI/CD強化 + batch API整理 |
 | Phase 2 | 9言語 | SSML、マルチターゲット |
 | Phase 3 | 11言語 | ストリーミング、AOT/trim検証 |
 | Phase 4 | 14言語 | WebAssembly、gRPC |

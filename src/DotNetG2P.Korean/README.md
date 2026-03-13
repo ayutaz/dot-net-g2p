@@ -41,11 +41,11 @@ string uiVariant = colloquial.Analyze("나의").ToHangulString();
 ## Benchmarks And Tests
 
 - Benchmark datasets: `g2pk_parity`, `official_gold`, `weak_rules`
-- Current seed status as of 2026-03-12:
+- Current seed status as of 2026-03-14:
   - `g2pk_parity`: `8/8`
   - `official_gold`: `21/21`
   - `weak_rules`: `14/14`
-- Korean regression status as of 2026-03-12: `178 passed, 1 skipped`
+- Korean regression status as of 2026-03-14: `179 passed, 1 skipped`
 - Targeted regression command:
 
 ```bash

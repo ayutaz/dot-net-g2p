@@ -45,7 +45,7 @@ var segments = custom.ToSegments("나의 bonjour 世界");
 
 ## Validation
 
-- Multilingual regression status as of 2026-03-12: `443 passed`
+- Multilingual regression status as of 2026-03-14: `446 passed`
 - `MultilingualPerformanceTests`: `8 passed`
 - `MultilingualKoreanPerformanceTests`: `2 passed`
 

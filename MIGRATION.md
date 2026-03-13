@@ -19,6 +19,11 @@ This remains an external setup step and should be called out in release notes wh
 Batch APIs are documented by their public return types.
 If a method returns `IReadOnlyList<T>`, callers should not depend on a specific concrete runtime collection type.
 
+### Package README Coverage
+
+Published packages now ship package-specific README files at pack time.
+When installation guidance or examples change, update the corresponding `src/*/README.md` file in the same PR.
+
 ### SDK And CI Baseline
 
 The repository keeps the root contributor workflow on `DotNetG2P.slnx`, which requires an SDK with SLNX support.

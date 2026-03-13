@@ -44,6 +44,7 @@ dotnet run -c Release --project tests/DotNetG2P.Benchmarks -- --list flat
 ## Coding Guidelines
 
 - Keep public API additions aligned with the package-specific README and root README examples.
+- Package-specific usage docs live under `src/*/README.md`; update them alongside any user-visible package changes.
 - Add or update tests for behavior changes, especially when modifying normalization, dictionaries, or batch conversion APIs.
 - Prefer small, reviewable commits over broad refactors that mix unrelated concerns.
 - Treat package compatibility carefully. If an API returns `IReadOnlyList<T>`, do not introduce a concrete collection requirement in callers or docs.
@@ -52,6 +53,7 @@ dotnet run -c Release --project tests/DotNetG2P.Benchmarks -- --list flat
 
 - Describe behavior changes, compatibility notes, and verification commands in the PR body.
 - Update docs when installation, package layout, or user-visible behavior changes.
+- CI publishes per-matrix test results and a coverage summary on PRs; use those reports when validating your change.
 - Keep generated artifacts and local-only files out of commits.
 - Make sure CI is green before requesting review.
 

@@ -56,6 +56,7 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日语部分 => �
 - [法语评估](#法语评估)
 - [葡萄牙语评估](#葡萄牙语评估)
 - [选项配置](#选项配置)
+- [相关文档](#相关文档)
 - [构建](#构建)
 - [线程安全性](#线程安全性)
 - [许可证](#许可证)
@@ -118,6 +119,22 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.French` | Apache-2.0 | 法语 G2P 引擎（规则驱动 + 例外词典 + 可选异音处理） |
 | `DotNetG2P.Portuguese` | Apache-2.0 | 葡萄牙语 G2P 引擎（规则驱动 + 例外词典 + 可选异音处理） |
 | `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中韩西法葡混合文本支持） |
+
+## 相关文档
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)：贡献环境准备、构建/测试流程以及 PR 约定
+- [MIGRATION.md](MIGRATION.md)：兼容性说明与后续迁移指南
+- [CHANGELOG.md](CHANGELOG.md)：包含未发布变更在内的版本历史
+- 各包 README：
+  - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
+  - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
+  - [`DotNetG2P.English`](src/DotNetG2P.English/README.md)
+  - [`DotNetG2P.Chinese`](src/DotNetG2P.Chinese/README.md)
+  - [`DotNetG2P.Korean`](src/DotNetG2P.Korean/README.md)
+  - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
+  - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
+  - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
+  - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
 
 ### Unity (UPM)
 
@@ -447,7 +464,7 @@ Multilingual 补充说明:
 - 内置中文词典与 `ChineseG2PEngine` 共享，当前测量下 `TextSegmenter` 额外带来的词典常驻约为 `0.02MB`
 - 只有证据不足的歧义纯汉字片段才会回退到 `DefaultCjkLanguage`
 - `MultilingualG2POptions.KoreanOptions` 可将韩语规范化与 `UiVariationMode` 设置透传给 `KoreanG2PEngine`
-- 截至 2026-03-12 的 Multilingual 回归结果: `443 passed`
+- 截至 2026-03-14 的 Multilingual 回归结果: `446 passed`
 - `MultilingualPerformanceTests`: `8 passed`
 - `MultilingualKoreanPerformanceTests`: `2 passed`
 
@@ -628,7 +645,8 @@ using var engine = new G2PEngine(tokenizer, options);
 
 ### 环境要求
 
-- .NET SDK 9.0 或更高版本
+- 使用根目录 `DotNetG2P.slnx` 的贡献者工作流需要 .NET SDK 9.0 或更高版本
+- CI 也会直接构建 `tests/`、`samples/`、`tools/` 下的项目文件，以验证 .NET 8 兼容性
 
 ### 命令
 

@@ -125,6 +125,7 @@ dotnet add package DotNetG2P.Multilingual
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): 開発環境構築、ビルド、テスト、PR の基本方針
 - [MIGRATION.md](MIGRATION.md): 互換性メモと将来の移行ガイド
+- [CHANGELOG.md](CHANGELOG.md): 未リリース変更を含む変更履歴
 - パッケージ別 README:
   - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
   - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
@@ -469,7 +470,7 @@ Multilingual の補足:
 - 埋め込み中国語辞書は `ChineseG2PEngine` と共有され、`TextSegmenter` 単独の追加辞書常駐は実測で約 `0.02MB` です
 - それでも根拠が弱い曖昧な純漢字 run だけ `DefaultCjkLanguage` にフォールバックします
 - `MultilingualG2POptions.KoreanOptions` で `UiVariationMode` や正規化設定を multilingual 側から渡せます
-- 2026-03-12 時点の Multilingual 回帰: `443 passed`（7言語対応）
+- 2026-03-14 時点の Multilingual 回帰: `446 passed`（7言語対応）
 - `MultilingualPerformanceTests`: `8 passed`
 - `MultilingualKoreanPerformanceTests`: `2 passed`
 
