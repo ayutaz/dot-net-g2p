@@ -464,7 +464,7 @@ Multilingual notes:
 - The embedded Chinese dictionaries are shared with `ChineseG2PEngine`, so additional `TextSegmenter`-only dictionary residency is about `0.02MB` in the current measurement
 - Only ambiguous pure ideograph runs with weak evidence fall back to `DefaultCjkLanguage`
 - `MultilingualG2POptions.KoreanOptions` passes Korean normalization and `UiVariationMode` settings through to `KoreanG2PEngine`
-- Multilingual regression status as of March 14, 2026: `446 passed`
+- Current multilingual regression status: `448 passed`
 - `MultilingualPerformanceTests`: `8 passed`
 - `MultilingualKoreanPerformanceTests`: `2 passed`
 

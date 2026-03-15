@@ -1,7 +1,7 @@
 {
   "name": "com.dotnetg2p.korean",
   "displayName": "DotNetG2P.Korean",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "unity": "2021.2",
   "description": "Korean Grapheme-to-Phoneme (G2P) library for .NET and Unity. Hangul-first rule-based conversion with standard pronunciation rules, exception dictionary support, lightweight normalization, and Jamo decomposition.",
   "keywords": [

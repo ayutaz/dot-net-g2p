@@ -1,7 +1,7 @@
 {
   "name": "com.dotnetg2p.english",
   "displayName": "DotNetG2P.English",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "unity": "2021.2",
   "description": "English Grapheme-to-Phoneme (G2P) library for .NET and Unity. CMU Dictionary lookup (135K words), Flite LTS for OOV estimation, text normalization, homograph resolution, and IPA/X-SAMPA output.",
   "keywords": [
