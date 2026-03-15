@@ -465,7 +465,7 @@ Multilingual 补充说明:
 - 内置中文词典与 `ChineseG2PEngine` 共享，当前测量下 `TextSegmenter` 额外带来的词典常驻约为 `0.02MB`
 - 只有证据不足的歧义纯汉字片段才会回退到 `DefaultCjkLanguage`
 - `MultilingualG2POptions.KoreanOptions` 可将韩语规范化与 `UiVariationMode` 设置透传给 `KoreanG2PEngine`
-- 截至 2026-03-14 的 Multilingual 回归结果: `446 passed`
+- 当前 Multilingual 回归结果: `448 passed`
 - `MultilingualPerformanceTests`: `8 passed`
 - `MultilingualKoreanPerformanceTests`: `2 passed`
 

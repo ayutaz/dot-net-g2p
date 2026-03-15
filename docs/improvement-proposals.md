@@ -1,10 +1,10 @@
 # DotNetG2P 改善提案書
 
-> 調査日: 2026-03-14
-> 対象: 作業ツリー（dx-ci-package-hardening 782857b）
-> 調査方法: 15視点レビューによるコードベース・文書整合調査
-> レビュー反映: 2026-03-13（15視点レビューで現行リポジトリとの整合性を補正）
-> 実装反映: 2026-03-14（PR #29 マージ済み + dx-ci-package-hardening ブランチ差分まで反映）
+> 調査日: 2026-03-16
+> 対象: release/v1.5.0 ブランチ（ea468fb）
+> 調査方法: 10視点レビューによるコードベース・文書整合調査
+> レビュー反映: 2026-03-16（10視点レビューで現行リポジトリとの差分を再確認）
+> 実装反映: 2026-03-16（main ca6c0d9 + release/v1.5.0 の v1.5.0 release prep ea468fb まで反映）
 
 ---
 
@@ -27,27 +27,29 @@
 
 ## 1. エグゼクティブサマリー
 
-DotNetG2P は 7 言語対応・6,285 テスト定義を持つ、.NET/Unity 向けでは**稀少な純 C# 多言語 G2P 実装**です。2026-03-14 時点では、CI は 3 OS x .NET 8/9 matrix、PR テスト結果公開、coverage summary/comment、NuGet pack 検証まで導入済みで、BenchmarkDotNet 基盤、batch API 共通化、パッケージ別 README、`CONTRIBUTING.md`、`MIGRATION.md`、Dependabot、deterministic build も揃いました。次の主戦場は capability-based internal adapter、AOT/trim 検証、DocFX/API ドキュメント、サンプル拡充、新言語拡張です。
+DotNetG2P は 7 言語対応・総計 6,350 テスト定義（CI 既定レーン `Category!=Performance` では 6,287 件）を持つ、.NET/Unity 向けでは**稀少な純 C# 多言語 G2P 実装**です。2026-03-16 時点では、CI は 3 OS x .NET 8/9 matrix、PR テスト結果公開、coverage summary/comment、DocFX build、AOT/trim smoke test、NuGet Package Validation、CycloneDX SBOM 生成まで導入済みで、BenchmarkDotNet 基盤と Japanese / Multilingual / Romance への拡張、batch API 共通化、capability-based internal adapter、パッケージ別 README、`CONTRIBUTING.md`、`MIGRATION.md`、`ARCHITECTURE.md`、多言語 sample、Dependabot、deterministic build も `main` に反映済みです。release/v1.5.0 ではこれに加えて UPM `package.json` と `CHANGELOG.md` の 1.5.0 release prep まで反映済みです。次の主戦場は Signing / Strong Naming、XML Doc / compiler warning 整理、scheduled benchmark / baseline 比較、新言語拡張です。
 
 以下の8領域で改善の機会を特定しました。
 
 | 領域 | 主要課題 | 推定効果 |
 |------|---------|---------|
-| **コード品質** | Capability-based internal adapter 未着手、バッチAPI共通化は完了 | 保守性向上、テスト共通化 |
-| **テスト・CI/CD** | 3OS x .NET 8/9 CI / coverage / PR結果公開 / pack検証は導入済み | 品質保証・互換性確保 |
-| **パフォーマンス** | BenchmarkDotNet基盤は導入済み。測定対象拡大とCI比較が未完了 | 定量的な最適化判断が可能 |
+| **コード品質** | Capability-based internal adapter とバッチAPI共通化は main 反映済み。残りは contract test 横展開と設計文書同期 | 保守性向上、テスト共通化 |
+| **テスト・CI/CD** | 3OS x .NET 8/9 CI / coverage / PR結果公開 / DocFX / trim-AOT / package validation / SBOM は導入済み | 品質保証・互換性確保 |
+| **パフォーマンス** | BenchmarkDotNet基盤と Japanese / Multilingual / Romance 拡張は完了。残りは定期実行と baseline 比較 | 定量的な最適化判断が可能 |
 | **機能拡張** | SSML/ストリーミング/WebAssembly | 市場競争力大幅向上 |
 | **新言語** | 11言語候補を調査、Tier 1-4に分類 | 最大14言語対応 |
-| **パッケージ** | Dependabot / deterministic build は導入済み。残りは AOT/trim、Package Validation、Signing、SBOM | 配布互換性・運用強化 |
-| **ドキュメント・DX** | パッケージ別README、CONTRIBUTING、MIGRATION は整備済み。残りは DocFX、サンプル拡充、ARCHITECTURE | 新規ユーザー獲得・貢献促進 |
+| **パッケージ** | Dependabot / deterministic build / Package Validation / SBOM / trim-AOT smoke は導入済み。残りは Signing / Strong Naming | 配布互換性・運用強化 |
+| **ドキュメント・DX** | パッケージ別README、CONTRIBUTING、MIGRATION、DocFX、サンプル、ARCHITECTURE は整備済み。残りは XML Doc / warning 整理と公開運用 | 新規ユーザー獲得・貢献促進 |
 | **競合対策** | 比較表の根拠整備、ユースケース訴求 | 市場認知度向上 |
 
 ### 1.1 直近の進捗スナップショット
 
-- 完了: 3 OS x .NET 8/9 CI、PR テスト結果公開、coverage summary/comment、pack 検証
-- 完了: BenchmarkDotNet 基盤、batch API 共通化、Core / Multilingual の batch contract テスト補強
-- 完了: パッケージ別 README、`CONTRIBUTING.md`、`MIGRATION.md`、Dependabot、deterministic build
-- 次の優先: capability-based internal adapter、AOT/trim smoke test、DocFX / XML Doc、実行可能サンプル拡充
+- 完了: 3 OS x .NET 8/9 CI、PR テスト結果公開、coverage summary/comment、DocFX build、trim/AOT smoke test、Package Validation、SBOM 生成
+- 完了: BenchmarkDotNet 基盤と Japanese / Multilingual / Romance 拡張、batch API 共通化、Multilingual の capability-based internal adapter、Core / Multilingual の batch contract テスト補強
+- 完了: パッケージ別 README、`CONTRIBUTING.md`、`MIGRATION.md`、`ARCHITECTURE.md`、多言語 sample、Dependabot、deterministic build
+- 運用開始: Dependabot による GitHub Actions / NuGet 更新 PR を継続取り込み（2026-03-16 時点で #31 / #32 / #34 / #35 / #36 / #37 / #38、および機能追加 PR #39 / #40 を main へ反映し、release/v1.5.0 では v1.5.0 release prep `ea468fb` まで積まれている）
+- 確認済み: 2026-03-16 のローカル検証で `Category!=Performance` レーンは `0 failure / 5,830 pass / 457 skip / 6,287 total`（skip は辞書・外部データ依存ケースを含む）で完了し、`--list-tests` では総計 `6,350` テストを列挙
+- 次の優先: Signing / Strong Naming、XML Doc / compiler warning 整理、scheduled benchmark / baseline 比較、新言語拡張または SSML ライトMVP
 
 ---
 
@@ -121,9 +123,7 @@ DotNetG2P は 7 言語対応・6,285 テスト定義を持つ、.NET/Unity 向�
 
 ### 4.1 Capability-Based 抽象化（優先度: 中）
 
-**現状の問題**: 各言語エンジンは独立実装だが、API表現が言語ごとに異なる。特に中国語は `ToPinyin()`/`ToZhuyin()` が主APIであり、単純な `ToPhonemes()` への統一は不自然。
-
-**提案**: 公開APIを無理に一本化せず、内部利用・テスト共通化のために capability 単位の抽象を導入する。
+**現状**: 2026-03-15 に `DotNetG2P.Multilingual` へ capability-based internal adapter を実装済み。`src/DotNetG2P.Multilingual/Internal/CapabilityAdapters.cs` に `ITextBatchProcessor<TResult>` / `IIpaTextBatchProcessor` / `LanguageCapabilityRouter` が導入され、日本語の lock 保護を含めて言語別処理を内部 capability として束ねている。公開APIは中国語の `ToPinyin()` / `ToZhuyin()` など言語固有の形を維持している。
 
 ```csharp
 public interface ITextBatchProcessor<TResult> : IDisposable
@@ -139,11 +139,15 @@ public interface IIpaConvertible
 }
 ```
 
-**効果**: テストヘルパー共通化、内部アダプタ導入、Multilingual 側の整理が可能。中国語の `ToPinyin()` のような言語固有APIも維持できる。
+**評価**: 公開APIを無理に共通化しないという当初方針を守りつつ、`CapabilityAdapterTests` による内部 contract 検証、Multilingual ルーティング整理、batch helper との接続点明確化まで進んだ。中国語の `ToPinyin()` のような言語固有APIもそのまま維持できている。
+
+**残課題**:
+- large input / exception propagation / parallel 実行の共通 fixture をさらに横展開する
+- README / XML Doc / `ARCHITECTURE.md` に internal adapter 導入後の設計意図を同期する
 
 ### 4.2 バッチAPI実装の共通化（優先度: 高）
 
-**現状**: `src/Shared/BatchConversionHelper.cs` を追加し、Core / English / Chinese / Spanish / French / Portuguese / Korean のバッチ実装は共通 helper に集約済み。`IReadOnlyList<T>` の public シグネチャは維持しつつ、従来の戻り値実体（`List<T>` / 配列）も保っている。Chinese の `style` / `includeTones` 付き batch API は state 付き helper で capture を避ける形まで反映済み。Multilingual はアセンブリ境界での型競合を避けるため、現時点ではクラス内 helper を使用している。
+**現状**: `src/Shared/BatchConversionHelper.cs` を追加し、Core / English / Chinese / Spanish / French / Portuguese / Korean のバッチ実装は共通 helper に集約済み。`IReadOnlyList<T>` の public シグネチャは維持しつつ、従来の戻り値実体（`List<T>` / 配列）も保っている。Chinese の `style` / `includeTones` 付き batch API は state 付き helper で capture を避ける形まで反映済み。Multilingual はアセンブリ境界での型競合を避けるためクラス内 helper を維持しつつ、言語別変換そのものは `LanguageCapabilityRouter` 経由へ整理された。
 
 **現行実装の形**:
 
@@ -156,11 +160,11 @@ internal static class BatchConversionHelper
 ```
 
 **残課題**:
-- Multilingual を shared helper へ統一するか、現状の局所 helper を維持するかの判断
-- `null` / 空配列 / Dispose後 / 例外伝播 / 大規模入力 の contract test を全言語へ横展開
-- capability-based internal adapter と組み合わせて、テスト共通化をもう一段進める
+- `null` / 空配列 / Dispose後 / 例外伝播 / 大規模入力 / 並列入力 の contract test を全言語へ横展開
+- Multilingual の局所 `ConvertBatch` を shared helper へ寄せるかは、実利が出るまで保留でよい
+- capability adapter 前提での benchmark fixture / sample code の再利用度をもう一段上げる
 
-**効果**: コード重複削減を進めつつ、ランタイム互換性リスクを抑制できる。
+**効果**: コード重複削減と runtime contract の明確化はすでに進んでおり、残りはテスト観点と文書の同期が中心になった。
 
 ### 4.3 オプションクラスの基底クラス導入（優先度: 中）
 
@@ -196,14 +200,14 @@ internal static class BatchConversionHelper
 
 ### 5.2 CI/CDマトリックスビルド（優先度: 高）
 
-**現状**: `CI` workflow は `ubuntu-latest` / `windows-latest` / `macos-latest` と `.NET 8` / `.NET 9` の matrix で動作している。`.NET 8` は project file 直接ビルドで互換性確認、Ubuntu `.NET 9` ジョブではカバレッジ収集、ReportGenerator、PR 向け coverage comment、NuGet pack 検証まで実施している。
+**現状**: `CI` workflow は `ubuntu-latest` / `windows-latest` / `macos-latest` と `.NET 8` / `.NET 9` の matrix で動作している。`.NET 8` は project file 直接ビルドで互換性確認、Ubuntu `.NET 9` ジョブではカバレッジ収集、ReportGenerator、PR 向け coverage comment、DocFX build（`--warningsAsErrors`）、trim / AOT publish smoke test、NuGet Package Validation、CycloneDX SBOM 生成まで実施している。2026-03-16 のローカル確認では `dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj -c Release --filter "Category!=Performance"` が `0 failure / 5,830 pass / 457 skip / 6,287 total`（skip は辞書・外部データ依存ケースを含む）で完了し、`--list-tests` では `6,350` 件のテスト定義を列挙できた。
 
-**残課題**: AOT/trim の smoke test、scheduled benchmark、より厳密な quality gate は未実装。
+**残課題**: scheduled benchmark、coverage threshold、repo 全体の compiler warning 整理は未完了。DocFX warning gate は導入済みだが、C# compile warning までは fail 条件にしていない。
 
 **次の一手**:
-- `dotnet publish /p:PublishTrimmed=true` と `PublishAot=true` の最小 smoke test を追加
-- ベースライン安定後に coverage / package validation の fail 条件を導入
-- benchmark は別 workflow に切り出し、CI 本線の所要時間を増やしすぎない
+- benchmark は別 workflow に切り出し、baseline 差分比較付きで保管する
+- coverage はベースライン安定後に threshold 導入を検討する
+- compiler warning gate は XML Doc / nullability 整理後に段階導入する
 
 ### 5.3 コードカバレッジ統合（優先度: 高）
 
@@ -220,7 +224,7 @@ internal static class BatchConversionHelper
 
 ### 5.5 CIキャッシング見直し（優先度: 低）
 
-**現状**: NuGet パッケージと naist-jdic 辞書は既に `actions/cache@v4` でキャッシュされている。
+**現状**: `CI` workflow の NuGet パッケージキャッシュと `.github/actions/setup-dictionary/action.yml` の naist-jdic 辞書キャッシュは、いずれも `actions/cache@v5` に揃っている。
 
 **提案**: `.build/` キャッシュは効果測定後に判断する。キャッシュサイズ増加や古い生成物混入のリスクがあるため、先に CI 実行時間の内訳を可視化する。
 
@@ -253,14 +257,14 @@ internal static class BatchConversionHelper
 
 ### 6.1 BenchmarkDotNet 導入（優先度: 高）
 
-**現状**: `tests/DotNetG2P.Benchmarks/` は導入済みで、English / Chinese / Korean の代表シナリオを `BenchmarkSwitcher` から実行できる。README と入力データの整理も含めて、基盤としては着地している。
+**現状**: `tests/DotNetG2P.Benchmarks/` は導入済みで、English / Chinese / Korean に加えて Japanese / Multilingual / Romance（Spanish / French / Portuguese）の代表シナリオを `BenchmarkSwitcher` から実行できる。2026-03-16 の `--list flat` では 27 ベンチマークケースを列挙できた。README と入力データの整理も含めて、基盤導入フェーズは完了している。
 
 **残課題**:
-- Japanese / Multilingual / Romance 言語群のベンチマーク不足
 - CI での定期実行や baseline 比較未導入
-- 辞書初期化と steady-state 変換の計測を明確に分離していない
+- cold start と steady-state の計測粒度が言語ごとにまだ揃っていない
+- 結果の artifact 保管と回帰比較の導線が未整備
 
-**提案**: 新設ではなく拡張フェーズに移し、主要言語の hot path を増やしたうえで、手動 workflow か scheduled workflow でベンチ結果を保管する。
+**提案**: 基盤新設は完了として、次は manual / scheduled workflow でベンチ結果を保管し、主要言語の cold start / steady-state 指標を比較しやすくする。
 
 ### 6.2 マルチターゲット化 + .NET 8+ API活用（優先度: 高）
 
@@ -464,14 +468,14 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 
 ## 9. パッケージ・エコシステム・セキュリティ
 
-### 9.1 AOT / Trim 互換性検証（優先度: 中、推定工数: 3-5日）
+### 9.1 AOT / Trim 互換性検証（実装済み、継続検証）
 
-**現状**: ソース配下で 8 箇所の `Assembly.GetManifestResourceStream()` による埋め込みリソース読み込みがある。これだけで NativeAOT 非対応とは断定できないが、AOT / trimming の実検証は未実施。
+**現状**: `tests/DotNetG2P.PublishSmoke/` を追加し、Ubuntu `.NET 9` の CI レーンで `PublishTrimmed=true` と `PublishAot=true` の publish smoke test を実行している。smoke app は英語・中国語・韓国語・スペイン語・フランス語・ポルトガル語を常時検証し、辞書が見つかる環境では日本語と Multilingual も検証する。埋め込みリソース読み込みは引き続き 8 箇所あるが、「未検証」状態は解消された。
 
-**対策**:
-- `PublishAot=true` / `PublishTrimmed=true` の smoke test を追加
-- 問題再現時のみ属性追加やリソース読込方式の変更を行う
-- 実測結果を README / CI に反映し、「対応済み」ではなく「検証済み」状態を作る
+**残課題**:
+- 現状の smoke test は代表変換の publish 成功確認が中心で、全 RID や WebAssembly までは網羅していない
+- 今後 reflection / dynamic loading を追加する変更では、AOT/trim レーンを先に回してから merge する運用を徹底する
+- 実測結果の README / release note 反映はまだ薄い
 
 ### 9.2 Source Generator活用（優先度: 低、推定工数: 1-2日）
 
@@ -491,18 +495,18 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 | 項目 | 工数 | 効果 |
 |------|------|------|
 | MinVer / Nerdbank.GitVersioning | 1-2日 | gitタグからバージョン自動検出 |
-| NuGet Package Validation (.NET 8+) | 0.5日 | 互換性レポート自動生成 |
-| SBOM生成 (CycloneDX) | 1日 | セキュリティ監査対応 |
+| NuGet Package Signing / Strong Naming | 1-2日 | 配布物の信頼性向上 |
+| release provenance / attestations | 1日 | サプライチェーン透明性 |
 
 ### 9.4 セキュリティ（優先度: 中）
 
-**現状**: Dependabot は NuGet / .NET SDK / GitHub Actions 向けに導入済み。Strong Naming、NuGet Package Signing、SBOM、AOT/trim の安全側検証は未実装。
+**現状**: Dependabot は NuGet / .NET SDK / GitHub Actions 向けに導入済みで、2026-03-16 時点で `actions/download-artifact@v8`、`actions/upload-artifact@v7`、`actions/checkout@v6`、`actions/setup-dotnet@v5`、`actions/cache@v5`、`actions/github-script@v8`、`all-nuget-dependencies` グループ更新（PR #31 / #32 / #34 / #35 / #36 / #37 / #38）が `main` に反映済み。`.github/actions/setup-dictionary/action.yml` も `actions/cache@v5` に更新済みで、SBOM 生成と AOT/trim の safety smoke test も CI / release に入った。残っている中心課題は Strong Naming、NuGet Package Signing、署名用 secret / 証明書運用方針の確立である。
 
 | 施策 | 工数 | 効果 |
 |------|------|------|
 | Dependabotルールの調整（grouping / cadence） | 0.5日 | ノイズ抑制と更新追従の両立 |
+| Strong Naming | 1日 | 参照整合性と企業利用時の安心感向上 |
 | NuGet Package Signing | 1日 | パッケージ改ざん防止 |
-| SBOM生成（CycloneDX） | 0.5日 | サプライチェーン安全性 |
 
 ---
 
@@ -516,29 +520,32 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 
 ### 10.2 APIドキュメント生成（優先度: 高）
 
-**現状**: XMLドキュメント生成は全csprojで有効だが、`///` コメント密度は低い（146ファイル中19ファイルのみ充実）。DocFX未導入。
+**現状**: XML ドキュメント生成は全 9 公開パッケージの csproj で有効で、DocFX も `docs/docfx.json` とローカル tool manifest を介して導入済みである。metadata は Release build 済み DLL + XML doc を参照し、CI / release workflow の両方で `dotnet tool run docfx docs/docfx.json --logLevel Warning --warningsAsErrors` が quality gate として動作する。残課題は公開 API の XML Doc 充実化、`CS1591` を含む compiler warning 整理、DocFX site の公開運用である。
 
 **提案**:
-- DocFX統合（`docfx.json` 作成、GitHub Pages公開）
-- 全公開APIにXML Docコメント充実化（例示付き）
+- 全公開APIに XML Doc コメントを充実化し、`CS1591` を優先的に減らす
+- compiler warning を repo-wide gate に引き上げられる状態まで nullability / doc warning を整理する
+- DocFX site の GitHub Pages 公開や versioning 戦略を整える
 - サンプルコードの自動テスト
 
-### 10.3 CONTRIBUTING.md 新規作成（優先度: 高）
+### 10.3 CONTRIBUTING.md 維持（優先度: 中）
 
-**現状**: `CONTRIBUTING.md` は追加済みで、`.slnx` contributor workflow、辞書セットアップ、targeted test / benchmark コマンド、PR 方針まで記載している。
+**現状**: `CONTRIBUTING.md` は追加済みで、`.slnx` contributor workflow、辞書セットアップ、targeted test / benchmark コマンド、PR 方針、`MIGRATION.md` への導線まで記載している。
 
 **残課題**: release checklist、アーキテクチャ判断への導線、doc lint ルール整備。
 
 ### 10.4 言語別サンプルコード拡充（優先度: 高）
 
-**現状**: ルート README には各言語の利用例があるが、実行可能な `samples/DotNetG2P.Console/` は日本語中心。
+**現状**: ルート README には各言語の利用例があり、実行可能な `samples/DotNetG2P.Console/` も standalone language engines、日本語、Multilingual を横断する多言語デモへ拡張済みである。
 
-**提案**: 各言語の基本使用例 + Multilingual 混在テキスト例をサンプルプロジェクトとして追加し、README の断片コードだけで終わらせない。
+**残課題**:
+- 各言語専用の最小 sample project を分けるかどうかの判断
+- sample の smoke test 自動化と README 断片コードとの同期
 
 ### 10.5 ARCHITECTURE.md 整備と MIGRATION.md 維持（優先度: 中）
 
 - MIGRATION.md: 追加済み。辞書要件、batch API の collection contract、`.slnx` / .NET 8 project file 併用方針を記録
-- ARCHITECTURE.md: 未着手。設計判断の背景（なぜ独立パッケージか / なぜ純C#か / なぜ EmbeddedResource か）を整理する余地が大きい
+- ARCHITECTURE.md: 追加済み。パッケージ境界、日本語パイプライン、Multilingual routing、CI quality gate を整理した。今後は internal adapter や benchmark / signing 方針変更時に追随更新を続ける
 
 ### 10.6 CHANGELOG の Unreleased セクション（優先度: 低）
 
@@ -550,25 +557,25 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 
 ## 11. 統合ロードマップ
 
-### Phase 1: 品質基盤整備（ほぼ完了）
+### Phase 1: 品質基盤整備（実質完了）
 
 | # | 項目 | 状態 | 次アクション |
 |---|------|------|-------------|
 | 1 | パッケージ別README拡充 | 完了 | drift 防止とサンプル導線の整備を継続 |
 | 2 | CONTRIBUTING.md / MIGRATION.md | 完了 | release checklist と architecture 導線を追加検討 |
-| 3 | CI マトリックスビルド | 完了 | AOT/trim smoke test を次段に追加 |
+| 3 | CI マトリックスビルド | 完了 | scheduled benchmark と coverage threshold を次段で検討 |
 | 4 | コードカバレッジ統合 | 完了 | threshold 運用はベースライン安定後に導入 |
-| 5 | Dependabot + Deterministic Build | 完了 | signing / SBOM / package validation を次段へ |
-| 6 | BenchmarkDotNet 導入 | 完了 | 日本語 / Multilingual / Romance言語へ計測対象を拡張 |
-| 7 | Capability-based internal adapter 導入 | 未着手 | batch helper の次段で内部抽象を整理 |
+| 5 | Dependabot + Deterministic Build | 完了 | signing / strong naming 方針を次段へ |
+| 6 | BenchmarkDotNet 導入 | 完了 | scheduled 実行と baseline 比較を次段へ |
+| 7 | Capability-based internal adapter 導入 | 完了 | Multilingual contract test と設計文書同期を継続 |
 | 8 | バッチAPI共通化 + テスト棚卸し | 完了 | 共通 contract test を全言語へ横展開 |
 
 ### Phase 1 の残タスク
 
-1. capability-based internal adapter を設計し、batch helper / 共通 fixture と接続する
-2. Japanese / Multilingual / Romance 言語群へ benchmark 対象を拡張する
-3. AOT/trim smoke test、Package Validation、Signing、SBOM を追加する
-4. DocFX / XML Doc / 実行可能サンプルを整備して DX を次段へ進める
+1. Signing / Strong Naming / NuGet Package Signing の方針と release 組み込みを決める
+2. XML Doc / `CS1591` / compiler warning を整理し、repo-wide warning gate に近づける
+3. scheduled benchmark と baseline 比較を導入し、性能回帰の可視化を進める
+4. DocFX site の公開運用と README / sample / `ARCHITECTURE.md` の drift 防止を整える
 
 ### Phase 2: 短期（2-4ヶ月）— 機能拡張 + 新言語Tier 1
 
@@ -578,7 +585,7 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 | 10 | トルコ語 G2P | 新言語 | 3-4週 | 規則性高い新言語 |
 | 11 | SSML ライトMVP | 機能拡張 | 2-3週 | TTS統合基盤 |
 | 12 | マルチターゲット + FrozenDictionary | パフォーマンス | 2-3週 | 10-20%高速化 |
-| 13 | DocFX + XMLDoc充実化 | DX | 1-2週 | API使いやすさ |
+| 13 | XMLDoc充実化 + DocFX公開運用 | DX | 1-2週 | API使いやすさ |
 
 ### Phase 3: 中期（4-8ヶ月）— 新言語Tier 1-2 + 機能拡張
 
@@ -587,7 +594,7 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 | 14 | ドイツ語 G2P | 新言語 | 3-4週 | 欧州主要言語 |
 | 15 | ストリーミングAPI | 機能拡張 | 2-3週 | リアルタイム対応 |
 | 16 | ベトナム語 G2P | 新言語 | 4-5週 | アジア市場拡大 |
-| 17 | AOT / Trim 互換性検証 | 品質 | 3-5日 | 配布互換性可視化 |
+| 17 | Signing / Strong Naming | 品質 | 3-5日 | 配布信頼性向上 |
 | 18 | Unity Editor拡張 | Unity | 4-5週 | ゲーム市場 |
 
 ### Phase 4: 長期（8-12ヶ月）— 大規模展開
@@ -605,9 +612,9 @@ TTS/ASRシステムとの連携用に音素のベクトル表現を出力。言�
 
 | フェーズ完了 | 対応言語数 | 主な新機能 |
 |------------|-----------|-----------|
-| Phase 1 | 7言語（現状維持） | 品質基盤・CI/CD強化 + batch API整理 |
+| Phase 1 | 7言語（現状維持） | 品質基盤・CI/CD強化 + internal adapter / DocFX / benchmark 整備 |
 | Phase 2 | 9言語 | SSML、マルチターゲット |
-| Phase 3 | 11言語 | ストリーミング、AOT/trim検証 |
+| Phase 3 | 11言語 | ストリーミング、Signing / Strong Naming |
 | Phase 4 | 14言語 | WebAssembly、gRPC |
 
 ---
