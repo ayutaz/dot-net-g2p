@@ -236,6 +236,7 @@ jobs:
         run: >
           dotnet restore tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj
           -r linux-x64
+          -p:DotNetG2PPublishAotSmoke=true
           -p:BuildProjectReferences=false
 
       - name: Publish trim smoke test
@@ -247,7 +248,7 @@ jobs:
             --framework net8.0 \
             --runtime linux-x64 \
             --self-contained true \
-            -p:PublishTrimmed=true \
+            -p:DotNetG2PPublishTrimmedSmoke=true \
             -p:BuildProjectReferences=false \
             --no-restore \
             -o ./artifacts/publish-smoke/trim
@@ -262,7 +263,7 @@ jobs:
             --framework net8.0 \
             --runtime linux-x64 \
             --self-contained true \
-            -p:PublishAot=true \
+            -p:DotNetG2PPublishAotSmoke=true \
             -p:BuildProjectReferences=false \
             --no-restore \
             -o ./artifacts/publish-smoke/aot

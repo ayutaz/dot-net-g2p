@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <PublishTrimmed Condition="'$(DotNetG2PPublishTrimmedSmoke)' == 'true'">true</PublishTrimmed>
+    <PublishAot Condition="'$(DotNetG2PPublishAotSmoke)' == 'true'">true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
