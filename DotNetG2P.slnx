@@ -20,6 +20,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DotNetG2P.Benchmarks/DotNetG2P.Benchmarks.csproj" />
+    <Project Path="tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj" />
     <Project Path="tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj" />
   </Folder>
 </Solution>

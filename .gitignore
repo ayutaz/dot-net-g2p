@@ -28,6 +28,10 @@ nul
 temp_*
 test_output.txt
 artifacts/spanish-eval/
+artifacts/publish-smoke/
+artifacts/package-validation/
+artifacts/package-validation-test/
+artifacts/package-validation-all/
 .cache/spanish-eval/
 tests/**/TestResults/
 BenchmarkDotNet.Artifacts/

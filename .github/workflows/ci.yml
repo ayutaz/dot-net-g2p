@@ -78,6 +78,7 @@ jobs:
           $projects = @(
             'tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj',
             'tests/DotNetG2P.Benchmarks/DotNetG2P.Benchmarks.csproj',
+            'tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj',
             'samples/DotNetG2P.Console/DotNetG2P.Console.csproj',
             'tools/DotNetG2P.SpanishEval/DotNetG2P.SpanishEval.csproj',
             'tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj',
@@ -94,6 +95,7 @@ jobs:
           $projects = @(
             'tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj',
             'tests/DotNetG2P.Benchmarks/DotNetG2P.Benchmarks.csproj',
+            'tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj',
             'samples/DotNetG2P.Console/DotNetG2P.Console.csproj',
             'tools/DotNetG2P.SpanishEval/DotNetG2P.SpanishEval.csproj',
             'tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj',
@@ -229,18 +231,55 @@ jobs:
           path: coverage-report/
           retention-days: 30
 
+      - name: Restore publish smoke runtime assets
+        if: ${{ matrix.validate_pack }}
+        run: >
+          dotnet restore tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj
+          -r linux-x64
+          -p:BuildProjectReferences=false
+
+      - name: Publish trim smoke test
+        if: ${{ matrix.validate_pack }}
+        shell: bash
+        run: |
+          dotnet publish tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --runtime linux-x64 \
+            --self-contained true \
+            -p:PublishTrimmed=true \
+            -p:BuildProjectReferences=false \
+            --no-restore \
+            -o ./artifacts/publish-smoke/trim
+          ./artifacts/publish-smoke/trim/DotNetG2P.PublishSmoke
+
+      - name: Publish AOT smoke test
+        if: ${{ matrix.validate_pack }}
+        shell: bash
+        run: |
+          dotnet publish tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --runtime linux-x64 \
+            --self-contained true \
+            -p:PublishAot=true \
+            -p:BuildProjectReferences=false \
+            --no-restore \
+            -o ./artifacts/publish-smoke/aot
+          ./artifacts/publish-smoke/aot/DotNetG2P.PublishSmoke
+
       - name: Pack
         if: ${{ matrix.validate_pack }}
         run: |
-          dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj --configuration Release --no-build --output ./artifacts
-          dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj --configuration Release --no-build --output ./artifacts
-          dotnet pack src/DotNetG2P.English/DotNetG2P.English.csproj --configuration Release --no-build --output ./artifacts
-          dotnet pack src/DotNetG2P.Chinese/DotNetG2P.Chinese.csproj --configuration Release --no-build --output ./artifacts
-          dotnet pack src/DotNetG2P.Korean/DotNetG2P.Korean.csproj --configuration Release --no-build --output ./artifacts
-          dotnet pack src/DotNetG2P.Spanish/DotNetG2P.Spanish.csproj --configuration Release --no-build --output ./artifacts
-          dotnet pack src/DotNetG2P.French/DotNetG2P.French.csproj --configuration Release --no-build --output ./artifacts
-          dotnet pack src/DotNetG2P.Portuguese/DotNetG2P.Portuguese.csproj --configuration Release --no-build --output ./artifacts
-          dotnet pack src/DotNetG2P.Multilingual/DotNetG2P.Multilingual.csproj --configuration Release --no-build --output ./artifacts
+          dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
+          dotnet pack src/DotNetG2P.MeCab/DotNetG2P.MeCab.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
+          dotnet pack src/DotNetG2P.English/DotNetG2P.English.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
+          dotnet pack src/DotNetG2P.Chinese/DotNetG2P.Chinese.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
+          dotnet pack src/DotNetG2P.Korean/DotNetG2P.Korean.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
+          dotnet pack src/DotNetG2P.Spanish/DotNetG2P.Spanish.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
+          dotnet pack src/DotNetG2P.French/DotNetG2P.French.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
+          dotnet pack src/DotNetG2P.Portuguese/DotNetG2P.Portuguese.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
+          dotnet pack src/DotNetG2P.Multilingual/DotNetG2P.Multilingual.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
 
       - name: Upload NuGet packages
         if: ${{ matrix.validate_pack }}

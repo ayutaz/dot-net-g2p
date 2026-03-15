@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DotNetG2P.Chinese\DotNetG2P.Chinese.csproj" GlobalPropertiesToRemove="PublishTrimmed;PublishAot;RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Core\DotNetG2P.Core.csproj" GlobalPropertiesToRemove="PublishTrimmed;PublishAot;RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="..\..\src\DotNetG2P.English\DotNetG2P.English.csproj" GlobalPropertiesToRemove="PublishTrimmed;PublishAot;RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="..\..\src\DotNetG2P.French\DotNetG2P.French.csproj" GlobalPropertiesToRemove="PublishTrimmed;PublishAot;RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Korean\DotNetG2P.Korean.csproj" GlobalPropertiesToRemove="PublishTrimmed;PublishAot;RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="..\..\src\DotNetG2P.MeCab\DotNetG2P.MeCab.csproj" GlobalPropertiesToRemove="PublishTrimmed;PublishAot;RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Multilingual\DotNetG2P.Multilingual.csproj" GlobalPropertiesToRemove="PublishTrimmed;PublishAot;RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Portuguese\DotNetG2P.Portuguese.csproj" GlobalPropertiesToRemove="PublishTrimmed;PublishAot;RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Spanish\DotNetG2P.Spanish.csproj" GlobalPropertiesToRemove="PublishTrimmed;PublishAot;RuntimeIdentifier;SelfContained" />
+  </ItemGroup>
+
+</Project>
