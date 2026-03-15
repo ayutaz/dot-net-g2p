@@ -1,7 +1,7 @@
 {
   "name": "com.dotnetg2p.spanish",
   "displayName": "DotNetG2P.Spanish",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "unity": "2021.2",
   "description": "Spanish Grapheme-to-Phoneme (G2P) library for .NET and Unity. Rule-based IPA conversion with syllabification, stress assignment, and Castilian/Latin American dialect options.",
   "keywords": [
