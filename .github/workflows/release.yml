@@ -122,10 +122,37 @@ jobs:
 
       - name: Push to NuGet
         run: |
-          dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-          dotnet nuget push ./artifacts/*.snupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate || true
+          mapfile -t nupkg_files < <(find ./artifacts -type f -name '*.nupkg' ! -name '*.snupkg' | sort)
+          mapfile -t snupkg_files < <(find ./artifacts -type f -name '*.snupkg' | sort)
+
+          if [ ${#nupkg_files[@]} -eq 0 ]; then
+            echo "::error::No .nupkg files were downloaded into ./artifacts"
+            find ./artifacts -maxdepth 4 -type f | sort
+            exit 1
+          fi
+
+          printf 'NuGet packages to push:\n%s\n' "${nupkg_files[@]}"
+          for package in "${nupkg_files[@]}"; do
+            dotnet nuget push "$package" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
+
+          if [ ${#snupkg_files[@]} -gt 0 ]; then
+            printf 'Symbol packages to push:\n%s\n' "${snupkg_files[@]}"
+            for package in "${snupkg_files[@]}"; do
+              dotnet nuget push "$package" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate || true
+            done
+          fi
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "v$VERSION" ./artifacts/*.nupkg ./artifacts/sbom/bom.xml --title "v$VERSION" --generate-notes
+        run: |
+          mapfile -t release_files < <(find ./artifacts -type f \( -name '*.nupkg' -o -path '*/sbom/bom.xml' \) | sort)
+
+          if [ ${#release_files[@]} -eq 0 ]; then
+            echo "::error::No release files were downloaded into ./artifacts"
+            find ./artifacts -maxdepth 4 -type f | sort
+            exit 1
+          fi
+
+          gh release create "v$VERSION" "${release_files[@]}" --title "v$VERSION" --generate-notes
