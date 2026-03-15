@@ -231,6 +231,25 @@ jobs:
           path: coverage-report/
           retention-days: 30
 
+      - name: Restore local tools
+        if: ${{ matrix.validate_pack }}
+        run: dotnet tool restore
+
+      - name: Build DocFX site
+        if: ${{ matrix.validate_pack }}
+        run: >
+          dotnet tool run docfx docs/docfx.json
+          --logLevel Warning
+          --warningsAsErrors
+
+      - name: Upload DocFX site
+        if: ${{ matrix.validate_pack }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: docfx-site
+          path: docs/_site/
+          retention-days: 30
+
       - name: Restore publish smoke runtime assets
         if: ${{ matrix.validate_pack }}
         run: >
@@ -282,9 +301,25 @@ jobs:
           dotnet pack src/DotNetG2P.Portuguese/DotNetG2P.Portuguese.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
           dotnet pack src/DotNetG2P.Multilingual/DotNetG2P.Multilingual.csproj --configuration Release --no-build -p:EnablePackageValidation=true --output ./artifacts
 
+      - name: Generate SBOM
+        if: ${{ matrix.validate_pack }}
+        run: >
+          dotnet tool run dotnet-CycloneDX DotNetG2P.slnx
+          -o ./artifacts/sbom
+          -t
+          --disable-hash-computation
+
       - name: Upload NuGet packages
         if: ${{ matrix.validate_pack }}
         uses: actions/upload-artifact@v7
         with:
           name: nuget-packages-validation
           path: artifacts/*.nupkg
+
+      - name: Upload SBOM
+        if: ${{ matrix.validate_pack }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom
+          path: artifacts/sbom/
+          retention-days: 30

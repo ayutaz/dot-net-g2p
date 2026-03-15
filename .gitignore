@@ -38,6 +38,9 @@ BenchmarkDotNet.Artifacts/
 coverage-report/
 test-results/
 test-results-coverage/
+artifacts/sbom/
+docs/_site/
+docs/api/
 
 ## Dictionary (large binary)
 open_jtalk_dic_utf_8-*/
