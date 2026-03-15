@@ -39,6 +39,9 @@ Useful targeted commands:
 dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Korean --no-restore
 dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual --no-restore -m:1
 dotnet run -c Release --project tests/DotNetG2P.Benchmarks -- --list flat
+dotnet restore tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj -r win-x64 -p:BuildProjectReferences=false
+dotnet publish tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj -c Release -f net8.0 -r win-x64 --self-contained true -p:PublishTrimmed=true -p:BuildProjectReferences=false --no-restore -o ./artifacts/publish-smoke/trim
+dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj -c Release --no-build -p:EnablePackageValidation=true -o ./artifacts/package-validation
 ```
 
 ## Coding Guidelines
