@@ -1,8 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\DotNetG2P.Chinese\DotNetG2P.Chinese.csproj" />
     <ProjectReference Include="..\..\src\DotNetG2P.Core\DotNetG2P.Core.csproj" />
+    <ProjectReference Include="..\..\src\DotNetG2P.English\DotNetG2P.English.csproj" />
+    <ProjectReference Include="..\..\src\DotNetG2P.French\DotNetG2P.French.csproj" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Korean\DotNetG2P.Korean.csproj" />
     <ProjectReference Include="..\..\src\DotNetG2P.MeCab\DotNetG2P.MeCab.csproj" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Multilingual\DotNetG2P.Multilingual.csproj" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Portuguese\DotNetG2P.Portuguese.csproj" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Spanish\DotNetG2P.Spanish.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

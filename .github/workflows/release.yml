@@ -48,6 +48,7 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - run: dotnet restore DotNetG2P.slnx
+      - run: dotnet tool restore
 
       - run: dotnet build DotNetG2P.slnx --configuration Release -p:Version="$VERSION"
 
@@ -82,12 +83,20 @@ jobs:
           dotnet pack src/DotNetG2P.Portuguese/DotNetG2P.Portuguese.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
           dotnet pack src/DotNetG2P.Multilingual/DotNetG2P.Multilingual.csproj --configuration Release --no-build -p:PackageVersion="$VERSION" --output ./artifacts
 
+      - name: Generate SBOM
+        run: >
+          dotnet tool run dotnet-CycloneDX DotNetG2P.slnx
+          -o ./artifacts/sbom
+          -t
+          --disable-hash-computation
+
       - uses: actions/upload-artifact@v7
         with:
           name: nuget-packages
           path: |
             artifacts/*.nupkg
             artifacts/*.snupkg
+            artifacts/sbom/bom.xml
 
   publish:
     needs: build-and-test
@@ -112,4 +121,4 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "v$VERSION" ./artifacts/*.nupkg --title "v$VERSION" --generate-notes
+        run: gh release create "v$VERSION" ./artifacts/*.nupkg ./artifacts/sbom/bom.xml --title "v$VERSION" --generate-notes

@@ -9,6 +9,7 @@ using DotNetG2P.English;
 using DotNetG2P.French;
 using DotNetG2P.Korean;
 using DotNetG2P.MeCab;
+using DotNetG2P.Multilingual.Internal;
 using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
 
@@ -31,6 +32,7 @@ namespace DotNetG2P.Multilingual
         private readonly FrenchG2PEngine _frenchEngine;
         private readonly PortugueseG2PEngine _portugueseEngine;
         private readonly MultilingualG2POptions _options;
+        private readonly LanguageCapabilityRouter _capabilityRouter;
         private readonly object _japaneseLock = new object();
         private int _disposed;
 
@@ -114,6 +116,15 @@ namespace DotNetG2P.Multilingual
                 _spanishEngine = spanishEngine;
                 _frenchEngine = frenchEngine;
                 _portugueseEngine = portugueseEngine;
+                _capabilityRouter = LanguageCapabilityRouter.Create(
+                    _japaneseEngine,
+                    _japaneseLock,
+                    _englishEngine,
+                    _chineseEngine,
+                    _koreanEngine,
+                    _spanishEngine,
+                    _frenchEngine,
+                    _portugueseEngine);
             }
             catch
             {
@@ -212,6 +223,18 @@ namespace DotNetG2P.Multilingual
             return ConvertBatch<IReadOnlyList<G2PSegment>>(texts, ToSegments);
         }
 
+        internal ITextBatchProcessor<string> GetTextBatchProcessor(Language language)
+        {
+            ThrowIfDisposed();
+            return _capabilityRouter.GetRequired(language);
+        }
+
+        internal bool TryGetIpaTextBatchProcessor(Language language, out IIpaTextBatchProcessor? processor)
+        {
+            ThrowIfDisposed();
+            return _capabilityRouter.TryGetIpa(language, out processor);
+        }
+
         /// <inheritdoc />
         public void Dispose()
         {
@@ -232,35 +255,7 @@ namespace DotNetG2P.Multilingual
         /// </summary>
         private string ConvertSegment(TextSegment segment)
         {
-            switch (segment.Language)
-            {
-                case Language.Japanese:
-                    lock (_japaneseLock)
-                    {
-                        return _japaneseEngine.ToPhonemes(segment.Text);
-                    }
-
-                case Language.English:
-                    return _englishEngine.ToPhonemes(segment.Text);
-
-                case Language.Chinese:
-                    return _chineseEngine.ToPinyin(segment.Text);
-
-                case Language.Korean:
-                    return _koreanEngine.ToPhonemes(segment.Text);
-
-                case Language.Spanish:
-                    return _spanishEngine.ToPhonemes(segment.Text);
-
-                case Language.French:
-                    return _frenchEngine.ToPhonemes(segment.Text);
-
-                case Language.Portuguese:
-                    return _portugueseEngine.ToPhonemes(segment.Text);
-
-                default:
-                    return "";
-            }
+            return _capabilityRouter.GetRequired(segment.Language).Convert(segment.Text);
         }
 
         private static List<TResult> ConvertBatch<TResult>(IReadOnlyList<string> texts, Func<string, TResult> converter)

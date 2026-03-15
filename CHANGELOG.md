@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ルートドキュメントとして `CONTRIBUTING.md` と `MIGRATION.md` を追加
 - `DotNetG2P` / `DotNetG2P.MeCab` / `DotNetG2P.English` / `DotNetG2P.Chinese` / `DotNetG2P.Spanish` / `DotNetG2P.French` / `DotNetG2P.Portuguese` 向けのパッケージ別 README を追加
 - Dependabot 設定 (`.github/dependabot.yml`) を追加し、NuGet / .NET SDK / GitHub Actions の更新監視を有効化
+- `ARCHITECTURE.md`、DocFX 設定、SBOM 生成用のローカル tool manifest を追加
+- Japanese / Multilingual / Romance 言語群の BenchmarkDotNet シナリオを追加
+- `samples/DotNetG2P.Console` を多言語デモへ拡張
 
 ### Changed
 - バッチAPI実装を共通 helper ベースへ整理しつつ、公開 `IReadOnlyList<T>` API のランタイム互換性を維持
@@ -19,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PR でテスト結果公開、coverage summary/comment、Cobertura/HTML artifact、NuGet pack 検証を自動化
 - `Directory.Build.props` に deterministic build / CI build 設定を追加し、pack 時の package README 解決を共通化
 - ルート README と翻訳 README を関連ドキュメント、CI/.NET 8/9 ビルド要件、最新のパッケージ導線に合わせて更新
+- `setup-dictionary` action の cache を `actions/cache@v5` に更新
+- CI / Release workflow に DocFX build と CycloneDX SBOM 生成を追加
+- `Multilingual` の言語ルーティングを capability-based internal adapter 経由へ整理し、共通 fixture から検証できるようにした
 
 ## [1.4.0] - 2026-03-12
 

@@ -1,166 +1,105 @@
-using System;
 using DotNetG2P;
+using DotNetG2P.Chinese;
+using DotNetG2P.English;
+using DotNetG2P.French;
+using DotNetG2P.Korean;
 using DotNetG2P.MeCab;
+using DotNetG2P.Multilingual;
+using DotNetG2P.Portuguese;
+using DotNetG2P.Spanish;
 
-// naist-jdic辞書のパスを指定
-// 第1引数を優先し、省略時は環境変数または既定インストール先 (%USERPROFILE%\naist-jdic) を探索
-var dicPath = args.Length > 0
-    ? args[0]
-    : null;
+var dictionaryPath = ResolveDictionaryPath(args);
 
-var useDefaultDictionaryResolution = string.IsNullOrEmpty(dicPath);
-var defaultDictionaryAvailable = useDefaultDictionaryResolution
-    && NaistJdicLocator.TryResolve(out _);
-
-if (string.IsNullOrEmpty(dicPath) && !defaultDictionaryAvailable)
+PrintSection("Core MoraMapping");
+foreach (var kana in new[] { "コンニチワ", "オハヨウゴザイマス", "アリガトウ", "セカイ" })
 {
-    Console.WriteLine("使用方法: DotNetG2P.Console <naist-jdic辞書ディレクトリパス>");
-    Console.WriteLine("  または環境変数 DOTNETG2P_NAIST_JDIC_PATH / NAIST_JDIC_PATH を設定してください。");
-    Console.WriteLine("  既定配置にインストールする場合: pwsh -File tools/install_naist_jdic.ps1");
-    Console.WriteLine();
-    Console.WriteLine("辞書なしでMoraMappingの動作確認を行います...");
-    Console.WriteLine();
+    var moras = DotNetG2P.PhonemeConverter.MoraMapping.KatakanaToMoras(kana);
+    Console.WriteLine($"{kana} -> {DotNetG2P.PhonemeConverter.MoraMapping.MorasToPhonemeString(moras)}");
+}
 
-    // 辞書なしでもMoraMappingの動作確認が可能
-    var testCases = new[] { "コンニチワ", "オハヨウゴザイマス", "アリガトウ", "セカイ" };
-    foreach (var kana in testCases)
-    {
-        var moras = DotNetG2P.PhonemeConverter.MoraMapping.KatakanaToMoras(kana);
-        var phonemes = DotNetG2P.PhonemeConverter.MoraMapping.MorasToPhonemeString(moras);
-        Console.WriteLine($"{kana} → {phonemes}");
-    }
+PrintSection("Standalone Language Engines");
 
+using (var english = new EnglishG2PEngine())
+{
+    Console.WriteLine($"English phonemes: {english.ToPhonemes("benchmarking makes regressions visible")}");
+    Console.WriteLine($"English IPA:      {english.ToIPA("hello world")}");
+}
+
+using (var chinese = new ChineseG2PEngine())
+{
+    Console.WriteLine($"Chinese pinyin:   {chinese.ToPinyin("你好世界")}");
+    Console.WriteLine($"Chinese zhuyin:   {chinese.ToZhuyin("你好世界")}");
+}
+
+using (var korean = new KoreanG2PEngine())
+{
+    Console.WriteLine($"Korean phonemes:  {korean.ToPhonemes("안녕하세요")}");
+    Console.WriteLine($"Korean jamo:      {korean.ToJamo("안녕하세요")}");
+}
+
+using (var spanish = new SpanishG2PEngine())
+{
+    Console.WriteLine($"Spanish phonemes: {spanish.ToPhonemes("hola mundo")}");
+    Console.WriteLine($"Spanish IPA:      {spanish.ToIPA("la fonetica ayuda")}");
+}
+
+using (var french = new FrenchG2PEngine())
+{
+    Console.WriteLine($"French phonemes:  {french.ToPhonemes("bonjour le monde")}");
+    Console.WriteLine($"French X-SAMPA:   {french.ToXSampa("synthese vocale")}");
+}
+
+using (var portuguese = new PortugueseG2PEngine())
+{
+    Console.WriteLine($"Portuguese phonemes: {portuguese.ToPhonemes("ola mundo")}");
+    Console.WriteLine($"Portuguese X-SAMPA:  {portuguese.ToXSampa("sintese de fala")}");
+}
+
+if (dictionaryPath is null)
+{
+    PrintSection("Japanese And Multilingual Samples");
+    Console.WriteLine("naist-jdic was not found.");
+    Console.WriteLine("Pass a dictionary path as the first argument or set DOTNETG2P_NAIST_JDIC_PATH / NAIST_JDIC_PATH.");
+    Console.WriteLine("Install helper: pwsh -File tools/install_naist_jdic.ps1");
     return;
 }
 
-// === NJDパイプライン統合動作確認 ===
-
-Console.WriteLine("=== DotNetG2P NJDパイプライン動作確認 ===");
-Console.WriteLine();
-
-// デフォルトオプション（全処理有効）で動作確認
-using var tokenizer = useDefaultDictionaryResolution
-    ? new MeCabTokenizer()
-    : new MeCabTokenizer(dicPath!);
-using var engine = new G2PEngine(tokenizer);
-
-var samples = new[]
+PrintSection("Japanese Engine");
+using (var engine = new G2PEngine(new MeCabTokenizer(dictionaryPath)))
 {
-    // 基本テスト
-    "こんにちは",
-    "今日は良い天気です",
-    "東京タワーに行きたい",
-    "音声合成の研究",
-    // 数字読み変換テスト
-    "３個のりんご",
-    "１２３円",
-    "２０２５年",
-    // 無声音化テスト
-    "すきです",
-    // 複合テスト
-    "私は東京に住んでいます",
-};
-
-Console.WriteLine("--- 全処理有効（デフォルト）---");
-Console.WriteLine();
-
-foreach (var text in samples)
-{
-    var phonemes = engine.ToPhonemes(text);
-    var kana = engine.ToKana(text);
-    Console.WriteLine($"入力: {text}");
-    Console.WriteLine($"カナ: {kana}");
-    Console.WriteLine($"音素: {phonemes}");
-    Console.WriteLine();
+    var text = "東京タワーに行きたい";
+    Console.WriteLine($"Input:            {text}");
+    Console.WriteLine($"Kana:             {engine.ToKana(text)}");
+    Console.WriteLine($"Phonemes:         {engine.ToPhonemes(text)}");
+    Console.WriteLine($"Prosody:          {engine.ToProsody(text)}");
+    Console.WriteLine($"Batch phonemes:   {string.Join(" | ", engine.ToPhonemesBatch(new[] { "こんにちは", "今日は良い天気です" }))}");
 }
 
-// オプション指定の動作確認: 無声音化OFF
-Console.WriteLine("--- 無声音化OFF ---");
-Console.WriteLine();
-
-using var tokenizer2 = useDefaultDictionaryResolution
-    ? new MeCabTokenizer()
-    : new MeCabTokenizer(dicPath!);
-var optionsNoUnvoiced = new G2POptions(enableUnvoicedVowel: false);
-using var engine2 = new G2PEngine(tokenizer2, optionsNoUnvoiced);
-
-var unvoicedSamples = new[] { "すきです", "東京タワー" };
-foreach (var text in unvoicedSamples)
+PrintSection("Multilingual Engine");
+using (var multilingual = new MultilingualG2PEngine(dictionaryPath))
 {
-    var phonemes = engine2.ToPhonemes(text);
-    Console.WriteLine($"入力: {text}");
-    Console.WriteLine($"音素: {phonemes}");
-    Console.WriteLine();
-}
-
-// Analyze APIのデモ
-Console.WriteLine("--- Analyze API（NjdNode詳細出力）---");
-Console.WriteLine();
-
-var analyzeText = "東京タワーに行きたい";
-Console.WriteLine($"入力: {analyzeText}");
-var nodes = engine.Analyze(analyzeText);
-for (int i = 0; i < nodes.Count; i++)
-{
-    var node = nodes[i];
-    Console.WriteLine($"  [{i}] 表層: {node.Surface}");
-    Console.WriteLine($"       品詞: {node.Details?.PartOfSpeech}");
-    Console.WriteLine($"       発音: {node.Pronunciation}");
-    Console.WriteLine($"       Acc:  {node.AccentType}");
-    Console.WriteLine($"       Chain: {node.ChainFlag}");
-}
-
-// === 出力形式API動作確認 ===
-
-Console.WriteLine();
-Console.WriteLine("=== DotNetG2P 出力形式API動作確認 ===");
-Console.WriteLine();
-
-var m3Samples = new[] { "こんにちは", "今日は良い天気です", "東京タワーに行きたい" };
-
-// ToProsody
-Console.WriteLine("--- ToProsody（ESPnet韻律記号付き）---");
-Console.WriteLine();
-foreach (var text in m3Samples)
-{
-    var prosody = engine.ToProsody(text);
-    Console.WriteLine($"入力: {text}");
-    Console.WriteLine($"韻律: {prosody}");
-    Console.WriteLine();
-}
-
-// ToAccentPhrases
-Console.WriteLine("--- ToAccentPhrases（VOICEVOX互換）---");
-Console.WriteLine();
-foreach (var text in m3Samples)
-{
-    var phrases = engine.ToAccentPhrases(text);
-    Console.WriteLine($"入力: {text}");
-    Console.WriteLine($"  アクセント句数: {phrases.Count}");
-    for (int i = 0; i < phrases.Count; i++)
+    var text = "こんにちは DotNetG2P, hello 世界 and bonjour tout le monde.";
+    Console.WriteLine($"Input:            {text}");
+    Console.WriteLine($"Phonemes:         {multilingual.ToPhonemes(text)}");
+    Console.WriteLine("Segments:");
+    foreach (var segment in multilingual.ToSegments(text))
     {
-        var p = phrases[i];
-        Console.WriteLine($"  [{i}] モーラ数={p.Moras.Count}, アクセント={p.Accent}, 疑問={p.IsInterrogative}, ポーズ={p.PauseMora != null}");
+        Console.WriteLine($"  {segment.Language}: {segment.SourceText} -> {segment.Phonemes}");
     }
-    Console.WriteLine();
 }
 
-// ToFullContextLabels
-Console.WriteLine("--- ToFullContextLabels（HTSフルコンテキストラベル）---");
-Console.WriteLine();
-foreach (var text in m3Samples)
+static string? ResolveDictionaryPath(string[] args)
 {
-    var labels = engine.ToFullContextLabels(text);
-    Console.WriteLine($"入力: {text}");
-    Console.WriteLine($"  ラベル数: {labels.Count}");
-    var showCount = Math.Min(5, labels.Count);
-    for (int i = 0; i < showCount; i++)
-    {
-        Console.WriteLine($"  [{i}] {labels[i]}");
-    }
-    if (labels.Count > showCount)
-    {
-        Console.WriteLine($"  ... (残り {labels.Count - showCount} 行)");
-    }
+    if (args.Length > 0 && !string.IsNullOrWhiteSpace(args[0]))
+        return args[0];
+
+    return NaistJdicLocator.TryResolve(out var resolvedPath)
+        ? resolvedPath
+        : null;
+}
+
+static void PrintSection(string title)
+{
     Console.WriteLine();
+    Console.WriteLine($"=== {title} ===");
 }

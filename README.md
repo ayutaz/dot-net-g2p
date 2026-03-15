@@ -125,6 +125,7 @@ dotnet add package DotNetG2P.Multilingual
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): 開発環境構築、ビルド、テスト、PR の基本方針
 - [MIGRATION.md](MIGRATION.md): 互換性メモと将来の移行ガイド
+- [ARCHITECTURE.md](ARCHITECTURE.md): パッケージ境界、共有基盤、Multilingual ルーティングの概要
 - [CHANGELOG.md](CHANGELOG.md): 未リリース変更を含む変更履歴
 - パッケージ別 README:
   - [`DotNetG2P`](src/DotNetG2P.Core/README.md)

@@ -128,6 +128,7 @@ dotnet add package DotNetG2P.Multilingual
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): contributor setup, build/test workflow, and PR expectations
 - [MIGRATION.md](MIGRATION.md): compatibility notes and future migration guidance
+- [ARCHITECTURE.md](ARCHITECTURE.md): package boundaries, shared internals, and multilingual routing
 - [CHANGELOG.md](CHANGELOG.md): release history, including unreleased infrastructure and API updates
 - Package-specific READMEs:
   - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
