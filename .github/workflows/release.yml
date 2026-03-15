@@ -52,6 +52,12 @@ jobs:
 
       - run: dotnet build DotNetG2P.slnx --configuration Release -p:Version="$VERSION"
 
+      - name: Build DocFX site
+        run: >
+          dotnet tool run docfx docs/docfx.json
+          --logLevel Warning
+          --warningsAsErrors
+
       - name: Setup dictionary
         uses: ./.github/actions/setup-dictionary
 
@@ -97,6 +103,7 @@ jobs:
             artifacts/*.nupkg
             artifacts/*.snupkg
             artifacts/sbom/bom.xml
+            docs/_site/**
 
   publish:
     needs: build-and-test

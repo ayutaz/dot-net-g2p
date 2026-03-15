@@ -32,6 +32,7 @@ dotnet test DotNetG2P.slnx --configuration Release --filter "Category!=Performan
 
 The root solution is `.slnx`, so the full solution workflow requires a .NET SDK with SLNX support.
 The CI matrix also validates the library and test projects with .NET 8 by building project files directly.
+The DocFX configuration reads the Release assemblies under `.build/bin`, so run the Release build before generating docs.
 
 Useful targeted commands:
 
@@ -43,7 +44,7 @@ dotnet run -c Release --project tests/DotNetG2P.Benchmarks -- --list flat
 dotnet run -c Release --project tests/DotNetG2P.Benchmarks -- --filter "*Japanese*"
 dotnet run -c Release --project tests/DotNetG2P.Benchmarks -- --filter "*Multilingual*"
 dotnet run -c Release --project tests/DotNetG2P.Benchmarks -- --filter "*Romance*"
-dotnet run -c Release --project samples/DotNetG2P.Console -- %USERPROFILE%\\naist-jdic
+dotnet run -c Release --project samples/DotNetG2P.Console -- "$HOME/naist-jdic"
 dotnet restore tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj -r win-x64 -p:BuildProjectReferences=false
 dotnet publish tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj -c Release -f net8.0 -r win-x64 --self-contained true -p:PublishTrimmed=true -p:BuildProjectReferences=false --no-restore -o ./artifacts/publish-smoke/trim
 dotnet pack src/DotNetG2P.Core/DotNetG2P.Core.csproj -c Release --no-build -p:EnablePackageValidation=true -o ./artifacts/package-validation

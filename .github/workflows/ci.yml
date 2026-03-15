@@ -240,6 +240,7 @@ jobs:
         run: >
           dotnet tool run docfx docs/docfx.json
           --logLevel Warning
+          --warningsAsErrors
 
       - name: Upload DocFX site
         if: ${{ matrix.validate_pack }}

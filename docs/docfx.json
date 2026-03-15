@@ -6,7 +6,15 @@
         {
           "src": "..",
           "files": [
-            "src/**/*.csproj"
+            ".build/bin/DotNetG2P.Core/Release/netstandard2.1/DotNetG2P.dll",
+            ".build/bin/DotNetG2P.MeCab/Release/netstandard2.1/DotNetG2P.MeCab.dll",
+            ".build/bin/DotNetG2P.English/Release/netstandard2.1/DotNetG2P.English.dll",
+            ".build/bin/DotNetG2P.Chinese/Release/netstandard2.1/DotNetG2P.Chinese.dll",
+            ".build/bin/DotNetG2P.Korean/Release/netstandard2.1/DotNetG2P.Korean.dll",
+            ".build/bin/DotNetG2P.Spanish/Release/netstandard2.1/DotNetG2P.Spanish.dll",
+            ".build/bin/DotNetG2P.French/Release/netstandard2.1/DotNetG2P.French.dll",
+            ".build/bin/DotNetG2P.Portuguese/Release/netstandard2.1/DotNetG2P.Portuguese.dll",
+            ".build/bin/DotNetG2P.Multilingual/Release/netstandard2.1/DotNetG2P.Multilingual.dll"
           ]
         }
       ],
