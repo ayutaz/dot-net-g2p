@@ -102,6 +102,80 @@ namespace DotNetG2P.Multilingual.Internal
             return new LanguageCapabilityRouter(primaryProcessors);
         }
 
+        /// <summary>
+        /// 非日本語エンジンを遅延初期化で登録するファクトリメソッド。
+        /// Lazy&lt;T&gt;.Value へのアクセスはデリゲート経由で行われるため、
+        /// 実際にその言語が要求されるまでエンジンは生成されない。
+        /// </summary>
+        public static LanguageCapabilityRouter CreateLazy(
+            G2PEngine japaneseEngine,
+            object japaneseLock,
+            Lazy<EnglishG2PEngine> lazyEnglishEngine,
+            Lazy<ChineseG2PEngine> lazyChineseEngine,
+            Lazy<KoreanG2PEngine> lazyKoreanEngine,
+            Lazy<SpanishG2PEngine> lazySpanishEngine,
+            Lazy<FrenchG2PEngine> lazyFrenchEngine,
+            Lazy<PortugueseG2PEngine> lazyPortugueseEngine)
+        {
+            if (japaneseEngine == null) throw new ArgumentNullException(nameof(japaneseEngine));
+            if (japaneseLock == null) throw new ArgumentNullException(nameof(japaneseLock));
+            if (lazyEnglishEngine == null) throw new ArgumentNullException(nameof(lazyEnglishEngine));
+            if (lazyChineseEngine == null) throw new ArgumentNullException(nameof(lazyChineseEngine));
+            if (lazyKoreanEngine == null) throw new ArgumentNullException(nameof(lazyKoreanEngine));
+            if (lazySpanishEngine == null) throw new ArgumentNullException(nameof(lazySpanishEngine));
+            if (lazyFrenchEngine == null) throw new ArgumentNullException(nameof(lazyFrenchEngine));
+            if (lazyPortugueseEngine == null) throw new ArgumentNullException(nameof(lazyPortugueseEngine));
+
+            var primaryProcessors = new Dictionary<Language, ITextBatchProcessor<string>>
+            {
+                [Language.Japanese] = new DelegateTextBatchProcessor(
+                    text =>
+                    {
+                        lock (japaneseLock)
+                        {
+                            return japaneseEngine.ToPhonemes(text);
+                        }
+                    },
+                    texts =>
+                    {
+                        lock (japaneseLock)
+                        {
+                            return japaneseEngine.ToPhonemesBatch(texts);
+                        }
+                    }),
+                [Language.English] = new DelegateIpaTextBatchProcessor(
+                    text => lazyEnglishEngine.Value.ToPhonemes(text),
+                    texts => lazyEnglishEngine.Value.ToPhonemesBatch(texts),
+                    text => lazyEnglishEngine.Value.ToIPA(text),
+                    texts => lazyEnglishEngine.Value.ToIPABatch(texts)),
+                [Language.Chinese] = new DelegateIpaTextBatchProcessor(
+                    text => lazyChineseEngine.Value.ToPinyin(text),
+                    texts => lazyChineseEngine.Value.ToPinyinBatch(ToArray(texts)),
+                    text => lazyChineseEngine.Value.ToIPA(text),
+                    texts => lazyChineseEngine.Value.ToIPABatch(ToArray(texts))),
+                [Language.Korean] = new DelegateTextBatchProcessor(
+                    text => lazyKoreanEngine.Value.ToPhonemes(text),
+                    texts => lazyKoreanEngine.Value.ToPhonemesBatch(texts)),
+                [Language.Spanish] = new DelegateIpaTextBatchProcessor(
+                    text => lazySpanishEngine.Value.ToPhonemes(text),
+                    texts => lazySpanishEngine.Value.ToPhonemesBatch(texts),
+                    text => lazySpanishEngine.Value.ToIPA(text),
+                    texts => lazySpanishEngine.Value.ToIPABatch(texts)),
+                [Language.French] = new DelegateIpaTextBatchProcessor(
+                    text => lazyFrenchEngine.Value.ToPhonemes(text),
+                    texts => lazyFrenchEngine.Value.ToPhonemesBatch(texts),
+                    text => lazyFrenchEngine.Value.ToIPA(text),
+                    texts => lazyFrenchEngine.Value.ToIPABatch(texts)),
+                [Language.Portuguese] = new DelegateIpaTextBatchProcessor(
+                    text => lazyPortugueseEngine.Value.ToPhonemes(text),
+                    texts => lazyPortugueseEngine.Value.ToPhonemesBatch(texts),
+                    text => lazyPortugueseEngine.Value.ToIPA(text),
+                    texts => lazyPortugueseEngine.Value.ToIPABatch(texts)),
+            };
+
+            return new LanguageCapabilityRouter(primaryProcessors);
+        }
+
         public ITextBatchProcessor<string> GetRequired(Language language)
         {
             if (_primaryProcessors.TryGetValue(language, out var processor))

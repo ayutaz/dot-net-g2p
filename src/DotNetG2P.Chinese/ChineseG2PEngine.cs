@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using DotNetG2P.Chinese.Conversion;
 using DotNetG2P.Internal;
 
 namespace DotNetG2P.Chinese
@@ -13,6 +14,7 @@ namespace DotNetG2P.Chinese
     /// <remarks>
     /// このクラスはスレッドセーフです。辞書はコンストラクタで読み込まれ、以後は読み取り専用です。
     /// </remarks>
+    [Preserve]
     public sealed class ChineseG2PEngine : IDisposable
     {
         private readonly PinyinCharDictionary _charDictionary;
@@ -235,6 +237,164 @@ namespace DotNetG2P.Chinese
         }
 
         // =====================================================================
+        // piper-plus 互換 IPA 出力
+        // =====================================================================
+
+        /// <summary>
+        /// テキストを piper-plus 互換 IPA 文字列に変換する。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>piper-plus 互換 IPA 文字列</returns>
+        public string ToPiperIPA(string text)
+        {
+            return RunPipeline(text, p => PinyinToPiperIpa.Convert(p));
+        }
+
+        /// <summary>
+        /// テキストを piper-plus 互換 IPA 音素配列に変換する。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>piper-plus 互換 IPA 音素の配列</returns>
+        public string[] ToPiperIpaPhonemes(string text)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return Array.Empty<string>();
+
+            var entries = CollectPinyins(text);
+
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            var result = new List<string>();
+            foreach (var entry in entries)
+            {
+                if (entry.Pinyin != null)
+                {
+                    if (PinyinParser.TryParse(entry.Pinyin, out var syllable))
+                    {
+                        var phonemes = PinyinToPiperIpa.ConvertToPhonemes(syllable);
+                        result.AddRange(phonemes);
+                    }
+                }
+            }
+            return result.ToArray();
+        }
+
+        // =====================================================================
+        // PUA 出力
+        // =====================================================================
+
+        /// <summary>
+        /// テキストを piper-plus 互換 PUA 音素配列に変換する。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>PUA 音素の配列</returns>
+        public string[] ToPuaPhonemes(string text)
+        {
+            var ipaPhonemes = ToPiperIpaPhonemes(text);
+            return ChinesePuaMapper.ApplyPuaMapping(ipaPhonemes);
+        }
+
+        /// <summary>
+        /// テキストを piper-plus 互換 PUA 文字列に変換する。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>PUA 文字列</returns>
+        public string ToPuaString(string text)
+        {
+            var puaPhonemes = ToPuaPhonemes(text);
+            return string.Join(" ", puaPhonemes);
+        }
+
+        // =====================================================================
+        // Prosody 出力
+        // =====================================================================
+
+        /// <summary>
+        /// テキストの IPA 音素と韻律情報（声調・語内位置・語長）を返す。
+        /// piper-plus の _build_word_info() に準拠し、連続する漢字エントリを「語」としてグループ化する。
+        /// 各音節ごとに声調マーカー付き IPA 文字列を1つ返す。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>IPA 音素配列と韻律情報を含む結果</returns>
+        public ChineseProsodyResult ToIpaWithProsody(string text)
+        {
+            return ToIpaWithProsody(text, true);
+        }
+
+        /// <summary>
+        /// テキストの IPA 音素と韻律情報（声調・語内位置・語長）を返す。
+        /// 各音節ごとに IPA 文字列を1つ返す。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <param name="includeTones">IPA 出力に声調マーカーを含めるか</param>
+        /// <returns>IPA 音素配列と韻律情報を含む結果</returns>
+        public ChineseProsodyResult ToIpaWithProsody(string text, bool includeTones)
+        {
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return new ChineseProsodyResult(Array.Empty<string>(), Array.Empty<ChineseProsodyInfo>());
+
+            var entries = CollectPinyins(text);
+
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            // 連続する漢字エントリ（Pinyin != null && !IsSeparator）をグループ化して「語」とする
+            var allPhonemes = new List<string>();
+            var allProsody = new List<ChineseProsodyInfo>();
+
+            int i = 0;
+            while (i < entries.Count)
+            {
+                var entry = entries[i];
+                if (entry.Pinyin != null && !entry.IsSeparator)
+                {
+                    // 語の開始: 連続する漢字エントリを収集
+                    var wordEntries = new List<PinyinEntry>();
+                    while (i < entries.Count && entries[i].Pinyin != null && !entries[i].IsSeparator)
+                    {
+                        wordEntries.Add(entries[i]);
+                        i++;
+                    }
+
+                    int wordLength = wordEntries.Count;
+
+                    for (int w = 0; w < wordEntries.Count; w++)
+                    {
+                        var we = wordEntries[w];
+                        if (PinyinParser.TryParse(we.Pinyin!, out var syllable))
+                        {
+                            // 音節ごとに1つの IPA 文字列を生成
+                            var ipaStr = PinyinToIpa.Convert(we.Pinyin!, includeTones);
+
+                            // 声調番号: Tone enum の int 値（1-4）、Neutral=0→5扱い
+                            int toneNumber = (int)syllable.Tone;
+                            if (toneNumber == 0)
+                                toneNumber = 5;
+
+                            int syllablePosition = w + 1; // 1ベース
+
+                            var prosodyInfo = new ChineseProsodyInfo(toneNumber, syllablePosition, wordLength);
+
+                            allPhonemes.Add(ipaStr);
+                            allProsody.Add(prosodyInfo);
+                        }
+                    }
+                }
+                else
+                {
+                    i++;
+                }
+            }
+
+            return new ChineseProsodyResult(allPhonemes.ToArray(), allProsody.ToArray());
+        }
+
+        // =====================================================================
         // バッチAPI
         // =====================================================================
 
@@ -344,6 +504,55 @@ namespace DotNetG2P.Chinese
                 this,
                 includeTones,
                 ConvertZhuyinBatchItem);
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で piper-plus 互換 IPA に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <returns>各テキストに対応する piper-plus 互換 IPA 文字列のリスト</returns>
+        public IReadOnlyList<string> ToPiperIPABatch(string[] texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToList(texts, ToPiperIPA);
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で piper-plus 互換 PUA 文字列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <returns>各テキストに対応する PUA 文字列のリスト</returns>
+        public IReadOnlyList<string> ToPuaStringBatch(string[] texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToList(texts, ToPuaString);
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で IPA 音素と韻律情報に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <returns>各テキストに対応する韻律情報付き IPA 音素結果のリスト</returns>
+        public IReadOnlyList<ChineseProsodyResult> ToIpaWithProsodyBatch(string[] texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToList(texts, ToIpaWithProsody);
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で IPA 音素と韻律情報に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <param name="includeTones">IPA 出力に声調マーカーを含めるか</param>
+        /// <returns>各テキストに対応する韻律情報付き IPA 音素結果のリスト</returns>
+        public IReadOnlyList<ChineseProsodyResult> ToIpaWithProsodyBatch(string[] texts, bool includeTones)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToList(
+                texts,
+                this,
+                includeTones,
+                ConvertIpaWithProsodyBatchItem);
         }
 
         /// <inheritdoc />
@@ -639,6 +848,11 @@ namespace DotNetG2P.Chinese
         private static string ConvertZhuyinBatchItem(ChineseG2PEngine engine, string text, bool includeTones)
         {
             return engine.ToZhuyin(text, includeTones);
+        }
+
+        private static ChineseProsodyResult ConvertIpaWithProsodyBatchItem(ChineseG2PEngine engine, string text, bool includeTones)
+        {
+            return engine.ToIpaWithProsody(text, includeTones);
         }
 
         /// <summary>

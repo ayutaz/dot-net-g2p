@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Shared\BatchConversionHelper.cs" Link="Internal\BatchConversionHelper.cs" />
+    <Compile Include="..\Shared\PreserveAttribute.cs" Link="Internal\PreserveAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />

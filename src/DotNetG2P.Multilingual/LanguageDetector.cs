@@ -18,6 +18,9 @@ namespace DotNetG2P.Multilingual
             // 2. カタカナ U+30A0-30FF
             if (c >= '\u30A0' && c <= '\u30FF') return ScriptKind.Japanese;
 
+            // 2a. カタカナ拡張（アイヌ語用） U+31F0-31FF
+            if (c >= '\u31F0' && c <= '\u31FF') return ScriptKind.Japanese;
+
             // 3. Hangul音節・Jamo
             if (c >= '\uAC00' && c <= '\uD7AF') return ScriptKind.Korean;
             if (c >= '\u1100' && c <= '\u11FF') return ScriptKind.Korean;
@@ -30,6 +33,9 @@ namespace DotNetG2P.Multilingual
 
             // 5. CJK拡張A U+3400-4DBF（日中共用、文脈で判定）
             if (c >= '\u3400' && c <= '\u4DBF') return ScriptKind.CJKIdeograph;
+
+            // 5a. CJK互換漢字 U+F900-FAFF（日中共用、文脈で判定）
+            if (c >= '\uF900' && c <= '\uFAFF') return ScriptKind.CJKIdeograph;
 
             // 6. 半角カナ U+FF65-FF9F
             if (c >= '\uFF65' && c <= '\uFF9F') return ScriptKind.Japanese;
