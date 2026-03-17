@@ -12,7 +12,6 @@ DotNetG2P provides pure C# grapheme-to-phoneme engines for Japanese, English, Ch
 
 - Root README files explain package selection and basic usage.
 - `CONTRIBUTING.md` covers the contributor workflow.
-- `MIGRATION.md` records compatibility notes.
 - `ARCHITECTURE.md` describes the repo-level structure and package boundaries.
 
 ## Notes
