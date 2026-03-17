@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-03-17
+
+### Added
+- 韓国語 G2P に piper-plus 互換 IPA 変換 API を追加（`ToIPA()`, `ToIpaPhonemes()`, `ToIpa()`）
+- 韓国語 G2P に PUA マッピング API を追加（`ToPuaPhonemes()`, `ToPuaString()`）— 13エントリ（0xE04B-0xE052 + 0xE020-0xE024）
+- 韓国語 G2P に Prosody API を追加（`ToIpaWithProsody()`）— a1=0, a2=0, a3=音節数
+- 中国語 G2P に piper-plus 互換 IPA 変換 API を追加（`ToPiperIPA()`, `ToPiperIpaPhonemes()`）
+- 中国語 G2P に PUA マッピング API を追加（`ToPuaPhonemes()`, `ToPuaString()`）— 43エントリ（0xE020-0xE04A）
+- 中国語 G2P に Prosody API を追加（`ToIpaWithProsody()`）— a1=声調, a2=音節位置, a3=語長
+- 韓国語・中国語の新規テスト 375件を追加
+- Unity IL2CPP AOT strip 防止用 `PreserveAttribute` を韓国語・中国語エンジンに追加
+- `LanguageDetector` に CJK 互換漢字（U+F900-FAFF）とカタカナ音声拡張（U+31F0-31FF）の範囲を追加
+
+### Changed
+- `MultilingualG2PEngine` の非日本語エンジンを `Lazy<T>` 初期化に変更（メモリ使用量削減）
+
+### Fixed
+- 韓国語 JamoToIpa の ㅢ マッピングを修正（ɯi → ɰi、U+026F → U+0270）
+
 ## [1.5.0] - 2026-03-16
 
 ### Added
@@ -218,7 +237,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - LibNMeCab依存を削除
 
-[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.2.0...v1.3.0
