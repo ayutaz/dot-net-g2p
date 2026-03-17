@@ -41,7 +41,7 @@ That keeps them usable in Unity and other .NET environments without native or Py
 
 ## Shared Internal Patterns
 
-- Batch conversion helpers are linked into the package projects from `src/Shared/`.
+- Batch conversion helpers are placed directly in each package's `Internal/` directory rather than shared across projects.
 - Embedded resources are used for dictionaries and static language data to keep package deployment simple.
 - `InternalsVisibleTo` is enabled selectively so the test project can validate internal behavior without opening the public API surface.
 - Build output is redirected under `.build/` through `Directory.Build.props` so generated files do not pollute package source directories.
