@@ -14,6 +14,7 @@ namespace DotNetG2P.Chinese
     /// <remarks>
     /// このクラスはスレッドセーフです。辞書はコンストラクタで読み込まれ、以後は読み取り専用です。
     /// </remarks>
+    [Preserve]
     public sealed class ChineseG2PEngine : IDisposable
     {
         private readonly PinyinCharDictionary _charDictionary;

@@ -20,17 +20,20 @@ namespace DotNetG2P.Multilingual
     /// テキストを言語セグメントに自動分割し、各言語のG2Pエンジンで変換する。
     /// </summary>
     /// <remarks>
-    /// 英語・韓国語エンジンはスレッドセーフ。日本語エンジンはスレッドセーフでないためlockで保護。
+    /// 日本語エンジンは辞書パスが必要なため即時初期化される。
+    /// その他の言語エンジン（英語・中国語・韓国語・スペイン語・フランス語・ポルトガル語）は
+    /// 遅延初期化され、初回アクセス時にのみ生成される。
+    /// 日本語エンジンはスレッドセーフでないためlockで保護。
     /// </remarks>
     public sealed class MultilingualG2PEngine : IDisposable
     {
         private readonly G2PEngine _japaneseEngine;
-        private readonly EnglishG2PEngine _englishEngine;
-        private readonly ChineseG2PEngine _chineseEngine;
-        private readonly KoreanG2PEngine _koreanEngine;
-        private readonly SpanishG2PEngine _spanishEngine;
-        private readonly FrenchG2PEngine _frenchEngine;
-        private readonly PortugueseG2PEngine _portugueseEngine;
+        private readonly Lazy<EnglishG2PEngine> _lazyEnglishEngine;
+        private readonly Lazy<ChineseG2PEngine> _lazyChineseEngine;
+        private readonly Lazy<KoreanG2PEngine> _lazyKoreanEngine;
+        private readonly Lazy<SpanishG2PEngine> _lazySpanishEngine;
+        private readonly Lazy<FrenchG2PEngine> _lazyFrenchEngine;
+        private readonly Lazy<PortugueseG2PEngine> _lazyPortugueseEngine;
         private readonly MultilingualG2POptions _options;
         private readonly LanguageCapabilityRouter _capabilityRouter;
         private readonly object _japaneseLock = new object();
@@ -78,65 +81,39 @@ namespace DotNetG2P.Multilingual
 
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
-            G2PEngine? japaneseEngine = null;
-            EnglishG2PEngine? englishEngine = null;
-            ChineseG2PEngine? chineseEngine = null;
-            KoreanG2PEngine? koreanEngine = null;
-            SpanishG2PEngine? spanishEngine = null;
-            FrenchG2PEngine? frenchEngine = null;
-            PortugueseG2PEngine? portugueseEngine = null;
-            try
-            {
-                japaneseEngine = new G2PEngine(
-                    new MeCabTokenizer(japaneseDictPath),
-                    options.JapaneseOptions ?? G2POptions.Default);
+            // 日本語エンジンは辞書パスが必要なため即時初期化
+            _japaneseEngine = new G2PEngine(
+                new MeCabTokenizer(japaneseDictPath),
+                options.JapaneseOptions ?? G2POptions.Default);
 
-                englishEngine = new EnglishG2PEngine(
-                    options.EnglishOptions ?? EnglishG2POptions.Default);
+            // その他の言語エンジンは遅延初期化（Lazy<T>はデフォルトでスレッドセーフ）
+            _lazyEnglishEngine = new Lazy<EnglishG2PEngine>(
+                () => new EnglishG2PEngine(options.EnglishOptions ?? EnglishG2POptions.Default));
 
-                chineseEngine = new ChineseG2PEngine(
-                    options.ChineseOptions ?? ChineseG2POptions.Default);
+            _lazyChineseEngine = new Lazy<ChineseG2PEngine>(
+                () => new ChineseG2PEngine(options.ChineseOptions ?? ChineseG2POptions.Default));
 
-                koreanEngine = new KoreanG2PEngine(
-                    options.KoreanOptions ?? KoreanG2POptions.Default);
+            _lazyKoreanEngine = new Lazy<KoreanG2PEngine>(
+                () => new KoreanG2PEngine(options.KoreanOptions ?? KoreanG2POptions.Default));
 
-                spanishEngine = new SpanishG2PEngine(
-                    options.SpanishOptions ?? SpanishG2POptions.Default);
+            _lazySpanishEngine = new Lazy<SpanishG2PEngine>(
+                () => new SpanishG2PEngine(options.SpanishOptions ?? SpanishG2POptions.Default));
 
-                frenchEngine = new FrenchG2PEngine(
-                    options.FrenchOptions ?? FrenchG2POptions.Default);
+            _lazyFrenchEngine = new Lazy<FrenchG2PEngine>(
+                () => new FrenchG2PEngine(options.FrenchOptions ?? FrenchG2POptions.Default));
 
-                portugueseEngine = new PortugueseG2PEngine(
-                    options.PortugueseOptions ?? PortugueseG2POptions.Default);
+            _lazyPortugueseEngine = new Lazy<PortugueseG2PEngine>(
+                () => new PortugueseG2PEngine(options.PortugueseOptions ?? PortugueseG2POptions.Default));
 
-                _japaneseEngine = japaneseEngine;
-                _englishEngine = englishEngine;
-                _chineseEngine = chineseEngine;
-                _koreanEngine = koreanEngine;
-                _spanishEngine = spanishEngine;
-                _frenchEngine = frenchEngine;
-                _portugueseEngine = portugueseEngine;
-                _capabilityRouter = LanguageCapabilityRouter.Create(
-                    _japaneseEngine,
-                    _japaneseLock,
-                    _englishEngine,
-                    _chineseEngine,
-                    _koreanEngine,
-                    _spanishEngine,
-                    _frenchEngine,
-                    _portugueseEngine);
-            }
-            catch
-            {
-                japaneseEngine?.Dispose();
-                englishEngine?.Dispose();
-                chineseEngine?.Dispose();
-                koreanEngine?.Dispose();
-                spanishEngine?.Dispose();
-                frenchEngine?.Dispose();
-                portugueseEngine?.Dispose();
-                throw;
-            }
+            _capabilityRouter = LanguageCapabilityRouter.CreateLazy(
+                _japaneseEngine,
+                _japaneseLock,
+                _lazyEnglishEngine,
+                _lazyChineseEngine,
+                _lazyKoreanEngine,
+                _lazySpanishEngine,
+                _lazyFrenchEngine,
+                _lazyPortugueseEngine);
         }
 
         /// <summary>
@@ -242,12 +219,20 @@ namespace DotNetG2P.Multilingual
                 return;
 
             _japaneseEngine.Dispose();
-            _englishEngine.Dispose();
-            _chineseEngine.Dispose();
-            _koreanEngine.Dispose();
-            _spanishEngine.Dispose();
-            _frenchEngine.Dispose();
-            _portugueseEngine.Dispose();
+
+            // 遅延初期化されたエンジンは実際に生成された場合のみDispose
+            if (_lazyEnglishEngine.IsValueCreated)
+                _lazyEnglishEngine.Value.Dispose();
+            if (_lazyChineseEngine.IsValueCreated)
+                _lazyChineseEngine.Value.Dispose();
+            if (_lazyKoreanEngine.IsValueCreated)
+                _lazyKoreanEngine.Value.Dispose();
+            if (_lazySpanishEngine.IsValueCreated)
+                _lazySpanishEngine.Value.Dispose();
+            if (_lazyFrenchEngine.IsValueCreated)
+                _lazyFrenchEngine.Value.Dispose();
+            if (_lazyPortugueseEngine.IsValueCreated)
+                _lazyPortugueseEngine.Value.Dispose();
         }
 
         /// <summary>

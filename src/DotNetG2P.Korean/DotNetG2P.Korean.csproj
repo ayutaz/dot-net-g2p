@@ -22,6 +22,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Shared\BatchConversionHelper.cs" Link="Internal\BatchConversionHelper.cs" />
+    <Compile Include="..\Shared\PreserveAttribute.cs" Link="Internal\PreserveAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Data\korean_exceptions.master.tsv" LogicalName="DotNetG2P.Korean.Data.korean_exceptions.master.tsv" />

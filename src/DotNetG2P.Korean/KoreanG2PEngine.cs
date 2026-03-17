@@ -14,6 +14,7 @@ namespace DotNetG2P.Korean
     /// 韓国語 G2P エンジン。
     /// Hangul-first の規則ベース処理で Jamo / 音素列へ変換する。
     /// </summary>
+    [Preserve]
     public sealed class KoreanG2PEngine : IDisposable
     {
         private readonly KoreanG2POptions _options;
