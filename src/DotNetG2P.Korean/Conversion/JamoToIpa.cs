@@ -57,7 +57,7 @@ namespace DotNetG2P.Korean.Conversion
             { 'ㅟ', "wi" },
             { 'ㅠ', "ju" },
             { 'ㅡ', "\u026F" },             // ɯ
-            { 'ㅢ', "\u026Fi" },            // ɯi
+            { 'ㅢ', "\u0270i" },            // ɰi
             { 'ㅣ', "i" },
         };
 

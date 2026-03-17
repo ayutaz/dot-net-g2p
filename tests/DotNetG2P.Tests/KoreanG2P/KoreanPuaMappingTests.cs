@@ -668,7 +668,7 @@ namespace DotNetG2P.Tests.KoreanG2P
         [InlineData('ㅚ', "we")]
         [InlineData('ㅞ', "we")]
         [InlineData('ㅟ', "wi")]
-        [InlineData('ㅢ', "\u026Fi")]      // ɯi
+        [InlineData('ㅢ', "\u0270i")]      // ɰi
         public void ConvertNucleus_DiphthongVowels_ReturnsCorrectIpa(char jamo, string expected)
         {
             Assert.Equal(expected, JamoToIpa.ConvertNucleus(jamo));
