@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using DotNetG2P.Chinese.Conversion;
 using DotNetG2P.Internal;
+using UnityEngine.Scripting;
 
 namespace DotNetG2P.Chinese
 {

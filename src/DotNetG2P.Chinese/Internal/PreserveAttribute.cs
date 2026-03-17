@@ -1,10 +1,11 @@
 using System;
 
-namespace DotNetG2P.Internal
+namespace UnityEngine.Scripting
 {
     /// <summary>
-    /// Unity IL2CPP linker が認識する Preserve 属性。
-    /// クラスが AOT strip されないようにマークする。
+    /// Unity IL2CPP linker が認識する UnityEngine.Scripting.PreserveAttribute 互換属性。
+    /// Unity 環境では IL2CPP リンカーがこの名前空間を認識し、AOT strip を防止する。
+    /// 非 Unity 環境（.NET）ではマーカーとして機能する。
     /// </summary>
     [AttributeUsage(
         AttributeTargets.Class | AttributeTargets.Struct |

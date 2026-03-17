@@ -61,6 +61,10 @@ jobs:
 
           echo "All .meta files present."
 
+      - name: Check shared Internal file sync
+        shell: pwsh
+        run: tools/sync-shared-internals.ps1 -Check
+
   build-test-and-validate:
     name: Build/Test (${{ matrix.os }}, .NET ${{ matrix.dotnet_major }})
     runs-on: ${{ matrix.os }}
