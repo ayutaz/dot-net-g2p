@@ -317,7 +317,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── Tone.cs                  # 声調enum (5種: Neutral/First/Second/Third/Fourth)
 │   │   │   ├── PinyinSyllable.cs        # 音節 readonly struct
 │   │   │   ├── PinyinStyle.cs           # 出力スタイルenum (ToneMarked/ToneNumber/Normal)
-│   │   │   └── PinyinResult.cs          # 変換結果クラス
+│   │   │   ├── PinyinResult.cs          # 変換結果クラス
+│   │   │   ├── ChineseProsodyInfo.cs    # 韻律情報 readonly struct (A1=声調/A2=位置/A3=語長)
+│   │   │   └── ChineseProsodyResult.cs  # 韻律結果クラス (phonemes + prosody)
 │   │   ├── Dictionary/
 │   │   │   ├── PinyinCharDictionary.cs  # 単字辞書 (44,435エントリ)
 │   │   │   ├── PinyinPhraseDictionary.cs # フレーズ辞書 (411,958エントリ)
@@ -328,7 +330,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── PinyinParser.cs          # ピンイン文字列パーサ
 │   │   │   ├── ToneConverter.cs         # 声調変換ユーティリティ
 │   │   │   ├── PinyinToIpa.cs           # ピンイン→IPA変換 (C4)
-│   │   │   └── PinyinToZhuyin.cs        # ピンイン→注音符号変換 (C4)
+│   │   │   ├── PinyinToZhuyin.cs        # ピンイン→注音符号変換 (C4)
+│   │   │   ├── PinyinToPiperIpa.cs      # piper-plus互換IPA変換 (zh→tʂ, ong→uŋ等6差異対応)
+│   │   │   └── ChinesePuaMapper.cs      # PUAマッピング (43エントリ、0xE020-0xE04A)
 │   │   ├── ToneSandhi/
 │   │   │   └── ToneSandhiProcessor.cs   # 声調変調（三声連読、一/不変調）
 │   │   ├── package.json                 # UPM (com.dotnetg2p.chinese)
@@ -448,6 +452,28 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   └── XSampaConverter.cs         # X-SAMPA変換 (49音素マッピング) [P3]
 │   │   ├── package.json                   # UPM (com.dotnetg2p.portuguese)
 │   │   └── DotNetG2P.Portuguese.asmdef    # Unity Assembly Definition
+│   │
+│   ├── DotNetG2P.Korean/               # 韓国語G2Pパッケージ（独立、Core参照なし）
+│   │   ├── DotNetG2P.Korean.csproj      # .NET Standard 2.1
+│   │   ├── KoreanG2PEngine.cs           # メインAPI (ToPhonemes, ToJamo, ToIPA, ToPuaPhonemes, ToIpaWithProsody等)
+│   │   ├── KoreanG2POptions.cs          # オプション (Separator, SyllableSeparator, EnableTextNormalization等)
+│   │   ├── Models/
+│   │   │   ├── KoreanSyllable.cs        # 音節 readonly struct
+│   │   │   ├── KoreanPhoneme.cs         # 音素 readonly struct
+│   │   │   ├── KoreanProsodyInfo.cs     # 韻律情報 readonly struct (A1/A2/A3)
+│   │   │   └── KoreanProsodyResult.cs   # 韻律結果クラス (phonemes + prosody)
+│   │   ├── Conversion/
+│   │   │   ├── JamoToIpa.cs             # Jamo→IPA変換 (19初声+21中声+15終声マッピング)
+│   │   │   └── PuaMapper.cs             # PUAマッピング (13エントリ、0xE04B-0xE052+共有)
+│   │   ├── Data/
+│   │   │   ├── KoreanExceptionDictionary.cs # 例外辞書ルックアップ
+│   │   │   └── korean_exceptions.master.tsv # 例外辞書TSV
+│   │   ├── Rules/
+│   │   │   └── GraphemeToPhonemeRules.cs # G2Pルール (連音化・鼻音化・激音化等)
+│   │   ├── Normalization/
+│   │   │   └── KoreanNormalizer.cs      # テキスト正規化
+│   │   ├── package.json                 # UPM (com.dotnetg2p.korean)
+│   │   └── DotNetG2P.Korean.asmdef      # Unity Assembly Definition
 │   │
 │   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese + Korean + Spanish + French + Portuguese依存）
 │       ├── DotNetG2P.Multilingual.csproj # .NET Standard 2.1
