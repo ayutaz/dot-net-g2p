@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-C#/.NET（Unity対応）向けの日英中西仏葡多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
+C#/.NET（Unity対応）向けの日英中韓西仏葡多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、Hangul-firstの韓国語G2P、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
 
 ## 進捗状況
 
@@ -192,6 +192,28 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - `MultilingualG2PEngine` に `PortugueseG2PEngine` を統合
     - `MultilingualPortugueseTests` / 6言語混在テストを追加
     - Multilingual テスト 412件通過
+- **韓国語G2P (DotNetG2P.Korean)**: K4完了
+  - **K1-K3（コアG2P + 例外辞書 + 正規化 + benchmark）**: 完了
+    - Hangul-first 規則ベース変換、Jamo 分解、例外辞書、軽量正規化
+    - 標準発音寄り rule engine（ㅎ系変化・終声中和・連音・濃音化・鼻音化・流音化）
+    - benchmark harness、external corpus gate、performance test
+  - **K4（piper-plus 互換 API）**: 完了
+    - IPA 変換 API: `ToIpaPhonemes()`, `ToIpa()`, `ToIpaBatch()`
+    - PUA マッピング API: `ToPuaPhonemes()`, `ToPuaString()`, `ToPuaStringBatch()` — 13エントリ（0xE04B-0xE052 + 0xE020-0xE024）
+    - Prosody API: `ToIpaWithProsody()`, `ToIpaWithProsodyBatch()` — a1=0, a2=0, a3=音節数
+    - Unity IL2CPP AOT strip 防止用 `PreserveAttribute` を追加
+    - テスト375件追加
+- **中国語G2P piper-plus 互換 API 追加**: 完了
+  - piper-plus 互換 IPA: `ToPiperIPA()`, `ToPiperIpaPhonemes()`, `ToPiperIPABatch()`
+  - PUA マッピング: `ToPuaPhonemes()`, `ToPuaString()`, `ToPuaStringBatch()` — 43エントリ（0xE020-0xE04A）
+  - Prosody API: `ToIpaWithProsody()`, `ToIpaWithProsodyBatch()` — a1=声調, a2=音節位置, a3=語長
+  - Unity IL2CPP AOT strip 防止用 `PreserveAttribute` を追加
+- **MultilingualG2PEngine Lazy 初期化**: 完了
+  - 非日本語エンジン（英語・中国語・韓国語・スペイン語・フランス語・ポルトガル語）を `Lazy<T>` 遅延初期化に変更
+  - 実際に使用されるまでメモリを消費しない設計
+- **LanguageDetector 拡張**: 完了
+  - CJK 互換漢字（U+F900-FAFF）を `ScriptKind.CJKIdeograph` に追加
+  - カタカナ音声拡張（U+31F0-31FF）を `ScriptKind.Japanese` に追加
 
 ## ビルド・実行
 
@@ -287,7 +309,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │
 │   ├── DotNetG2P.Chinese/              # 中国語G2Pパッケージ（独立、Core参照なし）
 │   │   ├── DotNetG2P.Chinese.csproj     # .NET Standard 2.1
-│   │   ├── ChineseG2PEngine.cs          # メインAPI (ToPinyin, ToPinyinList, LookupChar等)
+│   │   ├── ChineseG2PEngine.cs          # メインAPI (ToPinyin, ToPinyinList, LookupChar, ToPiperIPA, ToPuaPhonemes, ToIpaWithProsody等)
 │   │   ├── ChineseG2POptions.cs         # オプション (EnableToneSandhi, HandleHeteronyms, DefaultStyle)
 │   │   ├── Models/
 │   │   │   ├── Initial.cs               # 声母enum (22種, byte基底)
@@ -295,7 +317,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── Tone.cs                  # 声調enum (5種: Neutral/First/Second/Third/Fourth)
 │   │   │   ├── PinyinSyllable.cs        # 音節 readonly struct
 │   │   │   ├── PinyinStyle.cs           # 出力スタイルenum (ToneMarked/ToneNumber/Normal)
-│   │   │   └── PinyinResult.cs          # 変換結果クラス
+│   │   │   ├── PinyinResult.cs          # 変換結果クラス
+│   │   │   ├── ChineseProsodyInfo.cs    # 韻律情報 readonly struct (A1=声調/A2=位置/A3=語長)
+│   │   │   └── ChineseProsodyResult.cs  # 韻律結果クラス (phonemes + prosody)
 │   │   ├── Dictionary/
 │   │   │   ├── PinyinCharDictionary.cs  # 単字辞書 (44,435エントリ)
 │   │   │   ├── PinyinPhraseDictionary.cs # フレーズ辞書 (411,958エントリ)
@@ -306,7 +330,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── PinyinParser.cs          # ピンイン文字列パーサ
 │   │   │   ├── ToneConverter.cs         # 声調変換ユーティリティ
 │   │   │   ├── PinyinToIpa.cs           # ピンイン→IPA変換 (C4)
-│   │   │   └── PinyinToZhuyin.cs        # ピンイン→注音符号変換 (C4)
+│   │   │   ├── PinyinToZhuyin.cs        # ピンイン→注音符号変換 (C4)
+│   │   │   ├── PinyinToPiperIpa.cs      # piper-plus互換IPA変換 (zh→tʂ, ong→uŋ等6差異対応)
+│   │   │   └── ChinesePuaMapper.cs      # PUAマッピング (43エントリ、0xE020-0xE04A)
 │   │   ├── ToneSandhi/
 │   │   │   └── ToneSandhiProcessor.cs   # 声調変調（三声連読、一/不変調）
 │   │   ├── package.json                 # UPM (com.dotnetg2p.chinese)
@@ -427,16 +453,38 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   ├── package.json                   # UPM (com.dotnetg2p.portuguese)
 │   │   └── DotNetG2P.Portuguese.asmdef    # Unity Assembly Definition
 │   │
-│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese + Spanish + French + Portuguese依存）
+│   ├── DotNetG2P.Korean/               # 韓国語G2Pパッケージ（独立、Core参照なし）
+│   │   ├── DotNetG2P.Korean.csproj      # .NET Standard 2.1
+│   │   ├── KoreanG2PEngine.cs           # メインAPI (ToPhonemes, ToJamo, ToIPA, ToPuaPhonemes, ToIpaWithProsody等)
+│   │   ├── KoreanG2POptions.cs          # オプション (Separator, SyllableSeparator, EnableTextNormalization等)
+│   │   ├── Models/
+│   │   │   ├── KoreanSyllable.cs        # 音節 readonly struct
+│   │   │   ├── KoreanPhoneme.cs         # 音素 readonly struct
+│   │   │   ├── KoreanProsodyInfo.cs     # 韻律情報 readonly struct (A1/A2/A3)
+│   │   │   └── KoreanProsodyResult.cs   # 韻律結果クラス (phonemes + prosody)
+│   │   ├── Conversion/
+│   │   │   ├── JamoToIpa.cs             # Jamo→IPA変換 (19初声+21中声+15終声マッピング)
+│   │   │   └── PuaMapper.cs             # PUAマッピング (13エントリ、0xE04B-0xE052+共有)
+│   │   ├── Data/
+│   │   │   ├── KoreanExceptionDictionary.cs # 例外辞書ルックアップ
+│   │   │   └── korean_exceptions.master.tsv # 例外辞書TSV
+│   │   ├── Rules/
+│   │   │   └── GraphemeToPhonemeRules.cs # G2Pルール (連音化・鼻音化・激音化等)
+│   │   ├── Normalization/
+│   │   │   └── KoreanNormalizer.cs      # テキスト正規化
+│   │   ├── package.json                 # UPM (com.dotnetg2p.korean)
+│   │   └── DotNetG2P.Korean.asmdef      # Unity Assembly Definition
+│   │
+│   └── DotNetG2P.Multilingual/         # 多言語G2Pパッケージ（Core + MeCab + English + Chinese + Korean + Spanish + French + Portuguese依存）
 │       ├── DotNetG2P.Multilingual.csproj # .NET Standard 2.1
-│       ├── Language.cs                  # Language enum (Japanese/English/Chinese/Spanish/French/Portuguese)
+│       ├── Language.cs                  # Language enum (Japanese/English/Chinese/Korean/Spanish/French/Portuguese)
 │       ├── ScriptKind.cs               # ScriptKind enum (8種分類、internal)
 │       ├── TextSegment.cs              # 言語タグ付きテキストセグメント
 │       ├── G2PSegment.cs               # G2P結果セグメント
 │       ├── MultilingualG2POptions.cs   # 多言語G2Pオプション（DefaultCjkLanguage / DefaultLatinLanguage）
-│       ├── LanguageDetector.cs         # Unicode文字種ベース言語判定
-│       ├── TextSegmenter.cs            # テキストセグメント分割（日英西仏葡ラテン文字対応）
-│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中西仏葡ファサード）
+│       ├── LanguageDetector.cs         # Unicode文字種ベース言語判定（CJK互換漢字・カタカナ音声拡張対応）
+│       ├── TextSegmenter.cs            # テキストセグメント分割（日英韓西仏葡ラテン文字対応）
+│       ├── MultilingualG2PEngine.cs    # 多言語G2Pエンジン（日英中韓西仏葡ファサード、非日本語は Lazy<T> 遅延初期化）
 │       ├── package.json                # UPM (com.dotnetg2p.multilingual)
 │       └── DotNetG2P.Multilingual.asmdef # Unity Assembly Definition
 │
@@ -621,7 +669,7 @@ OpenJTalk用のnaist-jdic辞書フォーマット（IPADIC + アクセント情�
 - **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、Apache-2.0、外部依存なし）
 - **辞書**: naist-jdic（BSD License）
 - **テスト**: xUnit 2.5.3 (net8.0)
-- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.Chinese`, `DotNetG2P.English`, `DotNetG2P.Spanish`, `DotNetG2P.French`, `DotNetG2P.Portuguese`, `DotNetG2P.Multilingual`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`, `com.dotnetg2p.chinese`, `com.dotnetg2p.english`, `com.dotnetg2p.spanish`, `com.dotnetg2p.french`, `com.dotnetg2p.portuguese`, `com.dotnetg2p.multilingual`)
+- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.Chinese`, `DotNetG2P.English`, `DotNetG2P.Korean`, `DotNetG2P.Spanish`, `DotNetG2P.French`, `DotNetG2P.Portuguese`, `DotNetG2P.Multilingual`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`, `com.dotnetg2p.chinese`, `com.dotnetg2p.english`, `com.dotnetg2p.korean`, `com.dotnetg2p.spanish`, `com.dotnetg2p.french`, `com.dotnetg2p.portuguese`, `com.dotnetg2p.multilingual`)
 - **CI/CD**: GitHub Actions (ci.yml, release.yml)
 - **ソリューション形式**: .slnx（.NET 10）
 

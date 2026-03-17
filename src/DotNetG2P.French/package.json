@@ -1,7 +1,7 @@
 {
   "name": "com.dotnetg2p.french",
   "displayName": "DotNetG2P.French",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "unity": "2021.2",
   "description": "French Grapheme-to-Phoneme (G2P) library for .NET and Unity. Rule-based IPA conversion with syllabification, nasal vowels, and Metropolitan/Conservative dialect options.",
   "keywords": [

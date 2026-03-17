@@ -70,4 +70,4 @@ dotnet tool run dotnet-CycloneDX DotNetG2P.slnx -o ./artifacts/sbom -t --disable
 
 ## Release Notes
 
-If a change alters public behavior, package dependencies, or required setup, add an entry to `MIGRATION.md` as part of the same PR.
+破壊的変更がある場合は CHANGELOG.md の Breaking Changes セクションと PR 本文に明記してください。

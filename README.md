@@ -26,6 +26,7 @@ zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 // 韓国語G2P
 using var koEngine = new KoreanG2PEngine();
 koEngine.ToPhonemes("좋다");  // => "ㅈ ㅗ ㅌ ㅏ"
+koEngine.ToIpa("안녕하세요");  // => piper-plus 互換 IPA
 
 // スペイン語G2P
 using var esEngine = new SpanishG2PEngine();
@@ -69,8 +70,8 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日本語部分は
 - **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、UPMパッケージ提供
 - **拡張可能な設計** — `ITokenizer`インターフェースにより形態素解析エンジンを差し替え可能
 - **英語G2P対応** — CMU辞書（135,000語）+ Flite LTSルールによるOOV推定、IPA/X-SAMPA出力、テキスト正規化、同綴異音語解決
-- **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力
-- **韓国語G2P対応** — Hangul-first の規則ベース変換、Jamo 分解、例外辞書、軽量正規化、`ㅎ` 系変化・終声中和・連音・濃音化・鼻音化・流音化を含む標準発音寄り rule engine、benchmark harness、external corpus gate、performance test を実装
+- **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力、piper-plus 互換 IPA/PUA/Prosody API
+- **韓国語G2P対応** — Hangul-first の規則ベース変換、Jamo 分解、例外辞書、軽量正規化、`ㅎ` 系変化・終声中和・連音・濃音化・鼻音化・流音化を含む標準発音寄り rule engine、piper-plus 互換 IPA/PUA/Prosody API、benchmark harness、external corpus gate、performance test を実装
 - **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応
 - **フランス語G2P対応** — ルールベース6フェーズG2P変換（ダイグラフ→文脈依存→鼻母音化→半母音化→位置の法則→黙字）、音素ベース音節分割、Metropolitan/Conservative方言切り替え、異音処理（R無声化・阻害音有声性同化）、例外辞書500+エントリ（外来語/不規則語/動詞3複/学術語/同綴異音語）、テキスト正規化（数値/日付/時刻/通貨/単位/略語/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
 - **ポルトガル語G2P対応** — ルールベースG2P変換 + 例外辞書（560+エントリ）、音節分割、ストレス付与、Brazilian/European方言切り替え、7種の異音規則（母音弱化・鼻音同化・歯擦音有声性同化・閉鎖音弱化・歯擦音後部歯茎化・t/d破擦音化・コーダl異音）、テキスト正規化（13段階パイプライン: 略語/日付/時刻/通貨/%/単位/数値範囲/小数/数値/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
@@ -124,7 +125,6 @@ dotnet add package DotNetG2P.Multilingual
 ## 関連ドキュメント
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): 開発環境構築、ビルド、テスト、PR の基本方針
-- [MIGRATION.md](MIGRATION.md): 互換性メモと将来の移行ガイド
 - [ARCHITECTURE.md](ARCHITECTURE.md): パッケージ境界、共有基盤、Multilingual ルーティングの概要
 - [CHANGELOG.md](CHANGELOG.md): 未リリース変更を含む変更履歴
 - パッケージ別 README:
@@ -219,6 +219,15 @@ string ipa = zhEngine.ToIPA("你好");
 string zhuyin = zhEngine.ToZhuyin("你好");
 // => 注音符号表記
 
+// piper-plus 互換 IPA
+string piper = zhEngine.ToPiperIPA("你好世界");
+
+// PUA マッピング
+string[] zhPua = zhEngine.ToPuaPhonemes("你好世界");
+
+// Prosody 情報
+var zhResult = zhEngine.ToIpaWithProsody("你好世界");
+
 // === 英語G2P ===
 using DotNetG2P.English;
 
@@ -235,6 +244,15 @@ string koPhonemes = koEngine.ToPhonemes("좋다");
 
 string koJamo = koEngine.ToJamo("한글");
 // => "ㅎㅏㄴ ㄱㅡㄹ"
+
+// piper-plus 互換 IPA
+string[] koIpa = koEngine.ToIpaPhonemes("안녕하세요");
+
+// PUA マッピング
+string[] koPua = koEngine.ToPuaPhonemes("안녕하세요");
+
+// Prosody 情報
+var koResult = koEngine.ToIpaWithProsody("안녕하세요");
 
 using var koColloquial = new KoreanG2PEngine(
     new KoreanG2POptions(uiVariationMode: KoreanUiVariationMode.Colloquial));
@@ -397,6 +415,16 @@ multiPtEngine.ToPhonemes("obrigado世界");
 | `ToIPABatch(texts, includeTones)` | `string[]` | バッチIPA変換（声調制御） |
 | `ToZhuyinBatch(texts)` | `string[]` | バッチ注音変換 |
 | `ToZhuyinBatch(texts, includeTones)` | `string[]` | バッチ注音変換（声調制御） |
+| `ToPiperIPA(text)` | `string` | piper-plus 互換 IPA 文字列 |
+| `ToPiperIpaPhonemes(text)` | `string[]` | piper-plus 互換 IPA 音素配列 |
+| `ToPuaPhonemes(text)` | `string[]` | PUA マッピング済み音素配列 |
+| `ToPuaString(text)` | `string` | PUA マッピング済み文字列（スペース区切り） |
+| `ToIpaWithProsody(text)` | `ChineseProsodyResult` | IPA 音素配列 + 韻律情報（声調/音節位置/語長） |
+| `ToIpaWithProsody(text, includeTones)` | `ChineseProsodyResult` | 声調制御付き IPA+Prosody |
+| `ToPiperIPABatch(texts)` | `IReadOnlyList<string>` | バッチ piper-plus IPA 変換 |
+| `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | バッチ PUA 文字列変換 |
+| `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<ChineseProsodyResult>` | バッチ IPA+Prosody 変換 |
+| `ToIpaWithProsodyBatch(texts, includeTones)` | `IReadOnlyList<ChineseProsodyResult>` | バッチ IPA+Prosody 変換（声調制御） |
 
 ### KoreanG2PEngine
 
@@ -405,8 +433,16 @@ multiPtEngine.ToPhonemes("obrigado世界");
 | `ToPhonemes(text)` | `string` | スペース区切りの compatibility Jamo 音素列 (`"ㅈ ㅗ ㅌ ㅏ"`) |
 | `ToJamo(text)` | `string` | 音節区切り付き Jamo 列 (`"ㅎㅏㄴ ㄱㅡㄹ"`) |
 | `Analyze(text)` | `KoreanPronunciation` | 正規化後テキストと音節/音素モデルを返す |
+| `ToIpaPhonemes(text)` | `string[]` | piper-plus 互換 IPA 音素配列 |
+| `ToIpa(text)` | `string` | IPA 文字列（スペース区切り） |
+| `ToPuaPhonemes(text)` | `string[]` | PUA マッピング済み音素配列 |
+| `ToPuaString(text)` | `string` | PUA マッピング済み文字列（スペース区切り） |
+| `ToIpaWithProsody(text)` | `KoreanProsodyResult` | IPA 音素配列 + 韻律情報（a1/a2/a3） |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToJamoBatch(texts)` | `IReadOnlyList<string>` | バッチ Jamo 変換 |
+| `ToIpaBatch(texts)` | `IReadOnlyList<string>` | バッチ IPA 変換 |
+| `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | バッチ PUA 文字列変換 |
+| `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<KoreanProsodyResult>` | バッチ IPA+Prosody 変換 |
 
 ### SpanishG2PEngine
 
@@ -744,6 +780,8 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 
 `MultilingualG2PEngine` は内部の日本語エンジンを `lock` で保護しているため、
 複数スレッドから安全に呼び出せます。ただし日本語テキストの変換は直列化されます。
+非日本語エンジン（英語・中国語・韓国語・スペイン語・フランス語・ポルトガル語）は `Lazy<T>` による遅延初期化で、
+実際に使用されるまでメモリを消費しません。
 
 ## ライセンス
 
