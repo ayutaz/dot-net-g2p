@@ -214,6 +214,12 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
 - **LanguageDetector 拡張**: 完了
   - CJK 互換漢字（U+F900-FAFF）を `ScriptKind.CJKIdeograph` に追加
   - カタカナ音声拡張（U+31F0-31FF）を `ScriptKind.Japanese` に追加
+- **Unity パッケージ修正 (v1.7.0)**: 完了
+  - `src/Shared/` の `<Link>` 参照を廃止し、各パッケージの `Internal/` に直接配置
+  - `PreserveAttribute` の名前空間を `UnityEngine.Scripting` に変更（IL2CPP リンカー互換）
+  - 7パッケージに欠落していた `package.json.meta` を追加
+  - CI に Unity `.meta` ファイル整合性チェックジョブを追加
+  - `tools/sync-shared-internals.ps1` 共有 Internal ファイル同期ツールを追加
 
 ## ビルド・実行
 
@@ -241,7 +247,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 ├── .editorconfig                        # コーディング規約
 ├── .gitattributes                       # Git属性設定
 ├── .github/workflows/                   # GitHub Actions
-│   ├── ci.yml                           # CI（push/PR: ビルド・テスト・パック）
+│   ├── ci.yml                           # CI（push/PR: ビルド・テスト・パック・Unity .meta整合性チェック）
 │   └── release.yml                      # リリース（NuGet push + GitHub Release）
 ├── src/
 │   ├── DotNetG2P.Core/                  # コアライブラリ（.NET Standard 2.1）
@@ -625,6 +631,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │           ├── EdgeCaseTests.cs         # エッジケーステスト（~57件）
 │           ├── PiperPlusTests.cs        # piper-plus移植テスト（87件）
 │           └── PyOpenJTalkComparisonTests.cs  # pyopenjtalk比較テスト（20件）
+│
+├── tools/
+│   └── sync-shared-internals.ps1        # 共有 Internal ファイル同期ツール
 │
 └── samples/
     └── DotNetG2P.Console/               # コンソールサンプル (net8.0)
