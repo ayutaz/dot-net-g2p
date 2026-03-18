@@ -14,9 +14,6 @@
     <EmbeddedResource Include="Data\portuguese_exceptions.master.tsv" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Shared\BatchConversionHelper.cs" Link="Internal\BatchConversionHelper.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
   </ItemGroup>
 </Project>

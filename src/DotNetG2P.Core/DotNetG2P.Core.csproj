@@ -17,8 +17,4 @@
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="..\Shared\BatchConversionHelper.cs" Link="Internal\BatchConversionHelper.cs" />
-  </ItemGroup>
-
 </Project>

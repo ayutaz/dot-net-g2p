@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using DotNetG2P.Internal;
+using UnityEngine.Scripting;
 using DotNetG2P.Korean.Conversion;
 using DotNetG2P.Korean.Data;
 using DotNetG2P.Korean.Normalization;

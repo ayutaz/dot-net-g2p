@@ -17,6 +17,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  unity-meta-check:
+    name: Unity .meta file integrity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check .meta files in UPM packages
+        shell: bash
+        run: |
+          missing=0
+
+          # UPM パッケージルートを検出（package.json があるディレクトリ）
+          for pkg_dir in src/DotNetG2P.*/; do
+            [ -f "$pkg_dir/package.json" ] || continue
+
+            echo "::group::Checking $pkg_dir"
+
+            # ファイルのチェック（.meta 自体と .gitkeep は除外）
+            while IFS= read -r -d '' file; do
+              if [ ! -f "$file.meta" ]; then
+                echo "::error file=$file::Missing .meta file: $file.meta"
+                missing=$((missing + 1))
+              fi
+            done < <(find "$pkg_dir" -type f ! -name '*.meta' ! -name '.gitkeep' -print0)
+
+            # ディレクトリのチェック（パッケージルート自体は除外）
+            while IFS= read -r -d '' dir; do
+              if [ ! -f "$dir.meta" ]; then
+                echo "::error file=$dir::Missing .meta file: $dir.meta"
+                missing=$((missing + 1))
+              fi
+            done < <(find "$pkg_dir" -mindepth 1 -type d -print0)
+
+            echo "::endgroup::"
+          done
+
+          if [ "$missing" -gt 0 ]; then
+            echo "::error::$missing .meta file(s) missing. Unity requires a .meta for every file and directory in UPM packages."
+            exit 1
+          fi
+
+          echo "All .meta files present."
+
+      - name: Check shared Internal file sync
+        shell: pwsh
+        run: tools/sync-shared-internals.ps1 -Check
+
   build-test-and-validate:
     name: Build/Test (${{ matrix.os }}, .NET ${{ matrix.dotnet_major }})
     runs-on: ${{ matrix.os }}
