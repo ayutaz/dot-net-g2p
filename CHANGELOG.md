@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-03-18
+
+### Fixed
+- Unity git パッケージ（`?path=` 指定）で `src/Shared/` の `<Link>` 参照ファイルが PackageCache に含まれずコンパイルエラーになる問題を修正
+  - `BatchConversionHelper.cs` を7パッケージの `Internal/` に直接コピー配置
+  - `PreserveAttribute.cs` を Chinese/Korean の `Internal/` に直接コピー配置し、名前空間を `UnityEngine.Scripting` に変更して IL2CPP リンカーが正しく認識するよう修正
+  - 全 csproj から `<Compile Include="..\Shared\..." Link="...">` を削除
+  - 不要になった `src/Shared/` ディレクトリを削除
+- 7パッケージ（English/Chinese/Korean/Spanish/French/Portuguese/Multilingual）で欠落していた `package.json.meta` を追加
+
+### Added
+- Unity `.meta` ファイル整合性チェックを CI に追加（UPM パッケージ内の全ファイル・ディレクトリに `.meta` が存在するか検証）
+- `tools/sync-shared-internals.ps1` を追加（マスターファイルからの同期チェック `-Check` / 自動修正 `-Fix`）
+
 ## [1.6.0] - 2026-03-17
 
 ### Added
@@ -237,7 +251,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - LibNMeCab依存を削除
 
-[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.3.0...v1.4.0
