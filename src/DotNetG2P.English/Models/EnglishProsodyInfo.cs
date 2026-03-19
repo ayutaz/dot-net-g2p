@@ -11,7 +11,7 @@ namespace DotNetG2P.English
         /// <summary>予約（常に 0）。</summary>
         public int A1 { get; }
 
-        /// <summary>語内のストレス位置（1ベース、0=ストレスなし）。</summary>
+        /// <summary>ストレスレベル（0=ストレスなし、1=primary、2=secondary）。</summary>
         public int A2 { get; }
 
         /// <summary>語の音素数。</summary>

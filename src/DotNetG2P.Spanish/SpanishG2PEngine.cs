@@ -161,14 +161,14 @@ namespace DotNetG2P.Spanish
         // =====================================================================
 
         /// <summary>
-        /// 入力テキストの IPA 音素配列と韻律情報（a1, a2, a3）を返す。
+        /// 入力テキストの IPA 音素配列と韻律情報（A1=0, A2=ストレスレベル, A3=語の音素数）を返す。
         /// piper-plus 互換の韻律情報を含む。
         /// </summary>
         /// <remarks>
         /// <list type="bullet">
-        /// <item><description>A1: 0（スペイン語では未使用）</description></item>
-        /// <item><description>A2: ストレス音節位置（1ベース）。ストレスなしの場合は0。</description></item>
-        /// <item><description>A3: 語の音節数。</description></item>
+        /// <item><description>A1: 予約（常に 0）。</description></item>
+        /// <item><description>A2: ストレスレベル（0=ストレスなし、2=ストレスあり）。</description></item>
+        /// <item><description>A3: 語の音素数。</description></item>
         /// </list>
         /// </remarks>
         public SpanishProsodyResult ToIpaWithProsody(string text)
@@ -190,17 +190,28 @@ namespace DotNetG2P.Spanish
                 if (applied.PhonemesInternal.Length == 0)
                     continue;
 
-                var syllableCount = applied.SyllableOffsetsInternal.Length;
-                // ストレス音節位置（1ベース）。ストレスなしの場合は0。
-                var stressPosition = applied.StressedSyllableIndex >= 0
-                    ? applied.StressedSyllableIndex + 1
-                    : 0;
+                // 語の音素数（A3）
+                var wordPhonemeCount = applied.PhonemesInternal.Length;
+
+                // ストレス音節の音素範囲を特定
+                var stressStart = -1;
+                var stressEnd = -1;
+                if (applied.StressedSyllableIndex >= 0
+                    && applied.StressedSyllableIndex < applied.SyllableOffsetsInternal.Length)
+                {
+                    stressStart = applied.SyllableOffsetsInternal[applied.StressedSyllableIndex];
+                    stressEnd = applied.StressedSyllableIndex + 1 < applied.SyllableOffsetsInternal.Length
+                        ? applied.SyllableOffsetsInternal[applied.StressedSyllableIndex + 1]
+                        : applied.PhonemesInternal.Length;
+                }
 
                 for (var i = 0; i < applied.PhonemesInternal.Length; i++)
                 {
                     var symbol = IpaConverter.ToSymbol(applied.PhonemesInternal[i].Phoneme);
+                    // A2: ストレス音節内の音素なら 2、それ以外は 0
+                    var stress = (i >= stressStart && i < stressEnd) ? 2 : 0;
                     allPhonemes.Add(symbol);
-                    allProsody.Add(new SpanishProsodyInfo(0, stressPosition, syllableCount));
+                    allProsody.Add(new SpanishProsodyInfo(0, stress, wordPhonemeCount));
                 }
             }
 

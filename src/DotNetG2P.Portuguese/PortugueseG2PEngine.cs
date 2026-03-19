@@ -182,7 +182,7 @@ namespace DotNetG2P.Portuguese
         // =====================================================================
 
         /// <summary>
-        /// 入力テキストを IPA 音素配列と韻律情報（A1=0, A2=ストレス音節位置, A3=語の音節数）のペアとして返す。
+        /// 入力テキストを IPA 音素配列と韻律情報（A1=0, A2=ストレスレベル, A3=語の音素数）のペアとして返す。
         /// piper-plus 互換の韻律情報を含む。
         /// </summary>
         public PortugueseProsodyResult ToIpaWithProsody(string text)
@@ -202,16 +202,27 @@ namespace DotNetG2P.Portuguese
                 if (pronunciation.PhonemesInternal.Length == 0)
                     continue;
 
-                var syllableCount = pronunciation.SyllableOffsetsInternal.Length;
-                // ストレス音節位置 (1ベース)。-1 の場合は 0 とする。
-                var stressPosition = pronunciation.StressedSyllableIndex >= 0
-                    ? pronunciation.StressedSyllableIndex + 1
-                    : 0;
+                // 語の音素数（A3）
+                var wordPhonemeCount = pronunciation.PhonemesInternal.Length;
+
+                // ストレス音節の音素範囲を特定
+                var stressStart = -1;
+                var stressEnd = -1;
+                if (pronunciation.StressedSyllableIndex >= 0
+                    && pronunciation.StressedSyllableIndex < pronunciation.SyllableOffsetsInternal.Length)
+                {
+                    stressStart = pronunciation.SyllableOffsetsInternal[pronunciation.StressedSyllableIndex];
+                    stressEnd = pronunciation.StressedSyllableIndex + 1 < pronunciation.SyllableOffsetsInternal.Length
+                        ? pronunciation.SyllableOffsetsInternal[pronunciation.StressedSyllableIndex + 1]
+                        : pronunciation.PhonemesInternal.Length;
+                }
 
                 for (var j = 0; j < pronunciation.PhonemesInternal.Length; j++)
                 {
                     allPhonemes.Add(IpaConverter.ToSymbol(pronunciation.PhonemesInternal[j].Phoneme));
-                    allProsody.Add(new PortugueseProsodyInfo(0, stressPosition, syllableCount));
+                    // A2: ストレス音節内の音素なら 2、それ以外は 0
+                    var stress = (j >= stressStart && j < stressEnd) ? 2 : 0;
+                    allProsody.Add(new PortugueseProsodyInfo(0, stress, wordPhonemeCount));
                 }
             }
 

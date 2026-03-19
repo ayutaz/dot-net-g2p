@@ -192,8 +192,8 @@ namespace DotNetG2P.French
         // =====================================================================
 
         /// <summary>
-        /// テキストの IPA 音素と韻律情報（A1=0固定、A2=語内音節位置、A3=語の音節数）を返す。
-        /// フランス語はストレスが語末固定のため A1 は常に 0。
+        /// テキストの IPA 音素と韻律情報（A1=0固定、A2=ストレスレベル、A3=語の音素数）を返す。
+        /// フランス語はストレスが語末固定のため、最終音節の音素に A2=2 を付与する。
         /// </summary>
         public FrenchProsodyResult ToIpaWithProsody(string text)
         {
@@ -212,26 +212,29 @@ namespace DotNetG2P.French
                 if (_options.EnableAllophones)
                     pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures);
 
-                // 音節数を算出
+                if (pronunciation.PhonemesInternal.Length == 0)
+                    continue;
+
+                // 語の音素数（A3）
+                var wordPhonemeCount = pronunciation.PhonemesInternal.Length;
+
+                // フランス語のストレスは最終音節固定
                 var syllableCount = pronunciation.SyllableOffsetsInternal.Length;
-                if (syllableCount == 0)
-                    syllableCount = 1;
-
-                // 音節ごとに音素を収集し韻律情報を付与
-                for (var s = 0; s < pronunciation.SyllableOffsetsInternal.Length; s++)
+                var stressStart = -1;
+                var stressEnd = -1;
+                if (syllableCount > 0)
                 {
-                    var start = pronunciation.SyllableOffsetsInternal[s];
-                    var end = s + 1 < pronunciation.SyllableOffsetsInternal.Length
-                        ? pronunciation.SyllableOffsetsInternal[s + 1]
-                        : pronunciation.PhonemesInternal.Length;
+                    var lastSyllable = syllableCount - 1;
+                    stressStart = pronunciation.SyllableOffsetsInternal[lastSyllable];
+                    stressEnd = pronunciation.PhonemesInternal.Length;
+                }
 
-                    var syllablePosition = s + 1; // 1ベース
-
-                    for (var i = start; i < end; i++)
-                    {
-                        allPhonemes.Add(IpaConverter.ToSymbol(pronunciation.PhonemesInternal[i].Phoneme));
-                        allProsody.Add(new FrenchProsodyInfo(0, syllablePosition, syllableCount));
-                    }
+                for (var i = 0; i < pronunciation.PhonemesInternal.Length; i++)
+                {
+                    allPhonemes.Add(IpaConverter.ToSymbol(pronunciation.PhonemesInternal[i].Phoneme));
+                    // A2: ストレス音節（最終音節）内の音素なら 2、それ以外は 0
+                    var stress = (i >= stressStart && i < stressEnd) ? 2 : 0;
+                    allProsody.Add(new FrenchProsodyInfo(0, stress, wordPhonemeCount));
                 }
             }
 

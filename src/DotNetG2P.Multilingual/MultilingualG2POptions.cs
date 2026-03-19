@@ -46,6 +46,9 @@ namespace DotNetG2P.Multilingual
         /// <summary>英語 CMU 辞書のファイルパス。null の場合は埋め込みリソースを使用。</summary>
         public string? EnglishDictionaryPath { get; }
 
+        /// <summary>英語 LTS モデルのファイルパス。null の場合は埋め込みリソースを使用。</summary>
+        public string? EnglishLtsModelPath { get; }
+
         /// <summary>中国語単字辞書のファイルパス。null の場合は埋め込みリソースを使用。</summary>
         public string? ChineseCharDictionaryPath { get; }
 
@@ -69,6 +72,7 @@ namespace DotNetG2P.Multilingual
         /// <param name="portugueseOptions">ポルトガル語G2Pオプション（null時はデフォルト）</param>
         /// <param name="koreanOptions">韓国語G2Pオプション（null時はデフォルト）</param>
         /// <param name="englishDictionaryPath">英語CMU辞書のファイルパス（null時は埋め込みリソースを使用）</param>
+        /// <param name="englishLtsModelPath">英語LTSモデルのファイルパス（null時は埋め込みリソースを使用）</param>
         /// <param name="chineseCharDictionaryPath">中国語単字辞書のファイルパス（null時は埋め込みリソースを使用）</param>
         /// <param name="chinesePhraseDictionaryPath">中国語フレーズ辞書のファイルパス（null時は埋め込みリソースを使用）</param>
         public MultilingualG2POptions(
@@ -83,6 +87,7 @@ namespace DotNetG2P.Multilingual
             PortugueseG2POptions? portugueseOptions = null,
             KoreanG2POptions? koreanOptions = null,
             string? englishDictionaryPath = null,
+            string? englishLtsModelPath = null,
             string? chineseCharDictionaryPath = null,
             string? chinesePhraseDictionaryPath = null)
         {
@@ -103,6 +108,7 @@ namespace DotNetG2P.Multilingual
             DefaultLatinLanguage = defaultLatinLanguage;
             SegmentSeparator = segmentSeparator;
             EnglishDictionaryPath = englishDictionaryPath;
+            EnglishLtsModelPath = englishLtsModelPath;
             ChineseCharDictionaryPath = chineseCharDictionaryPath;
             ChinesePhraseDictionaryPath = chinesePhraseDictionaryPath;
         }

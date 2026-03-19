@@ -96,6 +96,13 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - LanguageDetector（Unicode文字種ベース言語判定）、TextSegmenter（2パスセグメント分割）
     - MultilingualG2PEngine（日英中G2Pファサード、IDisposable、lock保護）
     - テスト162件追加
+  - **E7（Unity統合・piper-plus互換IPA）**: 実装中（fix/unity-integration-issues ブランチ）
+    - CmuDictionary.LoadFromStream()、LtsEngine.SetModelData() 追加
+    - EnglishG2PEngine に Stream/パスベースコンストラクタ追加
+    - PiperIpaConverter（長音マーク・破擦音分割・AA+Rマージ・機能語ストレス除去67語）
+    - PUA マッピング API: ToPuaPhonemes(), ToPuaString() + バッチ（7 PUAエントリ）
+    - 韻律情報 API: ToIpaWithProsody() + バッチ（EnglishProsodyInfo/Result）
+    - [Preserve] 属性追加（IL2CPP strip防止）
 - **スペイン語G2P (DotNetG2P.Spanish)**: S4実装済み（feature/spanish-g2p ブランチ）
   - **S1（コアルールエンジン + 基本G2P MVP）**: 完了
     - プロジェクト構成（csproj, package.json, asmdef, slnx更新）
@@ -220,6 +227,14 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
   - 7パッケージに欠落していた `package.json.meta` を追加
   - CI に Unity `.meta` ファイル整合性チェックジョブを追加
   - `tools/sync-shared-internals.ps1` 共有 Internal ファイル同期ツールを追加
+- **Unity 統合対応**: 実装中（fix/unity-integration-issues ブランチ）
+  - 全6パッケージ（En/Es/Fr/Pt/Ko/Zh）の embedded resource 問題対応
+  - Ko/Es/Fr/Pt: 例外辞書グレースフルフォールバック
+  - Zh/En: LoadFromStream + パスベースコンストラクタ public 化
+  - En/Es/Fr/Pt: PUA + Prosody API 追加
+  - En: piper-plus 互換 IPA（PiperIpaConverter + FunctionWordList）
+  - Multilingual: 辞書パス指定オプション追加
+  - 全パッケージ: [Preserve] 属性 + #if !UNITY_5_3_OR_NEWER ガード
 
 ## ビルド・実行
 

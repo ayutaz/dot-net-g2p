@@ -548,9 +548,9 @@ namespace DotNetG2P.Tests.ChineseG2P
         {
             var result = _engine.ToPuaPhonemes("\u4F60\u597D"); // 你好
 
-            // ToPuaPhonemes は ToPiperIpaPhonemes（声調なし）→ ApplyPuaMapping の変換。
-            // 声調PUAトークンは含まれない（声調は別管理）。
-            // PUA範囲(0xE020-0xE045)または非PUA音素が含まれることを検証
+            // ToPuaPhonemes は各音節ごとに IPA音素→PUAマッピング + 声調PUA追加。
+            // 音素PUA範囲(0xE020-0xE045)と声調PUA範囲(0xE046-0xE04A)の両方を含む。
+            // ここでは音素PUA(0xE020-0xE045)が含まれることを検証
             Assert.NotEmpty(result);
             bool hasPua = false;
             foreach (var p in result)

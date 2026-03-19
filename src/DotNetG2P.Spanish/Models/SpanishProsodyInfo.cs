@@ -8,8 +8,8 @@ namespace DotNetG2P.Spanish
     /// <remarks>
     /// <list type="bullet">
     /// <item><description>A1: 予約（常に 0）。</description></item>
-    /// <item><description>A2: ストレス音節位置（1ベース）。ストレスなしの場合は 0。</description></item>
-    /// <item><description>A3: 語の音節数。</description></item>
+    /// <item><description>A2: ストレスレベル（0=ストレスなし、2=ストレスあり）。</description></item>
+    /// <item><description>A3: 語の音素数。</description></item>
     /// </list>
     /// </remarks>
     public readonly struct SpanishProsodyInfo : IEquatable<SpanishProsodyInfo>
@@ -17,18 +17,18 @@ namespace DotNetG2P.Spanish
         /// <summary>予約（常に 0）。</summary>
         public int A1 { get; }
 
-        /// <summary>ストレス音節位置（1ベース）。ストレスなしの場合は 0。</summary>
+        /// <summary>ストレスレベル（0=ストレスなし、2=ストレスあり）。</summary>
         public int A2 { get; }
 
-        /// <summary>語の音節数。</summary>
+        /// <summary>語の音素数。</summary>
         public int A3 { get; }
 
         /// <summary>
         /// 韻律情報を初期化する。
         /// </summary>
         /// <param name="a1">予約（常に 0）。</param>
-        /// <param name="a2">ストレス音節位置（1ベース）。</param>
-        /// <param name="a3">語の音節数。</param>
+        /// <param name="a2">ストレスレベル（0=ストレスなし、2=ストレスあり）。</param>
+        /// <param name="a3">語の音素数。</param>
         public SpanishProsodyInfo(int a1, int a2, int a3)
         {
             A1 = a1;

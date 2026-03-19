@@ -67,7 +67,7 @@ namespace DotNetG2P.Chinese
         public static PinyinCharDictionary LoadFromStream(Stream stream)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
-            using (var reader = new StreamReader(stream))
+            using (var reader = new StreamReader(stream, encoding: System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true))
             {
                 return ParseFromReader(reader);
             }

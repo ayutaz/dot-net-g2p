@@ -89,9 +89,12 @@ namespace DotNetG2P.Multilingual
             // その他の言語エンジンは遅延初期化（Lazy<T>はデフォルトでスレッドセーフ）
             _lazyEnglishEngine = new Lazy<EnglishG2PEngine>(() =>
             {
+                var opts = options.EnglishOptions ?? EnglishG2POptions.Default;
+                if (options.EnglishDictionaryPath != null && options.EnglishLtsModelPath != null)
+                    return new EnglishG2PEngine(options.EnglishDictionaryPath, options.EnglishLtsModelPath, opts);
                 if (options.EnglishDictionaryPath != null)
-                    return new EnglishG2PEngine(options.EnglishDictionaryPath, options.EnglishOptions ?? EnglishG2POptions.Default);
-                return new EnglishG2PEngine(options.EnglishOptions ?? EnglishG2POptions.Default);
+                    return new EnglishG2PEngine(options.EnglishDictionaryPath, opts);
+                return new EnglishG2PEngine(opts);
             });
 
             _lazyChineseEngine = new Lazy<ChineseG2PEngine>(() =>

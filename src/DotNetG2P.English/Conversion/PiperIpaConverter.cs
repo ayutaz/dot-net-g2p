@@ -106,13 +106,14 @@ namespace DotNetG2P.English.Conversion
         /// </summary>
         /// <param name="pronunciation">変換対象の発音。</param>
         /// <param name="word">元の語（機能語判定に使用）。</param>
+        /// <param name="removeFunctionWordStress">機能語のストレスを除去するかどうか。デフォルト: true。</param>
         /// <returns>piper-plus 互換の IPA 音素トークン配列。</returns>
-        public static string[] Convert(EnglishPronunciation pronunciation, string word)
+        public static string[] Convert(EnglishPronunciation pronunciation, string word, bool removeFunctionWordStress = true)
         {
             if (pronunciation == null)
                 throw new ArgumentNullException(nameof(pronunciation));
 
-            return Convert(pronunciation.PhonemesInternal, word);
+            return Convert(pronunciation.PhonemesInternal, word, removeFunctionWordStress);
         }
 
         /// <summary>
@@ -120,8 +121,9 @@ namespace DotNetG2P.English.Conversion
         /// </summary>
         /// <param name="phonemes">変換対象の音素配列。</param>
         /// <param name="word">元の語（機能語判定に使用）。</param>
+        /// <param name="removeFunctionWordStress">機能語のストレスを除去するかどうか。デフォルト: true。</param>
         /// <returns>piper-plus 互換の IPA 音素トークン配列。</returns>
-        public static string[] Convert(EnglishPhoneme[] phonemes, string word)
+        public static string[] Convert(EnglishPhoneme[] phonemes, string word, bool removeFunctionWordStress = true)
         {
             if (phonemes == null)
                 throw new ArgumentNullException(nameof(phonemes));
@@ -129,7 +131,7 @@ namespace DotNetG2P.English.Conversion
             if (phonemes.Length == 0)
                 return Array.Empty<string>();
 
-            bool isFunctionWord = word != null && FunctionWordList.Contains(word);
+            bool isFunctionWord = removeFunctionWordStress && word != null && FunctionWordList.Contains(word);
             var result = new List<string>(phonemes.Length * 2);
 
             for (int i = 0; i < phonemes.Length; i++)

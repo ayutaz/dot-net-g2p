@@ -48,20 +48,39 @@ namespace DotNetG2P.English.Conversion
 
         /// <summary>
         /// IPA 音素配列を PUA マッピング済み音素配列に変換する。
-        /// 多文字 IPA 音素が PUA マッピングに存在する場合、単一 PUA 文字に置換する。
+        /// 連続する2トークンを結合して PUA マッピングをチェックし、マッチした場合は
+        /// 1つの PUA 文字に置換する。マッチしない場合は単一トークンで PUA チェックを行う。
         /// </summary>
+        /// <remarks>
+        /// PiperIpaConverter は破擦音（CH → t + ʃ、JH → d + ʒ）や
+        /// 二重母音（AW → a + ʊ、AY → a + ɪ 等）を分割出力するため、
+        /// 2トークン結合によるマッチが必要。
+        /// </remarks>
         public static string[] ApplyPuaMapping(string[] ipaPhonemes)
         {
             if (ipaPhonemes == null || ipaPhonemes.Length == 0)
                 return Array.Empty<string>();
 
-            var result = new string[ipaPhonemes.Length];
+            var result = new List<string>(ipaPhonemes.Length);
             for (var i = 0; i < ipaPhonemes.Length; i++)
             {
-                result[i] = MapToPua(ipaPhonemes[i]);
+                // まず2トークン結合で PUA チェック
+                if (i + 1 < ipaPhonemes.Length)
+                {
+                    var combined = ipaPhonemes[i] + ipaPhonemes[i + 1];
+                    if (IpaToPuaMap.TryGetValue(combined, out var pua))
+                    {
+                        result.Add(pua.ToString());
+                        i++; // 次のトークンもスキップ
+                        continue;
+                    }
+                }
+
+                // 単一トークンで PUA チェック
+                result.Add(MapToPua(ipaPhonemes[i]));
             }
 
-            return result;
+            return result.ToArray();
         }
 
         /// <summary>

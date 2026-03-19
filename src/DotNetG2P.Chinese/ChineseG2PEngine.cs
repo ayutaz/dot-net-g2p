@@ -292,13 +292,46 @@ namespace DotNetG2P.Chinese
 
         /// <summary>
         /// テキストを piper-plus 互換 PUA 音素配列に変換する。
+        /// 各音節の PUA 音素の末尾にトーン PUA 文字（0xE046-0xE04A）を自動追加する。
         /// </summary>
         /// <param name="text">入力テキスト</param>
-        /// <returns>PUA 音素の配列</returns>
+        /// <returns>PUA 音素の配列（各音節末尾にトーンPUA含む）</returns>
         public string[] ToPuaPhonemes(string text)
         {
-            var ipaPhonemes = ToPiperIpaPhonemes(text);
-            return ChinesePuaMapper.ApplyPuaMapping(ipaPhonemes);
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return Array.Empty<string>();
+
+            var entries = CollectPinyins(text);
+
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            var result = new List<string>();
+            foreach (var entry in entries)
+            {
+                if (entry.Pinyin != null)
+                {
+                    if (PinyinParser.TryParse(entry.Pinyin, out var syllable))
+                    {
+                        // 音節の IPA 音素を PUA マッピング
+                        var ipaPhonemes = PinyinToPiperIpa.ConvertToPhonemes(syllable);
+                        var puaPhonemes = ChinesePuaMapper.ApplyPuaMapping(ipaPhonemes);
+                        result.AddRange(puaPhonemes);
+
+                        // 声調番号: Tone enum の int 値（1-4）、Neutral=0→5扱い
+                        int toneNumber = (int)syllable.Tone;
+                        if (toneNumber == 0)
+                            toneNumber = 5;
+
+                        var tonePua = ChinesePuaMapper.ToneToPua(toneNumber);
+                        if (tonePua.Length > 0)
+                            result.Add(tonePua);
+                    }
+                }
+            }
+            return result.ToArray();
         }
 
         /// <summary>

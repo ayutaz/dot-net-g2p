@@ -97,8 +97,9 @@ namespace DotNetG2P.Tests.ChineseG2P
             Assert.NotEmpty(puaString);
             Assert.NotEmpty(prosody.Phonemes);
 
-            // IPA音素配列とPUA音素配列の長さは同じ
-            Assert.Equal(ipaPhonemes.Length, puaPhonemes.Length);
+            // PUA音素配列はIPA音素配列 + 各音節末尾の声調PUAを含むため、IPA音素より多い
+            Assert.True(puaPhonemes.Length > ipaPhonemes.Length,
+                $"PUA音素({puaPhonemes.Length})はIPA音素({ipaPhonemes.Length}) + 声調PUA分だけ多いはず");
 
             // Prosody音素配列は音節単位（漢字1字=1エントリ）
             // IPA音素配列は声母+韻母単位なのでProsodyより多い
@@ -106,39 +107,30 @@ namespace DotNetG2P.Tests.ChineseG2P
         }
 
         // =====================================================================
-        // 2. PUA音素に声調PUAが含まれないことの確認
+        // 2. PUA音素に各音節末尾の声調PUAが含まれることの確認
         // =====================================================================
 
         [Fact]
-        public void ToPuaPhonemes_声調PUA文字を含まない()
+        public void ToPuaPhonemes_各音節末尾に声調PUA文字を含む()
         {
             // 声調PUA範囲: 0xE046-0xE04A（tone1-tone5）
             var result = _engine.ToPuaPhonemes("你好世界");
-            foreach (var phoneme in result)
-            {
-                foreach (var ch in phoneme)
-                {
-                    Assert.False(
-                        ch >= '\uE046' && ch <= '\uE04A',
-                        $"PUA音素に声調トークン U+{(int)ch:X4} が含まれている");
-                }
-            }
+            var toneCount = result.Count(p => p.Length == 1 && p[0] >= '\uE046' && p[0] <= '\uE04A');
+            // "你好世界" は4音節なので声調PUAも4つ
+            Assert.Equal(4, toneCount);
         }
 
         [Fact]
-        public void ToPuaString_声調PUA文字を含まない()
+        public void ToPuaString_声調PUA文字を含む()
         {
             var result = _engine.ToPuaString("你好世界");
-            foreach (var ch in result)
-            {
-                Assert.False(
-                    ch >= '\uE046' && ch <= '\uE04A',
-                    $"PUA文字列に声調トークン U+{(int)ch:X4} が含まれている");
-            }
+            var toneCount = result.Count(ch => ch >= '\uE046' && ch <= '\uE04A');
+            // "你好世界" は4音節なので声調PUAも4つ
+            Assert.Equal(4, toneCount);
         }
 
         // =====================================================================
-        // 3. 一貫性テスト: ToPiperIpaPhonemes → ApplyPuaMapping == ToPuaPhonemes
+        // 3. 一貫性テスト: ToPuaPhonemesが音素PUA+声調PUAを正しく含むことの確認
         // =====================================================================
 
         [Theory]
@@ -147,16 +139,23 @@ namespace DotNetG2P.Tests.ChineseG2P
         [InlineData("中国人民")]
         [InlineData("学生")]
         [InlineData("北京大学")]
-        public void ToPiperIpaPhonemes経由のPUAマッピングとToPuaPhonemesが一致する(string text)
+        public void ToPuaPhonemesが音素PUAと声調PUAの両方を含む(string text)
         {
             var ipaPhonemes = _engine.ToPiperIpaPhonemes(text);
-            var expectedPua = ChinesePuaMapper.ApplyPuaMapping(ipaPhonemes);
+            var puaFromIpa = ChinesePuaMapper.ApplyPuaMapping(ipaPhonemes);
             var actualPua = _engine.ToPuaPhonemes(text);
 
-            Assert.Equal(expectedPua.Length, actualPua.Length);
-            for (int i = 0; i < expectedPua.Length; i++)
+            // ToPuaPhonemesは音素PUA + 各音節末尾の声調PUA を含むため、
+            // IPA音素を単純にPUAマッピングしたものより多い
+            var toneCount = actualPua.Count(p => p.Length == 1 && p[0] >= '\uE046' && p[0] <= '\uE04A');
+            Assert.Equal(puaFromIpa.Length + toneCount, actualPua.Length);
+
+            // 声調PUAを除いた音素部分はIPA→PUAマッピングと一致する
+            var actualWithoutTones = actualPua.Where(p => !(p.Length == 1 && p[0] >= '\uE046' && p[0] <= '\uE04A')).ToArray();
+            Assert.Equal(puaFromIpa.Length, actualWithoutTones.Length);
+            for (int i = 0; i < puaFromIpa.Length; i++)
             {
-                Assert.Equal(expectedPua[i], actualPua[i]);
+                Assert.Equal(puaFromIpa[i], actualWithoutTones[i]);
             }
         }
 
@@ -231,10 +230,12 @@ namespace DotNetG2P.Tests.ChineseG2P
 
             Assert.NotEmpty(piperIpa);
             Assert.NotEmpty(ipaPhonemes);
-            Assert.Equal(ipaPhonemes.Length, puaPhonemes.Length);
+            // PUA音素はIPA音素 + 各音節末尾の声調PUAを含む
+            Assert.True(puaPhonemes.Length > ipaPhonemes.Length,
+                $"PUA音素({puaPhonemes.Length})はIPA音素({ipaPhonemes.Length}) + 声調PUA分だけ多いはず");
             Assert.Equal(prosody.Phonemes.Count, prosody.Prosody.Count);
 
-            _output.WriteLine($"[{text}] phonemes: {ipaPhonemes.Length}");
+            _output.WriteLine($"[{text}] IPA phonemes: {ipaPhonemes.Length}, PUA phonemes: {puaPhonemes.Length}");
         }
 
         // =====================================================================

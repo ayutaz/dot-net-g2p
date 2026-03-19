@@ -1,3 +1,4 @@
+#if !UNITY_5_3_OR_NEWER
 using System;
 
 namespace UnityEngine.Scripting
@@ -13,3 +14,4 @@ namespace UnityEngine.Scripting
         AllowMultiple = false)]
     internal sealed class PreserveAttribute : Attribute { }
 }
+#endif
