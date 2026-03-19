@@ -60,6 +60,20 @@ namespace DotNetG2P.Chinese
         }
 
         /// <summary>
+        /// ストリームからピンイン辞書を読み込む（Unity StreamingAssets / WebGL対応）。
+        /// </summary>
+        /// <param name="stream">辞書データのストリーム</param>
+        /// <returns>読み込まれた単字ピンイン辞書</returns>
+        public static PinyinCharDictionary LoadFromStream(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            using (var reader = new StreamReader(stream))
+            {
+                return ParseFromReader(reader);
+            }
+        }
+
+        /// <summary>
         /// 指定コードポイントの最優先ピンイン（最初の候補）を返す。
         /// </summary>
         /// <param name="codePoint">Unicodeコードポイント</param>

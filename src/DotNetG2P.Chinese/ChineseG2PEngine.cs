@@ -85,9 +85,12 @@ namespace DotNetG2P.Chinese
         }
 
         /// <summary>
-        /// PinyinCharDictionaryとPinyinPhraseDictionaryを指定してエンジンを初期化する（内部用）。
+        /// 外部から辞書オブジェクトを直接指定してエンジンを初期化する（Unity StreamingAssets対応）。
         /// </summary>
-        internal ChineseG2PEngine(PinyinCharDictionary charDictionary, PinyinPhraseDictionary? phraseDictionary, ChineseG2POptions options)
+        /// <param name="charDictionary">単字ピンイン辞書</param>
+        /// <param name="phraseDictionary">フレーズピンイン辞書（nullの場合はフレーズ辞書なし）</param>
+        /// <param name="options">処理オプション</param>
+        public ChineseG2PEngine(PinyinCharDictionary charDictionary, PinyinPhraseDictionary? phraseDictionary, ChineseG2POptions options)
         {
             _charDictionary = charDictionary ?? throw new ArgumentNullException(nameof(charDictionary));
             _phraseDictionary = phraseDictionary;

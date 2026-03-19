@@ -6,12 +6,14 @@ using DotNetG2P.Internal;
 using DotNetG2P.Spanish.Conversion;
 using DotNetG2P.Spanish.Normalization;
 using DotNetG2P.Spanish.Rules;
+using UnityEngine.Scripting;
 
 namespace DotNetG2P.Spanish
 {
     /// <summary>
     /// スペイン語G2P（Grapheme-to-Phoneme）エンジン。
     /// </summary>
+    [Preserve]
     public sealed class SpanishG2PEngine : IDisposable
     {
         private readonly SpanishG2POptions _options;
@@ -118,6 +120,100 @@ namespace DotNetG2P.Spanish
             return BatchConversionHelper.ConvertToArray(texts, ToXSampa);
         }
 
+        // =====================================================================
+        // PUA API
+        // =====================================================================
+
+        /// <summary>
+        /// 入力テキストを piper-plus 互換 PUA 音素配列として返す。
+        /// 多文字 IPA 音素を PUA 単一文字に置換した形式。
+        /// </summary>
+        public string[] ToPuaPhonemes(string text)
+        {
+            ThrowIfDisposed();
+
+            var words = GetWords(text);
+            if (words.Count == 0)
+                return Array.Empty<string>();
+
+            var ipaPhonemes = CollectIpaPhonemeStrings(words);
+            return SpanishPuaMapper.ApplyPuaMapping(ipaPhonemes);
+        }
+
+        /// <summary>
+        /// 入力テキストを piper-plus 互換 PUA 音素文字列として返す。
+        /// </summary>
+        public string ToPuaString(string text)
+        {
+            var phonemes = ToPuaPhonemes(text);
+            return phonemes.Length == 0 ? string.Empty : string.Join(" ", phonemes);
+        }
+
+        /// <summary>複数テキストを一括で PUA 音素文字列に変換する。</summary>
+        public IReadOnlyList<string> ToPuaStringBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToArray(texts, ToPuaString);
+        }
+
+        // =====================================================================
+        // Prosody API
+        // =====================================================================
+
+        /// <summary>
+        /// 入力テキストの IPA 音素配列と韻律情報（a1, a2, a3）を返す。
+        /// piper-plus 互換の韻律情報を含む。
+        /// </summary>
+        /// <remarks>
+        /// <list type="bullet">
+        /// <item><description>A1: 0（スペイン語では未使用）</description></item>
+        /// <item><description>A2: ストレス音節位置（1ベース）。ストレスなしの場合は0。</description></item>
+        /// <item><description>A3: 語の音節数。</description></item>
+        /// </list>
+        /// </remarks>
+        public SpanishProsodyResult ToIpaWithProsody(string text)
+        {
+            ThrowIfDisposed();
+
+            var words = GetWords(text);
+            if (words.Count == 0)
+                return new SpanishProsodyResult(Array.Empty<string>(), Array.Empty<SpanishProsodyInfo>());
+
+            var allPhonemes = new List<string>();
+            var allProsody = new List<SpanishProsodyInfo>();
+
+            for (var w = 0; w < words.Count; w++)
+            {
+                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[w], _options.Dialect, _options.EnableExceptionDictionary);
+                var applied = ApplyAllophonesIfNeeded(pronunciation);
+
+                if (applied.PhonemesInternal.Length == 0)
+                    continue;
+
+                var syllableCount = applied.SyllableOffsetsInternal.Length;
+                // ストレス音節位置（1ベース）。ストレスなしの場合は0。
+                var stressPosition = applied.StressedSyllableIndex >= 0
+                    ? applied.StressedSyllableIndex + 1
+                    : 0;
+
+                for (var i = 0; i < applied.PhonemesInternal.Length; i++)
+                {
+                    var symbol = IpaConverter.ToSymbol(applied.PhonemesInternal[i].Phoneme);
+                    allPhonemes.Add(symbol);
+                    allProsody.Add(new SpanishProsodyInfo(0, stressPosition, syllableCount));
+                }
+            }
+
+            return new SpanishProsodyResult(allPhonemes.ToArray(), allProsody.ToArray());
+        }
+
+        /// <summary>複数テキストを一括で IPA 音素配列と韻律情報のペアに変換する。</summary>
+        public IReadOnlyList<SpanishProsodyResult> ToIpaWithProsodyBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToArray(texts, ToIpaWithProsody);
+        }
+
         /// <summary>リソースを解放する。</summary>
         public void Dispose()
         {
@@ -159,6 +255,20 @@ namespace DotNetG2P.Spanish
                 return SpanishNormalizer.Normalize(text);
 
             return text.Normalize(NormalizationForm.FormC).ToLowerInvariant();
+        }
+
+        private string[] CollectIpaPhonemeStrings(IReadOnlyList<string> words)
+        {
+            var result = new List<string>(words.Count * 6);
+            for (var i = 0; i < words.Count; i++)
+            {
+                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect, _options.EnableExceptionDictionary);
+                var applied = ApplyAllophonesIfNeeded(pronunciation);
+                for (var j = 0; j < applied.PhonemesInternal.Length; j++)
+                    result.Add(IpaConverter.ToSymbol(applied.PhonemesInternal[j].Phoneme));
+            }
+
+            return result.ToArray();
         }
 
         private SpanishPronunciation ApplyAllophonesIfNeeded(SpanishPronunciation pronunciation)

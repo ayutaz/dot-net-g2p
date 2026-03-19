@@ -61,6 +61,20 @@ namespace DotNetG2P.Chinese
         }
 
         /// <summary>
+        /// ストリームからフレーズピンイン辞書を読み込む（Unity StreamingAssets / WebGL対応）。
+        /// </summary>
+        /// <param name="stream">辞書データのストリーム</param>
+        /// <returns>読み込まれたフレーズピンイン辞書</returns>
+        public static PinyinPhraseDictionary LoadFromStream(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            using (var reader = new StreamReader(stream))
+            {
+                return ParseFromReader(reader);
+            }
+        }
+
+        /// <summary>
         /// フレーズの完全一致検索を行う。
         /// </summary>
         /// <param name="phrase">検索するフレーズ</param>

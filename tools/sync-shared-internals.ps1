@@ -48,6 +48,10 @@ $SyncTargets = @(
         Master = "src/DotNetG2P.Chinese/Internal/PreserveAttribute.cs"
         Copies = @(
             "src/DotNetG2P.Korean/Internal/PreserveAttribute.cs"
+            "src/DotNetG2P.English/Internal/PreserveAttribute.cs"
+            "src/DotNetG2P.Spanish/Internal/PreserveAttribute.cs"
+            "src/DotNetG2P.French/Internal/PreserveAttribute.cs"
+            "src/DotNetG2P.Portuguese/Internal/PreserveAttribute.cs"
         )
     }
 )

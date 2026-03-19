@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace DotNetG2P.English.LTS
@@ -58,6 +59,38 @@ namespace DotNetG2P.English.LTS
                     s_modelData = data;
                     return data;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 外部から読み込んだLTSモデルデータを設定する（Unity StreamingAssets / WebGL対応）。
+        /// 埋め込みリソースの代わりに外部データを使用する場合に呼び出す。
+        /// </summary>
+        /// <param name="data">LTSモデルバイナリデータ（cmu_lts_model.bin の内容）。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="data"/> が null の場合。</exception>
+        internal static void SetModelData(byte[] data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+
+            lock (s_initLock)
+            {
+                s_modelData = LtsData.LoadModelData(data);
+            }
+        }
+
+        /// <summary>
+        /// 外部ストリームからLTSモデルデータを設定する。
+        /// 埋め込みリソースの代わりに外部データを使用する場合に呼び出す。
+        /// </summary>
+        /// <param name="stream">LTSモデルバイナリデータを含むストリーム。</param>
+        /// <exception cref="ArgumentNullException"><paramref name="stream"/> が null の場合。</exception>
+        internal static void SetModelData(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+            lock (s_initLock)
+            {
+                s_modelData = LtsData.LoadModelData(stream);
             }
         }
 

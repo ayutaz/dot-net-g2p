@@ -43,6 +43,15 @@ namespace DotNetG2P.Multilingual
         /// <summary>セグメント間の区切り文字（デフォルト: スペース）。</summary>
         public string SegmentSeparator { get; }
 
+        /// <summary>英語 CMU 辞書のファイルパス。null の場合は埋め込みリソースを使用。</summary>
+        public string? EnglishDictionaryPath { get; }
+
+        /// <summary>中国語単字辞書のファイルパス。null の場合は埋め込みリソースを使用。</summary>
+        public string? ChineseCharDictionaryPath { get; }
+
+        /// <summary>中国語フレーズ辞書のファイルパス。null の場合は埋め込みリソースを使用。</summary>
+        public string? ChinesePhraseDictionaryPath { get; }
+
         /// <summary>デフォルトオプション。</summary>
         public static readonly MultilingualG2POptions Default = new MultilingualG2POptions();
 
@@ -59,6 +68,9 @@ namespace DotNetG2P.Multilingual
         /// <param name="frenchOptions">フランス語G2Pオプション（null時はデフォルト）</param>
         /// <param name="portugueseOptions">ポルトガル語G2Pオプション（null時はデフォルト）</param>
         /// <param name="koreanOptions">韓国語G2Pオプション（null時はデフォルト）</param>
+        /// <param name="englishDictionaryPath">英語CMU辞書のファイルパス（null時は埋め込みリソースを使用）</param>
+        /// <param name="chineseCharDictionaryPath">中国語単字辞書のファイルパス（null時は埋め込みリソースを使用）</param>
+        /// <param name="chinesePhraseDictionaryPath">中国語フレーズ辞書のファイルパス（null時は埋め込みリソースを使用）</param>
         public MultilingualG2POptions(
             G2POptions? japaneseOptions = null,
             EnglishG2POptions? englishOptions = null,
@@ -69,7 +81,10 @@ namespace DotNetG2P.Multilingual
             Language defaultLatinLanguage = Language.English,
             FrenchG2POptions? frenchOptions = null,
             PortugueseG2POptions? portugueseOptions = null,
-            KoreanG2POptions? koreanOptions = null)
+            KoreanG2POptions? koreanOptions = null,
+            string? englishDictionaryPath = null,
+            string? chineseCharDictionaryPath = null,
+            string? chinesePhraseDictionaryPath = null)
         {
             if (defaultCjkLanguage != Language.Japanese && defaultCjkLanguage != Language.Chinese)
                 throw new ArgumentOutOfRangeException(nameof(defaultCjkLanguage), "DefaultCjkLanguage must be Japanese or Chinese.");
@@ -87,6 +102,9 @@ namespace DotNetG2P.Multilingual
             DefaultCjkLanguage = defaultCjkLanguage;
             DefaultLatinLanguage = defaultLatinLanguage;
             SegmentSeparator = segmentSeparator;
+            EnglishDictionaryPath = englishDictionaryPath;
+            ChineseCharDictionaryPath = chineseCharDictionaryPath;
+            ChinesePhraseDictionaryPath = chinesePhraseDictionaryPath;
         }
     }
 }

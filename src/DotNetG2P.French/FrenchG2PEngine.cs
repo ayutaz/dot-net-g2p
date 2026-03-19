@@ -6,12 +6,14 @@ using DotNetG2P.Internal;
 using DotNetG2P.French.Conversion;
 using DotNetG2P.French.Normalization;
 using DotNetG2P.French.Rules;
+using UnityEngine.Scripting;
 
 namespace DotNetG2P.French
 {
     /// <summary>
     /// フランス語G2P（Grapheme-to-Phoneme）エンジン。
     /// </summary>
+    [Preserve]
     public sealed class FrenchG2PEngine : IDisposable
     {
         private readonly FrenchG2POptions _options;
@@ -140,6 +142,111 @@ namespace DotNetG2P.French
             return BatchConversionHelper.ConvertToArray<IReadOnlyList<FrenchPhoneme>>(texts, ToPhonemeList);
         }
 
+        // =====================================================================
+        // PUA API
+        // =====================================================================
+
+        /// <summary>
+        /// 入力テキストを piper-plus 互換 PUA 音素配列として返す。
+        /// 多文字 IPA 音素を PUA 単一文字に置換した形式。
+        /// </summary>
+        public string[] ToPuaPhonemes(string text)
+        {
+            ThrowIfDisposed();
+            var ipaPhonemes = ToIpaPhonemeArray(text);
+            return FrenchPuaMapper.ApplyPuaMapping(ipaPhonemes);
+        }
+
+        /// <summary>
+        /// 入力テキストを piper-plus 互換 PUA 音素文字列として返す。
+        /// </summary>
+        public string ToPuaString(string text)
+        {
+            var puaPhonemes = ToPuaPhonemes(text);
+            if (puaPhonemes.Length == 0)
+                return string.Empty;
+
+            var builder = new StringBuilder(puaPhonemes.Length * 2);
+            for (var i = 0; i < puaPhonemes.Length; i++)
+            {
+                if (i > 0)
+                    builder.Append(_options.Separator);
+
+                builder.Append(puaPhonemes[i]);
+            }
+
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で PUA 音素文字列へ変換する。
+        /// </summary>
+        public IReadOnlyList<string> ToPuaStringBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToArray(texts, ToPuaString);
+        }
+
+        // =====================================================================
+        // Prosody API
+        // =====================================================================
+
+        /// <summary>
+        /// テキストの IPA 音素と韻律情報（A1=0固定、A2=語内音節位置、A3=語の音節数）を返す。
+        /// フランス語はストレスが語末固定のため A1 は常に 0。
+        /// </summary>
+        public FrenchProsodyResult ToIpaWithProsody(string text)
+        {
+            ThrowIfDisposed();
+
+            var words = GetWords(text);
+            if (words.Count == 0)
+                return new FrenchProsodyResult(Array.Empty<string>(), Array.Empty<FrenchProsodyInfo>());
+
+            var allPhonemes = new List<string>();
+            var allProsody = new List<FrenchProsodyInfo>();
+
+            for (var w = 0; w < words.Count; w++)
+            {
+                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[w], _options.Dialect, _options.EnableExceptionDictionary);
+                if (_options.EnableAllophones)
+                    pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures);
+
+                // 音節数を算出
+                var syllableCount = pronunciation.SyllableOffsetsInternal.Length;
+                if (syllableCount == 0)
+                    syllableCount = 1;
+
+                // 音節ごとに音素を収集し韻律情報を付与
+                for (var s = 0; s < pronunciation.SyllableOffsetsInternal.Length; s++)
+                {
+                    var start = pronunciation.SyllableOffsetsInternal[s];
+                    var end = s + 1 < pronunciation.SyllableOffsetsInternal.Length
+                        ? pronunciation.SyllableOffsetsInternal[s + 1]
+                        : pronunciation.PhonemesInternal.Length;
+
+                    var syllablePosition = s + 1; // 1ベース
+
+                    for (var i = start; i < end; i++)
+                    {
+                        allPhonemes.Add(IpaConverter.ToSymbol(pronunciation.PhonemesInternal[i].Phoneme));
+                        allProsody.Add(new FrenchProsodyInfo(0, syllablePosition, syllableCount));
+                    }
+                }
+            }
+
+            return new FrenchProsodyResult(allPhonemes.ToArray(), allProsody.ToArray());
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で IPA 音素配列と韻律情報のペアへ変換する。
+        /// </summary>
+        public IReadOnlyList<FrenchProsodyResult> ToIpaWithProsodyBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToArray(texts, ToIpaWithProsody);
+        }
+
         /// <summary>リソースを解放する。</summary>
         public void Dispose()
         {
@@ -183,6 +290,27 @@ namespace DotNetG2P.French
                 return FrenchNormalizer.Normalize(text);
 
             return text.Normalize(NormalizationForm.FormC).ToLowerInvariant();
+        }
+
+        /// <summary>テキスト全体のIPA音素を文字列配列として返す内部ヘルパー。</summary>
+        private string[] ToIpaPhonemeArray(string text)
+        {
+            var words = GetWords(text);
+            if (words.Count == 0)
+                return Array.Empty<string>();
+
+            var result = new List<string>();
+            for (var i = 0; i < words.Count; i++)
+            {
+                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect, _options.EnableExceptionDictionary);
+                if (_options.EnableAllophones)
+                    pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures);
+
+                for (var j = 0; j < pronunciation.PhonemesInternal.Length; j++)
+                    result.Add(IpaConverter.ToSymbol(pronunciation.PhonemesInternal[j].Phoneme));
+            }
+
+            return result.ToArray();
         }
 
         /// <summary>FrenchPronunciation から生のIPA音素配列を取得する。</summary>
