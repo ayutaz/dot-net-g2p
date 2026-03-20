@@ -31,6 +31,20 @@ namespace DotNetG2P.English
         /// <summary>同綴異音語（Homograph）の文脈依存解決を有効にするか</summary>
         public bool EnableHomographResolution { get; }
 
+        /// <summary>機能語のストレスを除去するかどうか（piper-plus 互換）。デフォルト: true。
+        /// <para><see cref="EnglishG2PEngine.ToPiperIpa"/>, <see cref="EnglishG2PEngine.ToPiperIpaPhonemes"/>,
+        /// <see cref="EnglishG2PEngine.ToPiperIpaBatch"/>, <see cref="EnglishG2PEngine.ToIpaWithProsody"/>,
+        /// <see cref="EnglishG2PEngine.ToPuaPhonemes"/>, <see cref="EnglishG2PEngine.ToPuaString"/> で参照される。</para></summary>
+        public bool RemoveFunctionWordStress { get; }
+
+        /// <summary>piper-plus 互換の長音マーク付き IPA 出力を使用するかどうか。デフォルト: true。
+        /// <para>このオプションは <see cref="EnglishG2PEngine.ToPiperIpa"/>,
+        /// <see cref="EnglishG2PEngine.ToPiperIpaPhonemes"/>,
+        /// <see cref="EnglishG2PEngine.ToPiperIpaBatch"/> メソッド群で参照される。
+        /// <see cref="EnglishG2PEngine.ToIPA"/> は後方互換性のため常に従来の <c>IpaConverter</c> を使用し、
+        /// このオプションの影響を受けない。</para></summary>
+        public bool UsePiperIpaStyle { get; }
+
         /// <summary>デフォルトオプション</summary>
         public static readonly EnglishG2POptions Default = new EnglishG2POptions();
 
@@ -42,18 +56,24 @@ namespace DotNetG2P.English
         /// <param name="enableLts">LTSフォールバックを有効にするか（デフォルト: true）</param>
         /// <param name="enableNormalization">テキスト正規化を有効にするか（デフォルト: true）</param>
         /// <param name="enableHomographResolution">同綴異音語解決を有効にするか（デフォルト: true）</param>
+        /// <param name="removeFunctionWordStress">機能語のストレスを除去するか（デフォルト: true）</param>
+        /// <param name="usePiperIpaStyle">piper-plus 互換の長音マーク付き IPA 出力を使用するか（デフォルト: true）</param>
         public EnglishG2POptions(
             bool includeStress = true,
             UnknownWordStrategy unknownWordHandling = UnknownWordStrategy.Skip,
             bool enableLts = true,
             bool enableNormalization = true,
-            bool enableHomographResolution = true)
+            bool enableHomographResolution = true,
+            bool removeFunctionWordStress = true,
+            bool usePiperIpaStyle = true)
         {
             IncludeStress = includeStress;
             UnknownWordHandling = unknownWordHandling;
             EnableLts = enableLts;
             EnableNormalization = enableNormalization;
             EnableHomographResolution = enableHomographResolution;
+            RemoveFunctionWordStress = removeFunctionWordStress;
+            UsePiperIpaStyle = usePiperIpaStyle;
         }
     }
 }

@@ -166,5 +166,27 @@ namespace DotNetG2P.English.LTS
                 return data;
             }
         }
+
+        /// <summary>バイト配列からLTSモデルデータを読み込む（Unity StreamingAssets / WebGL対応）。</summary>
+        /// <param name="data">LTSモデルバイナリデータ。</param>
+        /// <returns>読み込まれたバイト配列。</returns>
+        internal static byte[] LoadModelData(byte[] data)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            return data;
+        }
+
+        /// <summary>ストリームからLTSモデルデータを読み込む。</summary>
+        /// <param name="stream">LTSモデルバイナリデータを含むストリーム。</param>
+        /// <returns>読み込まれたバイト配列。</returns>
+        internal static byte[] LoadModelData(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                return ms.ToArray();
+            }
+        }
     }
 }

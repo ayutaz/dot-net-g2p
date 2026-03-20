@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -24,12 +25,24 @@ namespace DotNetG2P.Korean.Data
 
         private static Dictionary<string, Dictionary<byte, string>> LoadEntries()
         {
-            var assembly = typeof(KoreanExceptionDictionary).Assembly;
-            using var stream = assembly.GetManifestResourceStream("DotNetG2P.Korean.Data.korean_exceptions.master.tsv")
-                ?? throw new InvalidOperationException("Embedded resource not found: korean_exceptions.master.tsv");
-            using var reader = new StreamReader(stream);
-
-            return ParseEntries(ReadAllLines(reader));
+            var entries = new Dictionary<string, Dictionary<byte, string>>(StringComparer.Ordinal);
+            try
+            {
+                var assembly = typeof(KoreanExceptionDictionary).Assembly;
+                using var stream = assembly.GetManifestResourceStream("DotNetG2P.Korean.Data.korean_exceptions.master.tsv");
+                if (stream == null)
+                {
+                    Debug.WriteLine("Warning: Embedded resource not found: korean_exceptions.master.tsv. Falling back to empty exception dictionary.");
+                    return entries;
+                }
+                using var reader = new StreamReader(stream);
+                return ParseEntries(ReadAllLines(reader));
+            }
+            catch
+            {
+                Debug.WriteLine("Warning: Failed to load korean_exceptions.master.tsv. Falling back to empty exception dictionary.");
+                return entries;
+            }
         }
 
         internal static Dictionary<string, Dictionary<byte, string>> ParseEntries(IReadOnlyList<string> lines)

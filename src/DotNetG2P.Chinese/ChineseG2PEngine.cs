@@ -85,9 +85,12 @@ namespace DotNetG2P.Chinese
         }
 
         /// <summary>
-        /// PinyinCharDictionaryとPinyinPhraseDictionaryを指定してエンジンを初期化する（内部用）。
+        /// 外部から辞書オブジェクトを直接指定してエンジンを初期化する（Unity StreamingAssets対応）。
         /// </summary>
-        internal ChineseG2PEngine(PinyinCharDictionary charDictionary, PinyinPhraseDictionary? phraseDictionary, ChineseG2POptions options)
+        /// <param name="charDictionary">単字ピンイン辞書</param>
+        /// <param name="phraseDictionary">フレーズピンイン辞書（nullの場合はフレーズ辞書なし）</param>
+        /// <param name="options">処理オプション</param>
+        public ChineseG2PEngine(PinyinCharDictionary charDictionary, PinyinPhraseDictionary? phraseDictionary, ChineseG2POptions options)
         {
             _charDictionary = charDictionary ?? throw new ArgumentNullException(nameof(charDictionary));
             _phraseDictionary = phraseDictionary;
@@ -289,13 +292,46 @@ namespace DotNetG2P.Chinese
 
         /// <summary>
         /// テキストを piper-plus 互換 PUA 音素配列に変換する。
+        /// 各音節の PUA 音素の末尾にトーン PUA 文字（0xE046-0xE04A）を自動追加する。
         /// </summary>
         /// <param name="text">入力テキスト</param>
-        /// <returns>PUA 音素の配列</returns>
+        /// <returns>PUA 音素の配列（各音節末尾にトーンPUA含む）</returns>
         public string[] ToPuaPhonemes(string text)
         {
-            var ipaPhonemes = ToPiperIpaPhonemes(text);
-            return ChinesePuaMapper.ApplyPuaMapping(ipaPhonemes);
+            ThrowIfDisposed();
+
+            if (string.IsNullOrWhiteSpace(text))
+                return Array.Empty<string>();
+
+            var entries = CollectPinyins(text);
+
+            if (_options.EnableToneSandhi)
+                ApplyToneSandhiToEntries(entries);
+
+            var result = new List<string>();
+            foreach (var entry in entries)
+            {
+                if (entry.Pinyin != null)
+                {
+                    if (PinyinParser.TryParse(entry.Pinyin, out var syllable))
+                    {
+                        // 音節の IPA 音素を PUA マッピング
+                        var ipaPhonemes = PinyinToPiperIpa.ConvertToPhonemes(syllable);
+                        var puaPhonemes = ChinesePuaMapper.ApplyPuaMapping(ipaPhonemes);
+                        result.AddRange(puaPhonemes);
+
+                        // 声調番号: Tone enum の int 値（1-4）、Neutral=0→5扱い
+                        int toneNumber = (int)syllable.Tone;
+                        if (toneNumber == 0)
+                            toneNumber = 5;
+
+                        var tonePua = ChinesePuaMapper.ToneToPua(toneNumber);
+                        if (tonePua.Length > 0)
+                            result.Add(tonePua);
+                    }
+                }
+            }
+            return result.ToArray();
         }
 
         /// <summary>

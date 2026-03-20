@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -8,6 +9,9 @@ using DotNetG2P.English.Conversion;
 using DotNetG2P.English.LTS;
 using DotNetG2P.English.Homograph;
 using DotNetG2P.English.Normalization;
+#if UNITY_5_3_OR_NEWER
+using UnityEngine.Scripting;
+#endif
 
 namespace DotNetG2P.English
 {
@@ -18,6 +22,9 @@ namespace DotNetG2P.English
     /// <remarks>
     /// このクラスはスレッドセーフです。辞書はコンストラクタで読み込まれ、以後は読み取り専用です。
     /// </remarks>
+#if UNITY_5_3_OR_NEWER
+    [Preserve]
+#endif
     public sealed class EnglishG2PEngine : IDisposable
     {
         private readonly CmuDictionary _dictionary;
@@ -61,9 +68,42 @@ namespace DotNetG2P.English
         }
 
         /// <summary>
-        /// CmuDictionaryインスタンスとオプションを指定してエンジンを初期化する（内部用）。
+        /// CMU辞書とLTSモデルのファイルパスを指定して初期化する（Unity StreamingAssets対応）。
         /// </summary>
-        internal EnglishG2PEngine(CmuDictionary dictionary, EnglishG2POptions options)
+        /// <param name="cmuDictPath">CMU辞書ファイルパス</param>
+        /// <param name="ltsModelPath">LTSモデルファイルパス（cmu_lts_model.bin）</param>
+        public EnglishG2PEngine(string cmuDictPath, string ltsModelPath)
+            : this(cmuDictPath, ltsModelPath, EnglishG2POptions.Default)
+        {
+        }
+
+        /// <summary>
+        /// CMU辞書とLTSモデルのファイルパスを指定し、オプション付きで初期化する（Unity StreamingAssets対応）。
+        /// </summary>
+        /// <param name="cmuDictPath">CMU辞書ファイルパス</param>
+        /// <param name="ltsModelPath">LTSモデルファイルパス（cmu_lts_model.bin）</param>
+        /// <param name="options">処理オプション</param>
+        public EnglishG2PEngine(string cmuDictPath, string ltsModelPath, EnglishG2POptions options)
+            : this(CmuDictionary.LoadFromFile(cmuDictPath), options)
+        {
+            if (ltsModelPath == null) throw new ArgumentNullException(nameof(ltsModelPath));
+            LtsEngine.SetModelData(File.ReadAllBytes(ltsModelPath));
+        }
+
+        /// <summary>
+        /// ストリームから辞書を読み込んで初期化する（Unity StreamingAssets対応）。
+        /// </summary>
+        /// <param name="dictionaryStream">CMU辞書ストリーム</param>
+        /// <param name="options">処理オプション</param>
+        public EnglishG2PEngine(Stream dictionaryStream, EnglishG2POptions options)
+            : this(CmuDictionary.LoadFromStream(dictionaryStream), options)
+        {
+        }
+
+        /// <summary>
+        /// CmuDictionaryインスタンスとオプションを指定してエンジンを初期化する。
+        /// </summary>
+        public EnglishG2PEngine(CmuDictionary dictionary, EnglishG2POptions options)
         {
             _dictionary = dictionary ?? throw new ArgumentNullException(nameof(dictionary));
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -163,6 +203,9 @@ namespace DotNetG2P.English
         /// テキストをIPA（国際音声記号）文字列に変換する。
         /// 単語はスペースで区切られる。
         /// 例: "Hello world" → "həˈloʊ wˈɝld"
+        /// <para>このメソッドは後方互換性のため常に従来の <c>IpaConverter</c> を使用する。
+        /// <see cref="EnglishG2POptions.UsePiperIpaStyle"/> の影響を受けない。
+        /// piper-plus 互換の IPA 出力が必要な場合は <see cref="ToPiperIpa"/> を使用すること。</para>
         /// </summary>
         /// <param name="text">入力テキスト</param>
         /// <returns>IPA文字列</returns>
@@ -252,6 +295,192 @@ namespace DotNetG2P.English
         {
             ThrowIfDisposed();
             return BatchConversionHelper.ConvertToList<IReadOnlyList<EnglishPhoneme>>(texts, ToPhonemeList);
+        }
+
+        // =====================================================================
+        // piper-plus 互換 IPA API
+        // =====================================================================
+
+        /// <summary>
+        /// piper-plus 互換の IPA 音素配列を返す。
+        /// <para><see cref="EnglishG2POptions.UsePiperIpaStyle"/> が true（デフォルト）の場合は
+        /// <c>PiperIpaConverter</c> を使用し、false の場合は従来の <c>IpaConverter</c> で
+        /// 単語単位の IPA 文字列を1要素として返す。</para>
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>IPA 音素文字列の配列</returns>
+        public string[] ToPiperIpaPhonemes(string text)
+        {
+            ThrowIfDisposed();
+            if (string.IsNullOrWhiteSpace(text)) return Array.Empty<string>();
+            var normalized = _options.EnableNormalization ? EnglishNormalizer.Normalize(text) : text;
+            var words = Tokenize(normalized);
+            var result = new List<string>();
+            foreach (var word in words)
+            {
+                var pron = LookupWordInternal(word);
+                if (pron != null)
+                {
+                    if (_options.UsePiperIpaStyle)
+                    {
+                        var ipaPhonemes = PiperIpaConverter.Convert(pron, word, _options.RemoveFunctionWordStress);
+                        result.AddRange(ipaPhonemes);
+                    }
+                    else
+                    {
+                        var ipaStr = IpaConverter.Convert(pron);
+                        if (ipaStr.Length > 0)
+                            result.Add(ipaStr);
+                    }
+                }
+            }
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// piper-plus 互換 IPA 文字列を返す。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>スペース区切りの IPA 文字列</returns>
+        public string ToPiperIpa(string text)
+        {
+            var phonemes = ToPiperIpaPhonemes(text);
+            return string.Join(" ", phonemes);
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で piper-plus 互換 IPA 文字列に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>各テキストに対応する IPA 文字列のリスト</returns>
+        public IReadOnlyList<string> ToPiperIpaBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToArray(texts, ToPiperIpa);
+        }
+
+        // =====================================================================
+        // PUA API
+        // =====================================================================
+
+        /// <summary>
+        /// piper-plus 互換 IPA 音素を PUA マッピングした配列を返す。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>PUA マッピング済み音素文字列の配列</returns>
+        public string[] ToPuaPhonemes(string text)
+        {
+            ThrowIfDisposed();
+            var ipaPhonemes = ToPiperIpaPhonemes(text);
+            return EnglishPuaMapper.ApplyPuaMapping(ipaPhonemes);
+        }
+
+        /// <summary>
+        /// PUA マッピング済み音素をセパレータ区切りで返す。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>スペース区切りの PUA マッピング済み音素文字列</returns>
+        public string ToPuaString(string text)
+        {
+            var phonemes = ToPuaPhonemes(text);
+            return phonemes.Length == 0 ? string.Empty : string.Join(" ", phonemes);
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で PUA 変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>各テキストに対応する PUA 文字列のリスト</returns>
+        public IReadOnlyList<string> ToPuaStringBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToArray(texts, ToPuaString);
+        }
+
+        // =====================================================================
+        // Prosody API
+        // =====================================================================
+
+        /// <summary>
+        /// IPA 音素配列と韻律情報を返す。
+        /// </summary>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>韻律情報付き IPA 音素結果</returns>
+        public EnglishProsodyResult ToIpaWithProsody(string text)
+        {
+            ThrowIfDisposed();
+            if (string.IsNullOrWhiteSpace(text))
+                return new EnglishProsodyResult(Array.Empty<string>(), Array.Empty<EnglishProsodyInfo>());
+
+            var normalized = _options.EnableNormalization ? EnglishNormalizer.Normalize(text) : text;
+            var words = Tokenize(normalized);
+            var allPhonemes = new List<string>();
+            var allProsody = new List<EnglishProsodyInfo>();
+
+            foreach (var word in words)
+            {
+                var pron = LookupWordInternal(word);
+                if (pron == null) continue;
+                var ipaPhonemes = PiperIpaConverter.Convert(pron, word, _options.RemoveFunctionWordStress);
+
+                // ストレスマーカーを除外した実音素数を数える（A3 用）
+                int phonemeCount = 0;
+                for (int i = 0; i < ipaPhonemes.Length; i++)
+                {
+                    if (ipaPhonemes[i] != "\u02C8" && ipaPhonemes[i] != "\u02CC")
+                        phonemeCount++;
+                }
+
+                // ストレスマーカーをスキップし、直後の音素に対応するストレスレベルを A2 に設定
+                int pendingStress = 0;
+                for (int i = 0; i < ipaPhonemes.Length; i++)
+                {
+                    if (ipaPhonemes[i] == "\u02C8")
+                    {
+                        pendingStress = 1; // primary
+                        continue;
+                    }
+                    if (ipaPhonemes[i] == "\u02CC")
+                    {
+                        pendingStress = 2; // secondary
+                        continue;
+                    }
+
+                    allPhonemes.Add(ipaPhonemes[i]);
+                    allProsody.Add(new EnglishProsodyInfo(0, pendingStress, phonemeCount));
+                    pendingStress = 0;
+                }
+            }
+
+            return new EnglishProsodyResult(allPhonemes.ToArray(), allProsody.ToArray());
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で韻律情報付き IPA に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストのリスト</param>
+        /// <returns>各テキストに対応する韻律情報付き結果のリスト</returns>
+        public IReadOnlyList<EnglishProsodyResult> ToIpaWithProsodyBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToArray(texts, ToIpaWithProsody);
+        }
+
+        // =====================================================================
+        // 静的ユーティリティ
+        // =====================================================================
+
+        /// <summary>LTS モデルデータを外部から設定する（Unity StreamingAssets / WebGL 対応）。
+        /// エンジン生成前に呼び出すこと。</summary>
+        public static void SetLtsModelData(byte[] data)
+        {
+            LtsEngine.SetModelData(data);
+        }
+
+        /// <summary>LTS モデルデータをストリームから設定する。</summary>
+        public static void SetLtsModelData(Stream stream)
+        {
+            LtsEngine.SetModelData(stream);
         }
 
         /// <inheritdoc />
@@ -453,5 +682,6 @@ namespace DotNetG2P.English
             if (Volatile.Read(ref _disposed) != 0)
                 throw new ObjectDisposedException(nameof(EnglishG2PEngine));
         }
+
     }
 }

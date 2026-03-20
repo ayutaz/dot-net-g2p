@@ -23,38 +23,45 @@ namespace DotNetG2P.Portuguese.Data
 
         private static Dictionary<string, Dictionary<byte, PortuguesePronunciation>> LoadEntries()
         {
-            var assembly = typeof(PortugueseExceptionDictionary).Assembly;
-            using var stream = assembly.GetManifestResourceStream("DotNetG2P.Portuguese.Data.portuguese_exceptions.master.tsv")
-                ?? throw new InvalidOperationException("Embedded resource not found: portuguese_exceptions.master.tsv");
-            using var reader = new StreamReader(stream);
-
             var entries = new Dictionary<string, Dictionary<byte, PortuguesePronunciation>>(StringComparer.Ordinal);
-            string? line;
-            while ((line = reader.ReadLine()) != null)
+            try
             {
-                line = line.Trim();
-                if (line.Length == 0 || line[0] == '#' || line.StartsWith("surface\t", StringComparison.Ordinal))
-                    continue;
+                var assembly = typeof(PortugueseExceptionDictionary).Assembly;
+                using var stream = assembly.GetManifestResourceStream("DotNetG2P.Portuguese.Data.portuguese_exceptions.master.tsv");
+                if (stream == null) return entries;
+                using var reader = new StreamReader(stream);
 
-                var parts = line.Split('\t');
-                if (parts.Length < 6)
-                    continue;
-
-                var w = parts[0];
-                if (!TryParseDialect(parts[1], out var dialectKey)
-                    || !int.TryParse(parts[3], out var stressIndex))
+                string? line;
+                while ((line = reader.ReadLine()) != null)
                 {
-                    continue;
-                }
+                    line = line.Trim();
+                    if (line.Length == 0 || line[0] == '#' || line.StartsWith("surface\t", StringComparison.Ordinal))
+                        continue;
 
-                var pron = ParsePronunciation(parts[4], stressIndex);
-                if (!entries.TryGetValue(w, out var byDialect))
-                {
-                    byDialect = new Dictionary<byte, PortuguesePronunciation>();
-                    entries[w] = byDialect;
-                }
+                    var parts = line.Split('\t');
+                    if (parts.Length < 6)
+                        continue;
 
-                byDialect[dialectKey] = pron;
+                    var w = parts[0];
+                    if (!TryParseDialect(parts[1], out var dialectKey)
+                        || !int.TryParse(parts[3], out var stressIndex))
+                    {
+                        continue;
+                    }
+
+                    var pron = ParsePronunciation(parts[4], stressIndex);
+                    if (!entries.TryGetValue(w, out var byDialect))
+                    {
+                        byDialect = new Dictionary<byte, PortuguesePronunciation>();
+                        entries[w] = byDialect;
+                    }
+
+                    byDialect[dialectKey] = pron;
+                }
+            }
+            catch
+            {
+                return entries;
             }
 
             return entries;

@@ -87,11 +87,26 @@ namespace DotNetG2P.Multilingual
                 options.JapaneseOptions ?? G2POptions.Default);
 
             // その他の言語エンジンは遅延初期化（Lazy<T>はデフォルトでスレッドセーフ）
-            _lazyEnglishEngine = new Lazy<EnglishG2PEngine>(
-                () => new EnglishG2PEngine(options.EnglishOptions ?? EnglishG2POptions.Default));
+            _lazyEnglishEngine = new Lazy<EnglishG2PEngine>(() =>
+            {
+                var opts = options.EnglishOptions ?? EnglishG2POptions.Default;
+                if (options.EnglishDictionaryPath != null && options.EnglishLtsModelPath != null)
+                    return new EnglishG2PEngine(options.EnglishDictionaryPath, options.EnglishLtsModelPath, opts);
+                if (options.EnglishDictionaryPath != null)
+                    return new EnglishG2PEngine(options.EnglishDictionaryPath, opts);
+                return new EnglishG2PEngine(opts);
+            });
 
-            _lazyChineseEngine = new Lazy<ChineseG2PEngine>(
-                () => new ChineseG2PEngine(options.ChineseOptions ?? ChineseG2POptions.Default));
+            _lazyChineseEngine = new Lazy<ChineseG2PEngine>(() =>
+            {
+                if (options.ChineseCharDictionaryPath != null)
+                {
+                    if (options.ChinesePhraseDictionaryPath != null)
+                        return new ChineseG2PEngine(options.ChineseCharDictionaryPath, options.ChinesePhraseDictionaryPath, options.ChineseOptions ?? ChineseG2POptions.Default);
+                    return new ChineseG2PEngine(options.ChineseCharDictionaryPath, options.ChineseOptions ?? ChineseG2POptions.Default);
+                }
+                return new ChineseG2PEngine(options.ChineseOptions ?? ChineseG2POptions.Default);
+            });
 
             _lazyKoreanEngine = new Lazy<KoreanG2PEngine>(
                 () => new KoreanG2PEngine(options.KoreanOptions ?? KoreanG2POptions.Default));

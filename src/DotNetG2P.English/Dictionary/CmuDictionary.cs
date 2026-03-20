@@ -60,6 +60,22 @@ namespace DotNetG2P.English
         }
 
         /// <summary>
+        /// ストリームからCMU辞書を読み込む（Unity StreamingAssets / WebGL対応）。
+        /// </summary>
+        /// <param name="stream">CMU辞書ストリーム</param>
+        /// <returns>読み込まれたCMU辞書</returns>
+        public static CmuDictionary LoadFromStream(Stream stream)
+        {
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+
+            using (var reader = new StreamReader(stream, encoding: System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024, leaveOpen: true))
+            {
+                return ParseFromReader(reader);
+            }
+        }
+
+        /// <summary>
         /// 単語の発音を検索する。
         /// </summary>
         /// <param name="word">検索する単語（大文字小文字不問）</param>
