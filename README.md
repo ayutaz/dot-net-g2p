@@ -450,10 +450,10 @@ using var multiUnityEngine = new MultilingualG2PEngine(japaneseDicPath, unityOpt
 | `ToIPA(text, includeTones)` | `string` | 声調制御付きIPA表記 |
 | `ToZhuyin(text)` | `string` | 注音符号（ボポモフォ）表記 |
 | `ToZhuyin(text, includeTones)` | `string` | 声調制御付き注音表記 |
-| `ToPinyinBatch(texts)` | `string[]` | バッチピンイン変換 |
-| `ToPinyinBatch(texts, style)` | `string[]` | バッチピンイン変換（スタイル指定） |
-| `ToPinyinListBatch(texts)` | `string[][]` | バッチピンインリスト変換 |
-| `ToPinyinListBatch(texts, style)` | `string[][]` | バッチピンインリスト変換（スタイル指定） |
+| `ToPinyinBatch(texts)` | `IReadOnlyList<string>` | バッチピンイン変換 |
+| `ToPinyinBatch(texts, style)` | `IReadOnlyList<string>` | バッチピンイン変換（スタイル指定） |
+| `ToPinyinListBatch(texts)` | `IReadOnlyList<string[]>` | バッチピンインリスト変換 |
+| `ToPinyinListBatch(texts, style)` | `IReadOnlyList<string[]>` | バッチピンインリスト変換（スタイル指定） |
 | `ToIPABatch(texts)` | `string[]` | バッチIPA変換 |
 | `ToIPABatch(texts, includeTones)` | `string[]` | バッチIPA変換（声調制御） |
 | `ToZhuyinBatch(texts)` | `string[]` | バッチ注音変換 |
@@ -500,6 +500,7 @@ using var multiUnityEngine = new MultilingualG2PEngine(japaneseDicPath, unityOpt
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<SpanishPhoneme>>` | バッチ構造化音素リスト変換 |
 | `ToPuaPhonemes(text)` | `string[]` | PUA マッピング済み音素配列 |
 | `ToPuaString(text)` | `string` | PUA マッピング済み文字列（スペース区切り） |
 | `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | バッチ PUA 文字列変換 |
