@@ -1,7 +1,7 @@
 {
   "name": "com.dotnetg2p.chinese",
   "displayName": "DotNetG2P Chinese",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "unity": "2021.2",
   "description": "Chinese Grapheme-to-Phoneme (G2P) library for .NET and Unity. Pinyin conversion with tone support, polyphone disambiguation, tone sandhi (third-tone and yi/bu rules), and multiple output formats (numbered, diacritical, Zhuyin).",
   "keywords": [
