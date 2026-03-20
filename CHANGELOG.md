@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-03-20
+
+### Added
+- 全6パッケージ（En/Es/Fr/Pt/Ko/Zh）の Unity embedded resource 問題に対応
+  - Ko/Es/Fr/Pt: 例外辞書のグレースフルフォールバック（resource 欠落時は空辞書で続行）
+  - Chinese: `PinyinCharDictionary.LoadFromStream()` / `PinyinPhraseDictionary.LoadFromStream()` 追加
+  - Chinese: `ChineseG2PEngine` の辞書受け取りコンストラクタを `public` 化
+  - English: `CmuDictionary.LoadFromStream()` / `EnglishG2PEngine.SetLtsModelData()` 追加
+  - English: `EnglishG2PEngine(string cmuDictPath, string ltsModelPath)` コンストラクタ追加
+- En/Es/Fr/Pt に `[Preserve]` 属性 + `PreserveAttribute.cs` 追加（Unity IL2CPP AOT strip 防止）
+- En/Es/Fr/Pt に PUA マッピング API 追加（`ToPuaPhonemes()` / `ToPuaString()` + バッチ）
+- En/Es/Fr/Pt に韻律情報 API 追加（`ToIpaWithProsody()` + バッチ、`ProsodyInfo` / `ProsodyResult` モデル）
+- English: piper-plus 互換 IPA 変換（`PiperIpaConverter`、`FunctionWordList` 67語、`ToPiperIpaPhonemes()` / `ToPiperIpa()` API）
+- Chinese: `ToPuaPhonemes()` に各音節末尾のトーン PUA 文字を自動追加
+- Es/Fr/Pt: 機能語リスト追加（`FunctionWordList.cs`）
+- `MultilingualG2POptions` に辞書パス指定オプション追加（`EnglishDictionaryPath` / `EnglishLtsModelPath` / `ChineseCharDictionaryPath` / `ChinesePhraseDictionaryPath`）
+- `tools/sync-shared-internals.ps1` に En/Es/Fr/Pt パッケージを追加
+
+### Changed
+- `PreserveAttribute` に `#if !UNITY_5_3_OR_NEWER` ガード追加（全6パッケージ、Unity 環境での型重複防止）
+- `LoadFromStream()` で `leaveOpen: true` に統一（CmuDictionary / PinyinCharDictionary / PinyinPhraseDictionary）
+- En/Es/Fr/Pt の Prosody A2/A3 を piper-plus 仕様に統一（A2=ストレスレベル、A3=語音素数）
+
 ## [1.7.0] - 2026-03-18
 
 ### Fixed
@@ -251,7 +274,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - LibNMeCab依存を削除
 
-[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.4.0...v1.5.0

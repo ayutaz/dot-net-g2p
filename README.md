@@ -69,12 +69,12 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日本語部分は
 - **複数の出力形式** — 音素列 / カタカナ / ESPnet韻律記号 / VOICEVOX互換AccentPhrase / HTSフルコンテキストラベル / 韻律特徴量（A1/A2/A3）
 - **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、UPMパッケージ提供
 - **拡張可能な設計** — `ITokenizer`インターフェースにより形態素解析エンジンを差し替え可能
-- **英語G2P対応** — CMU辞書（135,000語）+ Flite LTSルールによるOOV推定、IPA/X-SAMPA出力、テキスト正規化、同綴異音語解決
+- **英語G2P対応** — CMU辞書（135,000語）+ Flite LTSルールによるOOV推定、IPA/X-SAMPA出力、テキスト正規化、同綴異音語解決、piper-plus 互換 IPA/PUA/Prosody API
 - **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力、piper-plus 互換 IPA/PUA/Prosody API
 - **韓国語G2P対応** — Hangul-first の規則ベース変換、Jamo 分解、例外辞書、軽量正規化、`ㅎ` 系変化・終声中和・連音・濃音化・鼻音化・流音化を含む標準発音寄り rule engine、piper-plus 互換 IPA/PUA/Prosody API、benchmark harness、external corpus gate、performance test を実装
-- **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応
-- **フランス語G2P対応** — ルールベース6フェーズG2P変換（ダイグラフ→文脈依存→鼻母音化→半母音化→位置の法則→黙字）、音素ベース音節分割、Metropolitan/Conservative方言切り替え、異音処理（R無声化・阻害音有声性同化）、例外辞書500+エントリ（外来語/不規則語/動詞3複/学術語/同綴異音語）、テキスト正規化（数値/日付/時刻/通貨/単位/略語/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
-- **ポルトガル語G2P対応** — ルールベースG2P変換 + 例外辞書（560+エントリ）、音節分割、ストレス付与、Brazilian/European方言切り替え、7種の異音規則（母音弱化・鼻音同化・歯擦音有声性同化・閉鎖音弱化・歯擦音後部歯茎化・t/d破擦音化・コーダl異音）、テキスト正規化（13段階パイプライン: 略語/日付/時刻/通貨/%/単位/数値範囲/小数/数値/記号）、IPA/X-SAMPA出力、全量コーパス評価ツールを実装
+- **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応。PUA/Prosody API
+- **フランス語G2P対応** — ルールベース6フェーズG2P変換（ダイグラフ→文脈依存→鼻母音化→半母音化→位置の法則→黙字）、音素ベース音節分割、Metropolitan/Conservative方言切り替え、異音処理（R無声化・阻害音有声性同化）、例外辞書500+エントリ（外来語/不規則語/動詞3複/学術語/同綴異音語）、テキスト正規化（数値/日付/時刻/通貨/単位/略語/記号）、IPA/X-SAMPA出力、全量コーパス評価ツール、PUA/Prosody API を実装
+- **ポルトガル語G2P対応** — ルールベースG2P変換 + 例外辞書（560+エントリ）、音節分割、ストレス付与、Brazilian/European方言切り替え、7種の異音規則（母音弱化・鼻音同化・歯擦音有声性同化・閉鎖音弱化・歯擦音後部歯茎化・t/d破擦音化・コーダl異音）、テキスト正規化（13段階パイプライン: 略語/日付/時刻/通貨/%/単位/数値範囲/小数/数値/記号）、IPA/X-SAMPA出力、全量コーパス評価ツール、PUA/Prosody API を実装
 - **日英中韓西仏葡混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、Hangul block は Korean segment として自動ルーティング。`DefaultLatinLanguage` により英語/スペイン語/フランス語/ポルトガル語のラテン文字系セグメントを切り替え可能。ポルトガル語は特有文字(ã/õ)・ç接尾辞パターン・高頻度語彙で自動判定。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
 
 ## インストール
@@ -235,6 +235,15 @@ using var enEngine = new EnglishG2PEngine();
 string enPhonemes = enEngine.ToPhonemes("hello world");
 // => "HH AH0 L OW1 W ER1 L D"
 
+// piper-plus 互換 IPA
+string enPiperIpa = enEngine.ToPiperIpa("hello world");
+
+// PUA マッピング
+string[] enPua = enEngine.ToPuaPhonemes("hello world");
+
+// Prosody 情報
+var enResult = enEngine.ToIpaWithProsody("hello world");
+
 // === 韓国語G2P ===
 using DotNetG2P.Korean;
 
@@ -270,6 +279,12 @@ using var esAlloEngine = new SpanishG2PEngine(new SpanishG2POptions(enableAlloph
 string esAllo = esAlloEngine.ToIPA("uva");
 // => "ˈuβa"
 
+// PUA マッピング
+string[] esPua = esEngine.ToPuaPhonemes("hola");
+
+// Prosody 情報
+var esResult = esEngine.ToIpaWithProsody("hola");
+
 // === フランス語G2P ===
 using DotNetG2P.French;
 
@@ -287,6 +302,12 @@ string frAllo = frAlloEngine.ToIPA("autre");
 
 // X-SAMPA出力
 string frXsampa = frEngine.ToXSampa("bonjour");
+
+// PUA マッピング
+string[] frPua = frEngine.ToPuaPhonemes("bonjour");
+
+// Prosody 情報
+var frResult = frEngine.ToIpaWithProsody("bonjour");
 
 // === ポルトガル語G2P ===
 using DotNetG2P.Portuguese;
@@ -310,6 +331,12 @@ string ptAllo = ptAlloEngine.ToIPA("cidade");
 // X-SAMPA出力
 string ptXsampa = ptEngine.ToXSampa("obrigado");
 string ptXsampaNoStress = ptEngine.ToXSampaWithoutStress("obrigado");
+
+// PUA マッピング
+string[] ptPua = ptEngine.ToPuaPhonemes("obrigado");
+
+// Prosody 情報
+var ptResult = ptEngine.ToIpaWithProsody("obrigado");
 
 // バッチ処理
 var ptBatch = ptEngine.ToIPABatch(new[] { "bom dia", "boa noite" });
@@ -354,6 +381,14 @@ var ptOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Portug
 using var multiPtEngine = new MultilingualG2PEngine(ptOptions);
 multiPtEngine.ToPhonemes("obrigado世界");
 // ポルトガル語部分→IPA音素、日本語部分→日本語音素
+
+// Unity環境での辞書パス指定（StreamingAssets等）
+var unityOptions = new MultilingualG2POptions(
+    englishDictionaryPath: Path.Combine(Application.streamingAssetsPath, "cmudict.dict"),
+    englishLtsModelPath: Path.Combine(Application.streamingAssetsPath, "cmu_lts_model.bin"),
+    chineseCharDictionaryPath: Path.Combine(Application.streamingAssetsPath, "pinyin_char.txt"),
+    chinesePhraseDictionaryPath: Path.Combine(Application.streamingAssetsPath, "pinyin_phrase.txt"));
+using var multiUnityEngine = new MultilingualG2PEngine(japaneseDicPath, unityOptions);
 ```
 
 ## API リファレンス
@@ -392,6 +427,14 @@ multiPtEngine.ToPhonemes("obrigado世界");
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
 | `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<EnglishPhoneme>>` | バッチ構造化音素リスト変換 |
+| `ToPiperIpaPhonemes(text)` | `string[]` | piper-plus 互換 IPA 音素配列 |
+| `ToPiperIpa(text)` | `string` | piper-plus 互換 IPA 文字列（スペース区切り） |
+| `ToPiperIpaBatch(texts)` | `IReadOnlyList<string>` | バッチ piper-plus IPA 変換 |
+| `ToPuaPhonemes(text)` | `string[]` | PUA マッピング済み音素配列 |
+| `ToPuaString(text)` | `string` | PUA マッピング済み文字列（スペース区切り） |
+| `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | バッチ PUA 文字列変換 |
+| `ToIpaWithProsody(text)` | `EnglishProsodyResult` | IPA 音素配列 + 韻律情報 |
+| `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<EnglishProsodyResult>` | バッチ IPA+Prosody 変換 |
 
 ### ChineseG2PEngine
 
@@ -457,6 +500,11 @@ multiPtEngine.ToPhonemes("obrigado世界");
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
+| `ToPuaPhonemes(text)` | `string[]` | PUA マッピング済み音素配列 |
+| `ToPuaString(text)` | `string` | PUA マッピング済み文字列（スペース区切り） |
+| `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | バッチ PUA 文字列変換 |
+| `ToIpaWithProsody(text)` | `SpanishProsodyResult` | IPA 音素配列 + 韻律情報 |
+| `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<SpanishProsodyResult>` | バッチ IPA+Prosody 変換 |
 
 ### FrenchG2PEngine
 
@@ -473,6 +521,11 @@ multiPtEngine.ToPhonemes("obrigado世界");
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
 | `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<FrenchPhoneme>>` | バッチ構造化音素リスト変換 |
+| `ToPuaPhonemes(text)` | `string[]` | PUA マッピング済み音素配列 |
+| `ToPuaString(text)` | `string` | PUA マッピング済み文字列（スペース区切り） |
+| `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | バッチ PUA 文字列変換 |
+| `ToIpaWithProsody(text)` | `FrenchProsodyResult` | IPA 音素配列 + 韻律情報 |
+| `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<FrenchProsodyResult>` | バッチ IPA+Prosody 変換 |
 
 ### PortugueseG2PEngine
 
@@ -489,6 +542,11 @@ multiPtEngine.ToPhonemes("obrigado世界");
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
 | `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<PortuguesePhoneme>>` | バッチ構造化音素リスト変換 |
+| `ToPuaPhonemes(text)` | `string[]` | PUA マッピング済み音素配列 |
+| `ToPuaString(text)` | `string` | PUA マッピング済み文字列（スペース区切り） |
+| `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | バッチ PUA 文字列変換 |
+| `ToIpaWithProsody(text)` | `PortugueseProsodyResult` | IPA 音素配列 + 韻律情報 |
+| `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<PortugueseProsodyResult>` | バッチ IPA+Prosody 変換 |
 
 ### MultilingualG2PEngine
 
@@ -507,6 +565,11 @@ Multilingual の補足:
 - 埋め込み中国語辞書は `ChineseG2PEngine` と共有され、`TextSegmenter` 単独の追加辞書常駐は実測で約 `0.02MB` です
 - それでも根拠が弱い曖昧な純漢字 run だけ `DefaultCjkLanguage` にフォールバックします
 - `MultilingualG2POptions.KoreanOptions` で `UiVariationMode` や正規化設定を multilingual 側から渡せます
+- Unity 環境では `MultilingualG2POptions` の辞書パスオプションで埋め込みリソース以外のファイルを指定できます:
+  - `EnglishDictionaryPath`: 英語 CMU 辞書のファイルパス（null 時は埋め込みリソースを使用）
+  - `EnglishLtsModelPath`: 英語 LTS モデルのファイルパス（null 時は埋め込みリソースを使用）
+  - `ChineseCharDictionaryPath`: 中国語単字辞書のファイルパス（null 時は埋め込みリソースを使用）
+  - `ChinesePhraseDictionaryPath`: 中国語フレーズ辞書のファイルパス（null 時は埋め込みリソースを使用）
 - 現在の Multilingual 回帰: `448 passed`（7言語対応）
 - `MultilingualPerformanceTests`: `8 passed`
 - `MultilingualKoreanPerformanceTests`: `2 passed`
