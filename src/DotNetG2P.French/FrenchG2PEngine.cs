@@ -6,14 +6,18 @@ using DotNetG2P.Internal;
 using DotNetG2P.French.Conversion;
 using DotNetG2P.French.Normalization;
 using DotNetG2P.French.Rules;
+#if UNITY_5_3_OR_NEWER
 using UnityEngine.Scripting;
+#endif
 
 namespace DotNetG2P.French
 {
     /// <summary>
     /// フランス語G2P（Grapheme-to-Phoneme）エンジン。
     /// </summary>
+#if UNITY_5_3_OR_NEWER
     [Preserve]
+#endif
     public sealed class FrenchG2PEngine : IDisposable
     {
         private readonly FrenchG2POptions _options;

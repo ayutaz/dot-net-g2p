@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using DotNetG2P.Internal;
+#if UNITY_5_3_OR_NEWER
 using UnityEngine.Scripting;
+#endif
 using DotNetG2P.Korean.Conversion;
 using DotNetG2P.Korean.Data;
 using DotNetG2P.Korean.Normalization;
@@ -15,7 +17,9 @@ namespace DotNetG2P.Korean
     /// 韓国語 G2P エンジン。
     /// Hangul-first の規則ベース処理で Jamo / 音素列へ変換する。
     /// </summary>
+#if UNITY_5_3_OR_NEWER
     [Preserve]
+#endif
     public sealed class KoreanG2PEngine : IDisposable
     {
         private readonly KoreanG2POptions _options;

@@ -1,7 +1,7 @@
 {
   "name": "com.dotnetg2p.portuguese",
   "displayName": "DotNetG2P.Portuguese",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "unity": "2021.2",
   "description": "Portuguese G2P library for .NET and Unity. Rule-based IPA conversion with syllabification, stress assignment, nasal vowels, and Brazilian/European dialect support.",
   "keywords": ["g2p", "portuguese", "tts", "phoneme", "ipa"],
