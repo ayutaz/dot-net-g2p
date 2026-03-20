@@ -383,15 +383,13 @@ multiPtEngine.ToPhonemes("obrigado世界");
 // ポルトガル語部分→IPA音素、日本語部分→日本語音素
 
 // Unity環境での辞書パス指定（StreamingAssets等）
-// using System.IO;
-// using UnityEngine;
-var streamingAssets = "Assets/StreamingAssets"; // Unity: Application.streamingAssetsPath
-var japaneseDicPath = Path.Combine(streamingAssets, "naist-jdic");
+var streamingAssets = Application.streamingAssetsPath; // UnityEngine.Application
+var japaneseDicPath = System.IO.Path.Combine(streamingAssets, "naist-jdic");
 var unityOptions = new MultilingualG2POptions(
-    englishDictionaryPath: Path.Combine(streamingAssets, "cmudict.dict"),
-    englishLtsModelPath: Path.Combine(streamingAssets, "cmu_lts_model.bin"),
-    chineseCharDictionaryPath: Path.Combine(streamingAssets, "pinyin_char.txt"),
-    chinesePhraseDictionaryPath: Path.Combine(streamingAssets, "pinyin_phrase.txt"));
+    englishDictionaryPath: System.IO.Path.Combine(streamingAssets, "cmudict.dict"),
+    englishLtsModelPath: System.IO.Path.Combine(streamingAssets, "cmu_lts_model.bin"),
+    chineseCharDictionaryPath: System.IO.Path.Combine(streamingAssets, "pinyin_char.txt"),
+    chinesePhraseDictionaryPath: System.IO.Path.Combine(streamingAssets, "pinyin_phrase.txt"));
 using var multiUnityEngine = new MultilingualG2PEngine(japaneseDicPath, unityOptions);
 ```
 
