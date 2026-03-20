@@ -4,7 +4,9 @@ using System.Text;
 using System.Threading;
 using DotNetG2P.Chinese.Conversion;
 using DotNetG2P.Internal;
+#if UNITY_5_3_OR_NEWER
 using UnityEngine.Scripting;
+#endif
 
 namespace DotNetG2P.Chinese
 {
@@ -15,7 +17,9 @@ namespace DotNetG2P.Chinese
     /// <remarks>
     /// このクラスはスレッドセーフです。辞書はコンストラクタで読み込まれ、以後は読み取り専用です。
     /// </remarks>
+#if UNITY_5_3_OR_NEWER
     [Preserve]
+#endif
     public sealed class ChineseG2PEngine : IDisposable
     {
         private readonly PinyinCharDictionary _charDictionary;

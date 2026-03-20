@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using DotNetG2P.Internal;
+#if UNITY_5_3_OR_NEWER
 using UnityEngine.Scripting;
+#endif
 using DotNetG2P.Portuguese.Conversion;
 using DotNetG2P.Portuguese.Normalization;
 using DotNetG2P.Portuguese.Rules;
@@ -13,7 +15,9 @@ namespace DotNetG2P.Portuguese
     /// <summary>
     /// ポルトガル語G2P（Grapheme-to-Phoneme）エンジン。
     /// </summary>
+#if UNITY_5_3_OR_NEWER
     [Preserve]
+#endif
     public sealed class PortugueseG2PEngine : IDisposable
     {
         private readonly PortugueseG2POptions _options;

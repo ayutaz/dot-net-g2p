@@ -6,14 +6,18 @@ using DotNetG2P.Internal;
 using DotNetG2P.Spanish.Conversion;
 using DotNetG2P.Spanish.Normalization;
 using DotNetG2P.Spanish.Rules;
+#if UNITY_5_3_OR_NEWER
 using UnityEngine.Scripting;
+#endif
 
 namespace DotNetG2P.Spanish
 {
     /// <summary>
     /// スペイン語G2P（Grapheme-to-Phoneme）エンジン。
     /// </summary>
+#if UNITY_5_3_OR_NEWER
     [Preserve]
+#endif
     public sealed class SpanishG2PEngine : IDisposable
     {
         private readonly SpanishG2POptions _options;
