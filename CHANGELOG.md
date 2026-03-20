@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.2] - 2026-03-21
+
+### Fixed
+- Unity 環境で `[Preserve]` 属性による CS0246 エラーが依然発生していた問題を修正
+  - `noEngineReferences: true` だと `#if UNITY_5_3_OR_NEWER` ガード内の `using UnityEngine.Scripting` が有効化されるが `UnityEngine.dll` が参照不可のため矛盾していた
+  - `[Preserve]` を使用する6パッケージ（English/Chinese/Korean/Spanish/French/Portuguese）の asmdef で `noEngineReferences: false` に変更
+
+### Changed
+- `UnityPreserveGuardTests` を全パッケージ対象に拡張し、`noEngineReferences` と `[Preserve]` の矛盾検出テストを追加
+
 ## [1.8.1] - 2026-03-21
 
 ### Fixed
@@ -283,7 +293,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - LibNMeCab依存を削除
 
-[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.8.2...HEAD
+[1.8.2]: https://github.com/ayutaz/dot-net-g2p/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/ayutaz/dot-net-g2p/compare/v1.8.0...v1.8.1
 [1.8.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.6.0...v1.7.0
