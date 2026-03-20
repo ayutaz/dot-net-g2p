@@ -96,9 +96,11 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
     - LanguageDetector（Unicode文字種ベース言語判定）、TextSegmenter（2パスセグメント分割）
     - MultilingualG2PEngine（日英中G2Pファサード、IDisposable、lock保護）
     - テスト162件追加
-  - **E7（Unity統合・piper-plus互換IPA）**: 実装中（fix/unity-integration-issues ブランチ）
+  - **E7（Unity統合・piper-plus互換IPA）**: 完了
     - CmuDictionary.LoadFromStream()、LtsEngine.SetModelData() 追加
     - EnglishG2PEngine に Stream/パスベースコンストラクタ追加
+    - EnglishG2PEngine(string cmuDictPath, string ltsModelPath) コンストラクタ追加
+    - EnglishG2POptions に RemoveFunctionWordStress / UsePiperIpaStyle 追加
     - PiperIpaConverter（長音マーク・破擦音分割・AA+Rマージ・機能語ストレス除去67語）
     - PUA マッピング API: ToPuaPhonemes(), ToPuaString() + バッチ（7 PUAエントリ）
     - 韻律情報 API: ToIpaWithProsody() + バッチ（EnglishProsodyInfo/Result）
@@ -227,13 +229,15 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
   - 7パッケージに欠落していた `package.json.meta` を追加
   - CI に Unity `.meta` ファイル整合性チェックジョブを追加
   - `tools/sync-shared-internals.ps1` 共有 Internal ファイル同期ツールを追加
-- **Unity 統合対応**: 実装中（fix/unity-integration-issues ブランチ）
+- **Unity 統合対応 (v1.8.0)**: 完了（fix/unity-integration-issues ブランチ）
   - 全6パッケージ（En/Es/Fr/Pt/Ko/Zh）の embedded resource 問題対応
   - Ko/Es/Fr/Pt: 例外辞書グレースフルフォールバック
   - Zh/En: LoadFromStream + パスベースコンストラクタ public 化
   - En/Es/Fr/Pt: PUA + Prosody API 追加
   - En: piper-plus 互換 IPA（PiperIpaConverter + FunctionWordList）
-  - Multilingual: 辞書パス指定オプション追加
+  - Es/Fr/Pt: FunctionWordList.cs（機能語ストレス除去）
+  - Chinese: ToPuaPhonemes() にトーンPUA自動追加
+  - Multilingual: 辞書パス指定オプション + EnglishLtsModelPath オプション追加
   - 全パッケージ: [Preserve] 属性 + #if !UNITY_5_3_OR_NEWER ガード
 
 ## ビルド・実行
@@ -368,7 +372,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── Stress.cs                # ストレスenum (None/NoStress/Primary/Secondary)
 │       │   ├── EnglishPhoneme.cs        # ストレス付き音素 readonly struct
 │       │   ├── EnglishPronunciation.cs  # 発音クラス (音素配列)
-│       │   └── ArpabetParser.cs         # ARPAbetパーサー
+│       │   ├── ArpabetParser.cs         # ARPAbetパーサー
+│       │   ├── EnglishProsodyInfo.cs    # 韻律情報 readonly struct
+│       │   └── EnglishProsodyResult.cs  # 韻律結果クラス
 │       ├── Dictionary/
 │       │   ├── CmuDictionary.cs         # CMU辞書ルックアップ (135,166エントリ)
 │       │   └── Data/cmudict.dict        # CMU辞書 (EmbeddedResource)
@@ -391,6 +397,12 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │       │   ├── HomographEntry.cs        # エントリ・ルールモデル
 │       │   ├── PosGuesser.cs            # 軽量品詞推定
 │       │   └── PosTag.cs               # 品詞タグenum
+│       ├── Conversion/                  # 変換ユーティリティ (E7)
+│       │   ├── PiperIpaConverter.cs     # piper-plus 互換 ARPAbet→IPA 変換
+│       │   ├── EnglishPuaMapper.cs      # PUA マッピング (7エントリ)
+│       │   └── FunctionWordList.cs      # 機能語リスト (67語)
+│       ├── Internal/                    # 内部ユーティリティ
+│       │   └── PreserveAttribute.cs     # Unity IL2CPP strip 防止
 │       ├── package.json                 # UPM (com.dotnetg2p.english)
 │       └── DotNetG2P.English.asmdef     # Unity Assembly Definition
 │
@@ -402,17 +414,23 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── SpanishIpaPhoneme.cs     # IPA音素enum : byte (28種)
 │   │   │   ├── SpanishPhoneme.cs        # ストレス付き音素 readonly struct
 │   │   │   ├── SpanishPronunciation.cs  # 発音クラス (音素配列ラッパー)
-│   │   │   └── Dialect.cs               # 方言enum : byte (LatinAmerican, Castilian)
+│   │   │   ├── Dialect.cs               # 方言enum : byte (LatinAmerican, Castilian)
+│   │   │   ├── SpanishProsodyInfo.cs    # 韻律情報 readonly struct
+│   │   │   └── SpanishProsodyResult.cs  # 韻律結果クラス
 │   │   ├── Rules/
 │   │   │   ├── GraphemeToPhonemeRules.cs # コアG2Pルール（switch文ベース3フェーズ）
 │   │   │   ├── SyllableParser.cs        # 音節分割 (onset maximization)
 │   │   │   ├── StressAssigner.cs        # ストレス位置決定
 │   │   │   └── AllophoneProcessor.cs    # 異音規則 (β,ð,ɣ弱化, 鼻音同化) [S2]
+│   │   ├── Internal/                    # 内部ユーティリティ
+│   │   │   └── PreserveAttribute.cs     # Unity IL2CPP strip 防止
 │   │   ├── Normalization/
 │   │   │   └── SpanishNormalizer.cs     # テキスト正規化 (数値/日付/時刻/単位/略語/記号)
 │   │   ├── Conversion/
 │   │   │   ├── IpaConverter.cs          # IPA変換
-│   │   │   └── XSampaConverter.cs       # X-SAMPA変換 [S3]
+│   │   │   ├── XSampaConverter.cs       # X-SAMPA変換 [S3]
+│   │   │   ├── SpanishPuaMapper.cs      # PUA マッピング (3エントリ)
+│   │   │   └── FunctionWordList.cs      # 機能語リスト (27語、piper-plus準拠)
 │   │   ├── package.json                 # UPM (com.dotnetg2p.spanish)
 │   │   └── DotNetG2P.Spanish.asmdef     # Unity Assembly Definition
 │   │
@@ -425,13 +443,17 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── FrenchIpaPhoneme.cs      # IPA音素enum : byte (40種)
 │   │   │   ├── FrenchPhoneme.cs         # 音素 readonly struct (Phoneme + IsSyllableNucleus)
 │   │   │   ├── FrenchPronunciation.cs   # 発音クラス (音素配列 + 音節オフセット)
-│   │   │   └── FrenchDialect.cs         # 方言enum : byte (Metropolitan, Conservative)
+│   │   │   ├── FrenchDialect.cs         # 方言enum : byte (Metropolitan, Conservative)
+│   │   │   ├── FrenchProsodyInfo.cs     # 韻律情報 readonly struct
+│   │   │   └── FrenchProsodyResult.cs   # 韻律結果クラス
 │   │   ├── Rules/
 │   │   │   ├── GraphemeToPhonemeRules.cs # コアG2Pルール (6フェーズ) [F1]
 │   │   │   ├── FrenchOrthography.cs     # 正書法ヘルパー [F1]
 │   │   │   ├── NasalVowelizer.cs        # 鼻母音化ロジック [F1]
 │   │   │   ├── FrenchSyllabifier.cs     # 音素ベース音節分割 [F1]
 │   │   │   └── AllophoneProcessor.cs    # 異音規則 (R無声化、阻害音有声性同化) [F2]
+│   │   ├── Internal/                    # 内部ユーティリティ
+│   │   │   └── PreserveAttribute.cs     # Unity IL2CPP strip 防止
 │   │   ├── Normalization/
 │   │   │   ├── FrenchNormalizer.cs      # テキスト正規化 (11段階パイプライン) [F2]
 │   │   │   └── NumberToWords.cs         # フランス語数詞変換 (vigesimal 20進法) [F2]
@@ -440,7 +462,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   └── french_exceptions.master.tsv # 例外辞書TSV (500+エントリ) [F2]
 │   │   ├── Conversion/
 │   │   │   ├── IpaConverter.cs          # IPA変換 [F1]
-│   │   │   └── XSampaConverter.cs       # X-SAMPA変換 (40音素マッピング) [F3]
+│   │   │   ├── XSampaConverter.cs       # X-SAMPA変換 (40音素マッピング) [F3]
+│   │   │   ├── FrenchPuaMapper.cs       # PUA マッピング (6エントリ)
+│   │   │   └── FunctionWordList.cs      # 機能語リスト
 │   │   ├── package.json                 # UPM (com.dotnetg2p.french)
 │   │   └── DotNetG2P.French.asmdef      # Unity Assembly Definition
 │   │
@@ -454,7 +478,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── PortuguesePhoneme.cs      # ストレス付き音素 readonly struct
 │   │   │   ├── PortuguesePronunciation.cs # 発音クラス (音素配列 + 音節オフセット)
 │   │   │   ├── PortugueseDialect.cs      # 方言enum : byte (Brazilian, European)
-│   │   │   └── PortugueseSyllable.cs     # 音節 readonly struct
+│   │   │   ├── PortugueseSyllable.cs     # 音節 readonly struct
+│   │   │   ├── PortugueseProsodyInfo.cs  # 韻律情報 readonly struct
+│   │   │   └── PortugueseProsodyResult.cs # 韻律結果クラス
 │   │   ├── Rules/
 │   │   │   ├── GraphemeToPhonemeRules.cs  # コアG2Pルール (5フェーズ) [P1]
 │   │   │   ├── PortugueseSyllabifier.cs   # 音節分割 (onset maximization) [P1]
@@ -462,6 +488,8 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   ├── NasalVowelizer.cs          # 鼻母音化処理 [P1]
 │   │   │   ├── PortugueseOrthography.cs   # 正書法ヘルパー [P1]
 │   │   │   └── AllophoneProcessor.cs      # 異音規則 (7規則、BP/EPプリセット) [P2]
+│   │   ├── Internal/                      # 内部ユーティリティ
+│   │   │   └── PreserveAttribute.cs       # Unity IL2CPP strip 防止
 │   │   ├── Normalization/
 │   │   │   ├── PortugueseNormalizer.cs    # テキスト正規化 (13段階パイプライン) [P2]
 │   │   │   └── NumberToWords.cs           # ポルトガル語数詞変換 (BP/EP方言差対応) [P2]
@@ -470,7 +498,9 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   │   │   └── portuguese_exceptions.master.tsv # 例外辞書TSV (560+エントリ) [P2]
 │   │   ├── Conversion/
 │   │   │   ├── IpaConverter.cs            # IPA変換 [P1]
-│   │   │   └── XSampaConverter.cs         # X-SAMPA変換 (49音素マッピング) [P3]
+│   │   │   ├── XSampaConverter.cs         # X-SAMPA変換 (49音素マッピング) [P3]
+│   │   │   ├── PortuguesePuaMapper.cs     # PUA マッピング (2エントリ)
+│   │   │   └── FunctionWordList.cs        # 機能語リスト
 │   │   ├── package.json                   # UPM (com.dotnetg2p.portuguese)
 │   │   └── DotNetG2P.Portuguese.asmdef    # Unity Assembly Definition
 │   │
