@@ -1,7 +1,7 @@
 {
   "name": "com.dotnetg2p.multilingual",
   "displayName": "DotNetG2P.Multilingual",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "unity": "2021.2",
   "description": "Multilingual G2P engine combining Japanese, English, Chinese, Korean, Spanish, French, and Portuguese grapheme-to-phoneme support with automatic language detection and segment routing.",
   "keywords": [
@@ -22,14 +22,14 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
-    "com.dotnetg2p.core": "1.8.1",
-    "com.dotnetg2p.mecab": "1.8.1",
-    "com.dotnetg2p.english": "1.8.1",
-    "com.dotnetg2p.chinese": "1.8.1",
-    "com.dotnetg2p.korean": "1.8.1",
-    "com.dotnetg2p.spanish": "1.8.1",
-    "com.dotnetg2p.french": "1.8.1",
-    "com.dotnetg2p.portuguese": "1.8.1"
+    "com.dotnetg2p.core": "1.8.2",
+    "com.dotnetg2p.mecab": "1.8.2",
+    "com.dotnetg2p.english": "1.8.2",
+    "com.dotnetg2p.chinese": "1.8.2",
+    "com.dotnetg2p.korean": "1.8.2",
+    "com.dotnetg2p.spanish": "1.8.2",
+    "com.dotnetg2p.french": "1.8.2",
+    "com.dotnetg2p.portuguese": "1.8.2"
   },
   "author": {
     "name": "ayutaz"
