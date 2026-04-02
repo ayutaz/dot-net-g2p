@@ -806,7 +806,7 @@ namespace DotNetG2P.Multilingual
         {
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '\u00E5') // å
+                if (text[i] == '\u00E5' || text[i] == '\u00C5') // å or Å
                     return true;
             }
             return false;

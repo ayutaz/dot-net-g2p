@@ -18,6 +18,7 @@ namespace DotNetG2P.Swedish.Conversion
         /// <summary>
         /// IPA音素配列をPUAマッピング済み音素配列に変換する。
         /// 多文字IPA音素がPUAマッピングに存在する場合、単一PUA文字に置換する。
+        /// null安全: 呼び出し元でnullを渡さない前提。防御的にnullチェックを含む（Korean.PuaMapperと同一パターン）。
         /// </summary>
         public static string[] ApplyPuaMapping(string[] ipaPhonemes)
         {
@@ -33,6 +34,7 @@ namespace DotNetG2P.Swedish.Conversion
         /// <summary>
         /// 単一IPA音素文字列をPUA文字に変換する。
         /// マッピングが存在しない場合はそのまま返す。
+        /// null/空文字入力時はそのまま返す（Korean.PuaMapperと同一パターン）。
         /// </summary>
         public static string MapToPua(string ipaPhoneme)
         {
