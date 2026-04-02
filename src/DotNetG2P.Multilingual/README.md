@@ -11,6 +11,7 @@ Multilingual grapheme-to-phoneme conversion for .NET and Unity with automatic se
 - Spanish
 - French
 - Portuguese
+- Swedish
 
 ## Quick Start
 
@@ -56,7 +57,7 @@ dotnet test tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj --filter Multilingual -
 ## Thread Safety
 
 `MultilingualG2PEngine` is safe to call from multiple threads.
-Its internal Japanese engine is protected with a lock, while English, Chinese, Korean, Spanish, French, and Portuguese conversions are stateless.
+Its internal Japanese engine is protected with a lock, while English, Chinese, Korean, Spanish, French, Portuguese, and Swedish conversions are stateless.
 
 ## Known Limitations
 

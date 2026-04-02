@@ -1,6 +1,6 @@
 # DotNetG2P Documentation
 
-DotNetG2P provides pure C# grapheme-to-phoneme engines for Japanese, English, Chinese, Korean, Spanish, French, Portuguese, and mixed-language routing.
+DotNetG2P provides pure C# grapheme-to-phoneme engines for Japanese, English, Chinese, Korean, Spanish, French, Portuguese, Swedish, and mixed-language routing.
 
 ## Documentation Areas
 

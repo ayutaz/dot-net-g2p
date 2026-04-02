@@ -17,6 +17,16 @@ using var engine = new SwedishG2PEngine();
 string ipa = engine.ToIPA("hund");
 ```
 
+## 機能
+
+- 5フェーズG2P規則（トリグラフ/ダイグラフ → 子音軟化 → 母音変換 → そり舌化 → 語末処理）
+- ピッチアクセント予測（Accent 1/2）
+- Central / FinlandSwedish 方言対応
+- IPA / X-SAMPA / PUA / Prosody 出力
+- テキスト正規化（11段階）
+- 例外辞書（500+語）
+- テスト399件
+
 ## ステータス
 
-現在開発中（Sw1）。
+Sw1-Sw4完了。
