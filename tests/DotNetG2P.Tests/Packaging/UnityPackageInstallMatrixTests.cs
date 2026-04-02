@@ -17,6 +17,7 @@ namespace DotNetG2P.Tests.Packaging
                 ["Spanish"] = new[] { "com.dotnetg2p.spanish" },
                 ["French"] = new[] { "com.dotnetg2p.french" },
                 ["Portuguese"] = new[] { "com.dotnetg2p.portuguese" },
+                ["Swedish"] = new[] { "com.dotnetg2p.swedish" },
             };
 
         public static IEnumerable<object[]> LanguageCombinationScenarios()
@@ -69,6 +70,7 @@ namespace DotNetG2P.Tests.Packaging
                     "com.dotnetg2p.mecab",
                     "com.dotnetg2p.portuguese",
                     "com.dotnetg2p.spanish",
+                    "com.dotnetg2p.swedish",
                 },
             };
 
@@ -85,6 +87,7 @@ namespace DotNetG2P.Tests.Packaging
                     "com.dotnetg2p.spanish",
                     "com.dotnetg2p.french",
                     "com.dotnetg2p.portuguese",
+                    "com.dotnetg2p.swedish",
                 },
                 new[] { "com.dotnetg2p.mecab" },
             };
@@ -130,12 +133,13 @@ namespace DotNetG2P.Tests.Packaging
                 "com.dotnetg2p.spanish",
                 "com.dotnetg2p.french",
                 "com.dotnetg2p.portuguese",
+                "com.dotnetg2p.swedish",
                 "com.dotnetg2p.multilingual",
             };
 
             var missingDependencies = UnityPackageTestData.FindMissingDependencies(packageNames, packageInfos);
             Assert.Empty(missingDependencies);
-            Assert.Equal(9, packageNames.Length);
+            Assert.Equal(10, packageNames.Length);
 
             var gitUrls = packageNames
                 .Select(packageName => UnityPackageTestData.BuildGitUrl(packageInfos[packageName]))

@@ -22,6 +22,7 @@ namespace DotNetG2P.Multilingual
         private const byte LangFrench = 5;    // Language.French
         private const byte LangPortuguese = 6; // Language.Portuguese
         private const byte LangKorean = 7;    // Language.Korean
+        private const byte LangSwedish = 8;   // Language.Swedish
 
         private static readonly string[] s_frenchWordSignals =
         {
@@ -79,6 +80,17 @@ namespace DotNetG2P.Multilingual
             "openai", "test", "today", "tomorrow", "well", "world"
         };
 
+        private static readonly string[] s_swedishWordSignals =
+        {
+            "att", "dag", "den", "ett", "har", "hej", "hur", "inte",
+            "kan", "och", "ska", "tack", "vill"
+        };
+
+        private static readonly string[] s_swedishSuffixSignals =
+        {
+            "ande", "else", "ighet", "lig", "ning", "skap", "tion"
+        };
+
         private static readonly char[] s_chineseStrongMarkers =
         {
             '这', '们', '说', '话', '吗', '边', '门', '电', '车', '书',
@@ -129,8 +141,8 @@ namespace DotNetG2P.Multilingual
             if (defaultCjkLanguage != Language.Japanese && defaultCjkLanguage != Language.Chinese)
                 throw new ArgumentOutOfRangeException(nameof(defaultCjkLanguage), "DefaultCjkLanguage must be Japanese or Chinese.");
 
-            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French && defaultLatinLanguage != Language.Portuguese)
-                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, French, or Portuguese.");
+            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French && defaultLatinLanguage != Language.Portuguese && defaultLatinLanguage != Language.Swedish)
+                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, French, Portuguese, or Swedish.");
 
             int len = text.Length;
 
@@ -166,6 +178,7 @@ namespace DotNetG2P.Multilingual
                 byte defaultLatinByte = defaultLatinLanguage == Language.Spanish ? LangSpanish
                                      : defaultLatinLanguage == Language.French ? LangFrench
                                      : defaultLatinLanguage == Language.Portuguese ? LangPortuguese
+                                     : defaultLatinLanguage == Language.Swedish ? LangSwedish
                                      : LangEnglish;
 
                 // まず、日本語・韓国語の確定文字を直接割り当てる。
@@ -471,6 +484,7 @@ namespace DotNetG2P.Multilingual
                 case LangFrench: return Language.French;
                 case LangPortuguese: return Language.Portuguese;
                 case LangKorean: return Language.Korean;
+                case LangSwedish: return Language.Swedish;
                 default: return Language.English;
             }
         }
@@ -482,7 +496,7 @@ namespace DotNetG2P.Multilingual
 
         private static bool IsLatinLanguage(byte language)
         {
-            return language == LangEnglish || language == LangSpanish || language == LangFrench || language == LangPortuguese;
+            return language == LangEnglish || language == LangSpanish || language == LangFrench || language == LangPortuguese || language == LangSwedish;
         }
 
         private static byte ResolveLatinLanguage(string text, int start, int length, byte defaultLatinByte, bool hasLatinExtended)
@@ -497,6 +511,12 @@ namespace DotNetG2P.Multilingual
             // ç + ポルトガル語固有パターン（-ço, -ça 等）はフランス語判定より先にチェック
             if (ContainsPortugueseCedillaPattern(token))
                 return LangPortuguese;
+
+            // スウェーデン語特有文字 å (U+00E5) の検出
+            // å はスウェーデン語/ノルウェー語/デンマーク語の明確マーカー
+            // 現在ノルウェー語・デンマーク語は非サポートのためスウェーデン語に分類
+            if (ContainsExplicitSwedishCharacter(token))
+                return LangSwedish;
 
             // フランス語特有文字の検出（スペイン語より先に判定）
             if (ContainsExplicitFrenchCharacter(token))
@@ -517,6 +537,9 @@ namespace DotNetG2P.Multilingual
 
             if (!hasLatinExtended && LooksLikePortugueseAsciiToken(token))
                 return LangPortuguese;
+
+            if (!hasLatinExtended && LooksLikeSwedishAsciiToken(token))
+                return LangSwedish;
 
             return defaultLatinByte;
         }
@@ -766,6 +789,48 @@ namespace DotNetG2P.Multilingual
 
             if (lower.Contains("lh", StringComparison.Ordinal) || lower.Contains("nh", StringComparison.Ordinal))
                 score += 1;
+
+            return score >= 3;
+        }
+
+        /// <summary>
+        /// スウェーデン語特有文字 å (U+00E5) を含むか判定する。
+        /// ä (U+00E4) と ö (U+00F6) はドイツ語等と共有するため除外。
+        /// å はスウェーデン語/ノルウェー語/デンマーク語で使用されるが、
+        /// 現在ノルウェー語・デンマーク語は非サポートのためスウェーデン語に分類する。
+        /// </summary>
+        private static bool ContainsExplicitSwedishCharacter(ReadOnlySpan<char> text)
+        {
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\u00E5') // å
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool LooksLikeSwedishAsciiToken(ReadOnlySpan<char> token)
+        {
+            if (token.Length < 2 || IsLikelyAcronym(token))
+                return false;
+
+            string lower = new string(token).ToLowerInvariant();
+            if (Array.IndexOf(s_englishWordSignals, lower) >= 0)
+                return false;
+
+            int score = 0;
+
+            if (Array.IndexOf(s_swedishWordSignals, lower) >= 0)
+                score += 4;
+
+            for (int i = 0; i < s_swedishSuffixSignals.Length; i++)
+            {
+                if (lower.EndsWith(s_swedishSuffixSignals[i], StringComparison.Ordinal))
+                {
+                    score += 2;
+                    break;
+                }
+            }
 
             return score >= 3;
         }

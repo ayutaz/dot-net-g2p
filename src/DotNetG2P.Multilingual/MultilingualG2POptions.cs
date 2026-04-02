@@ -7,6 +7,7 @@ using DotNetG2P.French;
 using DotNetG2P.Korean;
 using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
+using DotNetG2P.Swedish;
 
 namespace DotNetG2P.Multilingual
 {
@@ -33,6 +34,9 @@ namespace DotNetG2P.Multilingual
 
         /// <summary>ポルトガル語G2Pオプション（null時はデフォルト）。</summary>
         public PortugueseG2POptions? PortugueseOptions { get; }
+
+        /// <summary>スウェーデン語G2Pオプション（null時はデフォルト）。</summary>
+        public SwedishG2POptions? SwedishOptions { get; }
 
         /// <summary>CJK漢字のデフォルト言語（周囲にかな文字がない場合に使用、デフォルト: Japanese）。</summary>
         public Language DefaultCjkLanguage { get; }
@@ -71,6 +75,7 @@ namespace DotNetG2P.Multilingual
         /// <param name="frenchOptions">フランス語G2Pオプション（null時はデフォルト）</param>
         /// <param name="portugueseOptions">ポルトガル語G2Pオプション（null時はデフォルト）</param>
         /// <param name="koreanOptions">韓国語G2Pオプション（null時はデフォルト）</param>
+        /// <param name="swedishOptions">スウェーデン語G2Pオプション（null時はデフォルト）</param>
         /// <param name="englishDictionaryPath">英語CMU辞書のファイルパス（null時は埋め込みリソースを使用）</param>
         /// <param name="englishLtsModelPath">英語LTSモデルのファイルパス（null時は埋め込みリソースを使用）</param>
         /// <param name="chineseCharDictionaryPath">中国語単字辞書のファイルパス（null時は埋め込みリソースを使用）</param>
@@ -86,6 +91,7 @@ namespace DotNetG2P.Multilingual
             FrenchG2POptions? frenchOptions = null,
             PortugueseG2POptions? portugueseOptions = null,
             KoreanG2POptions? koreanOptions = null,
+            SwedishG2POptions? swedishOptions = null,
             string? englishDictionaryPath = null,
             string? englishLtsModelPath = null,
             string? chineseCharDictionaryPath = null,
@@ -94,8 +100,8 @@ namespace DotNetG2P.Multilingual
             if (defaultCjkLanguage != Language.Japanese && defaultCjkLanguage != Language.Chinese)
                 throw new ArgumentOutOfRangeException(nameof(defaultCjkLanguage), "DefaultCjkLanguage must be Japanese or Chinese.");
 
-            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French && defaultLatinLanguage != Language.Portuguese)
-                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, French, or Portuguese.");
+            if (defaultLatinLanguage != Language.English && defaultLatinLanguage != Language.Spanish && defaultLatinLanguage != Language.French && defaultLatinLanguage != Language.Portuguese && defaultLatinLanguage != Language.Swedish)
+                throw new ArgumentOutOfRangeException(nameof(defaultLatinLanguage), "DefaultLatinLanguage must be English, Spanish, French, Portuguese, or Swedish.");
 
             JapaneseOptions = japaneseOptions;
             EnglishOptions = englishOptions;
@@ -104,6 +110,7 @@ namespace DotNetG2P.Multilingual
             SpanishOptions = spanishOptions;
             FrenchOptions = frenchOptions;
             PortugueseOptions = portugueseOptions;
+            SwedishOptions = swedishOptions;
             DefaultCjkLanguage = defaultCjkLanguage;
             DefaultLatinLanguage = defaultLatinLanguage;
             SegmentSeparator = segmentSeparator;

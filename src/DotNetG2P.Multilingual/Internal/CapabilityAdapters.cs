@@ -7,6 +7,7 @@ using DotNetG2P.French;
 using DotNetG2P.Korean;
 using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
+using DotNetG2P.Swedish;
 
 namespace DotNetG2P.Multilingual.Internal
 {
@@ -41,7 +42,8 @@ namespace DotNetG2P.Multilingual.Internal
             KoreanG2PEngine koreanEngine,
             SpanishG2PEngine spanishEngine,
             FrenchG2PEngine frenchEngine,
-            PortugueseG2PEngine portugueseEngine)
+            PortugueseG2PEngine portugueseEngine,
+            SwedishG2PEngine swedishEngine)
         {
             if (japaneseEngine == null) throw new ArgumentNullException(nameof(japaneseEngine));
             if (japaneseLock == null) throw new ArgumentNullException(nameof(japaneseLock));
@@ -51,6 +53,7 @@ namespace DotNetG2P.Multilingual.Internal
             if (spanishEngine == null) throw new ArgumentNullException(nameof(spanishEngine));
             if (frenchEngine == null) throw new ArgumentNullException(nameof(frenchEngine));
             if (portugueseEngine == null) throw new ArgumentNullException(nameof(portugueseEngine));
+            if (swedishEngine == null) throw new ArgumentNullException(nameof(swedishEngine));
 
             var primaryProcessors = new Dictionary<Language, ITextBatchProcessor<string>>
             {
@@ -97,6 +100,11 @@ namespace DotNetG2P.Multilingual.Internal
                     portugueseEngine.ToPhonemesBatch,
                     portugueseEngine.ToIPA,
                     portugueseEngine.ToIPABatch),
+                [Language.Swedish] = new DelegateIpaTextBatchProcessor(
+                    swedishEngine.ToPhonemes,
+                    swedishEngine.ToPhonemesBatch,
+                    swedishEngine.ToIPA,
+                    swedishEngine.ToIPABatch),
             };
 
             return new LanguageCapabilityRouter(primaryProcessors);
@@ -115,7 +123,8 @@ namespace DotNetG2P.Multilingual.Internal
             Lazy<KoreanG2PEngine> lazyKoreanEngine,
             Lazy<SpanishG2PEngine> lazySpanishEngine,
             Lazy<FrenchG2PEngine> lazyFrenchEngine,
-            Lazy<PortugueseG2PEngine> lazyPortugueseEngine)
+            Lazy<PortugueseG2PEngine> lazyPortugueseEngine,
+            Lazy<SwedishG2PEngine> lazySwedishEngine)
         {
             if (japaneseEngine == null) throw new ArgumentNullException(nameof(japaneseEngine));
             if (japaneseLock == null) throw new ArgumentNullException(nameof(japaneseLock));
@@ -125,6 +134,7 @@ namespace DotNetG2P.Multilingual.Internal
             if (lazySpanishEngine == null) throw new ArgumentNullException(nameof(lazySpanishEngine));
             if (lazyFrenchEngine == null) throw new ArgumentNullException(nameof(lazyFrenchEngine));
             if (lazyPortugueseEngine == null) throw new ArgumentNullException(nameof(lazyPortugueseEngine));
+            if (lazySwedishEngine == null) throw new ArgumentNullException(nameof(lazySwedishEngine));
 
             var primaryProcessors = new Dictionary<Language, ITextBatchProcessor<string>>
             {
@@ -171,6 +181,11 @@ namespace DotNetG2P.Multilingual.Internal
                     texts => lazyPortugueseEngine.Value.ToPhonemesBatch(texts),
                     text => lazyPortugueseEngine.Value.ToIPA(text),
                     texts => lazyPortugueseEngine.Value.ToIPABatch(texts)),
+                [Language.Swedish] = new DelegateIpaTextBatchProcessor(
+                    text => lazySwedishEngine.Value.ToPhonemes(text),
+                    texts => lazySwedishEngine.Value.ToPhonemesBatch(texts),
+                    text => lazySwedishEngine.Value.ToIPA(text),
+                    texts => lazySwedishEngine.Value.ToIPABatch(texts)),
             };
 
             return new LanguageCapabilityRouter(primaryProcessors);
