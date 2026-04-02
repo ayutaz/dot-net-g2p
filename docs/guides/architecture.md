@@ -11,4 +11,4 @@ The multilingual package sits on top and routes segmented text into the appropri
 - Prefer pure C# and embedded resources so the packages remain easy to ship in Unity and standard .NET apps.
 - Use CI to enforce quality gates around tests, package validation, DocFX builds, trim/AOT publish checks, and SBOM generation.
 
-See the root `ARCHITECTURE.md` for the repo-level breakdown and the rationale behind package boundaries.
+See the Architecture section in `CONTRIBUTING.md` for the repo-level breakdown and the rationale behind package boundaries.
