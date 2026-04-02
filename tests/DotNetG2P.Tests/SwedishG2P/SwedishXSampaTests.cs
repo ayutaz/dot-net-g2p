@@ -118,13 +118,13 @@ namespace DotNetG2P.Tests.SwedishG2P
         }
 
         // =================================================================
-        // 全41音素カバレッジテスト
+        // 全42音素カバレッジテスト
         // =================================================================
 
         [Fact]
         public void AllPhonemes_HaveNonEmptyXSampa()
         {
-            // SwedishIpaPhoneme enum の全値 (0-40) がX-SAMPAマッピングを持つことを確認
+            // SwedishIpaPhoneme enum の全値 (0-41) がX-SAMPAマッピングを持つことを確認
             var allPhonemes = Enum.GetValues(typeof(SwedishIpaPhoneme)).Cast<SwedishIpaPhoneme>();
             foreach (var phoneme in allPhonemes)
             {
