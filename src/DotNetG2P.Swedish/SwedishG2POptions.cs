@@ -25,18 +25,30 @@ namespace DotNetG2P.Swedish
         /// <summary>音素列出力の区切り文字。</summary>
         public string Separator { get; }
 
+        /// <summary>異音処理を有効にするか。</summary>
+        public bool EnableAllophones { get; }
+
+        /// <summary>適用する異音規則セット。</summary>
+        public SwedishAllophoneFeatures AllophoneFeatures { get; }
+
         /// <summary>
         /// SwedishG2POptions を初期化する。
         /// </summary>
         public SwedishG2POptions(
             SwedishDialect dialect = SwedishDialect.Central,
             bool includeStress = true,
+            bool enableAllophones = true,
+            SwedishAllophoneFeatures? allophoneFeatures = null,
             bool enableTextNormalization = true,
             bool enableExceptionDictionary = true,
             string separator = " ")
         {
             Dialect = dialect;
             IncludeStress = includeStress;
+            EnableAllophones = enableAllophones;
+            AllophoneFeatures = allophoneFeatures ?? (dialect == SwedishDialect.FinlandSwedish
+                ? SwedishAllophoneFeatures.FinlandDefault
+                : SwedishAllophoneFeatures.CentralDefault);
             EnableTextNormalization = enableTextNormalization;
             EnableExceptionDictionary = enableExceptionDictionary;
             Separator = separator ?? throw new ArgumentNullException(nameof(separator));

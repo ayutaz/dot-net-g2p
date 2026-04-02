@@ -36,6 +36,9 @@ namespace DotNetG2P.Swedish.Rules
 
         /// <summary>
         /// 子音字か判定する。
+        /// 注: ASCII a-z の範囲のみを対象とする。アクセント記号付き文字（é, è, à 等）は
+        /// IsVowelChar でも IsConsonantChar でも false を返す。外来語のアクセント付き母音は
+        /// HasWrittenAccent で別途判定すること。
         /// </summary>
         internal static bool IsConsonantChar(char c)
         {

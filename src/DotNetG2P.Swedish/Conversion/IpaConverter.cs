@@ -8,7 +8,7 @@ namespace DotNetG2P.Swedish.Conversion
     /// </summary>
     internal static class IpaConverter
     {
-        private static readonly string[] s_ipaSymbols = new string[41]
+        private static readonly string[] s_ipaSymbols = new string[42]
         {
             // 長母音 (0-8)
             "i\u02D0", "y\u02D0", "\u0289\u02D0", "u\u02D0", "e\u02D0", "\u00F8\u02D0", "\u025B\u02D0", "o\u02D0", "\u0251\u02D0",
@@ -24,6 +24,8 @@ namespace DotNetG2P.Swedish.Conversion
             "l", "r", "j",
             // そり舌音 (36-40)
             "\u0288", "\u0256", "\u0273", "\u026D", "\u0282",
+            // 破擦音 (41)
+            "t\u0361\u0255",  // t͡ɕ (U+0361 = combining tie bar)
         };
 
         internal static string ToSymbol(SwedishIpaPhoneme phoneme) =>

@@ -26,16 +26,16 @@ namespace DotNetG2P.Swedish
             IsSyllableNucleus = isSyllableNucleus;
         }
 
-        /// <summary>この音素が母音かどうかを判定する。</summary>
+        /// <summary>母音かどうか。SwedishIpaPhoneme.Schwa(=17)以下が母音。enum追加時は要確認。</summary>
         public bool IsVowel => Phoneme <= SwedishIpaPhoneme.Schwa;
 
-        /// <summary>この音素が子音かどうかを判定する。</summary>
+        /// <summary>子音かどうか。SwedishIpaPhoneme.P(=18)以上が子音。enum追加時は要確認。</summary>
         public bool IsConsonant => Phoneme >= SwedishIpaPhoneme.P;
 
         /// <summary>この音素がそり舌音かどうかを判定する。</summary>
         public bool IsRetroflex => Phoneme >= SwedishIpaPhoneme.RetroT && Phoneme <= SwedishIpaPhoneme.RetroS;
 
-        /// <summary>この音素が長母音かどうかを判定する。</summary>
+        /// <summary>長母音かどうか。SwedishIpaPhoneme.LongA(=8)以下が長母音。enum追加時は要確認。</summary>
         public bool IsLongVowel => Phoneme <= SwedishIpaPhoneme.LongA;
 
         /// <inheritdoc />

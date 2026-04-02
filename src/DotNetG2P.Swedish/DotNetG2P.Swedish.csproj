@@ -13,4 +13,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="DotNetG2P.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\swedish_exceptions.master.tsv" />
+  </ItemGroup>
 </Project>

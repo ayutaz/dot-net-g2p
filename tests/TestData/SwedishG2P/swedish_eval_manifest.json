@@ -1,0 +1,24 @@
+[
+  {
+    "Name": "ipa_dict_sv_se",
+    "Source": "ipa-dict",
+    "Dialect": "standard",
+    "Url": "https://raw.githubusercontent.com/open-dict-data/ipa-dict/master/data/sv.txt",
+    "CachePath": "C:\\Users\\yuta\\Desktop\\Private\\dot-net-g2p\\tools\\..\\.cache\\swedish-eval\\ipa_dict_sv.txt",
+    "FilteredEntries": 7714,
+    "SampleEntries": 256,
+    "GeneratedAtUtc": "2026-04-02T05:16:54.2599667Z",
+    "Mode": "Sample"
+  },
+  {
+    "Name": "wikipron_swe_latn_broad",
+    "Source": "wikipron",
+    "Dialect": "standard",
+    "Url": "https://raw.githubusercontent.com/CUNY-CL/wikipron/master/data/scrape/tsv/swe_latn_broad.tsv",
+    "CachePath": "C:\\Users\\yuta\\Desktop\\Private\\dot-net-g2p\\tools\\..\\.cache\\swedish-eval\\wikipron_swe_latn_broad.tsv",
+    "FilteredEntries": 2918,
+    "SampleEntries": 256,
+    "GeneratedAtUtc": "2026-04-02T05:16:55.1748500Z",
+    "Mode": "Sample"
+  }
+]

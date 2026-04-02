@@ -18,13 +18,12 @@ namespace DotNetG2P.Swedish.Rules
             if (string.IsNullOrEmpty(word))
                 return new SwedishPronunciation(Array.Empty<SwedishPhoneme>(), Array.Empty<int>(), -1);
 
-            var lower = word.ToLowerInvariant();
-
+            // 入力は小文字化済みを前提とする（呼び出し元 GetWords で変換済み）
             // 1. 音節分割 + ストレス付与（先に決定）
-            var syllables = StressAssigner.MarkStress(lower, SwedishSyllabifier.Syllabify(lower));
+            var syllables = StressAssigner.MarkStress(word, SwedishSyllabifier.Syllabify(word));
 
             // 2. 音節ごとにG2P変換（オフセットを自然追跡）
-            var phonemes = new List<SwedishPhoneme>(lower.Length + 4);
+            var phonemes = new List<SwedishPhoneme>(word.Length + 4);
             var syllableOffsets = new int[syllables.Count];
             var stressedIndex = -1;
 
@@ -35,19 +34,19 @@ namespace DotNetG2P.Swedish.Rules
                     stressedIndex = si;
 
                 var syl = syllables[si];
-                AppendSyllable(lower, syl.StartIndex, syl.StartIndex + syl.Length,
+                AppendSyllable(word, syl.StartIndex, syl.StartIndex + syl.Length,
                     syl.IsStressed, phonemes, dialect);
             }
 
-            // 3. 後処理（dialect依存）
-            if (dialect == SwedishDialect.Central)
-            {
-                ApplyRetroflexion(phonemes, syllableOffsets);
-            }
+            // 3. 後処理
+            // Phase 4: そり舌化（常に適用。FinlandSwedishの場合はAllophoneProcessorで戻す）
+            ApplyRetroflexion(phonemes, syllableOffsets);
 
-            ApplyFinalGWeakening(lower, phonemes);
+            ApplyFinalGWeakening(word, phonemes);
 
-            return new SwedishPronunciation(phonemes.ToArray(), syllableOffsets, stressedIndex);
+            var pron = new SwedishPronunciation(phonemes.ToArray(), syllableOffsets, stressedIndex);
+            pron.Accent = StressAssigner.AssignAccent(word, syllables, 0);
+            return pron;
         }
 
         /// <summary>音節範囲のG2P変換。</summary>
@@ -57,15 +56,26 @@ namespace DotNetG2P.Swedish.Rules
             var i = start;
             while (i < end)
             {
-                var consumed = TryMultigraph(word, i, end, output);
-                if (consumed > 0)
+                // Phase 0: 重子音（同一子音連続）→ 1音素に縮約。
+                // ck は TryMultigraph でダイグラフ処理済み、ng はダイグラフ /ŋ/ のため除外。
+                if (i + 1 < end && word[i] == word[i + 1]
+                    && SwedishOrthography.IsConsonantChar(word[i]))
                 {
-                    i += consumed;
+                    // 最初の子音を通常処理し、2文字目をスキップ
+                    var consumed = TrySingleChar(word, i, end, isStressed, output);
+                    i += consumed + 1; // +1 で重複分をスキップ
                     continue;
                 }
 
-                consumed = TrySingleChar(word, i, end, isStressed, output);
-                i += consumed;
+                var multigraphConsumed = TryMultigraph(word, i, end, start == 0 && i == start, i == start, output);
+                if (multigraphConsumed > 0)
+                {
+                    i += multigraphConsumed;
+                    continue;
+                }
+
+                var singleConsumed = TrySingleChar(word, i, end, isStressed, output);
+                i += singleConsumed;
             }
         }
 
@@ -73,12 +83,63 @@ namespace DotNetG2P.Swedish.Rules
         /// Phase 1: トリグラフ/ダイグラフ認識（最長一致）。
         /// 3文字パターン → 2文字パターンの順に試行する。
         /// </summary>
-        private static int TryMultigraph(string word, int i, int end, List<SwedishPhoneme> output)
+        /// <param name="word">対象単語（小文字化済み）。</param>
+        /// <param name="i">現在位置。</param>
+        /// <param name="end">音節末尾インデックス。</param>
+        /// <param name="isWordInitial">語頭位置か（gn/ps/pn 黙字判定に使用）。</param>
+        /// <param name="isSyllableStart">音節先頭か（将来拡張用）。</param>
+        /// <param name="output">出力リスト。</param>
+        private static int TryMultigraph(string word, int i, int end,
+            bool isWordInitial, bool isSyllableStart, List<SwedishPhoneme> output)
         {
             var remaining = end - i;
             var c0 = word[i];
             var c1 = remaining >= 2 ? word[i + 1] : '\0';
             var c2 = remaining >= 3 ? word[i + 2] : '\0';
+
+            // --- 語頭の黙字ダイグラフ (gn, ps, pn) ---
+            if (isWordInitial && remaining >= 2)
+            {
+                // gn → /n/ (gnista, gnälla)
+                if (c0 == 'g' && c1 == 'n')
+                {
+                    output.Add(P(SwedishIpaPhoneme.N));
+                    return 2;
+                }
+                // ps → /s/ (psykolog, psalm)
+                if (c0 == 'p' && c1 == 's')
+                {
+                    output.Add(P(SwedishIpaPhoneme.S));
+                    return 2;
+                }
+                // pn → /n/ (pneumoni)
+                if (c0 == 'p' && c1 == 'n')
+                {
+                    output.Add(P(SwedishIpaPhoneme.N));
+                    return 2;
+                }
+            }
+
+            // --- -tion/-sion 接尾辞: ti/si + on → /ɧ/ + on ---
+            // ti/si の位置から on が続き語末（または接尾辞 -ell/-är 等の前）で sj音化
+            if (remaining >= 2 && (c0 == 't' || c0 == 's') && c1 == 'i')
+            {
+                // i の次に 'on' が続くか確認（音節境界をまたぐ可能性があるので word 全体で確認）
+                var onPos = i + 2;
+                if (onPos + 1 < word.Length && word[onPos] == 'o' && word[onPos + 1] == 'n')
+                {
+                    // 語末の -tion/-sion、または -tionell/-tionär 等
+                    var afterOn = onPos + 2;
+                    if (afterOn == word.Length
+                        || (afterOn < word.Length && word[afterOn] == 'e')   // -tionell
+                        || (afterOn < word.Length && word[afterOn] == '\u00e4') // -tionär (ä)
+                        || (afterOn < word.Length && word[afterOn] == 's'))  // -tions
+                    {
+                        output.Add(P(SwedishIpaPhoneme.Sj));
+                        return 2; // ti/si を消費、on は後続処理
+                    }
+                }
+            }
 
             // --- 3文字パターン ---
             if (remaining >= 3)
@@ -208,11 +269,17 @@ namespace DotNetG2P.Swedish.Rules
                 return 1;
             }
 
-            // g軟化: 語頭のみ（語中母音間では軟化しない）
-            if (c == 'g' && i == 0 && i + 1 < word.Length && SwedishOrthography.IsSoftVowel(word[i + 1]))
+            // g軟化: 音節先頭の g + 軟母音 → /j/
+            // ng ダイグラフは TryMultigraph で先に処理されるため誤検出しない
+            if (c == 'g' && i + 1 < word.Length && SwedishOrthography.IsSoftVowel(word[i + 1]))
             {
-                output.Add(P(SwedishIpaPhoneme.J));
-                return 1;
+                // 直前が子音でない場合（語頭 or 母音後）に軟化
+                // 直前に n がある場合は ng ダイグラフが先に処理されるのでここに到達しない
+                if (i == 0 || !SwedishOrthography.IsConsonantChar(word[i - 1]))
+                {
+                    output.Add(P(SwedishIpaPhoneme.J));
+                    return 1;
+                }
             }
 
             // c + 軟母音 → /s/
@@ -234,7 +301,7 @@ namespace DotNetG2P.Swedish.Rules
             if (SwedishOrthography.IsVowelChar(c))
             {
                 var isLong = isStressed && IsLongVowelContext(word, i);
-                output.Add(P(MapVowel(c, isLong)));
+                output.Add(P(MapVowel(c, isLong, word, i)));
                 return 1;
             }
 
@@ -286,15 +353,18 @@ namespace DotNetG2P.Swedish.Rules
 
         /// <summary>
         /// 書記素（母音文字）をIPA音素にマッピングする。
+        /// o は後続子音文脈に依存して /uː/~/ʊ/ または /oː/~/ɔ/ を返す。
         /// </summary>
-        private static SwedishIpaPhoneme MapVowel(char c, bool isLong)
+        private static SwedishIpaPhoneme MapVowel(char c, bool isLong, string word, int pos)
         {
             switch (c)
             {
                 case 'a': return isLong ? SwedishIpaPhoneme.LongA : SwedishIpaPhoneme.ShortA;
                 case 'e': return isLong ? SwedishIpaPhoneme.LongE : SwedishIpaPhoneme.ShortE;
                 case 'i': return isLong ? SwedishIpaPhoneme.LongI : SwedishIpaPhoneme.ShortI;
-                case 'o': return isLong ? SwedishIpaPhoneme.LongU : SwedishIpaPhoneme.ShortU;          // o → uː/ʊ
+                case 'o': return IsOBeforeR(word, pos)
+                    ? (isLong ? SwedishIpaPhoneme.LongO : SwedishIpaPhoneme.ShortO)    // o+r文脈 → oː/ɔ
+                    : (isLong ? SwedishIpaPhoneme.LongU : SwedishIpaPhoneme.ShortU);   // デフォルト → uː/ʊ
                 case 'u': return isLong ? SwedishIpaPhoneme.LongUCentral : SwedishIpaPhoneme.ShortUCentral;
                 case 'y': return isLong ? SwedishIpaPhoneme.LongY : SwedishIpaPhoneme.ShortY;
                 case '\u00e5': return isLong ? SwedishIpaPhoneme.LongO : SwedishIpaPhoneme.ShortO;     // å → oː/ɔ
@@ -302,6 +372,26 @@ namespace DotNetG2P.Swedish.Rules
                 case '\u00f6': return isLong ? SwedishIpaPhoneme.LongOe : SwedishIpaPhoneme.ShortOe;   // ö → øː/œ
                 default: return SwedishIpaPhoneme.Schwa;
             }
+        }
+
+        /// <summary>
+        /// o が r 系文脈の前にあるか判定する。
+        /// or, ord, ort, orn, ors, orl 等のパターンで o → /oː/ or /ɔ/ になる。
+        /// </summary>
+        private static bool IsOBeforeR(string word, int pos)
+        {
+            var next = pos + 1;
+            if (next >= word.Length)
+                return false;
+
+            // 直後が r なら r 文脈
+            if (word[next] == 'r')
+                return true;
+
+            // rr（重子音縮約前の位置では rr として現れる場合もある）
+            // ※ 重子音は Phase 0 で処理されるため、ここでは r 単体で十分
+
+            return false;
         }
 
         /// <summary>

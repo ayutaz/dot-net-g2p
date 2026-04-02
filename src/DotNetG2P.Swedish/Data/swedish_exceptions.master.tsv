@@ -1,0 +1,549 @@
+# surface	dialect	category	accent	stress_index	phonemes	source	note
+# POLICY: 重子音(geminate)は単一子音表記。スウェーデン語の重子音は先行短母音で表現される（例: gnugga = n ɵ|ɡ a）。
+# ===== 機能語 (function_word) =====
+jag	*	function_word	0	0	j ɑː	manual	主語代名詞、g脱落（弱形/ja/も存在）
+mig	*	function_word	0	0	m ɛ j	manual	目的格、-ig→-ej
+dig	*	function_word	0	0	d ɛ j	manual	目的格、-ig→-ej
+sig	*	function_word	0	0	s ɛ j	manual	再帰代名詞、-ig→-ej
+de	*	function_word	0	0	d ɔ m	manual	三人称複数主格、不規則
+dem	*	function_word	0	0	d ɔ m	manual	三人称複数目的格、不規則
+det	*	function_word	0	0	d ɛ	manual	それ/冠詞、弱形/dɛ/（語末tは黙字）
+den	*	function_word	0	0	d ɛ n	manual	それ/冠詞
+och	*	function_word	0	0	ɔ	manual	接続詞、chは黙字
+att	*	function_word	0	0	a t	manual	不定詞マーカー/接続詞
+är	*	function_word	0	0	ɛː r	manual	vara現在形
+var	*	function_word	0	0	v ɑː r	manual	vara過去形
+har	*	function_word	0	0	h ɑː r	manual	hava現在形
+hade	*	function_word	2	0	h ɑː|d ɛ	manual	hava過去形
+kan	*	function_word	0	0	k a n	manual	助動詞
+ska	*	function_word	0	0	s k ɑː	manual	未来助動詞
+skall	*	function_word	0	0	s k a l	manual	未来助動詞（正式）
+vill	*	function_word	0	0	v ɪ l	manual	願望助動詞
+inte	*	function_word	2	0	ɪ n|t ɛ	manual	否定副詞
+inte	finland	function_word	2	0	ɪ n|t ɛ	manual	否定副詞（フィンランド同形）
+hur	*	function_word	0	0	h ʉː r	manual	疑問副詞
+vad	*	function_word	0	0	v ɑː d	manual	疑問代名詞
+som	*	function_word	0	0	s ɔ m	manual	関係代名詞
+där	*	function_word	0	0	d ɛː r	manual	副詞
+här	*	function_word	0	0	h ɛː r	manual	副詞
+från	*	function_word	0	0	f r ɔː n	manual	前置詞（標準形、長母音）
+för	*	function_word	0	0	f øː r	manual	前置詞
+med	*	function_word	0	0	m eː d	manual	前置詞（dは弱い）
+vid	*	function_word	0	0	v iː d	manual	前置詞
+av	*	function_word	0	0	ɑː v	manual	前置詞
+till	*	function_word	0	0	t ɪ l	manual	前置詞
+på	*	function_word	0	0	p oː	manual	前置詞（標準中央スウェーデン語）
+men	*	function_word	0	0	m ɛ n	manual	接続詞
+hon	*	function_word	0	0	h ʊ n	manual	三人称女性代名詞
+honom	*	function_word	2	0	h ɔ|n ɔ m	manual	三人称男性目的格、不規則母音
+han	*	function_word	0	0	h a n	manual	三人称男性代名詞
+vi	*	function_word	0	0	v iː	manual	一人称複数代名詞
+ni	*	function_word	0	0	n iː	manual	二人称複数代名詞
+# ===== フランス語由来外来語 (loanword_fr) =====
+chef	*	loanword_fr	1	0	ɧ eː f	manual	ch→sj音
+chans	*	loanword_fr	1	0	ɧ a n s	manual	ch→sj音
+chock	*	loanword_fr	1	0	ɧ ɔ k	manual	ch→sj音
+choklad	*	loanword_fr	2	0	ɧ ʊ k|l ɑː d	manual	ch→sj音
+champagne	*	loanword_fr	2	1	ɧ a m|p a n j	manual	ch→sj音
+champinjon	*	loanword_fr	2	2	ɧ a m|p ɪ n|j ɔ n	manual	ch→sj音
+charkuteri	*	loanword_fr	2	3	ɧ a r|k ʉː|t ɛ|r iː	manual	ch→sj音
+chaufför	*	loanword_fr	2	1	ɧ oː|f øː r	manual	ch→sj音
+parfym	*	loanword_fr	2	1	p a r|f yː m	manual	仏語由来
+garderob	*	loanword_fr	2	2	ɡ a r|d ɛ|r oː b	manual	仏語由来
+garage	*	loanword_fr	2	1	ɡ a|r ɑː ɧ	manual	仏語由来、ge→sj音
+bagage	*	loanword_fr	2	1	b a|ɡ ɑː ɧ	manual	仏語由来、ge→sj音
+massage	*	loanword_fr	2	1	m a|s ɑː ɧ	manual	仏語由来、ge→sj音
+detalj	*	loanword_fr	2	1	d ɛ|t a l j	manual	仏語由来
+miljö	*	loanword_fr	2	1	m ɪ l|j øː	manual	仏語由来
+möbel	*	loanword_fr	2	0	m øː|b ɛ l	manual	仏語由来
+paket	*	loanword_fr	2	1	p a|k eː t	manual	仏語由来
+bukett	*	loanword_fr	2	1	b ʉː|k ɛ t	manual	仏語由来
+kupé	*	loanword_fr	2	1	k ʉː|p eː	manual	仏語由来
+refräng	*	loanword_fr	2	1	r ɛ|f r ɛ ŋ	manual	仏語由来
+affär	*	loanword_fr	2	1	a|f ɛː r	manual	仏語由来
+allé	*	loanword_fr	2	1	a|l eː	manual	仏語由来
+armé	*	loanword_fr	2	1	a r|m eː	manual	仏語由来
+balkong	*	loanword_fr	2	1	b a l|k ɔ ŋ	manual	仏語由来
+bankett	*	loanword_fr	2	1	b a ŋ|k ɛ t	manual	仏語由来
+boulevard	*	loanword_fr	2	2	b ʉː|l ɛ|v ɑː r d	manual	仏語由来
+butik	*	loanword_fr	2	1	b ʉː|t iː k	manual	仏語由来
+dessert	*	loanword_fr	2	1	d ɛ|s ɛː r t	manual	仏語由来
+dossier	*	loanword_fr	2	1	d ɔ|s iː ɛ	manual	仏語由来
+entré	*	loanword_fr	2	1	a ŋ|t r eː	manual	仏語由来
+etage	*	loanword_fr	2	1	ɛ|t ɑː ɧ	manual	仏語由来、ge→sj音
+fasad	*	loanword_fr	2	1	f a|s ɑː d	manual	仏語由来
+frisör	*	loanword_fr	2	1	f r ɪ|s øː r	manual	仏語由来
+interiör	*	loanword_fr	2	2	ɪ n|t ɛ|r iː øː r	manual	仏語由来
+kapell	*	loanword_fr	2	1	k a|p ɛ l	manual	仏語由来
+kaross	*	loanword_fr	2	1	k a|r ɔ s	manual	仏語由来
+kulör	*	loanword_fr	2	1	k ʉː|l øː r	manual	仏語由来
+kuvert	*	loanword_fr	2	1	k ʉː|v ɛː r t	manual	仏語由来
+porträtt	*	loanword_fr	2	1	p ɔ r|t r ɛ t	manual	仏語由来
+restaurang	*	loanword_fr	2	2	r ɛ s|t ɑː|r a ŋ	manual	仏語由来
+terräng	*	loanword_fr	2	1	t ɛ|r ɛ ŋ	manual	仏語由来
+tournédos	*	loanword_fr	2	2	t ʉː r|n ɛ|d oː	manual	仏語由来
+trottoar	*	loanword_fr	2	2	t r ɔ|t ɔ|ɑː r	manual	仏語由来
+# ===== 英語由来外来語 (loanword_en) =====
+show	*	loanword_en	1	0	ɧ oː	manual	英語sh→sj音
+shower	*	loanword_en	2	0	ɧ oː|v ɛ r	manual	英語sh→sj音
+team	*	loanword_en	1	0	t iː m	manual	英語由来
+design	*	loanword_en	2	1	d ɛ|s a j n	manual	英語由来
+jeans	*	loanword_en	1	0	d ɕ iː n s	manual	j→tj音
+juice	*	loanword_en	1	0	d ɕ ʉː s	manual	j→tj音
+jeep	*	loanword_en	1	0	d ɕ iː p	manual	j→tj音
+jazz	*	loanword_en	1	0	d ɕ a s	manual	j→tj音（スウェーデン語化）
+jogging	*	loanword_en	2	0	d ɕ ɔ|ɡ ɪ ŋ	manual	j→tj音
+strejk	*	loanword_en	1	0	s t r ɛ j k	manual	英語strike由来
+tajm	*	loanword_en	1	0	t a j m	manual	英語time由来（スウェーデン語綴り）
+mejl	*	loanword_en	1	0	m ɛ j l	manual	英語mail由来（スウェーデン語綴り）
+webb	*	loanword_en	1	0	v ɛ b	manual	英語web由来
+blogg	*	loanword_en	1	0	b l ɔ ɡ	manual	英語blog由来
+chatt	*	loanword_en	1	0	ɕ a t	manual	英語chat由来、ch→tj音
+mail	*	loanword_en	1	0	m ɛ j l	manual	英語由来
+film	*	loanword_en	1	0	f ɪ l m	manual	英語由来
+sport	*	loanword_en	1	0	s p ɔ ʈ	manual	英語由来（そり舌化）
+sport	finland	loanword_en	1	0	s p ɔ r t	manual	英語由来（フィンランド：そり舌化なし）
+tennis	*	loanword_en	2	0	t ɛ|n ɪ s	manual	英語由来
+fotboll	*	loanword_en	2	0	f ʊ t|b ɔ l	manual	英語football由来（複合語fot=短母音/ʊ/）
+hockey	*	loanword_en	2	0	h ɔ|k ɛ j	manual	英語由来
+golf	*	loanword_en	1	0	ɡ ɔ l f	manual	英語由来
+match	*	loanword_en	1	0	m a t ɧ	manual	英語由来
+shorts	*	loanword_en	1	0	ɧ ɔ ʈ s	manual	英語sh→sj音（そり舌化）
+shorts	finland	loanword_en	1	0	ɧ ɔ r t s	manual	英語sh→sj音（フィンランド：そり舌化なし）
+shopping	*	loanword_en	2	0	ɧ ɔ|p ɪ ŋ	manual	英語sh→sj音
+workshop	*	loanword_en	2	0	v ɔ r k|ɧ ɔ p	manual	英語由来
+hamburgare	*	loanword_en	2	0	h a m|b ɵ r|ɡ a r ɛ	manual	英語由来（スウェーデン語形）
+story	*	loanword_en	2	0	s t oː|r ɪ	manual	英語由来
+container	*	loanword_en	2	1	k ɔ n|t ɛ j|n ɛ r	manual	英語由来
+manager	*	loanword_en	2	0	m a|n ɛ|d ɕ ɛ r	manual	英語由来
+image	*	loanword_en	2	0	ɪ|m ɪ d ɕ	manual	英語由来
+service	*	loanword_en	2	0	s øː r|v ɪ s	manual	英語由来
+party	*	loanword_en	2	0	p ɑː r|t ɪ	manual	英語由来（そり舌化なし）
+partner	*	loanword_en	2	0	p ɑː ʈ|n ɛ r	manual	英語由来（そり舌化）
+partner	finland	loanword_en	2	0	p ɑː r t|n ɛ r	manual	英語由来（フィンランド：そり舌化なし）
+laptop	*	loanword_en	2	0	l a p|t ɔ p	manual	英語由来
+internet	*	loanword_en	2	0	ɪ n|t ɛ r|n ɛ t	manual	英語由来
+podcast	*	loanword_en	2	0	p ɔ d|k a s t	manual	英語由来
+streama	*	loanword_en	2	0	s t r iː|m a	manual	英語stream+スウェーデン語活用
+# ===== その他外来語 (loanword_other) =====
+psykologi	*	loanword_other	2	3	p s yː|k ɔ|l ɔ|ɡ iː	manual	ギリシャ語由来
+psykolog	*	loanword_other	2	2	p s yː|k ɔ|l oː ɡ	manual	ギリシャ語由来
+filosofi	*	loanword_other	2	3	f ɪ|l ɔ|s ɔ|f iː	manual	ギリシャ語由来
+gymnasium	*	loanword_other	2	1	j ʏ m|n ɑː|s ɪ|ɵ m	manual	ラテン語由来
+museum	*	loanword_other	2	1	m ʉː|s eː|ɵ m	manual	ラテン語由来
+centrum	*	loanword_other	2	0	s ɛ n|t r ɵ m	manual	ラテン語由来
+schema	*	loanword_other	2	0	ɧ eː|m a	manual	ギリシャ語由来、sch→sj音
+schack	*	loanword_other	1	0	ɧ a k	manual	ドイツ語由来、sch→sj音
+schablon	*	loanword_other	2	1	ɧ a b|l oː n	manual	ドイツ語由来、sch→sj音
+schnaps	*	loanword_other	1	0	ɧ n a p s	manual	ドイツ語由来、sch→sj音
+schäfer	*	loanword_other	2	0	ɧ ɛː|f ɛ r	manual	ドイツ語由来、sch→sj音
+zebra	*	loanword_other	2	0	s eː|b r a	manual	外来語、z→s
+# ===== sj音例外 (sj_exception: -tion/-sion等) =====
+station	*	sj_exception	2	1	s t a|ɧ uː n	manual	-tion→sj音
+nation	*	sj_exception	2	1	n a|ɧ uː n	manual	-tion→sj音
+information	*	sj_exception	2	3	ɪ n|f ɔ r|m a|ɧ uː n	manual	-tion→sj音
+kommunikation	*	sj_exception	2	4	k ɔ|m ʉː|n ɪ|k a|ɧ uː n	manual	-tion→sj音
+situation	*	sj_exception	2	3	s ɪ|t ʉː|a|ɧ uː n	manual	-tion→sj音
+operation	*	sj_exception	2	3	ɔ|p ɛ|r a|ɧ uː n	manual	-tion→sj音
+tradition	*	sj_exception	2	2	t r a|d ɪ|ɧ uː n	manual	-tion→sj音
+produktion	*	sj_exception	2	2	p r ɔ|d ɵ k|ɧ uː n	manual	-tion→sj音
+funktion	*	sj_exception	2	1	f ɵ ŋ k|ɧ uː n	manual	-tion→sj音
+reaktion	*	sj_exception	2	2	r ɛ|a k|ɧ uː n	manual	-tion→sj音
+organisation	*	sj_exception	2	4	ɔ r|ɡ a|n ɪ|s a|ɧ uː n	manual	-tion→sj音
+revolution	*	sj_exception	2	3	r ɛ|v ɔ|l ʉː|ɧ uː n	manual	-tion→sj音
+education	*	sj_exception	2	3	ɛ|d ʉː|k a|ɧ uː n	manual	-tion→sj音（英語化綴り）
+relation	*	sj_exception	2	2	r ɛ|l a|ɧ uː n	manual	-tion→sj音
+mission	*	sj_exception	2	1	m ɪ|ɧ uː n	manual	-sion→sj音
+passion	*	sj_exception	2	1	p a|ɧ uː n	manual	-sion→sj音
+pension	*	sj_exception	2	1	p a ŋ|ɧ uː n	manual	-sion→sj音
+version	*	sj_exception	2	1	v ɛ ʂ|ɧ uː n	manual	-sion→sj音
+diskussion	*	sj_exception	2	2	d ɪ s|k ɵ|ɧ uː n	manual	-ssion→sj音
+expression	*	sj_exception	2	2	ɛ k s|p r ɛ|ɧ uː n	manual	-ssion→sj音
+television	*	sj_exception	2	3	t ɛ|l ɛ|v ɪ|ɧ uː n	manual	-sion→sj音
+dimension	*	sj_exception	2	2	d ɪ|m ɛ n|ɧ uː n	manual	-sion→sj音
+lektion	*	sj_exception	2	1	l ɛ k|ɧ uː n	manual	-tion→sj音
+sektion	*	sj_exception	2	1	s ɛ k|ɧ uː n	manual	-tion→sj音
+auktion	*	sj_exception	2	1	a ɵ k|ɧ uː n	manual	-tion→sj音
+destruktion	*	sj_exception	2	2	d ɛ|s t r ɵ k|ɧ uː n	manual	-tion→sj音
+instruktion	*	sj_exception	2	2	ɪ n|s t r ɵ k|ɧ uː n	manual	-tion→sj音
+konstruktion	*	sj_exception	2	2	k ɔ n|s t r ɵ k|ɧ uː n	manual	-tion→sj音
+introduktion	*	sj_exception	2	3	ɪ n|t r ɔ|d ɵ k|ɧ uː n	manual	-tion→sj音
+position	*	sj_exception	2	2	p ɔ|s ɪ|ɧ uː n	manual	-tion→sj音
+proportion	*	sj_exception	2	2	p r ɔ|p ɔ ʂ|ɧ uː n	manual	-tion→sj音
+infektion	*	sj_exception	2	2	ɪ n|f ɛ k|ɧ uː n	manual	-tion→sj音
+kollektion	*	sj_exception	2	2	k ɔ|l ɛ k|ɧ uː n	manual	-tion→sj音
+# ===== 軟音化例外 (softening_exception: k/gが軟母音前で硬音のまま) =====
+gem	*	softening_exception	1	0	ɡ ɛ m	manual	g硬音維持（クリップ）
+gäng	*	softening_exception	1	0	ɡ ɛ ŋ	manual	g硬音維持（ギャング）
+kex	*	softening_exception	1	0	k ɛ k s	manual	k硬音維持（クラッカー）
+kille	*	softening_exception	2	0	k ɪ|l ɛ	manual	k硬音維持（男の子）
+kille	finland	softening_exception	2	0	k ɪ|l ɛ	manual	k硬音維持（フィンランド同形）
+kiosk	*	softening_exception	2	1	k ɪ|ɔ s k	manual	k硬音維持
+kissa	*	softening_exception	2	0	k ɪ|s a	manual	k硬音維持（猫/おしっこ）
+kist	*	softening_exception	1	0	k ɪ s t	manual	k硬音維持（箱）
+kör	*	softening_exception	1	0	k øː r	manual	k硬音維持（合唱）※動詞köraはɕ
+# ===== 地名 (place_name) =====
+Stockholm	*	place_name	2	0	s t ɔ k|h ɔ l m	manual	首都（ckは/k/のみ）
+Göteborg	*	place_name	2	0	j øː|t ɛ|b ɔ r j	manual	不規則（G→j、語末g→j）
+Malmö	*	place_name	2	0	m a l|m øː	manual	南部都市
+Uppsala	*	place_name	2	0	ɵ p|s ɑː|l a	manual	大学都市
+Lund	*	place_name	1	0	l ɵ n d	manual	南部大学都市
+Linköping	*	place_name	2	0	l ɪ n|ɕ øː|p ɪ ŋ	manual	k→tj音
+Norrköping	*	place_name	2	0	n ɔ r|ɕ øː|p ɪ ŋ	manual	k→tj音
+Jönköping	*	place_name	2	0	j øː n|ɕ øː|p ɪ ŋ	manual	k→tj音
+Helsingborg	*	place_name	2	0	h ɛ l|s ɪ ŋ|b ɔ r j	manual	南部都市（語末g→j）
+Sundsvall	*	place_name	2	0	s ɵ n d s|v a l	manual	北部都市
+Örebro	*	place_name	2	0	øː|r ɛ|b r uː	manual	中部都市
+Västerås	*	place_name	2	2	v ɛ s|t ɛ r|ɔː s	manual	中部都市
+Umeå	*	place_name	2	0	ʉː|m ɛ|ɔː	manual	北部都市
+Luleå	*	place_name	2	0	l ʉː|l ɛ|ɔː	manual	北部都市
+Gävle	*	place_name	2	0	j ɛ v|l ɛ	manual	g軟音化
+Borås	*	place_name	2	1	b ʊ|r ɔː s	manual	西部都市
+Eskilstuna	*	place_name	2	0	ɛ s|k ɪ l s|t ʉː|n a	manual	中部都市
+Halmstad	*	place_name	2	0	h a l m|s t ɑː d	manual	西海岸都市
+Karlstad	*	place_name	2	0	k ɑː l|s t ɑː d	manual	ヴェルムランド都市
+Kristianstad	*	place_name	2	0	k r ɪ|s t ɕ a n|s t ɑː d	manual	南部都市
+Trollhättan	*	place_name	2	2	t r ɔ l|h ɛ|t a n	manual	西部都市
+Växjö	*	place_name	2	0	v ɛ k|ɧ øː	manual	x→ks、j→sj音
+Kalmar	*	place_name	2	0	k a l|m ɑː r	manual	南東都市
+Falun	*	place_name	2	1	f ɑː|l ʉː n	manual	ダーラナ都市
+Visby	*	place_name	2	0	v iː s|b yː	manual	ゴットランド都市
+Kiruna	*	place_name	2	0	k iː|r ʉː|n a	manual	北部都市
+Sigtuna	*	place_name	2	0	s ɪ ɡ|t ʉː|n a	manual	歴史的都市
+Skara	*	place_name	2	0	s k ɑː|r a	manual	西部都市
+Ystad	*	place_name	2	0	yː|s t ɑː d	manual	南部都市
+Mora	*	place_name	2	0	m uː|r a	manual	ダーラナ都市
+Östersund	*	place_name	2	0	øː s|t ɛ r|s ɵ n d	manual	イェムトランド都市
+Gotland	*	place_name	2	0	ɡ ɔ t|l a n d	manual	島
+Norrbotten	*	place_name	2	0	n ɔ r|b ɔ|t ɛ n	manual	北部地方
+Skåne	*	place_name	2	0	s k ɔː|n ɛ	manual	南部地方
+Dalarna	*	place_name	2	1	d ɑː|l ɑː|ɳ a	manual	中部地方（rn→そり舌化）
+Dalarna	finland	place_name	2	1	d ɑː|l ɑː r|n a	manual	中部地方（フィンランド：そり舌なし）
+# ===== 黙字 (silent_letter) =====
+gnom	*	silent_letter	1	0	n oː m	manual	gn-でgは黙字（ギリシャ語由来）
+gnista	*	silent_letter	2	0	n ɪ s|t a	manual	gn-でgは黙字（ただし本来語）
+gnugga	*	silent_letter	2	0	n ɵ|ɡ a	manual	gn-でgは黙字
+gnälla	*	silent_letter	2	0	n ɛ|l a	manual	gn-でgは黙字
+psykisk	*	silent_letter	2	0	s yː|k ɪ s k	manual	ps-でpは黙字（ギリシャ語由来）
+psalm	*	silent_letter	1	0	s a l m	manual	ps-でpは黙字（ギリシャ語由来）
+pseudo	*	silent_letter	2	0	s øː|d oː	manual	ps-でpは黙字（標準スウェーデン語発音）
+pneumatisk	*	silent_letter	2	1	n ɛ v|m ɑː|t ɪ s k	manual	pn-でpは黙字
+hjul	*	silent_letter	1	0	j ʉː l	manual	hj-でhは黙字
+hjälp	*	silent_letter	1	0	j ɛ l p	manual	hj-でhは黙字
+hjälte	*	silent_letter	2	0	j ɛ l|t ɛ	manual	hj-でhは黙字
+hjärna	*	silent_letter	2	0	j ɛː|ɳ a	manual	hj-でhは黙字（rn→そり舌化）
+hjärna	finland	silent_letter	2	0	j ɛː r|n a	manual	hj-でhは黙字（フィンランド：そり舌なし）
+hjärta	*	silent_letter	2	0	j ɛː|ʈ a	manual	hj-でhは黙字（rt→そり舌化）
+hjärta	finland	silent_letter	2	0	j ɛː r|t a	manual	hj-でhは黙字（フィンランド：そり舌なし）
+ljus	*	silent_letter	1	0	j ʉː s	manual	lj-でlは黙字
+ljud	*	silent_letter	1	0	j ʉː d	manual	lj-でlは黙字
+ljuv	*	silent_letter	1	0	j ʉː v	manual	lj-でlは黙字
+ljuga	*	silent_letter	2	0	j ʉː|ɡ a	manual	lj-でlは黙字
+# ===== 不規則語 (irregular) =====
+genom	*	irregular	2	0	j eː|n ɔ m	manual	g→j軟音化、through
+igen	*	irregular	2	1	ɪ|j ɛ n	manual	g→j軟音化、again
+igår	*	irregular	2	1	ɪ|j ɔː r	manual	g→j軟音化、yesterday
+någon	*	irregular	2	0	n ɔː|ɡ ɔ n	manual	someone
+något	*	irregular	2	0	n ɔː|ɡ ɔ t	manual	something
+ingen	*	irregular	2	0	ɪ ŋ|ɛ n	manual	nobody
+inget	*	irregular	2	0	ɪ ŋ|ɛ t	manual	nothing
+ögon	*	irregular	2	0	øː|ɡ ɔ n	manual	目（複数）
+öga	*	irregular	2	0	øː|ɡ a	manual	目（単数）
+öra	*	irregular	2	0	øː|r a	manual	耳
+rolig	*	irregular	2	0	r uː|l ɪ	manual	おもしろい、語末-ig→/ɪ/
+tråkig	*	irregular	2	0	t r ɔː|k ɪ	manual	つまらない、語末-ig→/ɪ/
+viktig	*	irregular	2	0	v ɪ k|t ɪ	manual	重要な、語末-ig→/ɪ/
+möjlig	*	irregular	2	0	m øː j|l ɪ	manual	可能な、語末-ig→/ɪ/
+vanlig	*	irregular	2	0	v ɑː n|l ɪ	manual	普通の、語末-ig→/ɪ/
+farlig	*	irregular	2	0	f ɑː l|ɪ	manual	危険な、語末-ig→/ɪ/（rl→ɭなし）
+lycklig	*	irregular	2	0	l ʏ k|l ɪ	manual	幸せな、語末-ig→/ɪ/
+naturlig	*	irregular	2	1	n a|t ʉː l|ɪ	manual	自然な、語末-ig→/ɪ/
+dålig	*	irregular	2	0	d ɔː|l ɪ	manual	悪い、語末-ig→/ɪ/
+ledsen	*	irregular	2	0	l eː|s ɛ n	manual	悲しい（dは黙字）
+människa	*	irregular	2	0	m ɛ|n ɪ|ɧ a	manual	人間（nniskではsk→sj音）
+mycket	*	irregular	2	0	m ʏ|k ɛ t	manual	たくさん
+sedan	*	irregular	2	0	s ɛ n	manual	それ以来（短縮形sen）
+sju	*	irregular	0	0	ɧ ʉː	manual	数詞7、sj音
+sjutton	*	irregular	2	0	ɧ ɵ|t ɔ n	manual	数詞17、sj音
+sjuttio	*	irregular	2	0	ɧ ɵ|t ɪ ɔ	manual	数詞70、sj音
+sällan	*	irregular	2	0	s ɛ|l a n	manual	めったに
+redan	*	irregular	2	0	r eː|d a n	manual	すでに
+aldrig	*	irregular	2	0	a l d|r ɪ	manual	決して（語末-ig→/ɪ/）
+lagom	*	irregular	2	0	l ɑː|ɡ ɔ m	manual	ちょうどよい（スウェーデン語固有概念）
+fika	*	irregular	2	0	f iː|k a	manual	コーヒーブレイク（スウェーデン文化語）
+Sverige	*	irregular	2	0	s v ɛ r|j ɛ	manual	スウェーデン（国名）
+svensk	*	irregular	1	0	s v ɛ n s k	manual	スウェーデンの
+svenska	*	irregular	2	0	s v ɛ n|s k a	manual	スウェーデン語
+bara	*	irregular	2	0	b ɑː|r a	manual	ただ/だけ
+också	*	irregular	2	0	ɔ k|s ɔː	manual	〜も（也）
+kanske	*	irregular	2	0	k a n|ɧ ɛ	manual	たぶん（sk→sj音）
+liksom	*	irregular	2	0	l ɪ k|s ɔ m	manual	〜のように
+alltid	*	irregular	2	0	a l|t iː d	manual	いつも
+fortfarande	*	irregular	2	0	f ɔ ʈ|f ɑː|r a n|d ɛ	manual	まだ/依然として（rt→そり舌化）
+fortfarande	finland	irregular	2	0	f ɔ r t|f ɑː|r a n|d ɛ	manual	まだ/依然として（フィンランド：そり舌なし）
+egentligen	*	irregular	2	1	ɛ|j ɛ n t|l ɪ|ɡ ɛ n	manual	実際には
+förmodligen	*	irregular	2	1	f øː r|m uː d|l ɪ|ɡ ɛ n	manual	おそらく
+naturligtvis	*	irregular	2	2	n a|t ʉː l|ɪ k t|v iː s	manual	もちろん
+ändå	*	irregular	2	1	ɛ n|d ɔː	manual	それでも
+precis	*	irregular	2	1	p r ɛ|s iː s	manual	正確に
+absolut	*	irregular	2	2	a b|s ɔ|l ʉː t	manual	絶対に
+klockan	*	irregular	2	0	k l ɔ|k a n	manual	時計/〜時（ck→k）
+väldigt	*	irregular	2	0	v ɛ l|d ɪ k t	manual	とても
+ungefär	*	irregular	2	2	ɵ ŋ|ɛ|f ɛː r	manual	およそ
+annorlunda	*	irregular	2	1	a|n ɔ ɭ|ɵ n|d a	manual	異なった（rl→そり舌化）
+annorlunda	finland	irregular	2	1	a|n ɔ r|l ɵ n|d a	manual	異なった（フィンランド：そり舌なし）
+människor	*	irregular	2	0	m ɛ|n ɪ|ɧ ɔ r	manual	人々（sk→sj音）
+torsdag	*	irregular	2	0	t oː ʂ|d ɑː	manual	木曜日（rs→そり舌化、g黙字）
+torsdag	finland	irregular	2	0	t oː r s|d ɑː	manual	木曜日（フィンランド：そり舌なし、g黙字）
+onsdag	*	irregular	2	0	uː n s|d ɑː	manual	水曜日（g黙字）
+tisdag	*	irregular	2	0	t iː s|d ɑː	manual	火曜日（g黙字）
+lördag	*	irregular	2	0	l øː|d ɑː	manual	土曜日（r黙字化、g黙字）
+söndag	*	irregular	2	0	s øː n|d ɑː	manual	日曜日（g黙字）
+måndag	*	irregular	2	0	m ɔː n|d ɑː	manual	月曜日（g黙字）
+fredag	*	irregular	2	0	f r eː|d ɑː	manual	金曜日（g黙字）
+stadsbibliotek	*	irregular	2	3	s t a d s|b ɪ b|l ɪ|ɔ|t eː k	manual	市立図書館
+# ===== 追加sj音例外 (sj_exception) =====
+reduktion	*	sj_exception	2	2	r ɛ|d ɵ k|ɧ uː n	manual	-tion→sj音
+promotion	*	sj_exception	2	2	p r ɔ|m ɔː|ɧ uː n	manual	-tion→sj音
+prevention	*	sj_exception	2	2	p r ɛ|v ɛ n|ɧ uː n	manual	-tion→sj音
+emission	*	sj_exception	2	2	ɛ|m ɪ|ɧ uː n	manual	-ssion→sj音
+konfession	*	sj_exception	2	2	k ɔ n|f ɛ|ɧ uː n	manual	-ssion→sj音
+# ===== 追加地名 (place_name) =====
+Härnösand	*	place_name	2	2	h ɛː|ɳ øː|s a n d	manual	北部都市（rn→そり舌化）
+Härnösand	finland	place_name	2	2	h ɛː r|n øː|s a n d	manual	北部都市（フィンランド：そり舌なし）
+Södertälje	*	place_name	2	0	s øː|d ɛ r|t ɛ l|j ɛ	manual	ストックホルム近郊
+Nynäshamn	*	place_name	2	0	n yː|n ɛ s|h a m n	manual	ストックホルム近郊
+# ===== 追加英語外来語 (loanword_en) =====
+weekend	*	loanword_en	2	1	v iː k|ɛ n d	manual	英語由来
+laser	*	loanword_en	2	0	l eː|s ɛ r	manual	英語由来
+scanner	*	loanword_en	2	0	s k a|n ɛ r	manual	英語由来
+browser	*	loanword_en	2	0	b r ɑː|s ɛ r	manual	英語由来（スウェーデン語近似発音）
+server	*	loanword_en	2	0	s øː r|v ɛ r	manual	英語由来
+router	*	loanword_en	2	0	r ɵ|t ɛ r	manual	英語由来（スウェーデン語化/rʉːtɛr/）
+# ===== 複合語 (compound) =====
+järnväg	*	compound	2	0	j ɛː ɳ|v ɛː ɡ	manual	複合語（rn→ɳ）
+järnväg	finland	compound	2	0	j ɛː r n|v ɛː ɡ	manual	複合語（フィンランド：そり舌なし）
+barndom	*	compound	2	0	b ɑː ɳ|d ɔ m	manual	複合語（rn→ɳ）
+barndom	finland	compound	2	0	b ɑː r n|d ɔ m	manual	複合語（フィンランド：そり舌なし）
+sommardag	*	compound	2	0	s ɔ|m a r|d ɑː	manual	複合語
+huvudstad	*	compound	2	0	h ʉː|v ɵ d|s t ɑː d	manual	複合語
+flygplats	*	compound	2	0	f l yː ɡ|p l a t s	manual	複合語
+landskap	*	compound	2	0	l a n d|s k ɑː p	manual	複合語
+sjukhus	*	compound	2	0	ɧ ʉː k|h ʉː s	manual	複合語（sj音）
+arbetsplats	*	compound	2	0	a r|b eː t s|p l a t s	manual	複合語
+barnvagn	*	compound	2	0	b ɑː ɳ|v a ŋ n	manual	複合語（rn→ɳ）
+barnvagn	finland	compound	2	0	b ɑː r n|v a ŋ n	manual	複合語（フィンランド：そり舌なし）
+bokhylla	*	compound	2	0	b uː k|h ʏ|l a	manual	複合語
+höghus	*	compound	2	0	h øː ɡ|h ʉː s	manual	複合語
+dörrklocka	*	compound	2	0	d œ r|k l ɔ|k a	manual	複合語
+folkmusik	*	compound	2	0	f ɔ l k|m ʉː|s iː k	manual	複合語
+gatukök	*	compound	2	0	ɡ ɑː|t ʉː|ɕ øː k	manual	複合語（k→tj音 + 軟母音）
+julklapp	*	compound	2	0	j ʉː l|k l a p	manual	複合語
+köttbullar	*	compound	2	0	ɕ œ t|b ɵ|l a r	manual	複合語（k→tj音）
+livsmedel	*	compound	2	0	l iː v s|m eː|d ɛ l	manual	複合語
+morgontidning	*	compound	2	0	m ɔ r|ɡ ɔ n|t iː d|n ɪ ŋ	manual	複合語
+osthyvel	*	compound	2	0	ɔ s t|h yː|v ɛ l	manual	複合語
+potatismos	*	compound	2	0	p ɔ|t ɑː|t ɪ s|m uː s	manual	複合語
+regnkappa	*	compound	2	0	r ɛ ŋ n|k a|p a	manual	複合語
+skrivbord	*	compound	2	0	s k r iː v|b uː r d	manual	複合語
+snöstorm	*	compound	2	0	s n øː|s t ɔ r m	manual	複合語
+trädgård	*	compound	2	0	t r ɛː d|ɡ ɔː r d	manual	複合語
+vattenkraft	*	compound	2	0	v a|t ɛ n|k r a f t	manual	複合語
+årstid	*	compound	2	0	ɔː ʂ|t iː d	manual	複合語（rs→そり舌化）
+årstid	finland	compound	2	0	ɔː r s|t iː d	manual	複合語（フィンランド：そり舌なし）
+brevlåda	*	compound	2	0	b r eː v|l ɔː|d a	manual	複合語
+cykelbana	*	compound	2	0	s yː|k ɛ l|b ɑː|n a	manual	複合語
+daghem	*	compound	2	0	d ɑː ɡ|h ɛ m	manual	複合語
+farmor	*	compound	2	0	f ɑː r|m uː r	manual	複合語
+glasögon	*	compound	2	0	ɡ l ɑː s|øː|ɡ ɔ n	manual	複合語
+jordgubbe	*	compound	2	0	j uː r d|ɡ ɵ|b ɛ	manual	複合語
+kattunge	*	compound	2	0	k a t|ɵ ŋ|ɛ	manual	複合語
+ljusstake	*	compound	2	0	j ʉː s|s t ɑː|k ɛ	manual	複合語（lj-でlは黙字）
+mellanmål	*	compound	2	0	m ɛ|l a n|m ɔː l	manual	複合語
+nattklubb	*	compound	2	0	n a t|k l ɵ b	manual	複合語
+ölflaska	*	compound	2	0	øː l|f l a|s k a	manual	複合語
+telefonnummer	*	compound	2	0	t ɛ|l ɛ|f oː n|n ɵ|m ɛ r	manual	複合語
+isbrytare	*	compound	2	0	iː s|b r yː|t a|r ɛ	manual	複合語
+övervikt	*	compound	2	0	øː|v ɛ r|v ɪ k t	manual	複合語
+inomhus	*	compound	2	0	ɪ|n ɔ m|h ʉː s	manual	複合語
+# ===== 追加英語由来外来語 (loanword_en) =====
+website	*	loanword_en	2	0	v ɛ b|s a j t	manual	英語由来
+management	*	loanword_en	2	0	m a|n ɛ d ɕ|m ɛ n t	manual	英語由来
+e-mail	*	loanword_en	2	0	iː|m ɛ j l	manual	英語由来
+coach	*	loanword_en	1	0	k ɔː t ɧ	manual	英語由来
+software	*	loanword_en	2	0	s ɔ f t|v ɛː r	manual	英語由来
+hardware	*	loanword_en	2	0	h ɑː r d|v ɛː r	manual	英語由来
+deadline	*	loanword_en	2	0	d ɛ d|l a j n	manual	英語由来
+feedback	*	loanword_en	2	0	f iː d|b a k	manual	英語由来
+marketing	*	loanword_en	2	0	m ɑː r|k ɛ|t ɪ ŋ	manual	英語由来
+online	*	loanword_en	2	0	ɔ n|l a j n	manual	英語由来
+trailer	*	loanword_en	2	0	t r ɛ j|l ɛ r	manual	英語由来
+streamer	*	loanword_en	2	0	s t r iː|m ɛ r	manual	英語由来
+influencer	*	loanword_en	2	0	ɪ n|f l ʉː|ɛ n|s ɛ r	manual	英語由来
+blogger	*	loanword_en	2	0	b l ɔ|ɡ ɛ r	manual	英語由来
+startup	*	loanword_en	2	0	s t ɑː ʈ|ɵ p	manual	英語由来（そり舌化）
+startup	finland	loanword_en	2	0	s t ɑː r t|ɵ p	manual	英語由来（フィンランド：そり舌なし）
+backup	*	loanword_en	2	0	b a k|ɵ p	manual	英語由来
+update	*	loanword_en	2	0	ɵ p|d ɛ j t	manual	英語由来
+download	*	loanword_en	2	0	d ɑː n|l oː d	manual	英語由来
+# ===== 追加フランス語由来外来語 (loanword_fr) =====
+restaurant	*	loanword_fr	2	2	r ɛ s|t ɑː|r a ŋ	manual	仏語由来（restaurangと同義）
+plafond	*	loanword_fr	2	1	p l a|f ɔ n d	manual	仏語由来
+regissör	*	loanword_fr	2	1	r ɛ|ɧ ɪ|s øː r	manual	仏語由来
+kostym	*	loanword_fr	2	1	k ɔ s|t yː m	manual	仏語由来
+reklam	*	loanword_fr	2	1	r ɛ|k l ɑː m	manual	仏語由来
+gardin	*	loanword_fr	2	1	ɡ a r|d iː n	manual	仏語由来
+nivå	*	loanword_fr	2	1	n ɪ|v ɔː	manual	仏語由来
+soffa	*	loanword_fr	2	0	s ɔ|f a	manual	仏語由来
+kaffe	*	loanword_fr	2	0	k a|f ɛ	manual	仏語由来
+kafé	*	loanword_fr	2	1	k a|f eː	manual	仏語由来
+paraply	*	loanword_fr	2	2	p a|r a|p l yː	manual	仏語由来
+# ===== 追加地名 (place_name) =====
+Norrbotten	finland	place_name	2	0	n ɔ r|b ɔ|t ɛ n	manual	北部地方（フィンランド方言同形）
+Skellefteå	*	place_name	2	2	ɧ ɛ|l ɛ f|t ɛ|ɔː	manual	北部都市（sk+軟母音→sj音）
+Lidköping	*	place_name	2	0	l iː d|ɕ øː|p ɪ ŋ	manual	西部都市（k→tj音）
+Nyköping	*	place_name	2	0	n yː|ɕ øː|p ɪ ŋ	manual	東部都市（k→tj音）
+Enköping	*	place_name	2	0	ɛ ŋ|ɕ øː|p ɪ ŋ	manual	中部都市（k→tj音）
+Borlänge	*	place_name	2	1	b uː|l ɛ ŋ|ɛ	manual	ダーラナ都市
+Landskrona	*	place_name	2	0	l a n d s|k r uː|n a	manual	南部都市
+Varberg	*	place_name	2	0	v ɑː r|b ɛ r j	manual	西海岸都市（語末g→j）
+Motala	*	place_name	2	0	m uː|t ɑː|l a	manual	東部都市
+Piteå	*	place_name	2	0	p iː|t ɛ|ɔː	manual	北部都市
+Norrland	*	place_name	2	0	n ɔ r|l a n d	manual	北部地方
+Småland	*	place_name	2	0	s m ɔː|l a n d	manual	南部地方
+Värmland	*	place_name	2	0	v ɛ r m|l a n d	manual	西部地方
+Blekinge	*	place_name	2	0	b l eː|k ɪ ŋ|ɛ	manual	南東地方
+Halland	*	place_name	2	0	h a|l a n d	manual	西海岸地方
+# ===== 人名 (person_name) =====
+Kjell	*	person_name	1	0	ɕ ɛ l	manual	男性名（kj→tj音）
+Björk	*	person_name	1	0	b j œ r k	manual	姓（白樺の意）
+Hjördis	*	person_name	2	0	j øː|d ɪ s	manual	女性名（hj-でhは黙字、rは脱落）
+Stig	*	person_name	1	0	s t iː ɡ	manual	男性名
+Ingvar	*	person_name	2	0	ɪ ŋ|v ɑː r	manual	男性名
+Sigrid	*	person_name	2	0	s iː ɡ|r ɪ d	manual	女性名
+Torbjörn	*	person_name	2	0	t uː r|b j œ r n	manual	男性名
+Gunilla	*	person_name	2	0	ɡ ʉː|n ɪ|l a	manual	女性名
+Ulf	*	person_name	1	0	ɵ l f	manual	男性名
+Åsa	*	person_name	2	0	ɔː|s a	manual	女性名
+Göran	*	person_name	2	0	j øː|r a n	manual	男性名（g軟音化）
+Lena	*	person_name	2	0	l eː|n a	manual	女性名
+Astrid	*	person_name	2	0	a s|t r ɪ d	manual	女性名
+Nils	*	person_name	1	0	n ɪ l s	manual	男性名
+Per	*	person_name	1	0	p ɛː r	manual	男性名
+Lars	*	person_name	1	0	l a ʂ	manual	男性名（rs→そり舌化）
+Lars	finland	person_name	1	0	l a r s	manual	男性名（フィンランド：そり舌なし）
+Erik	*	person_name	2	0	eː|r ɪ k	manual	男性名
+Karin	*	person_name	2	0	k ɑː|r ɪ n	manual	女性名
+Anna	*	person_name	2	0	a|n a	manual	女性名
+Gustaf	*	person_name	2	0	ɡ ɵ s|t ɑː v	manual	男性名
+Elsa	*	person_name	2	0	ɛ l|s a	manual	女性名
+Sven	*	person_name	1	0	s v ɛ n	manual	男性名
+# ===== 最小ペア (minimal_pair) =====
+anden	*	minimal_pair	2	0	a n|d ɛ n	manual	定形：アヒル（accent 1）/精霊（accent 2）ここでは共通形
+tomten	*	minimal_pair	2	0	t ɔ m|t ɛ n	manual	定形：敷地/サンタ（アクセント差）
+buren	*	minimal_pair	2	0	b ʉː|r ɛ n	manual	檻（定形）/運ばれた（分詞）
+stegen	*	minimal_pair	2	0	s t eː|ɡ ɛ n	manual	はしご（定形）/歩み（定形）
+slottet	*	minimal_pair	2	0	s l ɔ|t ɛ t	manual	城（定形）
+tanken	*	minimal_pair	2	0	t a ŋ|k ɛ n	manual	考え（定形）/タンク（定形）
+planet	*	minimal_pair	2	0	p l ɑː|n ɛ t	manual	計画（定形）/飛行機（定形）
+viken	*	minimal_pair	2	0	v iː|k ɛ n	manual	入江（定形）
+laget	*	minimal_pair	2	0	l ɑː|ɡ ɛ t	manual	チーム（定形）
+stranden	*	minimal_pair	2	0	s t r a n|d ɛ n	manual	浜辺（定形）
+bryggan	*	minimal_pair	2	0	b r ʏ|ɡ a n	manual	桟橋（定形）
+eken	*	minimal_pair	2	0	eː|k ɛ n	manual	樫の木（定形）
+# ===== 追加不規則語 (irregular) =====
+varför	*	irregular	2	0	v a r|f øː r	manual	なぜ
+vänlig	*	irregular	2	0	v ɛ n|l ɪ	manual	親切な、語末-ig→/ɪ/
+hemlig	*	irregular	2	0	h ɛ m|l ɪ	manual	秘密の、語末-ig→/ɪ/
+tydlig	*	irregular	2	0	t yː d|l ɪ	manual	明確な、語末-ig→/ɪ/
+plötslig	*	irregular	2	0	p l œ t s|l ɪ	manual	突然の、語末-ig→/ɪ/
+fruktansvärd	*	irregular	2	0	f r ɵ k|t a n s|v ɛː r d	manual	恐ろしい
+emellan	*	irregular	2	1	ɛ|m ɛ|l a n	manual	〜の間
+villkor	*	irregular	2	0	v ɪ l|k oː r	manual	条件
+åtminstone	*	irregular	2	0	ɔː t|m ɪ n|s t ɔ|n ɛ	manual	少なくとも
+framför	*	irregular	2	0	f r a m|f øː r	manual	〜の前に
+genast	*	irregular	2	0	j eː|n a s t	manual	すぐに
+nämligen	*	irregular	2	0	n ɛ m|l ɪ|ɡ ɛ n	manual	すなわち
+knappast	*	irregular	2	0	k n a|p a s t	manual	ほとんど〜ない
+dessutom	*	irregular	2	2	d ɛ|s ʉː|t ɔ m	manual	さらに
+antagligen	*	irregular	2	1	a n|t ɑː|l ɪ|ɡ ɛ n	manual	おそらく
+tyvärr	*	irregular	2	1	t yː|v ɛ r	manual	残念ながら
+emellertid	*	irregular	2	2	ɛ|m ɛ|l ɛ r|t iː d	manual	しかしながら
+samhälle	*	irregular	2	0	s a m|h ɛ|l ɛ	manual	社会
+område	*	irregular	2	0	ɔ m|r ɔː|d ɛ	manual	地域
+kunskap	*	irregular	2	0	k ɵ n|s k ɑː p	manual	知識
+vetenskap	*	irregular	2	0	v eː|t ɛ n|s k ɑː p	manual	科学
+erfarenhet	*	irregular	2	1	ɛ r|f ɑː|r ɛ n|h eː t	manual	経験
+sysselsättning	*	irregular	2	0	s ʏ|s ɛ l|s ɛ t|n ɪ ŋ	manual	雇用
+tjänsteman	*	irregular	2	0	ɕ ɛ n s|t ɛ|m a n	manual	公務員（tj→ɕ）
+rättighet	*	irregular	2	0	r ɛ|t ɪ|h eː t	manual	権利
+möjlighet	*	irregular	2	0	m øː j|l ɪ|h eː t	manual	可能性
+skyldighet	*	irregular	2	0	ɧ ʏ l|d ɪ|h eː t	manual	義務（sk+y→sj音）
+sjuksköterska	*	compound	2	0	ɧ ʉː k|ɧ øː|t ɛ ʂ|k a	manual	看護師（sj音 + sk+軟母音→sj音 + rs→そり舌化）
+sjuksköterska	finland	compound	2	0	ɧ ʉː k|ɧ øː|t ɛ r s|k a	manual	看護師（フィンランド：そり舌なし）
+förskola	*	compound	2	0	f øː r|s k uː|l a	manual	幼稚園
+grundskola	*	compound	2	0	ɡ r ɵ n d|s k uː|l a	manual	基礎学校
+högskola	*	compound	2	0	h øː ɡ|s k uː|l a	manual	大学
+barnmorska	*	compound	2	0	b ɑː ɳ|m ɔ ʂ|k a	manual	助産師（rn→ɳ、rs→ʂ）
+barnmorska	finland	compound	2	0	b ɑː r n|m ɔ r s|k a	manual	助産師（フィンランド：そり舌なし）
+# ===== 追加sj音例外 (sj_exception) =====
+komplikation	*	sj_exception	2	3	k ɔ m|p l ɪ|k a|ɧ uː n	manual	-tion→sj音
+ventilation	*	sj_exception	2	3	v ɛ n|t ɪ|l a|ɧ uː n	manual	-tion→sj音
+provokation	*	sj_exception	2	3	p r ɔ|v ɔ|k a|ɧ uː n	manual	-tion→sj音
+koncentration	*	sj_exception	2	3	k ɔ n|s ɛ n|t r a|ɧ uː n	manual	-tion→sj音
+administration	*	sj_exception	2	4	a d|m ɪ|n ɪ s|t r a|ɧ uː n	manual	-tion→sj音
+registration	*	sj_exception	2	4	r ɛ|j ɪ s|t r a|ɧ uː n	manual	-tion→sj音（g軟音化）
+kommission	*	sj_exception	2	2	k ɔ|m ɪ|ɧ uː n	manual	-ssion→sj音
+depression	*	sj_exception	2	2	d ɛ|p r ɛ|ɧ uː n	manual	-ssion→sj音
+impression	*	sj_exception	2	2	ɪ m|p r ɛ|ɧ uː n	manual	-ssion→sj音
+procession	*	sj_exception	2	2	p r ɔ|s ɛ|ɧ uː n	manual	-ssion→sj音
+profession	*	sj_exception	2	2	p r ɔ|f ɛ|ɧ uː n	manual	-ssion→sj音
+session	*	sj_exception	2	1	s ɛ|ɧ uː n	manual	-ssion→sj音
+ambition	*	sj_exception	2	2	a m|b ɪ|ɧ uː n	manual	-tion→sj音
+definition	*	sj_exception	2	3	d ɛ|f ɪ|n ɪ|ɧ uː n	manual	-tion→sj音
+koalition	*	sj_exception	2	3	k ɔ|a|l ɪ|ɧ uː n	manual	-tion→sj音
+petition	*	sj_exception	2	2	p ɛ|t ɪ|ɧ uː n	manual	-tion→sj音
+donation	*	sj_exception	2	2	d ɔ|n a|ɧ uː n	manual	-tion→sj音
+rotation	*	sj_exception	2	2	r ɔ|t a|ɧ uː n	manual	-tion→sj音
+sensation	*	sj_exception	2	2	s ɛ n|s a|ɧ uː n	manual	-tion→sj音
+# ===== ipa-dict評価コーパス頻出誤り語 (corpus_fix) =====
+garage	central	corpus_fix	2	1	ɡ a|r ɑː ɧ	manual	仏語由来（中央方言固有: ge→sj音）
+chauvinism	*	corpus_fix	2	2	ɧ oː|v ɪ|n ɪ s m	manual	ch→sj音
+succé	*	corpus_fix	2	1	s ɵ k|s eː	manual	仏語由来
+sorbet	*	corpus_fix	2	1	s ɔ r|b eː	manual	仏語由来
+bidé	*	corpus_fix	2	1	b ɪ|d eː	manual	仏語由来
+motell	*	corpus_fix	2	1	m ɔ|t ɛ l	manual	英語motel由来
+brutalt	*	corpus_fix	2	1	b r ʉː|t ɑː l t	manual	brutal+接尾辞t
+diagonal	*	corpus_fix	2	3	d ɪ|a|ɡ ɔ|n ɑː l	manual	ラテン語由来
+diplomat	*	corpus_fix	2	2	d ɪ p|l ɔ|m ɑː t	manual	ラテン語由来
+speciell	*	corpus_fix	2	2	s p ɛ|s ɪ|ɛ l	manual	ラテン語由来
+manuell	*	corpus_fix	2	2	m a|n ʉː|ɛ l	manual	ラテン語由来
+federal	*	corpus_fix	2	2	f ɛ|d ɛ|r ɑː l	manual	ラテン語由来
+mineral	*	corpus_fix	2	2	m ɪ|n ɛ|r ɑː l	manual	ラテン語由来
+kollektiv	*	corpus_fix	2	2	k ɔ|l ɛ k|t iː v	manual	ラテン語由来
+initial	*	corpus_fix	2	3	ɪ|n ɪ|t s ɪ|ɑː l	manual	ラテン語由来
+examen	*	corpus_fix	2	1	ɛ k|s ɑː|m ɛ n	manual	ラテン語由来
+tabell	*	corpus_fix	2	1	t a|b ɛ l	manual	ラテン語由来
+kupol	*	corpus_fix	2	1	k ʉː|p oː l	manual	ラテン語由来
+satirist	*	corpus_fix	2	2	s a|t iː|r ɪ s t	manual	ラテン語由来
+proportionerlig	*	corpus_fix	2	3	p r ɔ|p ɔ ʈ|ɧ ʊ|n eː r|l ɪ ɡ	manual	-tion→sj音（語末-ig→ɪɡ: 形容詞接尾辞-lig）
+arkeologi	*	corpus_fix	2	3	a r|k ɛ|ɔ|l ɔ|ɡ iː	manual	ギリシャ語由来（ke→k硬音維持）
+biologi	*	corpus_fix	2	3	b iː|ɔ|l ɔ|ɡ iː	manual	ギリシャ語由来
+kennel	*	corpus_fix	2	0	k ɛ|n ɛ l	manual	英語由来（k硬音維持+軟母音前）
+orakel	*	corpus_fix	2	1	ʊ|r ɑː|k ɛ l	manual	ラテン語由来（k硬音維持）
+potpurri	*	corpus_fix	2	2	p ɔ t|p ɵ|r iː	manual	フランス語由来
+legitimerad	*	corpus_fix	2	2	l ɛ|ɡ ɪ|t ɪ|m eː|r a d	manual	ラテン語由来（語頭le-は短母音）
+konkurrera	*	corpus_fix	2	2	k ɔ ŋ|k ɵ|r eː|r a	manual	ラテン語由来（nk→ŋk）
+automat	*	corpus_fix	2	2	a ʊ|t ɔ|m ɑː t	manual	ギリシャ語由来
+humoristisk	*	corpus_fix	2	1	h ɵ|m ɔ|r ɪ s|t ɪ s k	manual	ラテン語由来
+projekt	*	corpus_fix	2	1	p r ɔ|ɧ ɛ k t	manual	ラテン語由来（j→sj音）
+preferens	*	corpus_fix	2	2	p r ɛ|f ɛ|r a ŋ s	manual	ラテン語由来
+reumatism	*	corpus_fix	2	2	r ɛ v|m a|t ɪ s m	manual	ギリシャ語由来（eu→ɛv）
+skeptisk	*	corpus_fix	2	0	s k ɛ p|t ɪ s k	manual	ギリシャ語由来（sk硬音維持）
+teoretisk	*	corpus_fix	2	1	t ɛ|ɔ|r eː|t ɪ s k	manual	ギリシャ語由来
+zucchini	*	corpus_fix	2	1	s ʊ|k iː|n ɪ	manual	イタリア語由来（z→s、cch→k、語末i→ɪ）
+bojkottar	*	corpus_fix	2	0	b ɔ j|k ɔ t|a r	manual	動詞現在形
+trakasserar	*	corpus_fix	2	2	t r a|k a|s eː|r a r	manual	仏語由来
+bedrägeri	*	corpus_fix	2	2	b ɛ|d r ɛː|ɡ ɛ|r iː	manual	不規則（ä→ɛː、語末-i→iː）
+befolkning	*	corpus_fix	2	1	b ɛ|f ɔ l k|n ɪ ŋ	manual	複合語系
+beläggning	*	corpus_fix	2	1	b ɛ|l ɛ ɡ|n ɪ ŋ	manual	動詞派生名詞

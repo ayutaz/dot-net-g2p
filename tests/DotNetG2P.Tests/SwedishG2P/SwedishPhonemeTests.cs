@@ -23,9 +23,9 @@ namespace DotNetG2P.Tests.SwedishG2P
         }
 
         [Fact]
-        public void SwedishIpaPhoneme_TotalCount_Is41()
+        public void SwedishIpaPhoneme_TotalCount_Is42()
         {
-            Assert.Equal(41, Enum.GetValues(typeof(SwedishIpaPhoneme)).Length);
+            Assert.Equal(42, Enum.GetValues(typeof(SwedishIpaPhoneme)).Length);
         }
 
         // =====================================================================
