@@ -39,8 +39,7 @@ namespace DotNetG2P.Swedish.Rules
         /// </summary>
         internal static bool IsConsonantChar(char c)
         {
-            return (c >= 'a' && c <= 'z' && !IsVowelChar(c))
-                || (c >= 'A' && c <= 'Z' && !IsVowelChar(c));
+            return c >= 'a' && c <= 'z' && !IsVowelChar(c);
         }
 
         /// <summary>
@@ -57,6 +56,11 @@ namespace DotNetG2P.Swedish.Rules
         /// </summary>
         internal static bool IsFollowedByDoubleConsonant(string word, int vowelIndex)
         {
+            if (vowelIndex + 1 >= word.Length) return false;
+
+            // x は /ks/ の2子音相当
+            if (word[vowelIndex + 1] == 'x') return true;
+
             if (vowelIndex + 2 >= word.Length) return false;
             var c1 = char.ToLowerInvariant(word[vowelIndex + 1]);
             var c2 = char.ToLowerInvariant(word[vowelIndex + 2]);

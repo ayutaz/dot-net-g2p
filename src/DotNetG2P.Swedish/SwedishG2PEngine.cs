@@ -61,13 +61,13 @@ namespace DotNetG2P.Swedish
             ThrowIfDisposed();
 
             var words = GetWords(text);
-            if (words.Count == 0)
+            if (words.Length == 0)
                 return Array.Empty<SwedishPhoneme>();
 
-            var result = new List<SwedishPhoneme>(words.Count * 6);
-            for (var i = 0; i < words.Count; i++)
+            var result = new List<SwedishPhoneme>(words.Length * 6);
+            for (var i = 0; i < words.Length; i++)
             {
-                var pronunciation = ConvertWordFull(words[i]);
+                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect);
                 result.AddRange(pronunciation.PhonemesInternal);
             }
 
@@ -100,11 +100,17 @@ namespace DotNetG2P.Swedish
             return BatchConversionHelper.ConvertToArray(texts, ToIPA);
         }
 
+        /// <summary>複数テキストを一括で音素リストに変換する。</summary>
+        public IReadOnlyList<IReadOnlyList<SwedishPhoneme>> ToPhonemeListBatch(IReadOnlyList<string> texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToArray<IReadOnlyList<SwedishPhoneme>>(texts, ToPhonemeList);
+        }
+
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
-                return;
+            Interlocked.CompareExchange(ref _disposed, 1, 0);
         }
 
         // =================================================================
@@ -119,90 +125,31 @@ namespace DotNetG2P.Swedish
             ThrowIfDisposed();
 
             var words = GetWords(text);
-            if (words.Count == 0)
+            if (words.Length == 0)
                 return string.Empty;
 
             var builder = new StringBuilder(text.Length + 8);
-            for (var i = 0; i < words.Count; i++)
+            for (var i = 0; i < words.Length; i++)
             {
                 if (i > 0)
                     builder.Append(' ');
 
-                var pronunciation = ConvertWordFull(words[i]);
+                var pronunciation = GraphemeToPhonemeRules.ConvertWord(words[i], _options.Dialect);
                 builder.Append(formatter(pronunciation));
             }
 
             return builder.ToString();
         }
 
-        /// <summary>
-        /// 単語に対してG2Pフルパイプラインを実行し、音節分割・ストレス付きのSwedishPronunciationを返す。
-        /// 1. GraphemeToPhonemeRules.ConvertWord で音素列を取得
-        /// 2. SwedishSyllabifier.Syllabify で正書法ベースの音節分割
-        /// 3. StressAssigner.MarkStress でストレス位置決定
-        /// 4. 音節ごとの音素数を算出して SyllableOffsets を構築
-        /// 5. 完成した SwedishPronunciation を返す
-        /// </summary>
-        private static SwedishPronunciation ConvertWordFull(string word)
-        {
-            // Phase 1: G2Pルールで全体の音素列を取得
-            var rawPronunciation = GraphemeToPhonemeRules.ConvertWord(word);
-            var phonemes = rawPronunciation.PhonemesInternal;
-
-            if (phonemes.Length == 0)
-                return rawPronunciation;
-
-            // Phase 2-3: 正書法ベースの音節分割 + ストレス付与
-            var lower = word.ToLowerInvariant();
-            var syllables = StressAssigner.MarkStress(lower, SwedishSyllabifier.Syllabify(lower));
-
-            if (syllables.Count == 0)
-                return rawPronunciation;
-
-            // Phase 4: 各音節の音素数を算出して SyllableOffsets を構築
-            // 各音節テキストを個別にConvertWordして音素数を数え、累積オフセットを計算する。
-            var syllableOffsets = new int[syllables.Count];
-            var stressedIndex = -1;
-            var offset = 0;
-
-            for (var i = 0; i < syllables.Count; i++)
-            {
-                syllableOffsets[i] = offset;
-
-                if (syllables[i].IsStressed)
-                    stressedIndex = i;
-
-                // 音節テキストを個別変換して音素数を取得
-                var syllablePronunciation = GraphemeToPhonemeRules.ConvertWord(syllables[i].Text);
-                offset += syllablePronunciation.PhonemesInternal.Length;
-            }
-
-            // 個別変換の合計と全体変換の音素数が異なる場合
-            // （そり舌化・語末g黙字は全体変換のみで適用されるため差異が出うる）
-            // → オフセット末尾を全体音素数に収まるよう補正
-            if (offset != phonemes.Length)
-            {
-                // 差分を最後の音節で吸収（そり舌化でrが消えた分などの調整）
-                // オフセットが音素配列を超えないよう各値をクランプ
-                for (var i = 0; i < syllableOffsets.Length; i++)
-                {
-                    if (syllableOffsets[i] > phonemes.Length)
-                        syllableOffsets[i] = phonemes.Length;
-                }
-            }
-
-            return new SwedishPronunciation(phonemes, syllableOffsets, stressedIndex);
-        }
-
-        /// <summary>テキストを小文字化し、空白で分割してトークンリストを返す。</summary>
-        private static IReadOnlyList<string> GetWords(string text)
+        /// <summary>テキストをNFC正規化・小文字化し、空白で分割してトークン配列を返す。</summary>
+        private string[] GetWords(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return Array.Empty<string>();
 
-            var lower = text.ToLowerInvariant();
-            var parts = lower.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
-            return parts;
+            // NFC正規化 + 小文字化（パイプライン全体でこの1回のみ）
+            var normalized = text.Normalize(NormalizationForm.FormC).ToLowerInvariant();
+            return normalized.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
         }
 
         private void ThrowIfDisposed()

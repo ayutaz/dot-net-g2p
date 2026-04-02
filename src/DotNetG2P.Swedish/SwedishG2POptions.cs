@@ -16,6 +16,12 @@ namespace DotNetG2P.Swedish
         /// <summary>IPA出力にストレスマークを含めるか。</summary>
         public bool IncludeStress { get; }
 
+        /// <summary>テキスト正規化を有効にするか。</summary>
+        public bool EnableTextNormalization { get; }
+
+        /// <summary>例外辞書を有効にするか。</summary>
+        public bool EnableExceptionDictionary { get; }
+
         /// <summary>音素列出力の区切り文字。</summary>
         public string Separator { get; }
 
@@ -25,10 +31,14 @@ namespace DotNetG2P.Swedish
         public SwedishG2POptions(
             SwedishDialect dialect = SwedishDialect.Central,
             bool includeStress = true,
+            bool enableTextNormalization = true,
+            bool enableExceptionDictionary = true,
             string separator = " ")
         {
             Dialect = dialect;
             IncludeStress = includeStress;
+            EnableTextNormalization = enableTextNormalization;
+            EnableExceptionDictionary = enableExceptionDictionary;
             Separator = separator ?? throw new ArgumentNullException(nameof(separator));
         }
     }

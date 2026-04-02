@@ -26,5 +26,8 @@ namespace DotNetG2P.Swedish
             SyllableOffsetsInternal = syllableOffsets ?? throw new ArgumentNullException(nameof(syllableOffsets));
             StressedSyllableIndex = stressedSyllableIndex;
         }
+
+        internal static readonly SwedishPronunciation Empty =
+            new SwedishPronunciation(Array.Empty<SwedishPhoneme>(), Array.Empty<int>(), -1);
     }
 }

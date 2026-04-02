@@ -42,8 +42,8 @@ namespace DotNetG2P.Tests.SwedishG2P
 
         [Theory]
         [InlineData("sjuk", "\u02C8\u0267\u0289\u02D0k")]       // ˈɧʉːk
-        [InlineData("skjorta", "\u02C8\u0267\u0254\u0288\u0251\u02D0")] // ˈɧɔʈɑː (skj→ɧ, rt→ʈ)
-        [InlineData("stjärna", "\u02C8\u0267\u025B\u0273\u0251\u02D0")] // ˈɧɛɳɑː (stj→ɧ, rn→ɳ)
+        [InlineData("skjorta", "\u02C8\u0267\u028A\u0288a")]    // ˈɧʊʈa (skj→ɧ, o短→ʊ, rt→ʈ, 非ストレス末尾a短)
+        [InlineData("stjärna", "\u02C8\u0267\u025B\u0273a")]    // ˈɧɛɳa (stj→ɧ, rn→ɳ, 非ストレス末尾a短)
         [InlineData("sked", "\u02C8\u0267e\u02D0d")]              // ˈɧeːd (sk+軟母音→ɧ)
         public void ToIPA_SjSound_ReturnsExpectedIPA(string input, string expected)
         {
@@ -55,9 +55,9 @@ namespace DotNetG2P.Tests.SwedishG2P
         // =====================================================================
 
         [Theory]
-        [InlineData("tjock", "\u02C8\u0255\u0254k")]             // ˈɕɔk (tj→ɕ)
+        [InlineData("tjock", "\u02C8\u0255\u028Ak")]             // ˈɕʊk (tj→ɕ, o短→ʊ)
         [InlineData("k\u00f6k", "\u02C8\u0255\u00f8\u02D0k")]   // ˈɕøːk (k+軟母音→ɕ)
-        [InlineData("kyrka", "\u02C8\u0255\u028Frk\u0251\u02D0")] // ˈɕʏrkɑː (k+y→ɕ)
+        [InlineData("kyrka", "\u02C8\u0255\u028Frka")]           // ˈɕʏrka (k+y→ɕ, 非ストレス末尾a短)
         public void ToIPA_TjSound_ReturnsExpectedIPA(string input, string expected)
         {
             Assert.Equal(expected, _engine.ToIPA(input));
@@ -68,9 +68,9 @@ namespace DotNetG2P.Tests.SwedishG2P
         // =====================================================================
 
         [Theory]
-        [InlineData("bord", "\u02C8b\u0254\u0256")]       // ˈbɔɖ (rd→ɖ)
+        [InlineData("bord", "\u02C8b\u028A\u0256")]       // ˈbʊɖ (rd→ɖ, o短→ʊ)
         [InlineData("barn", "\u02C8ba\u0273")]             // ˈbaɳ (rn→ɳ)
-        [InlineData("fors", "\u02C8f\u0254\u0282")]        // ˈfɔʂ (rs→ʂ)
+        [InlineData("fors", "\u02C8f\u028A\u0282")]        // ˈfʊʂ (rs→ʂ, o短→ʊ)
         public void ToIPA_Retroflexes_ReturnsExpectedIPA(string input, string expected)
         {
             Assert.Equal(expected, _engine.ToIPA(input));
@@ -83,7 +83,7 @@ namespace DotNetG2P.Tests.SwedishG2P
         [Theory]
         [InlineData("djur", "\u02C8j\u0289\u02D0r")]     // ˈjʉːr (dj→j)
         [InlineData("ljus", "\u02C8j\u0289\u02D0s")]     // ˈjʉːs (lj→j)
-        [InlineData("hj\u00e4rta", "\u02C8j\u025B\u0288\u0251\u02D0")] // ˈjɛʈɑː (hj→j, rt→ʈ)
+        [InlineData("hj\u00e4rta", "\u02C8j\u025B\u0288a")] // ˈjɛʈa (hj→j, rt→ʈ, 非ストレス末尾a短)
         public void ToIPA_SilentLetters_ReturnsExpectedIPA(string input, string expected)
         {
             Assert.Equal(expected, _engine.ToIPA(input));

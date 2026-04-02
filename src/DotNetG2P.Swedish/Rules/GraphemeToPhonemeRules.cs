@@ -5,126 +5,186 @@ namespace DotNetG2P.Swedish.Rules
 {
     /// <summary>
     /// スウェーデン語のルールベース書記素→音素変換。
-    /// 5フェーズ（トリグラフ/ダイグラフ認識、子音軟化、母音変換、そり舌化、黙字処理）を
-    /// 統合走査で処理する。
+    /// 音節分割→ストレス→音節ごとG2P変換→後処理を一括実行し、
+    /// 完成品の SwedishPronunciation を返す（スペイン語パターン）。
     /// </summary>
     internal static class GraphemeToPhonemeRules
     {
         /// <summary>
-        /// 単語をスウェーデン語のG2Pルールに基づいて音素列に変換する。
+        /// 単語をG2P変換する。入力は小文字化済みを前提とする。
         /// </summary>
-        /// <param name="word">変換対象の単語</param>
-        /// <returns>音素列・音節分割情報を含む発音情報</returns>
-        internal static SwedishPronunciation ConvertWord(string word)
+        internal static SwedishPronunciation ConvertWord(string word, SwedishDialect dialect)
         {
             if (string.IsNullOrEmpty(word))
                 return new SwedishPronunciation(Array.Empty<SwedishPhoneme>(), Array.Empty<int>(), -1);
 
             var lower = word.ToLowerInvariant();
-            var phonemes = new List<SwedishPhoneme>(lower.Length + 2);
 
-            // Phase 1-3: トリグラフ/ダイグラフ認識 + 子音軟化 + 母音変換（統合走査）
-            var i = 0;
-            while (i < lower.Length)
+            // 1. 音節分割 + ストレス付与（先に決定）
+            var syllables = StressAssigner.MarkStress(lower, SwedishSyllabifier.Syllabify(lower));
+
+            // 2. 音節ごとにG2P変換（オフセットを自然追跡）
+            var phonemes = new List<SwedishPhoneme>(lower.Length + 4);
+            var syllableOffsets = new int[syllables.Count];
+            var stressedIndex = -1;
+
+            for (var si = 0; si < syllables.Count; si++)
             {
-                var consumed = TryMultigraph(lower, i, phonemes);
+                syllableOffsets[si] = phonemes.Count;
+                if (syllables[si].IsStressed)
+                    stressedIndex = si;
+
+                var syl = syllables[si];
+                AppendSyllable(lower, syl.StartIndex, syl.StartIndex + syl.Length,
+                    syl.IsStressed, phonemes, dialect);
+            }
+
+            // 3. 後処理（dialect依存）
+            if (dialect == SwedishDialect.Central)
+            {
+                ApplyRetroflexion(phonemes, syllableOffsets);
+            }
+
+            ApplyFinalGWeakening(lower, phonemes);
+
+            return new SwedishPronunciation(phonemes.ToArray(), syllableOffsets, stressedIndex);
+        }
+
+        /// <summary>音節範囲のG2P変換。</summary>
+        private static void AppendSyllable(string word, int start, int end,
+            bool isStressed, List<SwedishPhoneme> output, SwedishDialect dialect)
+        {
+            var i = start;
+            while (i < end)
+            {
+                var consumed = TryMultigraph(word, i, end, output);
                 if (consumed > 0)
                 {
                     i += consumed;
                     continue;
                 }
 
-                consumed = TrySingleChar(lower, i, phonemes);
+                consumed = TrySingleChar(word, i, end, isStressed, output);
                 i += consumed;
             }
-
-            // Phase 4: そり舌化（音素列上で処理）
-            ApplyRetroflexion(phonemes);
-
-            // Phase 5: 語末 -ig/-lig の g 黙字
-            ApplyFinalGSilence(lower, phonemes);
-
-            return new SwedishPronunciation(
-                phonemes.ToArray(),
-                new[] { 0 }, // 音節オフセットはSyllabifierが後で設定
-                -1);         // ストレスはStressAssignerが後で設定
         }
 
         /// <summary>
         /// Phase 1: トリグラフ/ダイグラフ認識（最長一致）。
         /// 3文字パターン → 2文字パターンの順に試行する。
         /// </summary>
-        private static int TryMultigraph(string word, int i, List<SwedishPhoneme> output)
+        private static int TryMultigraph(string word, int i, int end, List<SwedishPhoneme> output)
         {
-            var remaining = word.Length - i;
+            var remaining = end - i;
+            var c0 = word[i];
+            var c1 = remaining >= 2 ? word[i + 1] : '\0';
+            var c2 = remaining >= 3 ? word[i + 2] : '\0';
 
             // --- 3文字パターン ---
             if (remaining >= 3)
             {
-                var tri = word.Substring(i, 3);
-                switch (tri)
+                if (c0 == 's' && c1 == 't' && c2 == 'j')
                 {
-                    case "stj":
-                        output.Add(P(SwedishIpaPhoneme.Sj));
-                        return 3;
-                    case "skj":
-                        output.Add(P(SwedishIpaPhoneme.Sj));
-                        return 3;
-                    case "sch":
-                        output.Add(P(SwedishIpaPhoneme.Sj));
-                        return 3;
+                    output.Add(P(SwedishIpaPhoneme.Sj));
+                    return 3;
+                }
+                if (c0 == 's' && c1 == 'k' && c2 == 'j')
+                {
+                    output.Add(P(SwedishIpaPhoneme.Sj));
+                    return 3;
+                }
+                if (c0 == 's' && c1 == 'c' && c2 == 'h')
+                {
+                    output.Add(P(SwedishIpaPhoneme.Sj));
+                    return 3;
                 }
             }
 
             // --- 2文字パターン ---
             if (remaining >= 2)
             {
-                var di = word.Substring(i, 2);
-                switch (di)
+                switch (c0)
                 {
-                    case "sj":
-                        output.Add(P(SwedishIpaPhoneme.Sj));
-                        return 2;
-                    case "tj":
-                        output.Add(P(SwedishIpaPhoneme.Tj));
-                        return 2;
-                    case "kj":
-                        output.Add(P(SwedishIpaPhoneme.Tj));
-                        return 2;
-                    case "dj":
-                        output.Add(P(SwedishIpaPhoneme.J));
-                        return 2;
-                    case "gj":
-                        output.Add(P(SwedishIpaPhoneme.J));
-                        return 2;
-                    case "hj":
-                        output.Add(P(SwedishIpaPhoneme.J));
-                        return 2;
-                    case "lj":
-                        output.Add(P(SwedishIpaPhoneme.J));
-                        return 2;
-                    case "ng":
-                        output.Add(P(SwedishIpaPhoneme.Ng));
-                        return 2;
-                    case "ck":
-                        // 重子音 k の正書法表記
-                        output.Add(P(SwedishIpaPhoneme.K));
-                        return 2;
-                }
-
-                // nk → ŋk（軟口蓋鼻音 + k）
-                if (di == "nk")
-                {
-                    output.Add(P(SwedishIpaPhoneme.Ng));
-                    output.Add(P(SwedishIpaPhoneme.K));
-                    return 2;
-                }
-
-                // sk + 軟母音 → sj音
-                if (di == "sk" && i + 2 < word.Length && SwedishOrthography.IsSoftVowel(word[i + 2]))
-                {
-                    output.Add(P(SwedishIpaPhoneme.Sj));
-                    return 2;
+                    case 's':
+                        if (c1 == 'j')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.Sj));
+                            return 2;
+                        }
+                        if (c1 == 'h')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.Sj));
+                            return 2;
+                        }
+                        // sk + 軟母音 → ɧ
+                        if (c1 == 'k' && i + 2 < word.Length && SwedishOrthography.IsSoftVowel(word[i + 2]))
+                        {
+                            output.Add(P(SwedishIpaPhoneme.Sj));
+                            return 2;
+                        }
+                        break;
+                    case 't':
+                        if (c1 == 'j')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.Tj));
+                            return 2;
+                        }
+                        break;
+                    case 'k':
+                        if (c1 == 'j')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.Tj));
+                            return 2;
+                        }
+                        break;
+                    case 'd':
+                        if (c1 == 'j')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.J));
+                            return 2;
+                        }
+                        break;
+                    case 'g':
+                        if (c1 == 'j')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.J));
+                            return 2;
+                        }
+                        break;
+                    case 'h':
+                        if (c1 == 'j')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.J));
+                            return 2;
+                        }
+                        break;
+                    case 'l':
+                        if (c1 == 'j')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.J));
+                            return 2;
+                        }
+                        break;
+                    case 'n':
+                        if (c1 == 'g')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.Ng));
+                            return 2;
+                        }
+                        if (c1 == 'k')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.Ng));
+                            output.Add(P(SwedishIpaPhoneme.K));
+                            return 2;
+                        }
+                        break;
+                    case 'c':
+                        if (c1 == 'k')
+                        {
+                            output.Add(P(SwedishIpaPhoneme.K));
+                            return 2;
+                        }
+                        break;
                 }
             }
 
@@ -133,9 +193,9 @@ namespace DotNetG2P.Swedish.Rules
 
         /// <summary>
         /// Phase 2 および Phase 3: 単一文字の子音軟化 + 母音変換。
-        /// k/g + 軟母音の軟化と、相補的数量法則に基づく母音の長短判定を行う。
         /// </summary>
-        private static int TrySingleChar(string word, int i, List<SwedishPhoneme> output)
+        private static int TrySingleChar(string word, int i, int end,
+            bool isStressed, List<SwedishPhoneme> output)
         {
             var c = word[i];
 
@@ -148,20 +208,32 @@ namespace DotNetG2P.Swedish.Rules
                 return 1;
             }
 
-            // g + 軟母音 → /j/（語頭、または前に母音がない位置のみ軟化。語中は条件付き）
-            if (c == 'g' && i + 1 < word.Length && SwedishOrthography.IsSoftVowel(word[i + 1]))
+            // g軟化: 語頭のみ（語中母音間では軟化しない）
+            if (c == 'g' && i == 0 && i + 1 < word.Length && SwedishOrthography.IsSoftVowel(word[i + 1]))
             {
-                if (i == 0 || !SwedishOrthography.IsVowelChar(word[i - 1]))
-                {
-                    output.Add(P(SwedishIpaPhoneme.J));
-                    return 1;
-                }
+                output.Add(P(SwedishIpaPhoneme.J));
+                return 1;
+            }
+
+            // c + 軟母音 → /s/
+            if (c == 'c' && i + 1 < word.Length && SwedishOrthography.IsSoftVowel(word[i + 1]))
+            {
+                output.Add(P(SwedishIpaPhoneme.S));
+                return 1;
+            }
+
+            // x → /ks/ (2音素)
+            if (c == 'x')
+            {
+                output.Add(P(SwedishIpaPhoneme.K));
+                output.Add(P(SwedishIpaPhoneme.S));
+                return 1;
             }
 
             // --- Phase 3: 母音変換 ---
             if (SwedishOrthography.IsVowelChar(c))
             {
-                var isLong = IsLongVowelContext(word, i);
+                var isLong = isStressed && IsLongVowelContext(word, i);
                 output.Add(P(MapVowel(c, isLong)));
                 return 1;
             }
@@ -180,23 +252,29 @@ namespace DotNetG2P.Swedish.Rules
 
         /// <summary>
         /// 相補的数量法則に基づく長母音の文脈判定。
-        /// 開音節（V+単子音またはV+語末）→長母音、閉音節（V+CC）→短母音。
+        /// ストレス音節内での長母音判定に使用（非ストレスは呼び出し元で短母音に確定済み）。
         /// </summary>
         private static bool IsLongVowelContext(string word, int vowelIndex)
         {
-            // 語末母音 → 長い
-            if (vowelIndex == word.Length - 1)
+            // 語末母音（後続文字なし）→ 長い
+            if (vowelIndex >= word.Length - 1)
                 return true;
 
-            // 母音の後に子音がない（母音連続 = hiatus）→ 長い
-            if (vowelIndex + 1 < word.Length && !SwedishOrthography.IsConsonantChar(word[vowelIndex + 1]))
+            var next = vowelIndex + 1;
+
+            // 母音の後に母音（hiatus）→ 長い
+            if (next < word.Length && SwedishOrthography.IsVowelChar(word[next]))
                 return true;
 
-            // 母音の後に子音が1つ以上
-            if (vowelIndex + 1 < word.Length && SwedishOrthography.IsConsonantChar(word[vowelIndex + 1]))
+            // x は /ks/ 相当の2子音 → 短い
+            if (next < word.Length && word[next] == 'x')
+                return false;
+
+            // 子音が後続する場合
+            if (next < word.Length && SwedishOrthography.IsConsonantChar(word[next]))
             {
-                // 後続に2子音以上（二重子音・子音クラスタ）→ 短い
-                if (vowelIndex + 2 < word.Length && SwedishOrthography.IsConsonantChar(word[vowelIndex + 2]))
+                // 後続に2子音以上連続 → 短い
+                if (next + 1 < word.Length && SwedishOrthography.IsConsonantChar(word[next + 1]))
                     return false;
 
                 // 子音1つのみ → 長い
@@ -216,12 +294,12 @@ namespace DotNetG2P.Swedish.Rules
                 case 'a': return isLong ? SwedishIpaPhoneme.LongA : SwedishIpaPhoneme.ShortA;
                 case 'e': return isLong ? SwedishIpaPhoneme.LongE : SwedishIpaPhoneme.ShortE;
                 case 'i': return isLong ? SwedishIpaPhoneme.LongI : SwedishIpaPhoneme.ShortI;
-                case 'o': return isLong ? SwedishIpaPhoneme.LongU : SwedishIpaPhoneme.ShortO;       // o の長母音は /uː/
+                case 'o': return isLong ? SwedishIpaPhoneme.LongU : SwedishIpaPhoneme.ShortU;          // o → uː/ʊ
                 case 'u': return isLong ? SwedishIpaPhoneme.LongUCentral : SwedishIpaPhoneme.ShortUCentral;
                 case 'y': return isLong ? SwedishIpaPhoneme.LongY : SwedishIpaPhoneme.ShortY;
-                case '\u00e5': return isLong ? SwedishIpaPhoneme.LongO : SwedishIpaPhoneme.ShortO;  // å → /oː/ or /ɔ/
-                case '\u00e4': return isLong ? SwedishIpaPhoneme.LongEh : SwedishIpaPhoneme.ShortE; // ä → /ɛː/ or /ɛ/
-                case '\u00f6': return isLong ? SwedishIpaPhoneme.LongOe : SwedishIpaPhoneme.ShortOe; // ö → /øː/ or /œ/
+                case '\u00e5': return isLong ? SwedishIpaPhoneme.LongO : SwedishIpaPhoneme.ShortO;     // å → oː/ɔ
+                case '\u00e4': return isLong ? SwedishIpaPhoneme.LongEh : SwedishIpaPhoneme.ShortE;    // ä → ɛː/ɛ
+                case '\u00f6': return isLong ? SwedishIpaPhoneme.LongOe : SwedishIpaPhoneme.ShortOe;   // ö → øː/œ
                 default: return SwedishIpaPhoneme.Schwa;
             }
         }
@@ -235,7 +313,7 @@ namespace DotNetG2P.Swedish.Rules
             switch (c)
             {
                 case 'b': return SwedishIpaPhoneme.B;
-                case 'c': return SwedishIpaPhoneme.K;  // デフォルト k。外来語の s 判定はSw2で対応
+                case 'c': return SwedishIpaPhoneme.K;  // 軟化はPhase 2で処理済み
                 case 'd': return SwedishIpaPhoneme.D;
                 case 'f': return SwedishIpaPhoneme.F;
                 case 'g': return SwedishIpaPhoneme.G;  // 軟化はPhase 2で処理済み
@@ -250,20 +328,20 @@ namespace DotNetG2P.Swedish.Rules
                 case 'r': return SwedishIpaPhoneme.R;
                 case 's': return SwedishIpaPhoneme.S;
                 case 't': return SwedishIpaPhoneme.T;
-                case 'v': return SwedishIpaPhoneme.V;
+                case 'v':
                 case 'w': return SwedishIpaPhoneme.V;
-                case 'x': return SwedishIpaPhoneme.K;  // x → ks 簡略化: k のみ出力（Sw2で改善予定）
                 case 'z': return SwedishIpaPhoneme.S;
                 default: return null;
             }
         }
 
         /// <summary>
-        /// Phase 4: そり舌化。
+        /// Phase 4: そり舌化（Central方言のみ）。
         /// 音素列上で r + 歯茎子音（t, d, n, l, s）のペアをそり舌音に変換する。
         /// 後方から走査して r を削除し、歯茎子音をそり舌音に置き換える。
+        /// オフセット連動補正あり。
         /// </summary>
-        private static void ApplyRetroflexion(List<SwedishPhoneme> phonemes)
+        private static void ApplyRetroflexion(List<SwedishPhoneme> phonemes, int[] syllableOffsets)
         {
             for (var i = phonemes.Count - 2; i >= 0; i--)
             {
@@ -283,28 +361,54 @@ namespace DotNetG2P.Swedish.Rules
                 if (retro.HasValue)
                 {
                     phonemes[i + 1] = new SwedishPhoneme(retro.Value, phonemes[i + 1].IsStressed);
-                    phonemes.RemoveAt(i); // r を削除
+                    phonemes.RemoveAt(i);
+
+                    // オフセット補正: i以降の全音節オフセットを1減算
+                    for (var s = 0; s < syllableOffsets.Length; s++)
+                    {
+                        if (syllableOffsets[s] > i)
+                            syllableOffsets[s]--;
+                    }
                 }
             }
         }
 
         /// <summary>
-        /// Phase 5: 語末 -ig/-lig の g 黙字。
-        /// 語末が -ig または -lig で終わる場合、最後の g を音素列から削除する。
+        /// Phase 5: 語末 -ig/-lig/-igt の g 処理。
+        /// -igt: g を完全削除（t はそのまま発音）。
+        /// -ig/-lig: g を /j/ に弱化。
         /// </summary>
-        private static void ApplyFinalGSilence(string word, List<SwedishPhoneme> phonemes)
+        private static void ApplyFinalGWeakening(string word, List<SwedishPhoneme> phonemes)
         {
             if (phonemes.Count < 2) return;
 
-            if ((word.EndsWith("ig") || word.EndsWith("lig"))
-                && phonemes[phonemes.Count - 1].Phoneme == SwedishIpaPhoneme.G)
+            // -igt: g を完全削除（t はそのまま発音）
+            if (word.EndsWith("igt") && phonemes.Count >= 3)
             {
-                phonemes.RemoveAt(phonemes.Count - 1);
+                // 末尾から2番目がGなら削除
+                var gIdx = phonemes.Count - 2;
+                if (phonemes[gIdx].Phoneme == SwedishIpaPhoneme.G)
+                {
+                    phonemes.RemoveAt(gIdx);
+                    return;
+                }
+            }
+
+            // -ig/-lig: g を /j/ に弱化（削除ではない）
+            if (word.Length >= 3 && (word.EndsWith("ig") || word.EndsWith("lig")))
+            {
+                var lastIdx = phonemes.Count - 1;
+                if (phonemes[lastIdx].Phoneme == SwedishIpaPhoneme.G)
+                {
+                    phonemes[lastIdx] = new SwedishPhoneme(SwedishIpaPhoneme.J, phonemes[lastIdx].IsStressed);
+                }
             }
         }
 
         /// <summary>SwedishPhoneme のファクトリヘルパー。</summary>
-        private static SwedishPhoneme P(SwedishIpaPhoneme phoneme) =>
-            new SwedishPhoneme(phoneme);
+        private static SwedishPhoneme P(SwedishIpaPhoneme phoneme)
+        {
+            return new SwedishPhoneme(phoneme);
+        }
     }
 }

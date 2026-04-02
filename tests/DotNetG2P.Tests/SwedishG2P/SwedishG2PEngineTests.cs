@@ -94,6 +94,13 @@ namespace DotNetG2P.Tests.SwedishG2P
         }
 
         [Fact]
+        public void ToPhonemeListBatch_MultipleWords_ReturnsCorrectCount()
+        {
+            var result = _engine.ToPhonemeListBatch(new[] { "hej", "ja" });
+            Assert.Equal(2, result.Count);
+        }
+
+        [Fact]
         public void Dispose_ThenToPhonemes_ThrowsObjectDisposedException()
         {
             _engine.Dispose();
