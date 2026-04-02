@@ -1,7 +1,7 @@
 {
   "name": "com.dotnetg2p.multilingual",
   "displayName": "DotNetG2P.Multilingual",
-  "version": "1.8.2",
+  "version": "1.9.0",
   "unity": "2021.2",
   "description": "Multilingual G2P engine combining Japanese, English, Chinese, Korean, Spanish, French, Portuguese, and Swedish grapheme-to-phoneme support with automatic language detection and segment routing.",
   "keywords": [

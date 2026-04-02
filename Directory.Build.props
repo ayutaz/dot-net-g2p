@@ -10,7 +10,7 @@
     <BaseOutputPath>$(MSBuildThisFileDirectory).build\bin\$(MSBuildProjectName)\</BaseOutputPath>
 
     <IsPackable>false</IsPackable>
-    <Version>0.0.0-local</Version>
+    <Version>1.9.0</Version>
     <PackageVersion>$(Version)</PackageVersion>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' Or '$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
