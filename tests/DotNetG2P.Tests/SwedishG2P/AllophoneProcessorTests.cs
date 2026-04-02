@@ -32,7 +32,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.CentralDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.CentralDefault, SwedishDialect.Central);
 
             Assert.Equal(2, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.RetroT, result.Phonemes[1].Phoneme);
@@ -48,7 +48,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             var phonemes = new[] { Ph(SwedishIpaPhoneme.RetroT) };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(2, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.R, result.Phonemes[0].Phoneme);
@@ -61,7 +61,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             var phonemes = new[] { Ph(SwedishIpaPhoneme.RetroD) };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(2, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.R, result.Phonemes[0].Phoneme);
@@ -74,7 +74,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             var phonemes = new[] { Ph(SwedishIpaPhoneme.RetroN) };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(2, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.R, result.Phonemes[0].Phoneme);
@@ -87,7 +87,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             var phonemes = new[] { Ph(SwedishIpaPhoneme.RetroL) };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(2, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.R, result.Phonemes[0].Phoneme);
@@ -100,7 +100,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             var phonemes = new[] { Ph(SwedishIpaPhoneme.RetroS) };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(2, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.R, result.Phonemes[0].Phoneme);
@@ -121,7 +121,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.TjAffrication);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.TjAffrication, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(2, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.TjAffricate, result.Phonemes[0].Phoneme);
@@ -138,7 +138,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.Retroflexion);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.Retroflexion, SwedishDialect.Central);
 
             Assert.Equal(2, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.Tj, result.Phonemes[0].Phoneme);
@@ -159,7 +159,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.CentralDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.CentralDefault, SwedishDialect.Central);
 
             Assert.Equal(3, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.RetroT, result.Phonemes[0].Phoneme);
@@ -177,7 +177,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(4, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.R, result.Phonemes[0].Phoneme);
@@ -200,7 +200,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.None);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.None, SwedishDialect.Central);
 
             Assert.Same(pron, result);
         }
@@ -216,7 +216,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.All);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.All, SwedishDialect.Central);
 
             Assert.Equal(3, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.RetroT, result.Phonemes[0].Phoneme);
@@ -228,7 +228,7 @@ namespace DotNetG2P.Tests.SwedishG2P
         {
             var pron = MakePron(Array.Empty<SwedishPhoneme>(), Array.Empty<int>(), -1);
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.All);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.All, SwedishDialect.Central);
 
             Assert.Same(pron, result);
         }
@@ -249,7 +249,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0, 2 }, stressedIndex: 0);
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(6, result.Phonemes.Count);
             Assert.Equal(0, result.SyllableOffsets[0]);
@@ -269,7 +269,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.VowelLengthMarking);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.VowelLengthMarking, SwedishDialect.Central);
 
             Assert.Equal(10, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.R, result.Phonemes[0].Phoneme);
@@ -288,7 +288,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             var phonemes = new[] { Ph(SwedishIpaPhoneme.RetroT), Ph(SwedishIpaPhoneme.LongA, nucleus: true) };
             var pron = MakePron(phonemes, new[] { 0 }, accent: 2);
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(2, result.Accent);
         }
@@ -303,7 +303,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.TjAffrication);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.TjAffrication, SwedishDialect.FinlandSwedish);
 
             Assert.Same(pron, result);
         }
@@ -320,7 +320,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0, 2 }, stressedIndex: 1);
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(1, result.StressedSyllableIndex);
         }
@@ -336,7 +336,7 @@ namespace DotNetG2P.Tests.SwedishG2P
             };
             var pron = MakePron(phonemes, new[] { 0 });
 
-            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault);
+            var result = AllophoneProcessor.Apply(pron, SwedishAllophoneFeatures.FinlandDefault, SwedishDialect.FinlandSwedish);
 
             Assert.Equal(4, result.Phonemes.Count);
             Assert.Equal(SwedishIpaPhoneme.TjAffricate, result.Phonemes[0].Phoneme);

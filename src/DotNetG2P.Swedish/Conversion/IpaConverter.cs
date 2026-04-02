@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System;
 using System.Text;
 
 namespace DotNetG2P.Swedish.Conversion
@@ -8,28 +8,63 @@ namespace DotNetG2P.Swedish.Conversion
     /// </summary>
     internal static class IpaConverter
     {
-        private static readonly string[] s_ipaSymbols = new string[42]
+        internal static string ToSymbol(SwedishIpaPhoneme phoneme)
         {
-            // 長母音 (0-8)
-            "i\u02D0", "y\u02D0", "\u0289\u02D0", "u\u02D0", "e\u02D0", "\u00F8\u02D0", "\u025B\u02D0", "o\u02D0", "\u0251\u02D0",
-            // 短母音 (9-17)
-            "\u026A", "\u028F", "\u0275", "\u028A", "\u025B", "\u0153", "\u0254", "a", "\u0259",
-            // 破裂音 (18-23)
-            "p", "b", "t", "d", "k", "\u0261",
-            // 摩擦音 (24-29)
-            "f", "v", "s", "h", "\u0267", "\u0255",
-            // 鼻音 (30-32)
-            "m", "n", "\u014B",
-            // 接近音・ふるえ音 (33-35)
-            "l", "r", "j",
-            // そり舌音 (36-40)
-            "\u0288", "\u0256", "\u0273", "\u026D", "\u0282",
-            // 破擦音 (41)
-            "t\u0361\u0255",  // t͡ɕ (U+0361 = combining tie bar)
-        };
-
-        internal static string ToSymbol(SwedishIpaPhoneme phoneme) =>
-            s_ipaSymbols[(int)phoneme];
+            switch (phoneme)
+            {
+                // 長母音
+                case SwedishIpaPhoneme.LongI: return "i\u02D0";
+                case SwedishIpaPhoneme.LongY: return "y\u02D0";
+                case SwedishIpaPhoneme.LongUCentral: return "\u0289\u02D0";
+                case SwedishIpaPhoneme.LongU: return "u\u02D0";
+                case SwedishIpaPhoneme.LongE: return "e\u02D0";
+                case SwedishIpaPhoneme.LongOe: return "\u00F8\u02D0";
+                case SwedishIpaPhoneme.LongEh: return "\u025B\u02D0";
+                case SwedishIpaPhoneme.LongO: return "o\u02D0";
+                case SwedishIpaPhoneme.LongA: return "\u0251\u02D0";
+                // 短母音
+                case SwedishIpaPhoneme.ShortI: return "\u026A";
+                case SwedishIpaPhoneme.ShortY: return "\u028F";
+                case SwedishIpaPhoneme.ShortUCentral: return "\u0275";
+                case SwedishIpaPhoneme.ShortU: return "\u028A";
+                case SwedishIpaPhoneme.ShortE: return "\u025B";
+                case SwedishIpaPhoneme.ShortOe: return "\u0153";
+                case SwedishIpaPhoneme.ShortO: return "\u0254";
+                case SwedishIpaPhoneme.ShortA: return "a";
+                case SwedishIpaPhoneme.Schwa: return "\u0259";
+                // 破裂音
+                case SwedishIpaPhoneme.P: return "p";
+                case SwedishIpaPhoneme.B: return "b";
+                case SwedishIpaPhoneme.T: return "t";
+                case SwedishIpaPhoneme.D: return "d";
+                case SwedishIpaPhoneme.K: return "k";
+                case SwedishIpaPhoneme.G: return "\u0261";
+                // 摩擦音
+                case SwedishIpaPhoneme.F: return "f";
+                case SwedishIpaPhoneme.V: return "v";
+                case SwedishIpaPhoneme.S: return "s";
+                case SwedishIpaPhoneme.H: return "h";
+                case SwedishIpaPhoneme.Sj: return "\u0267";
+                case SwedishIpaPhoneme.Tj: return "\u0255";
+                // 鼻音
+                case SwedishIpaPhoneme.M: return "m";
+                case SwedishIpaPhoneme.N: return "n";
+                case SwedishIpaPhoneme.Ng: return "\u014B";
+                // 接近音・ふるえ音
+                case SwedishIpaPhoneme.L: return "l";
+                case SwedishIpaPhoneme.R: return "r";
+                case SwedishIpaPhoneme.J: return "j";
+                // そり舌音
+                case SwedishIpaPhoneme.RetroT: return "\u0288";
+                case SwedishIpaPhoneme.RetroD: return "\u0256";
+                case SwedishIpaPhoneme.RetroN: return "\u0273";
+                case SwedishIpaPhoneme.RetroL: return "\u026D";
+                case SwedishIpaPhoneme.RetroS: return "\u0282";
+                // 破擦音
+                case SwedishIpaPhoneme.TjAffricate: return "t\u0361\u0255";
+                default: throw new ArgumentOutOfRangeException(nameof(phoneme), phoneme, null);
+            }
+        }
 
         /// <summary>発音情報をIPA連続文字列に変換する。</summary>
         internal static string Convert(SwedishPronunciation pronunciation, bool includeStress)
@@ -54,7 +89,7 @@ namespace DotNetG2P.Swedish.Conversion
                     : phonemes.Length;
 
                 for (var i = start; i < end; i++)
-                    sb.Append(s_ipaSymbols[(int)phonemes[i].Phoneme]);
+                    sb.Append(ToSymbol(phonemes[i].Phoneme));
             }
 
             return sb.ToString();
@@ -89,7 +124,7 @@ namespace DotNetG2P.Swedish.Conversion
                     if (includeStress && syllableIndex == stressedIndex && i == start)
                         sb.Append('\u02C8');
 
-                    sb.Append(s_ipaSymbols[(int)phonemes[i].Phoneme]);
+                    sb.Append(ToSymbol(phonemes[i].Phoneme));
                     first = false;
                 }
             }

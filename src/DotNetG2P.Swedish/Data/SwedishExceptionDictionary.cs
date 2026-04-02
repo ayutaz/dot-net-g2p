@@ -32,15 +32,16 @@ namespace DotNetG2P.Swedish.Data
         private static Dictionary<string, Dictionary<byte, SwedishPronunciation>> LoadEntries()
         {
             var entries = new Dictionary<string, Dictionary<byte, SwedishPronunciation>>(StringComparer.Ordinal);
-            try
-            {
-                var assembly = typeof(SwedishExceptionDictionary).Assembly;
-                using var stream = assembly.GetManifestResourceStream("DotNetG2P.Swedish.Data.swedish_exceptions.master.tsv");
-                if (stream == null) return entries;
-                using var reader = new StreamReader(stream);
 
-                string? line;
-                while ((line = reader.ReadLine()) != null)
+            var assembly = typeof(SwedishExceptionDictionary).Assembly;
+            using var stream = assembly.GetManifestResourceStream("DotNetG2P.Swedish.Data.swedish_exceptions.master.tsv");
+            if (stream == null) return entries;
+            using var reader = new StreamReader(stream);
+
+            string? line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                try
                 {
                     line = line.Trim();
                     if (line.Length == 0 || line[0] == '#' || line.StartsWith("surface\t", StringComparison.Ordinal))
@@ -71,11 +72,11 @@ namespace DotNetG2P.Swedish.Data
 
                     byDialect[dialectKey] = pron;
                 }
-            }
-            catch
-            {
-                // 辞書ロード失敗時はルールベースG2Pにフォールバックするため空辞書を返す
-                return entries;
+                catch
+                {
+                    // 不正行はスキップして次の行を読み続ける
+                    continue;
+                }
             }
 
             return entries;

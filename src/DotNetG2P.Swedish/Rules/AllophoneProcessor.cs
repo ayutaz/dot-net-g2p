@@ -13,7 +13,8 @@ namespace DotNetG2P.Swedish.Rules
     {
         public static SwedishPronunciation Apply(
             SwedishPronunciation pronunciation,
-            SwedishAllophoneFeatures features)
+            SwedishAllophoneFeatures features,
+            SwedishDialect dialect)
         {
             if (pronunciation.PhonemesInternal.Length == 0 || features == SwedishAllophoneFeatures.None)
                 return pronunciation;
@@ -39,7 +40,7 @@ namespace DotNetG2P.Swedish.Rules
 
             if (needsRebuilding)
             {
-                return RebuildWithDeretroflexion(pronunciation, features);
+                return RebuildWithDeretroflexion(pronunciation, features, dialect);
             }
 
             // 2. TjAffrication: ɕ → t͡ɕ（FinlandSwedish用、in-place可能）
@@ -70,7 +71,7 @@ namespace DotNetG2P.Swedish.Rules
 
         /// <summary>そり舌音をr+歯茎音に展開した新しいPronunciationを構築する。</summary>
         private static SwedishPronunciation RebuildWithDeretroflexion(
-            SwedishPronunciation pronunciation, SwedishAllophoneFeatures features)
+            SwedishPronunciation pronunciation, SwedishAllophoneFeatures features, SwedishDialect dialect)
         {
             var source = pronunciation.PhonemesInternal;
             var oldOffsets = pronunciation.SyllableOffsetsInternal;

@@ -113,5 +113,79 @@ namespace DotNetG2P.Tests.SwedishG2P
             _engine.Dispose();
             _engine.Dispose(); // 二重Disposeは例外なし
         }
+
+        // =================================================================
+        // ネガティブ・エッジケーステスト
+        // =================================================================
+
+        [Fact]
+        public void ToIPA_Null_ReturnsEmpty()
+        {
+            Assert.Equal("", _engine.ToIPA(null!));
+        }
+
+        [Fact]
+        public void ToIPA_Empty_ReturnsEmpty()
+        {
+            Assert.Equal("", _engine.ToIPA(""));
+        }
+
+        [Fact]
+        public void ToIPA_WhitespaceOnly_ReturnsEmpty()
+        {
+            Assert.Equal("", _engine.ToIPA("   "));
+        }
+
+        [Fact]
+        public void ToIPA_SymbolsOnly_HandledGracefully()
+        {
+            var result = _engine.ToIPA("!@#$%");
+            // 記号のみの場合、例外を投げずに処理完了すること
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public void ToIPA_MixedInput_HandledGracefully()
+        {
+            var result = _engine.ToIPA("hej 123 !!");
+            // 混在入力でも例外を投げずに処理完了すること
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public void ToIPA_SingleChar_ReturnsResult()
+        {
+            var result = _engine.ToIPA("a");
+            Assert.NotNull(result);
+            Assert.NotEqual("", result);
+        }
+
+        [Fact]
+        public void ToIPA_VeryLongWord_NoException()
+        {
+            var longWord = new string('a', 1000);
+            var result = _engine.ToIPA(longWord);
+            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public void ToIPABatch_Null_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => _engine.ToIPABatch(null!));
+        }
+
+        [Fact]
+        public void ToPuaString_Empty_ReturnsEmpty()
+        {
+            Assert.Equal("", _engine.ToPuaString(""));
+        }
+
+        [Fact]
+        public void ToIpaWithProsody_Empty_ReturnsEmptyResult()
+        {
+            var result = _engine.ToIpaWithProsody("");
+            Assert.Empty(result.Phonemes);
+            Assert.Empty(result.Prosody);
+        }
     }
 }

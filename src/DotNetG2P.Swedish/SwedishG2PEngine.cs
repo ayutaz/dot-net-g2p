@@ -186,7 +186,7 @@ namespace DotNetG2P.Swedish
             // 異音処理（EnableAllophones有効時）
             if (_options.EnableAllophones)
             {
-                pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures);
+                pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures, _options.Dialect);
             }
 
             // FinlandSwedish方言: ピッチアクセント無効化

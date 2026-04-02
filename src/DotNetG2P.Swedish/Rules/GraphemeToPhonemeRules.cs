@@ -39,7 +39,11 @@ namespace DotNetG2P.Swedish.Rules
             }
 
             // 3. 後処理
-            // Phase 4: そり舌化（常に適用。FinlandSwedishの場合はAllophoneProcessorで戻す）
+            // Phase 4: そり舌化（常に適用）
+            // 設計意図: Central方言を正規形として生成し、FinlandSwedish方言では
+            // AllophoneProcessor.RebuildWithDeretroflexion()で r+歯茎音に展開する。
+            // この「正規化→方言適応」パターンにより、G2Pルールが方言に依存せず保守性を確保する。
+            // Phase 4を方言分岐にしない理由: G2P規則の単純化、テスト容易性、デフォルト出力の品質。
             ApplyRetroflexion(phonemes, syllableOffsets);
 
             ApplyFinalGWeakening(word, phonemes);
@@ -353,7 +357,9 @@ namespace DotNetG2P.Swedish.Rules
 
         /// <summary>
         /// 書記素（母音文字）をIPA音素にマッピングする。
-        /// o は後続子音文脈に依存して /uː/~/ʊ/ または /oː/~/ɔ/ を返す。
+        /// isLong は IsLongVowelContext() で事前判定済み。
+        /// o の母音品質は後続 r の有無で決定（IsOBeforeR）。
+        /// この2段階判定は意図的: 長短は音節構造に依存し、母音品質は後続子音に依存するため。
         /// </summary>
         private static SwedishIpaPhoneme MapVowel(char c, bool isLong, string word, int pos)
         {
