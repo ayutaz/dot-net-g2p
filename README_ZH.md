@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-面向 C#/.NET 的多语言 G2P（Grapheme-to-Phoneme：字素到音素转换）库，覆盖日语、英语、中文、韩语、西班牙语、法语和葡萄牙语。
-以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线、基于 CMU 词典的英语 G2P、基于 pinyin-data 词典的中文拼音转换、Hangul-first 的韩语 G2P，以及基于规则的罗曼语系 G2P，无需依赖 Python 或原生二进制文件即可转换为音素序列。
+面向 C#/.NET 的多语言 G2P（Grapheme-to-Phoneme：字素到音素转换）库，覆盖日语、英语、中文、韩语、西班牙语、法语、葡萄牙语和瑞典语。
+以纯 C# 原生实现了兼容 OpenJTalk 的日语 G2P 处理管线、基于 CMU 词典的英语 G2P、基于 pinyin-data 词典的中文拼音转换、Hangul-first 的韩语 G2P、基于规则的罗曼语系 G2P，以及基于规则+例外词典的瑞典语 G2P，无需依赖 Python 或原生二进制文件即可转换为音素序列。
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer());
@@ -39,6 +39,10 @@ frEngine.ToIPA("bonjour");  // => "bɔ̃ʒuʁ"
 using var ptEngine = new PortugueseG2PEngine();
 ptEngine.ToIPA("obrigado");  // => "obɾiˈɡadu"
 
+// 瑞典语 G2P
+using var svEngine = new SwedishG2PEngine();
+svEngine.ToIPA("hej");  // => "hɛj"
+
 // 日韩英混合文本
 using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日语部分 => 日语音素，韩语部分 => Hangul 音素，英语部分 => ARPAbet
@@ -55,6 +59,7 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日语部分 => �
 - [西班牙语评估](#西班牙语评估)
 - [法语评估](#法语评估)
 - [葡萄牙语评估](#葡萄牙语评估)
+- [瑞典语评估](#瑞典语评估)
 - [选项配置](#选项配置)
 - [相关文档](#相关文档)
 - [构建](#构建)
@@ -73,7 +78,8 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日语部分 => �
 - **支持韩语 G2P** — Hangul-first 的规则驱动转换，包含 Jamo 分解、标准发音法导向的音韵规则、精确例外词典覆盖、轻量文本规范化，以及 `g2pk_parity` / `official_gold` / `weak_rules` benchmark harness，并提供 external corpus gate 与 performance test
 - **支持西班牙语 G2P** — 提供基于规则的 IPA 转写、音节划分、重音判定、Castilian/Latin American 切换、异音处理选项、文本规范化、例外词典以及全量语料评估工具链。规范化器现已区分千位分隔符与小数点，并对非法日期/时间安全回退
 - **支持法语和葡萄牙语 G2P** — 提供基于规则的 IPA 转写、例外词典、方言选项、规范化管线和数据集驱动的评估工具链
-- **支持日英中韩西法葡混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，Hangul 片段会直接路由到 Korean segment，`DefaultLatinLanguage` 可控制英语/西班牙语/法语/葡萄牙语拉丁文本路由。纯汉字片段会结合 marker、日语词汇提示和内置中文词典进一步判定 JP/ZH，且内置中文词典与 `ChineseG2PEngine` 共享以避免重复常驻
+- **支持瑞典语 G2P** — 基于规则+例外词典 500+ 词、Central/FinlandSwedish 方言切换、IPA/X-SAMPA 输出、PUA/Prosody API
+- **支持日英中韩西法葡瑞混合文本** — 基于 Unicode 字符类别的自动语言检测与分段，Hangul 片段会直接路由到 Korean segment，`DefaultLatinLanguage` 可控制英语/西班牙语/法语/葡萄牙语/瑞典语拉丁文本路由。纯汉字片段会结合 marker、日语词汇提示和内置中文词典进一步判定 JP/ZH，且内置中文词典与 `ChineseG2PEngine` 共享以避免重复常驻
 
 ## 安装
 
@@ -102,7 +108,10 @@ dotnet add package DotNetG2P.French
 # 葡萄牙语 G2P
 dotnet add package DotNetG2P.Portuguese
 
-# 日英中韩西法葡混合文本支持
+# 瑞典语 G2P
+dotnet add package DotNetG2P.Swedish
+
+# 日英中韩西法葡瑞混合文本支持
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -118,7 +127,8 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.Spanish` | Apache-2.0 | 西班牙语 G2P 引擎（规则驱动 + 可选异音处理） |
 | `DotNetG2P.French` | Apache-2.0 | 法语 G2P 引擎（规则驱动 + 例外词典 + 可选异音处理） |
 | `DotNetG2P.Portuguese` | Apache-2.0 | 葡萄牙语 G2P 引擎（规则驱动 + 例外词典 + 可选异音处理） |
-| `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中韩西法葡混合文本支持） |
+| `DotNetG2P.Swedish` | Apache-2.0 | 瑞典语 G2P 引擎（规则驱动 + 例外词典 500+ 词、Central/FinlandSwedish 方言） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中韩西法葡瑞混合文本支持） |
 
 ## 相关文档
 
@@ -133,6 +143,7 @@ dotnet add package DotNetG2P.Multilingual
   - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
   - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
   - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
+  - [`DotNetG2P.Swedish`](src/DotNetG2P.Swedish/README.md)
   - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
 
 ### Unity (UPM)
@@ -148,6 +159,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Korean
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.French
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Portuguese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Swedish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -288,7 +300,30 @@ string ptXsampaNoStress = ptEngine.ToXSampaWithoutStress("obrigado");
 
 var ptBatch = ptEngine.ToIPABatch(new[] { "bom dia", "boa noite" });
 
-// === 日英中韩西法葡混合文本 ===
+// === 瑞典语 G2P ===
+using DotNetG2P.Swedish;
+
+using var svEngine = new SwedishG2PEngine();
+string svIpa = svEngine.ToIPA("hej");
+// => "hɛj"
+
+// FinlandSwedish 方言
+using var svFiEngine = new SwedishG2PEngine(new SwedishG2POptions(dialect: SwedishDialect.FinlandSwedish));
+string svFiIpa = svFiEngine.ToIPA("hej");
+
+// X-SAMPA 输出
+string svXsampa = svEngine.ToXSampa("hej");
+
+// PUA 映射
+string[] svPua = svEngine.ToPuaPhonemes("hej");
+
+// Prosody 信息
+var svResult = svEngine.ToIpaWithProsody("hej");
+
+// 批量处理
+var svBatch = svEngine.ToIPABatch(new[] { "god morgon", "god kväll" });
+
+// === 日英中韩西法葡瑞混合文本 ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine();
@@ -328,6 +363,12 @@ var ptOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Portug
 using var multiPtEngine = new MultilingualG2PEngine(ptOptions);
 multiPtEngine.ToPhonemes("obrigado世界");
 // 葡萄牙语部分 => IPA 音素，日语部分 => 日语音素
+
+// 包含瑞典语文本的情况
+var svOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Swedish);
+using var multiSvEngine = new MultilingualG2PEngine(svOptions);
+multiSvEngine.ToPhonemes("hej世界");
+// 瑞典语部分 => IPA 音素，日语部分 => 日语音素
 ```
 
 ## API 参考
@@ -446,11 +487,32 @@ multiPtEngine.ToPhonemes("obrigado世界");
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | 批量 X-SAMPA 转换 |
 | `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<PortuguesePhoneme>>` | 批量结构化音素列表转换 |
 
+### SwedishG2PEngine
+
+| 方法 | 返回类型 | 说明 |
+|------|---------|------|
+| `ToPhonemes(text)` | `string` | 空格分隔的 IPA 音素序列 |
+| `ToIPA(text)` | `string` | IPA 表记 |
+| `ToIPAWithoutStress(text)` | `string` | 无重音标记的 IPA 表记 |
+| `ToXSampa(text)` | `string` | X-SAMPA 表记 |
+| `ToXSampaWithoutStress(text)` | `string` | 无重音标记的 X-SAMPA 表记 |
+| `ToPhonemeList(text)` | `IReadOnlyList<SwedishPhoneme>` | 结构化音素列表 |
+| `ToSyllables(text)` | `IReadOnlyList<SwedishSyllable>` | 音节划分结果 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | 批量 IPA 转换 |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | 批量 X-SAMPA 转换 |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<SwedishPhoneme>>` | 批量结构化音素列表转换 |
+| `ToPuaPhonemes(text)` | `string[]` | PUA 映射音素数组 |
+| `ToPuaString(text)` | `string` | PUA 映射字符串（空格分隔） |
+| `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | 批量 PUA 字符串转换 |
+| `ToIpaWithProsody(text)` | `SwedishProsodyResult` | IPA 音素数组 + 韵律信息 |
+| `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<SwedishProsodyResult>` | 批量 IPA+Prosody 转换 |
+
 ### MultilingualG2PEngine
 
 | 方法 | 返回类型 | 说明 |
 |------|---------|------|
-| `ToPhonemes(text)` | `string` | 日英中韩西法葡混合音素序列 |
+| `ToPhonemes(text)` | `string` | 日英中韩西法葡瑞混合音素序列 |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 带语言标签的分段 |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | 批量音素转换 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | 批量分段转换 |
