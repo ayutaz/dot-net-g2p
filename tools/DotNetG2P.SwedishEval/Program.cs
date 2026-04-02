@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using DotNetG2P.Swedish;
 
 var options = EvalCliOptions.Parse(args);
@@ -363,6 +364,42 @@ internal static class CorpusEvaluator
     }
 
     /// <summary>
+    /// 共通IPA正規化関数。リファレンスIPAとシステム出力IPAの比較前に適用する。
+    /// - ストレスマーク(ˈˌ)除去
+    /// - 声調アクセントマーク(² ¹)除去
+    /// - 長音記号(ː / : / ˑ)をːに統一後、baseプロファイルでは除去
+    /// - tie bar(◌͡◌)の正規化: U+0361(上tie bar)とU+035C(下tie bar)をU+0361に統一
+    /// - NFC正規化
+    /// </summary>
+    private static string NormalizeIpaCommon(string ipa)
+    {
+        if (string.IsNullOrEmpty(ipa))
+            return ipa;
+
+        // NFC正規化
+        ipa = ipa.Normalize(NormalizationForm.FormC);
+
+        // ストレスマーク除去
+        ipa = ipa
+            .Replace("\u02C8", string.Empty)   // ˈ 主ストレスマーク
+            .Replace("\u02CC", string.Empty);   // ˌ 副ストレスマーク
+
+        // 声調アクセントマーク除去
+        ipa = ipa
+            .Replace("\u00B2", string.Empty)    // ² 声調アクセント2
+            .Replace("\u00B9", string.Empty);   // ¹ 声調アクセント1
+
+        // 長音記号の統一: ASCIIコロン(U+003A)・半長(U+02D1)をIPA長音記号(U+02D0)に統一
+        // baseプロファイルでは後段で除去されるが、統一しておくことで他プロファイルでの比較にも対応
+        ipa = ipa.Replace("\u02D1", "\u02D0");  // ˑ (半長) → ː
+
+        // tie bar正規化: U+035C(下tie bar)をU+0361(上tie bar)に統一
+        ipa = ipa.Replace("\u035C", "\u0361");
+
+        return ipa;
+    }
+
+    /// <summary>
     /// エンジン出力の音素列を正規化する。
     /// 長母音はIPA基底母音+ː（長音記号）に分解し、baseプロファイル（ストレスなし）で比較する。
     /// </summary>
@@ -372,6 +409,8 @@ internal static class CorpusEvaluator
         for (var i = 0; i < phonemes.Count; i++)
         {
             var symbol = NormalizePredictedPhoneme(phonemes[i].Phoneme, dialect);
+            // 共通IPA正規化を適用
+            symbol = NormalizeIpaCommon(symbol);
             // 長母音は基底母音+ːに分解されるため、TokenizeIpaで再トークン化される参照側と一致する
             result.Add(symbol);
         }
@@ -446,28 +485,22 @@ internal static class CorpusEvaluator
 
     /// <summary>
     /// 参照IPA転写を正規化する。
-    /// ipa-dict: スラッシュ・ストレスマーク・声調アクセント（²）・長音記号(ː)・ピリオドを除去し、トークン化。
-    /// WikiPron: パイプをスペースに置換し、スペース区切り。ストレスマーク・長音記号は除去。
+    /// 共通IPA正規化を適用後、ソース固有の処理を行う。
+    /// ipa-dict: スラッシュ・ピリオドを除去し、トークン化。
+    /// WikiPron: パイプをスペースに置換し、スペース区切り。
+    /// ストレスマーク・声調マーク・長音記号の除去は共通正規化で処理される。
     /// </summary>
     private static string[] NormalizeReference(string transcription, SourceKind sourceKind, SwedishDialect dialect)
     {
+        // 共通IPA正規化を最初に適用
+        var normalized = NormalizeIpaCommon(transcription);
+
         var raw = sourceKind == SourceKind.WikiPron
-            ? transcription.Replace("|", " ").Trim()
-            : transcription.Replace("/", string.Empty)
-                .Replace("\u02C8", string.Empty)   // ˈ ストレスマーク除去
-                .Replace("\u02CC", string.Empty)   // ˌ 副ストレスマーク除去
-                .Replace("\u00B2", string.Empty)    // ² 声調アクセント2除去
+            ? normalized.Replace("|", " ").Trim()
+            : normalized.Replace("/", string.Empty)
                 .Replace(".", string.Empty)
                 .Replace(" ", string.Empty)
                 .Trim();
-
-        // WikiPronでもストレスマーク・長音記号を除去
-        if (sourceKind == SourceKind.WikiPron)
-        {
-            raw = raw
-                .Replace("\u02C8", string.Empty)   // ˈ
-                .Replace("\u02CC", string.Empty);   // ˌ
-        }
 
         var tokens = sourceKind == SourceKind.WikiPron
             ? raw.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)

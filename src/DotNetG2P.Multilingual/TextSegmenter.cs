@@ -82,7 +82,7 @@ namespace DotNetG2P.Multilingual
 
         private static readonly string[] s_swedishWordSignals =
         {
-            "att", "dag", "den", "ett", "har", "hej", "hur", "inte",
+            "att", "dag", "denna", "eller", "ett", "hej", "hur", "inte",
             "kan", "och", "ska", "tack", "vill"
         };
 
@@ -794,10 +794,13 @@ namespace DotNetG2P.Multilingual
         }
 
         /// <summary>
-        /// スウェーデン語特有文字 å (U+00E5) を含むか判定する。
-        /// ä (U+00E4) と ö (U+00F6) はドイツ語等と共有するため除外。
-        /// å はスウェーデン語/ノルウェー語/デンマーク語で使用されるが、
-        /// 現在ノルウェー語・デンマーク語は非サポートのためスウェーデン語に分類する。
+        /// スウェーデン語固有文字 å (U+00E5) の検出。
+        /// ä (U+00E4) と ö (U+00F6) はドイツ語・フィンランド語等と共有するため除外。
+        ///
+        /// 重要: å はノルウェー語 (bokmål/nynorsk) およびデンマーク語とも共有される。
+        /// 現在これらの言語は未サポートのため å をスウェーデン語確定信号として使用するが、
+        /// ノルウェー語またはデンマーク語を将来追加する場合は、å を確定信号から除外し
+        /// 信号語ベースのスコアリング判定に変更する必要がある。
         /// </summary>
         private static bool ContainsExplicitSwedishCharacter(ReadOnlySpan<char> text)
         {

@@ -74,7 +74,9 @@ namespace DotNetG2P.Swedish.Data
                 }
                 catch
                 {
-                    // 不正行はスキップして次の行を読み続ける
+                    // 不正行はスキップ。デバッグ時に System.Diagnostics.Debug で確認可能
+                    System.Diagnostics.Debug.WriteLine(
+                        $"SwedishExceptionDictionary: 不正行スキップ: {line}");
                     continue;
                 }
             }

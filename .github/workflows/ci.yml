@@ -121,40 +121,10 @@ jobs:
           restore-keys: ${{ runner.os }}-dotnet-${{ matrix.dotnet_major }}-nuget-
 
       - name: Restore dependencies
-        shell: pwsh
-        run: |
-          $projects = @(
-            'tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj',
-            'tests/DotNetG2P.Benchmarks/DotNetG2P.Benchmarks.csproj',
-            'tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj',
-            'samples/DotNetG2P.Console/DotNetG2P.Console.csproj',
-            'tools/DotNetG2P.SpanishEval/DotNetG2P.SpanishEval.csproj',
-            'tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj',
-            'tools/DotNetG2P.PortugueseEval/DotNetG2P.PortugueseEval.csproj',
-            'tools/DotNetG2P.SwedishEval/DotNetG2P.SwedishEval.csproj'
-          )
-
-          foreach ($project in $projects) {
-            dotnet restore $project
-          }
+        run: dotnet restore DotNetG2P.slnx
 
       - name: Build
-        shell: pwsh
-        run: |
-          $projects = @(
-            'tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj',
-            'tests/DotNetG2P.Benchmarks/DotNetG2P.Benchmarks.csproj',
-            'tests/DotNetG2P.PublishSmoke/DotNetG2P.PublishSmoke.csproj',
-            'samples/DotNetG2P.Console/DotNetG2P.Console.csproj',
-            'tools/DotNetG2P.SpanishEval/DotNetG2P.SpanishEval.csproj',
-            'tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj',
-            'tools/DotNetG2P.PortugueseEval/DotNetG2P.PortugueseEval.csproj',
-            'tools/DotNetG2P.SwedishEval/DotNetG2P.SwedishEval.csproj'
-          )
-
-          foreach ($project in $projects) {
-            dotnet build $project --configuration Release --no-restore
-          }
+        run: dotnet build DotNetG2P.slnx --configuration Release --no-restore
 
       - name: Setup dictionary
         uses: ./.github/actions/setup-dictionary

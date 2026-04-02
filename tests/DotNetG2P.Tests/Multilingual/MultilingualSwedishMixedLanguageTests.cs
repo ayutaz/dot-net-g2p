@@ -187,5 +187,85 @@ namespace DotNetG2P.Tests.Multilingual
             Assert.Equal(input, string.Concat(segments.Select(s => s.SourceText)));
             Assert.Equal(phonemes, string.Join(" ", segments.Select(s => s.Phonemes)));
         }
+
+        // ===== 追加テスト: 言語ペア網羅性 =====
+
+        [Fact]
+        public void TextSegmenter_瑞西仏3言語混在_正しく分離()
+        {
+            // hej går bra → スウェーデン語（å特有文字 + 信号語）
+            // hola mundo → スペイン語（信号語）
+            // bonjour le monde → フランス語（信号語）
+            var result = TextSegmenter.Segment(
+                "hej g\u00e5r bra hola mundo bonjour le monde",
+                Language.Japanese, Language.English);
+
+            Assert.Contains(result, s => s.Language == Language.Swedish);
+            Assert.Contains(result, s => s.Language == Language.Spanish);
+            Assert.Contains(result, s => s.Language == Language.French);
+        }
+
+        [Fact]
+        public void TextSegmenter_瑞葡英3言語混在_正しく分離()
+        {
+            // går → スウェーデン語（å特有文字）
+            // coração → ポルトガル語（ã特有文字）
+            // hello world → 英語（高頻度語シグナル）
+            var result = TextSegmenter.Segment(
+                "g\u00e5r cora\u00E7\u00E3o hello world",
+                Language.Japanese, Language.English);
+
+            Assert.Contains(result, s => s.Language == Language.Swedish);
+            Assert.Contains(result, s => s.Language == Language.Portuguese);
+            Assert.Contains(result, s => s.Language == Language.English);
+        }
+
+        [Fact]
+        public void TextSegmenter_ASCII信号語のみ_スウェーデン語判定()
+        {
+            // "tack och hej" — å なしでも信号語(tack, och, hej)でスウェーデン語と判定される
+            // DefaultLatinLanguage=Swedish で確認
+            var result = TextSegmenter.Segment(
+                "tack och hej",
+                Language.Japanese, Language.Swedish);
+
+            Assert.Single(result);
+            Assert.Equal(Language.Swedish, result[0].Language);
+        }
+
+        [SkippableFact]
+        public void DefaultLatinLanguage_Swedish_設定()
+        {
+            SkipIfNoDictionary();
+
+            // DefaultLatinLanguage=Swedish の場合、ラテン文字デフォルトがSwedishになる
+            using var engine = new MultilingualG2PEngine(
+                _fixture.DictPath!,
+                new MultilingualG2POptions(defaultLatinLanguage: Language.Swedish));
+
+            // "bra" は特定言語のシグナルを持たないが、DefaultLatinLanguage=Swedish なので Swedish に分類
+            var segments = engine.ToSegments("bra");
+
+            Assert.Single(segments);
+            Assert.Equal(Language.Swedish, segments[0].Language);
+        }
+
+        [SkippableFact]
+        public void 単語レベル混在_日瑞英()
+        {
+            SkipIfNoDictionary();
+
+            // 日本語 + スウェーデン語(å確定信号) + 英語(hello高頻度語)
+            // DefaultEngine（defaultLatinLanguage=English）を使用して英語信号語が正しく分離されることを確認
+            const string input = "東京 g\u00e5r hello";
+            var segments = _fixture.DefaultEngine!.ToSegments(input);
+
+            Assert.True(segments.Count >= 2, $"セグメント数が不足: {segments.Count}");
+            Assert.Contains(segments, s => s.Language == Language.Japanese);
+            Assert.Contains(segments, s => s.Language == Language.Swedish);
+
+            // ソーステキストの結合が元入力と一致すること
+            Assert.Equal(input, string.Concat(segments.Select(s => s.SourceText)));
+        }
     }
 }
