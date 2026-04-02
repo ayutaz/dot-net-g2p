@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\src\DotNetG2P.Spanish\DotNetG2P.Spanish.csproj" />
     <ProjectReference Include="..\..\src\DotNetG2P.French\DotNetG2P.French.csproj" />
     <ProjectReference Include="..\..\src\DotNetG2P.Portuguese\DotNetG2P.Portuguese.csproj" />
+    <ProjectReference Include="..\..\src\DotNetG2P.Swedish\DotNetG2P.Swedish.csproj" />
   </ItemGroup>
 
 </Project>

@@ -9,7 +9,8 @@
     "DotNetG2P.Korean",
     "DotNetG2P.Spanish",
     "DotNetG2P.French",
-    "DotNetG2P.Portuguese"
+    "DotNetG2P.Portuguese",
+    "DotNetG2P.Swedish"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

@@ -1,0 +1,14 @@
+{
+  "name": "DotNetG2P.Swedish",
+  "rootNamespace": "DotNetG2P.Swedish",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

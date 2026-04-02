@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- スウェーデン語G2P（DotNetG2P.Swedish）: ルールベース+例外辞書500+語、Central/FinlandSwedish方言対応
+  - 5フェーズG2P規則、ピッチアクセント予測、テキスト正規化11段階
+  - IPA / X-SAMPA / PUA / Prosody 出力
+- Multilingual 8言語対応（Language.Swedish = 7）
+  - TextSegmenter スウェーデン語言語判定
+  - SwedishEval 評価ツール
+
 ## [1.8.2] - 2026-03-21
 
 ### Fixed

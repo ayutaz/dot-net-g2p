@@ -12,6 +12,7 @@ using DotNetG2P.MeCab;
 using DotNetG2P.Multilingual.Internal;
 using DotNetG2P.Portuguese;
 using DotNetG2P.Spanish;
+using DotNetG2P.Swedish;
 
 namespace DotNetG2P.Multilingual
 {
@@ -21,7 +22,7 @@ namespace DotNetG2P.Multilingual
     /// </summary>
     /// <remarks>
     /// 日本語エンジンは辞書パスが必要なため即時初期化される。
-    /// その他の言語エンジン（英語・中国語・韓国語・スペイン語・フランス語・ポルトガル語）は
+    /// その他の言語エンジン（英語・中国語・韓国語・スペイン語・フランス語・ポルトガル語・スウェーデン語）は
     /// 遅延初期化され、初回アクセス時にのみ生成される。
     /// 日本語エンジンはスレッドセーフでないためlockで保護。
     /// </remarks>
@@ -34,6 +35,7 @@ namespace DotNetG2P.Multilingual
         private readonly Lazy<SpanishG2PEngine> _lazySpanishEngine;
         private readonly Lazy<FrenchG2PEngine> _lazyFrenchEngine;
         private readonly Lazy<PortugueseG2PEngine> _lazyPortugueseEngine;
+        private readonly Lazy<SwedishG2PEngine> _lazySwedishEngine;
         private readonly MultilingualG2POptions _options;
         private readonly LanguageCapabilityRouter _capabilityRouter;
         private readonly object _japaneseLock = new object();
@@ -120,6 +122,9 @@ namespace DotNetG2P.Multilingual
             _lazyPortugueseEngine = new Lazy<PortugueseG2PEngine>(
                 () => new PortugueseG2PEngine(options.PortugueseOptions ?? PortugueseG2POptions.Default));
 
+            _lazySwedishEngine = new Lazy<SwedishG2PEngine>(
+                () => new SwedishG2PEngine(options.SwedishOptions ?? SwedishG2POptions.Default));
+
             _capabilityRouter = LanguageCapabilityRouter.CreateLazy(
                 _japaneseEngine,
                 _japaneseLock,
@@ -128,7 +133,8 @@ namespace DotNetG2P.Multilingual
                 _lazyKoreanEngine,
                 _lazySpanishEngine,
                 _lazyFrenchEngine,
-                _lazyPortugueseEngine);
+                _lazyPortugueseEngine,
+                _lazySwedishEngine);
         }
 
         /// <summary>
@@ -248,6 +254,8 @@ namespace DotNetG2P.Multilingual
                 _lazyFrenchEngine.Value.Dispose();
             if (_lazyPortugueseEngine.IsValueCreated)
                 _lazyPortugueseEngine.Value.Dispose();
+            if (_lazySwedishEngine.IsValueCreated)
+                _lazySwedishEngine.Value.Dispose();
         }
 
         /// <summary>

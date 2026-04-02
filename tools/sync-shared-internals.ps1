@@ -42,6 +42,7 @@ $SyncTargets = @(
             "src/DotNetG2P.Spanish/Internal/BatchConversionHelper.cs"
             "src/DotNetG2P.French/Internal/BatchConversionHelper.cs"
             "src/DotNetG2P.Portuguese/Internal/BatchConversionHelper.cs"
+            "src/DotNetG2P.Swedish/Internal/BatchConversionHelper.cs"
         )
     }
     @{
@@ -52,6 +53,7 @@ $SyncTargets = @(
             "src/DotNetG2P.Spanish/Internal/PreserveAttribute.cs"
             "src/DotNetG2P.French/Internal/PreserveAttribute.cs"
             "src/DotNetG2P.Portuguese/Internal/PreserveAttribute.cs"
+            "src/DotNetG2P.Swedish/Internal/PreserveAttribute.cs"
         )
     }
 )

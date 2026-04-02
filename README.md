@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-C#/.NET向け日英中韓西仏葡多言語対応 G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、Hangul-first の韓国語G2P、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに音素列へ変換します。
+C#/.NET向け日英中韓西仏葡瑞多言語対応 G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、Hangul-first の韓国語G2P、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2P、ルールベース+例外辞書のスウェーデン語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存なしに音素列へ変換します。
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer());
@@ -40,6 +40,10 @@ frEngine.ToIPA("bonjour");  // => "bɔ̃ʒuʁ"
 using var ptEngine = new PortugueseG2PEngine();
 ptEngine.ToIPA("obrigado");  // => "obɾiˈɡadu"
 
+// スウェーデン語G2P
+using var svEngine = new SwedishG2PEngine();
+svEngine.ToIPA("hej");  // => "hɛj"
+
 // 日韓英混在テキスト
 using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日本語部分は日本語音素、韓国語部分はHangul phoneme、英語部分はARPAbet
@@ -56,6 +60,7 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日本語部分は
 - [スペイン語評価](#スペイン語評価)
 - [フランス語評価](#フランス語評価)
 - [ポルトガル語評価](#ポルトガル語評価)
+- [スウェーデン語評価](#スウェーデン語評価)
 - [オプション設定](#オプション設定)
 - [関連ドキュメント](#関連ドキュメント)
 - [ビルド](#ビルド)
@@ -75,7 +80,8 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日本語部分は
 - **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応。PUA/Prosody API
 - **フランス語G2P対応** — ルールベース6フェーズG2P変換（ダイグラフ→文脈依存→鼻母音化→半母音化→位置の法則→黙字）、音素ベース音節分割、Metropolitan/Conservative方言切り替え、異音処理（R無声化・阻害音有声性同化）、例外辞書500+エントリ（外来語/不規則語/動詞3複/学術語/同綴異音語）、テキスト正規化（数値/日付/時刻/通貨/単位/略語/記号）、IPA/X-SAMPA出力、全量コーパス評価ツール、PUA/Prosody API を実装
 - **ポルトガル語G2P対応** — ルールベースG2P変換 + 例外辞書（560+エントリ）、音節分割、ストレス付与、Brazilian/European方言切り替え、7種の異音規則（母音弱化・鼻音同化・歯擦音有声性同化・閉鎖音弱化・歯擦音後部歯茎化・t/d破擦音化・コーダl異音）、テキスト正規化（13段階パイプライン: 略語/日付/時刻/通貨/%/単位/数値範囲/小数/数値/記号）、IPA/X-SAMPA出力、全量コーパス評価ツール、PUA/Prosody API を実装
-- **日英中韓西仏葡混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、Hangul block は Korean segment として自動ルーティング。`DefaultLatinLanguage` により英語/スペイン語/フランス語/ポルトガル語のラテン文字系セグメントを切り替え可能。ポルトガル語は特有文字(ã/õ)・ç接尾辞パターン・高頻度語彙で自動判定。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
+- **スウェーデン語G2P対応** — ルールベース+例外辞書500+語、Central/FinlandSwedish方言切り替え、IPA/X-SAMPA出力、PUA/Prosody API を実装
+- **日英中韓西仏葡瑞混在テキスト対応** — Unicode文字種ベースの自動言語判定・セグメント分割に加え、Hangul block は Korean segment として自動ルーティング。`DefaultLatinLanguage` により英語/スペイン語/フランス語/ポルトガル語/スウェーデン語のラテン文字系セグメントを切り替え可能。ポルトガル語は特有文字(ã/õ)・ç接尾辞パターン・高頻度語彙で自動判定。純漢字runは marker・日本語語彙ヒント・埋め込み中国語辞書を使って JP/ZH を補強判定し、中国語埋め込み辞書は `ChineseG2PEngine` と共有して二重ロードを避けます
 
 ## インストール
 
@@ -104,7 +110,10 @@ dotnet add package DotNetG2P.French
 # ポルトガル語G2P
 dotnet add package DotNetG2P.Portuguese
 
-# 日英中韓西仏葡混在テキスト対応
+# スウェーデン語G2P
+dotnet add package DotNetG2P.Swedish
+
+# 日英中韓西仏葡瑞混在テキスト対応
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -120,12 +129,12 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.Spanish` | Apache-2.0 | スペイン語G2Pエンジン（ルールベース + 異音処理オプション） |
 | `DotNetG2P.French` | Apache-2.0 | フランス語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
 | `DotNetG2P.Portuguese` | Apache-2.0 | ポルトガル語G2Pエンジン（ルールベース + 例外辞書 + 異音処理オプション） |
-| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中韓西仏葡混在テキスト対応） |
+| `DotNetG2P.Swedish` | Apache-2.0 | スウェーデン語G2Pエンジン（ルールベース + 例外辞書500+語、Central/FinlandSwedish方言） |
+| `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中韓西仏葡瑞混在テキスト対応） |
 
 ## 関連ドキュメント
 
-- [CONTRIBUTING.md](CONTRIBUTING.md): 開発環境構築、ビルド、テスト、PR の基本方針
-- [ARCHITECTURE.md](ARCHITECTURE.md): パッケージ境界、共有基盤、Multilingual ルーティングの概要
+- [CONTRIBUTING.md](CONTRIBUTING.md): 開発環境構築、ビルド、テスト、アーキテクチャ、PR の基本方針
 - [CHANGELOG.md](CHANGELOG.md): 未リリース変更を含む変更履歴
 - パッケージ別 README:
   - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
@@ -136,6 +145,7 @@ dotnet add package DotNetG2P.Multilingual
   - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
   - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
   - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
+  - [`DotNetG2P.Swedish`](src/DotNetG2P.Swedish/README.md)
   - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
 
 ### Unity (UPM)
@@ -151,6 +161,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Korean
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.French
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Portuguese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Swedish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -341,7 +352,30 @@ var ptResult = ptEngine.ToIpaWithProsody("obrigado");
 // バッチ処理
 var ptBatch = ptEngine.ToIPABatch(new[] { "bom dia", "boa noite" });
 
-// === 日英中韓西仏葡混在テキスト ===
+// === スウェーデン語G2P ===
+using DotNetG2P.Swedish;
+
+using var svEngine = new SwedishG2PEngine();
+string svIpa = svEngine.ToIPA("hej");
+// => "hɛj"
+
+// FinlandSwedish方言
+using var svFiEngine = new SwedishG2PEngine(new SwedishG2POptions(dialect: SwedishDialect.FinlandSwedish));
+string svFiIpa = svFiEngine.ToIPA("hej");
+
+// X-SAMPA出力
+string svXsampa = svEngine.ToXSampa("hej");
+
+// PUA マッピング
+string[] svPua = svEngine.ToPuaPhonemes("hej");
+
+// Prosody 情報
+var svResult = svEngine.ToIpaWithProsody("hej");
+
+// バッチ処理
+var svBatch = svEngine.ToIPABatch(new[] { "god morgon", "god kväll" });
+
+// === 日英中韓西仏葡瑞混在テキスト ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine();
@@ -381,6 +415,12 @@ var ptOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Portug
 using var multiPtEngine = new MultilingualG2PEngine(ptOptions);
 multiPtEngine.ToPhonemes("obrigado世界");
 // ポルトガル語部分→IPA音素、日本語部分→日本語音素
+
+// スウェーデン語テキストを含む場合
+var svOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Swedish);
+using var multiSvEngine = new MultilingualG2PEngine(svOptions);
+multiSvEngine.ToPhonemes("hej世界");
+// スウェーデン語部分→IPA音素、日本語部分→日本語音素
 
 // Unity環境での辞書パス指定（StreamingAssets等）
 var streamingAssets = Application.streamingAssetsPath; // UnityEngine.Application
@@ -551,11 +591,32 @@ using var multiUnityEngine = new MultilingualG2PEngine(japaneseDicPath, unityOpt
 | `ToIpaWithProsody(text)` | `PortugueseProsodyResult` | IPA 音素配列 + 韻律情報 |
 | `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<PortugueseProsodyResult>` | バッチ IPA+Prosody 変換 |
 
+### SwedishG2PEngine
+
+| メソッド | 戻り値型 | 説明 |
+|---------|---------|------|
+| `ToPhonemes(text)` | `string` | スペース区切りIPA音素列 |
+| `ToIPA(text)` | `string` | IPA表記 |
+| `ToIPAWithoutStress(text)` | `string` | ストレスマークなしIPA表記 |
+| `ToXSampa(text)` | `string` | X-SAMPA表記 |
+| `ToXSampaWithoutStress(text)` | `string` | ストレスマークなしX-SAMPA表記 |
+| `ToPhonemeList(text)` | `IReadOnlyList<SwedishPhoneme>` | 構造化音素リスト |
+| `ToSyllables(text)` | `IReadOnlyList<SwedishSyllable>` | 音節分割結果 |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | バッチIPA変換 |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | バッチX-SAMPA変換 |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<SwedishPhoneme>>` | バッチ構造化音素リスト変換 |
+| `ToPuaPhonemes(text)` | `string[]` | PUA マッピング済み音素配列 |
+| `ToPuaString(text)` | `string` | PUA マッピング済み文字列（スペース区切り） |
+| `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | バッチ PUA 文字列変換 |
+| `ToIpaWithProsody(text)` | `SwedishProsodyResult` | IPA 音素配列 + 韻律情報 |
+| `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<SwedishProsodyResult>` | バッチ IPA+Prosody 変換 |
+
 ### MultilingualG2PEngine
 
 | メソッド | 戻り値型 | 説明 |
 |---------|---------|------|
-| `ToPhonemes(text)` | `string` | 日英中韓西仏葡混在音素列 |
+| `ToPhonemes(text)` | `string` | 日英中韓西仏葡瑞混在音素列 |
 | `ToSegments(text)` | `IReadOnlyList<G2PSegment>` | 言語タグ付きセグメント |
 | `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | バッチ音素変換 |
 | `ToSegmentsBatch(texts)` | `IReadOnlyList<IReadOnlyList<G2PSegment>>` | バッチセグメント変換 |
@@ -563,7 +624,7 @@ using var multiUnityEngine = new MultilingualG2PEngine(japaneseDicPath, unityOpt
 Multilingual の補足:
 
 - Hangul syllables / Jamo / compatibility jamo / halfwidth Hangul は Korean として分類され、`DotNetG2P.Korean` にルーティングされます
-- ラテン文字列は `DefaultLatinLanguage` を既定にしつつ、アクセント付きスペイン語文字、`güe/güi`、高頻度 ASCII Spanish 語彙、代表的な接尾辞で English / Spanish / French / Portuguese を切り替えます。ポルトガル語は特有文字(ã/õ)、ç接尾辞パターン(-ço/-ça)、高頻度語彙で判定します
+- ラテン文字列は `DefaultLatinLanguage` を既定にしつつ、アクセント付きスペイン語文字、`güe/güi`、高頻度 ASCII Spanish 語彙、代表的な接尾辞で English / Spanish / French / Portuguese / Swedish を切り替えます。ポルトガル語は特有文字(ã/õ)、ç接尾辞パターン(-ço/-ça)、高頻度語彙で判定します
 - 純漢字 run は `Chinese strong/weak markers`、`Japanese markers`、日本語語彙ヒント、埋め込み中国語 phrase/char 辞書を使って JP / ZH を補強判定します
 - 埋め込み中国語辞書は `ChineseG2PEngine` と共有され、`TextSegmenter` 単独の追加辞書常駐は実測で約 `0.02MB` です
 - それでも根拠が弱い曖昧な純漢字 run だけ `DefaultCjkLanguage` にフォールバックします
@@ -573,7 +634,7 @@ Multilingual の補足:
   - `EnglishLtsModelPath`: 英語 LTS モデルのファイルパス（null 時は埋め込みリソースを使用）
   - `ChineseCharDictionaryPath`: 中国語単字辞書のファイルパス（null 時は埋め込みリソースを使用）
   - `ChinesePhraseDictionaryPath`: 中国語フレーズ辞書のファイルパス（null 時は埋め込みリソースを使用）
-- 現在の Multilingual 回帰: `448 passed`（7言語対応）
+- 現在の Multilingual 回帰: `448 passed`（8言語対応）
 - `MultilingualPerformanceTests`: `8 passed`
 - `MultilingualKoreanPerformanceTests`: `2 passed`
 
@@ -785,6 +846,17 @@ PER閾値設定（`tools/portuguese_eval_thresholds.json`）
 12. 記号展開
 13. 空白正規化
 
+## スウェーデン語評価
+
+ルールベース+例外辞書500+語によるスウェーデン語G2P。Central/FinlandSwedish方言をサポート。
+
+### 方言サポート
+
+| 方言 | enum値 | 説明 |
+|------|--------|------|
+| Central | `SwedishDialect.Central`（デフォルト） | ストックホルム標準スウェーデン語 |
+| FinlandSwedish | `SwedishDialect.FinlandSwedish` | フィンランド・スウェーデン語 |
+
 ## オプション設定
 
 `G2POptions` で各処理段階を個別にON/OFFできます（イミュータブル設計）。
@@ -841,12 +913,12 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 辞書データ（`DictionaryBundle`）は内部でWeakReferenceキャッシュにより自動的に共有されるため、
 複数インスタンスを作成してもメモリ使用量は最小限に抑えられます。
 
-`EnglishG2PEngine`、`ChineseG2PEngine`、`KoreanG2PEngine`、`SpanishG2PEngine`、`FrenchG2PEngine`、`PortugueseG2PEngine` はステートレスな変換を行うため、
+`EnglishG2PEngine`、`ChineseG2PEngine`、`KoreanG2PEngine`、`SpanishG2PEngine`、`FrenchG2PEngine`、`PortugueseG2PEngine`、`SwedishG2PEngine` はステートレスな変換を行うため、
 単一インスタンスを複数スレッドから呼び出しても安全です。
 
 `MultilingualG2PEngine` は内部の日本語エンジンを `lock` で保護しているため、
 複数スレッドから安全に呼び出せます。ただし日本語テキストの変換は直列化されます。
-非日本語エンジン（英語・中国語・韓国語・スペイン語・フランス語・ポルトガル語）は `Lazy<T>` による遅延初期化で、
+非日本語エンジン（英語・中国語・韓国語・スペイン語・フランス語・ポルトガル語・スウェーデン語）は `Lazy<T>` による遅延初期化で、
 実際に使用されるまでメモリを消費しません。
 
 ## ライセンス
@@ -861,7 +933,8 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | スペイン語G2Pエンジン |
 | **DotNetG2P.French** | [Apache-2.0](LICENSE) | フランス語G2Pエンジン |
 | **DotNetG2P.Portuguese** | [Apache-2.0](LICENSE) | ポルトガル語G2Pエンジン |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中韓西仏葡対応） |
+| **DotNetG2P.Swedish** | [Apache-2.0](LICENSE) | スウェーデン語G2Pエンジン |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多言語G2Pエンジン（日英中韓西仏葡瑞対応） |
 
 全コンポーネントが**Apache-2.0ライセンス**で利用可能です。
 サードパーティコンポーネントのライセンスについては [NOTICE](NOTICE) ファイルを参照してください。

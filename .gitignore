@@ -28,11 +28,13 @@ nul
 temp_*
 test_output.txt
 artifacts/spanish-eval/
+artifacts/swedish-eval/
 artifacts/publish-smoke/
 artifacts/package-validation/
 artifacts/package-validation-test/
 artifacts/package-validation-all/
 .cache/spanish-eval/
+.cache/swedish-eval/
 tests/**/TestResults/
 BenchmarkDotNet.Artifacts/
 coverage-report/

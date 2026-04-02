@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackageId>DotNetG2P.Swedish</PackageId>
+    <AssemblyName>DotNetG2P.Swedish</AssemblyName>
+    <RootNamespace>DotNetG2P.Swedish</RootNamespace>
+    <Description>Swedish Grapheme-to-Phoneme (G2P) library for .NET and Unity. Rule-based IPA conversion with syllabification, stress assignment, pitch accent prediction, and Central/Finland Swedish dialect options.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageTags>g2p;swedish;tts;phoneme;ipa;text-to-speech;unity;pitch-accent</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DotNetG2P.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\swedish_exceptions.master.tsv" />
+  </ItemGroup>
+</Project>

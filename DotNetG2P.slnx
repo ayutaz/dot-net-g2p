@@ -3,6 +3,7 @@
     <Project Path="tools/DotNetG2P.SpanishEval/DotNetG2P.SpanishEval.csproj" />
     <Project Path="tools/DotNetG2P.FrenchEval/DotNetG2P.FrenchEval.csproj" />
     <Project Path="tools/DotNetG2P.PortugueseEval/DotNetG2P.PortugueseEval.csproj" />
+    <Project Path="tools/DotNetG2P.SwedishEval/DotNetG2P.SwedishEval.csproj" />
   </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/DotNetG2P.Console/DotNetG2P.Console.csproj" />
@@ -17,6 +18,7 @@
     <Project Path="src/DotNetG2P.Spanish/DotNetG2P.Spanish.csproj" />
     <Project Path="src/DotNetG2P.French/DotNetG2P.French.csproj" />
     <Project Path="src/DotNetG2P.Portuguese/DotNetG2P.Portuguese.csproj" />
+    <Project Path="src/DotNetG2P.Swedish/DotNetG2P.Swedish.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DotNetG2P.Benchmarks/DotNetG2P.Benchmarks.csproj" />

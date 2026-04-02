@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-C#/.NET（Unity対応）向けの日英中韓西仏葡多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
-OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、Hangul-firstの韓国語G2P、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
+C#/.NET（Unity対応）向けの日英中韓西仏葡瑞多言語G2P（Grapheme-to-Phoneme: 書記素→音素変換）ライブラリ。
+OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2P、pinyin-data辞書ベースの中国語ピンイン変換、Hangul-firstの韓国語G2P、ルールベースのスペイン語G2P、ルールベース+例外辞書のフランス語G2P、ルールベース+例外辞書のポルトガル語G2P、ルールベース+例外辞書のスウェーデン語G2PをC#でネイティブに再実装し、Pythonやネイティブバイナリへの依存を排除する。
 
 ## 進捗状況
 
@@ -20,7 +20,8 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
 | スペイン語 | DotNetG2P.Spanish | S1-S4完了 | 355 | ipa-dict PER 1.69%(base)/1.37%(allophones)、LatinAmerican/Castilian方言 |
 | フランス語 | DotNetG2P.French | F1-F4完了 | 719 | 例外辞書500+語、Metropolitan/Conservative方言 |
 | ポルトガル語 | DotNetG2P.Portuguese | P1-P4完了 | 1310 | 例外辞書560+語、Brazilian/European方言、異音7規則 |
-| 多言語 | DotNetG2P.Multilingual | 完了 | 412 | 7言語ファサード、Lazy初期化、言語自動判定+セグメント分割 |
+| スウェーデン語 | DotNetG2P.Swedish | Sw1-Sw4完了 | 400+ | ルールベース+例外辞書500+語、Central/FinlandSwedish方言 |
+| 多言語 | DotNetG2P.Multilingual | 完了 | 450+ | 8言語ファサード、Lazy初期化、言語自動判定+セグメント分割 |
 
 その他の完了済み作業:
 - Unity統合対応 (v1.8.0): embedded resource代替ロード、PUA/Prosody API、piper-plus互換IPA、[Preserve]属性
@@ -58,6 +59,7 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 │   ├── DotNetG2P.Spanish/               # スペイン語G2P（独立、Core参照なし）
 │   ├── DotNetG2P.French/                # フランス語G2P（独立、Core参照なし）
 │   ├── DotNetG2P.Portuguese/            # ポルトガル語G2P（独立、Core参照なし）
+│   ├── DotNetG2P.Swedish/               # スウェーデン語G2P（独立、Core参照なし）
 │   └── DotNetG2P.Multilingual/          # 多言語ファサード（全パッケージ依存）
 ├── tests/DotNetG2P.Tests/               # xUnit テスト (net8.0)
 ├── tools/                               # sync-shared-internals.ps1, 評価ツール等
@@ -111,7 +113,7 @@ OpenJTalk用のnaist-jdic辞書フォーマット（IPADIC + アクセント情�
 - **形態素解析**: 独自MeCabエンジン（`DotNetG2P.MeCab`、Apache-2.0、外部依存なし）
 - **辞書**: naist-jdic（BSD License）
 - **テスト**: xUnit 2.5.3 (net8.0)
-- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.Chinese`, `DotNetG2P.English`, `DotNetG2P.Korean`, `DotNetG2P.Spanish`, `DotNetG2P.French`, `DotNetG2P.Portuguese`, `DotNetG2P.Multilingual`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`, `com.dotnetg2p.chinese`, `com.dotnetg2p.english`, `com.dotnetg2p.korean`, `com.dotnetg2p.spanish`, `com.dotnetg2p.french`, `com.dotnetg2p.portuguese`, `com.dotnetg2p.multilingual`)
+- **パッケージング**: NuGet (`DotNetG2P`, `DotNetG2P.MeCab`, `DotNetG2P.Chinese`, `DotNetG2P.English`, `DotNetG2P.Korean`, `DotNetG2P.Spanish`, `DotNetG2P.French`, `DotNetG2P.Portuguese`, `DotNetG2P.Swedish`, `DotNetG2P.Multilingual`) + UPM (`com.dotnetg2p.core`, `com.dotnetg2p.mecab`, `com.dotnetg2p.chinese`, `com.dotnetg2p.english`, `com.dotnetg2p.korean`, `com.dotnetg2p.spanish`, `com.dotnetg2p.french`, `com.dotnetg2p.portuguese`, `com.dotnetg2p.swedish`, `com.dotnetg2p.multilingual`)
 - **CI/CD**: GitHub Actions (ci.yml, release.yml)
 - **ソリューション形式**: .slnx（.NET 10）
 
