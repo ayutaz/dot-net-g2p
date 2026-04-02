@@ -46,7 +46,7 @@ dotnet run --project samples/DotNetG2P.Console/DotNetG2P.Console.csproj -- <nais
 ## プロジェクト構成
 
 ```
-DotNetG2P.slnx                          # ソリューションファイル（.NET 10 .slnx形式）
+DotNetG2P.slnx                          # ソリューションファイル（.NET SDK 9.0+ 対応の .slnx 形式）
 ├── Directory.Build.props                # NuGet共通メタデータ
 ├── .github/workflows/                   # CI (ci.yml) + Release (release.yml)
 ├── src/
@@ -64,15 +64,15 @@ DotNetG2P.slnx                          # ソリューションファイル（.N
 └── samples/DotNetG2P.Console/           # コンソールサンプル
 ```
 
-各言語パッケージの共通構造:
+各言語パッケージの共通構造（言語により一部差異あり）:
 - `{Lang}G2PEngine.cs` — メインAPI (ToIPA, ToPhonemes, ToXSampa, ToPuaPhonemes, ToIpaWithProsody等 + バッチAPI)
 - `{Lang}G2POptions.cs` — オプション設定
 - `Models/` — 音素enum, Phoneme struct, Dialect enum, Prosody Info/Result等
 - `Rules/` — GraphemeToPhonemeRules, Syllabifier, StressAssigner, AllophoneProcessor等
 - `Normalization/` — テキスト正規化、NumberToWords
-- `Conversion/` — IPA/X-SAMPA/PUA変換、FunctionWordList
+- `Conversion/` — IPA/X-SAMPA/PUA変換、FunctionWordList（En/Es/Fr/Ptのみ）
 - `Data/` — 例外辞書TSV (Es/Fr/Pt/Ko)、埋め込みリソース (Zh/En)
-- `Internal/PreserveAttribute.cs` — Unity IL2CPP strip防止
+- `Internal/PreserveAttribute.cs` — Unity IL2CPP strip防止（非Core言語パッケージのみ）
 
 ## 背景・動機
 
