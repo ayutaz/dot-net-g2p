@@ -21,7 +21,7 @@ if ($Refresh -or -not (Test-Path $CorpusDir)) {
         $refreshArgs += "-Force"
     }
 
-    & powershell @refreshArgs
+    & pwsh @refreshArgs
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to refresh full Swedish evaluation corpora."
     }

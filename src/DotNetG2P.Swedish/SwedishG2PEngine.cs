@@ -189,10 +189,12 @@ namespace DotNetG2P.Swedish
                 pronunciation = AllophoneProcessor.Apply(pronunciation, _options.AllophoneFeatures, _options.Dialect);
             }
 
-            // FinlandSwedish方言: ピッチアクセント無効化
-            if (_options.Dialect == SwedishDialect.FinlandSwedish)
+            // FinlandSwedish方言: ピッチアクセント無効化（共有インスタンスを破壊しないよう新規生成）
+            if (_options.Dialect == SwedishDialect.FinlandSwedish && pronunciation.Accent != 0)
             {
-                pronunciation.Accent = 0;
+                pronunciation = new SwedishPronunciation(
+                    pronunciation.PhonemesInternal, pronunciation.SyllableOffsetsInternal,
+                    pronunciation.StressedSyllableIndex, accent: 0);
             }
 
             // 機能語のストレス除去（出力フォーマット設定に関わらず、音韻モデルからストレスを除去する）
