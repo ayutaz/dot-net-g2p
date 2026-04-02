@@ -6,8 +6,8 @@
 [![NuGet](https://img.shields.io/nuget/v/DotNetG2P.svg)](https://www.nuget.org/packages/DotNetG2P)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-A multilingual G2P (Grapheme-to-Phoneme) library for C#/.NET covering Japanese, English, Chinese, Korean, Spanish, French, and Portuguese.
-It natively reimplements the OpenJTalk-compatible Japanese G2P pipeline, CMU dictionary-based English G2P, pinyin-data dictionary-based Chinese pinyin conversion, Hangul-first Korean G2P, and rule-based Romance-language G2P in C#, without depending on Python or native binaries.
+A multilingual G2P (Grapheme-to-Phoneme) library for C#/.NET covering Japanese, English, Chinese, Korean, Spanish, French, Portuguese, and Swedish.
+It natively reimplements the OpenJTalk-compatible Japanese G2P pipeline, CMU dictionary-based English G2P, pinyin-data dictionary-based Chinese pinyin conversion, Hangul-first Korean G2P, rule-based Romance-language G2P, and rule-based + exception dictionary Swedish G2P in C#, without depending on Python or native binaries.
 
 ```csharp
 using var engine = new G2PEngine(new MeCabTokenizer());
@@ -39,6 +39,10 @@ frEngine.ToIPA("bonjour");  // => "bɔ̃ʒuʁ"
 using var ptEngine = new PortugueseG2PEngine();
 ptEngine.ToIPA("obrigado");  // => "obɾiˈɡadu"
 
+// Swedish G2P
+using var svEngine = new SwedishG2PEngine();
+svEngine.ToIPA("hej");  // => "hɛj"
+
 // Mixed Japanese-Korean-English text
 using var multiEngine = new MultilingualG2PEngine();
 multiEngine.ToPhonemes("今日は안녕하세요 hello");  // Japanese => Japanese phonemes, Korean => Hangul phonemes, English => ARPAbet
@@ -59,6 +63,7 @@ multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese =>
 - [Spanish Evaluation](#spanish-evaluation)
 - [French Evaluation](#french-evaluation)
 - [Portuguese Evaluation](#portuguese-evaluation)
+- [Swedish Evaluation](#swedish-evaluation)
 - [Configuration Options](#configuration-options)
 - [Related Documentation](#related-documentation)
 - [Building](#building)
@@ -77,7 +82,8 @@ multiEsEngine.ToPhonemes("hola世界");  // Spanish => IPA phonemes, Japanese =>
 - **Korean G2P support** — Hangul-first rule-based conversion with Jamo decomposition, standard-pronunciation-oriented phonological rules, exact exception dictionary overrides, lightweight normalization, benchmark harnesses for `g2pk_parity`, `official_gold`, and `weak_rules`, plus external corpus gates and performance tests
 - **Spanish G2P support** — Rule-based IPA conversion with syllabification, stress assignment, Castilian/Latin American options, optional allophone processing, normalization, an exception dictionary, and a full-corpus evaluation toolchain. The normalizer now also distinguishes grouping separators from decimal separators and safely falls back on invalid dates/times
 - **French and Portuguese G2P support** — Rule-based IPA conversion with exception dictionaries, dialect options, normalization pipelines, and dataset-driven evaluation toolchains
-- **Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese text support** — Automatic language detection and segment splitting based on Unicode character categories, with Hangul routed directly to Korean segments and `DefaultLatinLanguage` controlling English/Spanish/French/Portuguese Latin-script routing. Pure CJK ideograph runs are further disambiguated with markers, Japanese lexical hints, and embedded Chinese dictionaries, and the embedded Chinese dictionaries are shared with `ChineseG2PEngine` to avoid duplicate residency
+- **Swedish G2P support** — Rule-based + exception dictionary (500+ words), Central/FinlandSwedish dialect switching, IPA/X-SAMPA output, PUA/Prosody API
+- **Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese-Swedish text support** — Automatic language detection and segment splitting based on Unicode character categories, with Hangul routed directly to Korean segments and `DefaultLatinLanguage` controlling English/Spanish/French/Portuguese/Swedish Latin-script routing. Pure CJK ideograph runs are further disambiguated with markers, Japanese lexical hints, and embedded Chinese dictionaries, and the embedded Chinese dictionaries are shared with `ChineseG2PEngine` to avoid duplicate residency
 
 ## Installation
 
@@ -106,7 +112,10 @@ dotnet add package DotNetG2P.French
 # Portuguese G2P
 dotnet add package DotNetG2P.Portuguese
 
-# Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese text support
+# Swedish G2P
+dotnet add package DotNetG2P.Swedish
+
+# Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese-Swedish text support
 dotnet add package DotNetG2P.Multilingual
 ```
 
@@ -122,7 +131,8 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.Spanish` | Apache-2.0 | Spanish G2P engine (rule-based + optional allophones) |
 | `DotNetG2P.French` | Apache-2.0 | French G2P engine (rule-based + exception dictionary + optional allophones) |
 | `DotNetG2P.Portuguese` | Apache-2.0 | Portuguese G2P engine (rule-based + exception dictionary + optional allophones) |
-| `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese text support) |
+| `DotNetG2P.Swedish` | Apache-2.0 | Swedish G2P engine (rule-based + exception dictionary 500+ words, Central/FinlandSwedish dialects) |
+| `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese-Swedish text support) |
 
 ## Related Documentation
 
@@ -137,6 +147,7 @@ dotnet add package DotNetG2P.Multilingual
   - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
   - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
   - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
+  - [`DotNetG2P.Swedish`](src/DotNetG2P.Swedish/README.md)
   - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
 
 ### Unity (UPM)
@@ -152,6 +163,7 @@ https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Korean
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Spanish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.French
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Portuguese
+https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Swedish
 https://github.com/ayutaz/dot-net-g2p.git?path=src/DotNetG2P.Multilingual
 ```
 
@@ -287,7 +299,30 @@ string ptXsampaNoStress = ptEngine.ToXSampaWithoutStress("obrigado");
 
 var ptBatch = ptEngine.ToIPABatch(new[] { "bom dia", "boa noite" });
 
-// === Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese Text ===
+// === Swedish G2P ===
+using DotNetG2P.Swedish;
+
+using var svEngine = new SwedishG2PEngine();
+string svIpa = svEngine.ToIPA("hej");
+// => "hɛj"
+
+// FinlandSwedish dialect
+using var svFiEngine = new SwedishG2PEngine(new SwedishG2POptions(dialect: SwedishDialect.FinlandSwedish));
+string svFiIpa = svFiEngine.ToIPA("hej");
+
+// X-SAMPA output
+string svXsampa = svEngine.ToXSampa("hej");
+
+// PUA mapping
+string[] svPua = svEngine.ToPuaPhonemes("hej");
+
+// Prosody information
+var svResult = svEngine.ToIpaWithProsody("hej");
+
+// Batch processing
+var svBatch = svEngine.ToIPABatch(new[] { "god morgon", "god kväll" });
+
+// === Mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese-Swedish Text ===
 using DotNetG2P.Multilingual;
 
 using var multiEngine = new MultilingualG2PEngine();
@@ -327,6 +362,12 @@ var ptOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Portug
 using var multiPtEngine = new MultilingualG2PEngine(ptOptions);
 multiPtEngine.ToPhonemes("obrigado世界");
 // Portuguese segments => IPA phonemes, Japanese segments => Japanese phonemes
+
+// For text containing Swedish
+var svOptions = new MultilingualG2POptions(defaultLatinLanguage: Language.Swedish);
+using var multiSvEngine = new MultilingualG2PEngine(svOptions);
+multiSvEngine.ToPhonemes("hej世界");
+// Swedish segments => IPA phonemes, Japanese segments => Japanese phonemes
 ```
 
 ## API Reference
@@ -444,6 +485,27 @@ multiPtEngine.ToPhonemes("obrigado世界");
 | `ToIPABatch(texts)` | `IReadOnlyList<string>` | Batch IPA conversion |
 | `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | Batch X-SAMPA conversion |
 | `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<PortuguesePhoneme>>` | Batch structured phoneme list conversion |
+
+### SwedishG2PEngine
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ToPhonemes(text)` | `string` | Space-separated IPA phoneme sequence |
+| `ToIPA(text)` | `string` | IPA transcription |
+| `ToIPAWithoutStress(text)` | `string` | IPA transcription without stress marks |
+| `ToXSampa(text)` | `string` | X-SAMPA transcription |
+| `ToXSampaWithoutStress(text)` | `string` | X-SAMPA transcription without stress marks |
+| `ToPhonemeList(text)` | `IReadOnlyList<SwedishPhoneme>` | Structured phoneme list |
+| `ToSyllables(text)` | `IReadOnlyList<SwedishSyllable>` | Syllabification result |
+| `ToPhonemesBatch(texts)` | `IReadOnlyList<string>` | Batch phoneme conversion |
+| `ToIPABatch(texts)` | `IReadOnlyList<string>` | Batch IPA conversion |
+| `ToXSampaBatch(texts)` | `IReadOnlyList<string>` | Batch X-SAMPA conversion |
+| `ToPhonemeListBatch(texts)` | `IReadOnlyList<IReadOnlyList<SwedishPhoneme>>` | Batch structured phoneme list conversion |
+| `ToPuaPhonemes(text)` | `string[]` | PUA-mapped phoneme array |
+| `ToPuaString(text)` | `string` | PUA-mapped string (space-separated) |
+| `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | Batch PUA string conversion |
+| `ToIpaWithProsody(text)` | `SwedishProsodyResult` | IPA phoneme array + prosody information |
+| `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<SwedishProsodyResult>` | Batch IPA+Prosody conversion |
 
 ### MultilingualG2PEngine
 
