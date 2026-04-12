@@ -59,7 +59,7 @@ DotNetG2P.ChineseにMisaki互換出力モードを追加することで、C#/Uni
 | 方式 | 概要 | 判定 |
 |------|------|------|
 | A: PinyinStyle に追加 | PinyinStyle はピンイン表記用 enum。IPA 出力とはレイヤーが異なる | **不採用** (責務混在) |
-| **B: PinyinToMisaki.cs 新規 + ToMisakiIpa()** | PiperIpa と同パターン。独立マッピングテーブル | **採用** |
+| **B: PinyinToMisaki.cs 新規 + ToMisakiIPA()** | PiperIpa と同パターン。独立マッピングテーブル | **採用** |
 | C: ToIPA() 出力のポストプロセス | 文字列置換で変換。脆弱で将来変更に弱い | **不採用** |
 
 ### 採用: 方式B — 独立変換クラス + 専用メソッド
@@ -94,7 +94,7 @@ src/DotNetG2P.Chinese/Conversion/
 
 | ファイル | 内容 |
 |---------|------|
-| `src/DotNetG2P.Chinese/ChineseG2PEngine.cs` | `ToMisakiIpa()` / `ToMisakiIpaBatch()` 公開メソッド追加 |
+| `src/DotNetG2P.Chinese/ChineseG2PEngine.cs` | `ToMisakiIPA()` / `ToMisakiIPABatch()` 公開メソッド追加 |
 
 ### 変更不要 (共通基盤)
 
@@ -170,12 +170,12 @@ private static readonly string[] s_toneArrows = new[]
 
 ```csharp
 // 文字列出力
-public string ToMisakiIpa(string text)
-public string ToMisakiIpa(string text, bool includeTones)
+public string ToMisakiIPA(string text)
+public string ToMisakiIPA(string text, bool includeTones)
 
 // バッチ出力
-public string[] ToMisakiIpaBatch(string[] texts)
-public string[] ToMisakiIpaBatch(string[] texts, bool includeTones)
+public string[] ToMisakiIPABatch(string[] texts)
+public string[] ToMisakiIPABatch(string[] texts, bool includeTones)
 ```
 
 ## テスト方針
@@ -194,3 +194,8 @@ public string[] ToMisakiIpaBatch(string[] texts, bool includeTones)
 - Misaki には Legacy パス (IPA+矢印) と v1.1 パス (注音符号) の2つが存在するが、Kokoro-82M で使用されるのは Legacy パスのみ。本対応は Legacy パスを対象とする
 - Misaki が `ꭧ` (U+AB67) を zh/ch の子音IPAに使用する件は、Kokoro vocab に含まれない可能性があるため初期対応では見送り、必要に応じて追加する
 - Multilingual 層への統合は将来の追加作業とする
+
+### Phase 1-R 実装知見
+
+- Misaki legacy は 3-3 tone sandhi (三声連読変調) を適用しない。DotNetG2P では `EnableToneSandhi` オプションで制御可能。Misaki legacy と完全一致させるには `EnableToneSandhi = false` でエンジンを初期化する
+- U+032F (COMBINING INVERTED BREVE BELOW, 非音節化符号) は Misaki テンプレート側で事前除去されるため、実際の出力には含まれない。DotNetG2P の `ToMisakiIPA()` はマッピングテーブルに U+032F を含むが、Kokoro TTS に渡す前にテンプレート処理で除去される想定
