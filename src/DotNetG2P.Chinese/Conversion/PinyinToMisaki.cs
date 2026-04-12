@@ -17,6 +17,10 @@ namespace DotNetG2P.Chinese
     /// <item>Y/W 複合韻母は (Initial, Final) ペアから独立テーブルで lookup</item>
     /// </list>
     /// 仕様参照: .claude/tmp/misaki-spec.md
+    /// <para>
+    /// 注意: Misaki Python 実装 (legacy) は声調変調（三声連読等）を適用しません。
+    /// 本クラスは音節単位の変換のみを担当し、声調変調は <see cref="ChineseG2PEngine"/> のパイプラインで制御されます。
+    /// </para>
     /// </summary>
     internal static class PinyinToMisaki
     {
@@ -253,14 +257,8 @@ namespace DotNetG2P.Chinese
                 return erSb.ToString();
             }
 
-            // c. Zh/Ch/Sh/R + Final.I → 声母 + ɨ (retroflex apical)
-            if (syllable.Final == Final.I && IsRetroflex(syllable.Initial))
-            {
-                return s_initialMisaki[syllable.Initial] + s_apicalMisaki + toneArrow;
-            }
-
-            // d. Z/C/S + Final.I → 声母 + ɨ (alveolar apical)
-            if (syllable.Final == Final.I && IsAlveolar(syllable.Initial))
+            // c/d. Zh/Ch/Sh/R/Z/C/S + Final.I → 声母 + ɨ (retroflex/alveolar apical)
+            if (syllable.Final == Final.I && (IsRetroflex(syllable.Initial) || IsAlveolar(syllable.Initial)))
             {
                 return s_initialMisaki[syllable.Initial] + s_apicalMisaki + toneArrow;
             }
