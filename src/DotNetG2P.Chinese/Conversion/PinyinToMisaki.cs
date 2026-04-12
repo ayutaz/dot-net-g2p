@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 
 namespace DotNetG2P.Chinese
 {
@@ -124,5 +125,141 @@ namespace DotNetG2P.Chinese
 
         /// <summary>z/c/s + i で使用する歯茎母音を返す（テスト・検証用）。</summary>
         internal static string GetAlveolarApical() => s_alveolarApical;
+
+        /// <summary>
+        /// 声調記号付きピンインを Misaki 互換 IPA 表記に変換する（声調矢印付き）。
+        /// </summary>
+        /// <param name="pinyin">声調記号付きまたは声調数字付きのピンイン文字列。</param>
+        /// <returns>Misaki 互換 IPA 表記文字列。パース失敗時は空文字列。</returns>
+        public static string Convert(string pinyin)
+        {
+            return Convert(pinyin, true);
+        }
+
+        /// <summary>
+        /// 声調記号付きピンインを Misaki 互換 IPA 表記に変換する。
+        /// </summary>
+        /// <param name="pinyin">声調記号付きまたは声調数字付きのピンイン文字列。</param>
+        /// <param name="includeTones">声調矢印を含めるかどうか。</param>
+        /// <returns>Misaki 互換 IPA 表記文字列。パース失敗時は空文字列。</returns>
+        public static string Convert(string pinyin, bool includeTones)
+        {
+            if (string.IsNullOrEmpty(pinyin))
+                return string.Empty;
+
+            // 数字声調形式（"ma1"等）を声調記号付きに変換してからパース
+            string normalized = ToneConverter.ToToneMarked(pinyin);
+            if (!PinyinParser.TryParse(normalized, out var syllable))
+                return string.Empty;
+
+            return ConvertSyllable(syllable, includeTones);
+        }
+
+        /// <summary>
+        /// PinyinSyllable を Misaki 互換 IPA 表記に変換する。
+        /// </summary>
+        internal static string ConvertSyllable(PinyinSyllable syllable, bool includeTones)
+        {
+            var sb = new StringBuilder(16);
+
+            // 声母の Misaki IPA
+            if (syllable.Initial != Initial.None)
+            {
+                if (syllable.Initial == Initial.Y || syllable.Initial == Initial.W)
+                {
+                    // y/w は韻母側が対応する母音で始まる場合、半母音を省略する
+                    if (!ShouldOmitSemivowel(syllable.Initial, syllable.Final))
+                    {
+                        sb.Append(s_initialMisaki[syllable.Initial]);
+                    }
+                }
+                else
+                {
+                    sb.Append(s_initialMisaki[syllable.Initial]);
+                }
+            }
+
+            // 韻母の Misaki IPA
+            if (syllable.Final != Final.None)
+            {
+                // zhi/chi/shi/ri の i はそり舌母音 ɻ̩
+                if (syllable.Final == Final.I && IsRetroflex(syllable.Initial))
+                {
+                    sb.Append(s_retroflexApical);
+                }
+                // zi/ci/si の i は歯茎母音 ɹ̩
+                else if (syllable.Final == Final.I && IsAlveolar(syllable.Initial))
+                {
+                    sb.Append(s_alveolarApical);
+                }
+                else
+                {
+                    sb.Append(s_finalMisaki[syllable.Final]);
+                }
+            }
+
+            // 声調矢印
+            if (includeTones && syllable.Tone != Tone.Neutral)
+            {
+                sb.Append(s_toneArrows[(int)syllable.Tone]);
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>zh/ch/sh/r のそり舌声母かどうか。</summary>
+        private static bool IsRetroflex(Initial initial)
+        {
+            return initial == Initial.Zh
+                || initial == Initial.Ch
+                || initial == Initial.Sh
+                || initial == Initial.R;
+        }
+
+        /// <summary>z/c/s の歯茎声母かどうか。</summary>
+        private static bool IsAlveolar(Initial initial)
+        {
+            return initial == Initial.Z
+                || initial == Initial.C
+                || initial == Initial.S;
+        }
+
+        /// <summary>y/w の半母音を省略すべきかどうかを判定する。</summary>
+        private static bool ShouldOmitSemivowel(Initial initial, Final final_)
+        {
+            if (initial == Initial.Y)
+            {
+                // y + i系韻母: 韻母が i で始まるので j は不要
+                // y + ü系韻母: 韻母が y[IPA] で始まるので j は不要
+                switch (final_)
+                {
+                    case Final.I:
+                    case Final.In:
+                    case Final.Ing:
+                    case Final.V:
+                    case Final.Ve:
+                    case Final.Van:
+                    case Final.Vn:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            if (initial == Initial.W)
+            {
+                // w + u系韻母: 韻母が u で始まるので w は不要
+                switch (final_)
+                {
+                    case Final.U:
+                    case Final.Un:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            return false;
+        }
     }
 }
