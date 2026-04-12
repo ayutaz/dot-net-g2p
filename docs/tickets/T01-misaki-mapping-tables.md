@@ -13,15 +13,34 @@ blocks: [T02]
 
 ### 背景
 
-Kokoro TTS の G2P フロントエンド Misaki は、中国語音素表記に独自の IPA バリアント（破擦音の合字記号使用、二重母音の非音節化符号、矢印型声調記号）を採用している。DotNetG2P.Chinese は現在 3 種類の出力形式（標準 IPA、piper-plus 互換 IPA、注音符号）を提供しているが、Misaki 互換形式には未対応であり、Kokoro TTS ユーザーが DotNetG2P を G2P フロントエンドとして利用できない状況にある（Issue #56）。
+Kokoro TTS の G2P フロントエンド Misaki は、中国語音素表記に独自の IPA バリアントを採用している。DotNetG2P.Chinese は現在 3 種類の出力形式（標準 IPA、piper-plus 互換 IPA、注音符号）を提供しているが、Misaki 互換形式には未対応であり、Kokoro TTS ユーザーが DotNetG2P を G2P フロントエンドとして利用できない状況にある（Issue #56）。
+
+初期の Phase 1（現行仕様）では Misaki の独自表記を一部推測で構成していたが、**Phase 1-R で Misaki 公式実装 (`hexgrad/misaki` の `misaki/zh.py` + `misaki/transcription.py`) を fetch し、`uv run python` で実測した 137 件の gold standard (`.claude/tmp/misaki-gold.txt`) により完全な仕様が verified された**。本チケットはこの verified 仕様に基づきマッピングテーブルを再定義する。
+
+### Phase 1-R で verified された主要ポイント
+
+1. **J/Q は ligature U+02A8 `ʨ`** を使用する（旧仕様の `tɕ` は誤り）。
+2. **Z/C は ligature U+02A6 `ʦ`** を使用する（旧仕様の `ts` 2 文字は誤り）。
+3. **Zh/Ch は Unicode U+AB67 `ꭧ`** を使用する（旧仕様の `ʈʂ` (U+0288 U+0282) は誤り）。
+4. **retroflex/alveolar apical の I は直接 `ɨ` (U+0268)** である（旧仕様の `ɻ̩` / `ɹ̩` は誤り）。
+5. **Ong は `ʊŋ` (U+028A U+014B)** である（旧仕様の `u̯ŋ` (U+0075 U+032F U+014B) は誤り）。
+6. **Ai/Ei/Ao/Ou 等は U+032F 非音節化符号なし** で `ai`/`ei`/`au`/`ou` である（旧仕様は誤り）。
+7. **Ian/Van は `jɛn` / `ɥɛn`** (U+025B) である（旧仕様の `ian`/`yan` は誤り）。
+8. **Iong は `jʊŋ`**、**Ve/Van は `ɥe` / `ɥɛn`** (U+0265) である。
+9. **声調矢印は韻母の Prefix と Suffix の間に挿入する**（韻母末尾ではない）。例: `man1` → `ma→n`（`man→` ではない）。
+10. **Y/W は声母層ではなく複合韻母層** で処理される。Misaki では "wang" は `wa→ŋ` であり、Initial.W の 1 文字マッピングでは対応できない。
+11. **bpmf + o は pwo/pʰwo/mwo/fwo** 形式（`bo1` → `pwo→`）である。単独感嘆詞 `o` は `ɔ` (U+0254) である（bpmf + o の `wo` とは異なる）。
+12. **Er は `ɚ` (U+025A)** 単独である（旧仕様の `əɻ` は誤り）。
 
 ### ゴール
 
-既存の `PinyinToIpa.cs` / `PinyinToPiperIpa.cs` / `PinyinToZhuyin.cs` と同じ変換クラスパターンで `PinyinToMisaki.cs` を新規作成するための、**声母・韻母・声調の全マッピングテーブルを確定する**。本チケットのスコープはテーブル定義のみであり、Convert メソッドの統合は後続 T02 で行う。
+既存の `PinyinToIpa.cs` / `PinyinToPiperIpa.cs` / `PinyinToZhuyin.cs` と同じ変換クラスパターンで `PinyinToMisaki.cs` を新規作成するための、**声母・韻母・声調・Y/W 複合韻母の全マッピングテーブルを Misaki 公式準拠で確定する**。本チケットのスコープはテーブル定義のみであり、Convert メソッドの統合は後続 T02 で行う。
 
 ### 達成基準
 
-- 声母 22 エントリ、韻母 32 エントリ、声調 5 エントリすべてのマッピングが確定し、コードに `Dictionary<Initial, string>` / `Dictionary<Final, string>` / `string[]` として実装されていること
+- 声母 22 エントリ、韻母 36 エントリ（Prefix + Suffix 方式）、声調 5 エントリ、特殊母音 3 ケース、Y/W 複合韻母 23 エントリすべてのマッピングが確定し、コードに実装されていること
+- Phase 1-R gold standard（137 件、`.claude/tmp/misaki-gold.txt`）との照合が通ること
+- Kokoro 82M vocab 互換性（Inv6 verified）が確認されていること
 - PinyinToIpa との差異が明確にドキュメント化されていること
 - 全マッピングのユニットテストが通過すること
 
@@ -29,156 +48,358 @@ Kokoro TTS の G2P フロントエンド Misaki は、中国語音素表記に�
 
 ### 2.1 声母テーブル（22 エントリ）
 
-`PinyinToIpa.cs` の `s_initialIpa` を基準とし、Misaki で異なる表記を使用する箇所を太字で示す。
+`PinyinToIpa.cs` の `s_initialIpa` を基準とし、Misaki で異なる表記を使用する箇所を太字で示す。**Y/W は声母層ではなく複合韻母層で処理するため、声母テーブル本体には含めないが enum としては残す**（`ConvertSyllable` 側で Y/W 複合韻母テーブルを優先的に参照する）。
 
-| # | Initial enum | ピンイン | PinyinToIpa（標準 IPA） | PinyinToMisaki | Unicode シーケンス | 差異 |
-|---|-------------|---------|------------------------|----------------|-------------------|------|
-| 1 | `B` | b | p | p | `p` | |
-| 2 | `P` | p | ph | ph | `p\u02B0` | |
-| 3 | `M` | m | m | m | `m` | |
-| 4 | `F` | f | f | f | `f` | |
-| 5 | `D` | d | t | t | `t` | |
-| 6 | `T` | t | th | th | `t\u02B0` | |
-| 7 | `N` | n | n | n | `n` | |
-| 8 | `L` | l | l | l | `l` | |
-| 9 | `G` | g | k | k | `k` | |
-| 10 | `K` | k | kh | kh | `k\u02B0` | |
-| 11 | `H` | h | x | x | `x` | |
-| 12 | `J` | j | t\u0255 (tc) | **\u02A8** (**cc**) | **`\u02A8`** | **tc -> cc (U+02A8 合字)** |
-| 13 | `Q` | q | t\u0255\u02B0 (tch) | **\u02A8\u02B0** (**cch**) | **`\u02A8\u02B0`** | **tch -> cch (U+02A8 合字 + 有気)** |
-| 14 | `X` | x | \u0255 (c) | c | `\u0255` | |
-| 15 | `Zh` | zh | \u0288\u0282 (ts) | \u0288\u0282 (ts) | `\u0288\u0282` | |
-| 16 | `Ch` | ch | \u0288\u0282\u02B0 (tsh) | \u0288\u0282\u02B0 (tsh) | `\u0288\u0282\u02B0` | |
-| 17 | `Sh` | sh | \u0282 (s) | \u0282 (s) | `\u0282` | |
-| 18 | `R` | r | \u027B (r) | \u027B (r) | `\u027B` | |
-| 19 | `Z` | z | ts | **\u02A6** (**ts**) | **`\u02A6`** | **ts 2文字 -> U+02A6 合字** |
-| 20 | `C` | c | ts\u02B0 (tsh) | **\u02A6\u02B0** (**tsh**) | **`\u02A6\u02B0`** | **tsh -> U+02A6 合字 + 有気** |
-| 21 | `S` | s | s | s | `s` | |
-| 22 | `Y` | y | j | j | `j` | |
-| 23 | `W` | w | w | w | `w` | |
+Phase 1-R gold standard より検証済み（`uv run python -c "import misaki.zh; ..."` で全 22 エントリを実測）:
+
+| # | Initial enum | ピンイン | PinyinToIpa（標準 IPA） | PinyinToMisaki | Unicode シーケンス | 差異 | gold 例 |
+|---|-------------|---------|------------------------|----------------|-------------------|------|--------|
+| 1 | `B` | b | p | p | `p` | 同一 | `ba1` → `pa→` |
+| 2 | `P` | p | pʰ | pʰ | `p\u02B0` | 同一 | `pa2` → `pʰa↗` |
+| 3 | `M` | m | m | m | `m` | 同一 | `ma1` → `ma→` |
+| 4 | `F` | f | f | f | `f` | 同一 | `fa3` → `fa↓` |
+| 5 | `D` | d | t | t | `t` | 同一 | `da4` → `ta↘` |
+| 6 | `T` | t | tʰ | tʰ | `t\u02B0` | 同一 | `ta1` → `tʰa→` |
+| 7 | `N` | n | n | n | `n` | 同一 | `na2` → `na↗` |
+| 8 | `L` | l | l | l | `l` | 同一 | `la3` → `la↓` |
+| 9 | `G` | g | k | k | `k` | 同一 | `ga4` → `ka↘` |
+| 10 | `K` | k | kʰ | kʰ | `k\u02B0` | 同一 | `ka1` → `kʰa→` |
+| 11 | `H` | h | x | x | `x` | 同一 | `ha2` → `xa↗` |
+| 12 | **`J`** | j | **tɕ** (t\u0255) | **ʨ** | **`\u02A8`** | **tɕ → ʨ 合字 (U+02A8)** | `ji1` → **`ʨi→`** |
+| 13 | **`Q`** | q | **tɕʰ** (t\u0255\u02B0) | **ʨʰ** | **`\u02A8\u02B0`** | **tɕʰ → ʨʰ (U+02A8 + 有気)** | `qi2` → **`ʨʰi↗`** |
+| 14 | `X` | x | ɕ (\u0255) | ɕ | `\u0255` | 同一 | `xi3` → `ɕi↓` |
+| 15 | **`Zh`** | zh | **ʈʂ** (\u0288\u0282) | **ꭧ** | **`\uAB67`** | **ʈʂ 2 文字 → U+AB67 合字** | `zhi4` → **`ꭧɨ↘`** |
+| 16 | **`Ch`** | ch | **ʈʂʰ** (\u0288\u0282\u02B0) | **ꭧʰ** | **`\uAB67\u02B0`** | **ʈʂʰ → U+AB67 + 有気** | `chi1` → **`ꭧʰɨ→`** |
+| 17 | `Sh` | sh | ʂ (\u0282) | ʂ | `\u0282` | 同一 | `shi2` → `ʂɨ↗` |
+| 18 | `R` | r | ɻ (\u027B) | ɻ | `\u027B` | 同一 | `ri3` → `ɻɨ↓` |
+| 19 | **`Z`** | z | **ts** (2 文字) | **ʦ** | **`\u02A6`** | **ts 2 文字 → U+02A6 合字** | `zi4` → **`ʦɨ↘`** |
+| 20 | **`C`** | c | **tsʰ** (ts\u02B0) | **ʦʰ** | **`\u02A6\u02B0`** | **tsʰ → U+02A6 + 有気** | `ci1` → **`ʦʰɨ→`** |
+| 21 | `S` | s | s | s | `s` | 同一 | `si2` → `sɨ↗` |
+| 22 | **`Y`** | y | j | **—（compound final 層で処理）** | — | **声母マップから除外** | `ya1` → `ja→` |
+| 23 | **`W`** | w | w | **—（compound final 層で処理）** | — | **声母マップから除外** | `wa1` → `wa→` |
 
 **差異まとめ（声母）:**
 
-- **j** (Initial.J): 標準 IPA `tɕ` (U+0074 U+0255) -> Misaki `ʨ` (U+02A8、ラテン小文字 TC ダイグラフ)
-- **q** (Initial.Q): 標準 IPA `tɕʰ` (U+0074 U+0255 U+02B0) -> Misaki `ʨʰ` (U+02A8 U+02B0)
-- **z** (Initial.Z): 標準 IPA `ts` (U+0074 U+0073) -> Misaki `ʦ` (U+02A6、ラテン小文字 TS ダイグラフ)
-- **c** (Initial.C): 標準 IPA `tsʰ` (U+0074 U+0073 U+02B0) -> Misaki `ʦʰ` (U+02A6 U+02B0)
+Phase 1-R で判明した Misaki の声母差異は以下の 6 箇所（旧仕様の 4 箇所から増加）:
 
-### 2.2 韻母テーブル（32 エントリ）
+1. **j** (Initial.J): 標準 IPA `tɕ` (U+0074 U+0255) → Misaki **`ʨ` (U+02A8 ラテン文字 TC ligature)**
+2. **q** (Initial.Q): 標準 IPA `tɕʰ` → Misaki **`ʨʰ` (U+02A8 U+02B0)**
+3. **z** (Initial.Z): 標準 IPA `ts` (2 文字) → Misaki **`ʦ` (U+02A6 ラテン文字 TS ligature)**
+4. **c** (Initial.C): 標準 IPA `tsʰ` → Misaki **`ʦʰ` (U+02A6 U+02B0)**
+5. **zh** (Initial.Zh): 標準 IPA `ʈʂ` (U+0288 U+0282) → Misaki **`ꭧ` (U+AB67 単一文字)** ※Phase 1-R で新規確定
+6. **ch** (Initial.Ch): 標準 IPA `ʈʂʰ` → Misaki **`ꭧʰ` (U+AB67 U+02B0)** ※Phase 1-R で新規確定
 
-`PinyinToIpa.cs` の `s_finalIpa` を基準とし、Misaki で異なる表記を使用する箇所を太字で示す。Misaki の主な差異は、二重母音の滑り音（off-glide/on-glide）に非音節化符号 (U+032F, COMBINING INVERTED BREVE BELOW) を付与する点にある。具体的には `ɪ` -> `i̯`、`ʊ` -> `u̯` に変換される。
+加えて **Y / W は声母層の 1 文字マッピングでは対応不可** であることが判明した。Misaki の "wang" は `wa→ŋ` だが、もし W を `w` 単独マップで処理すると韻母 Ang と組み合わせて `wa→ŋ` にならず `w` + `aŋ` = `waŋ→`（末尾声調）となる。そのため Y/W は後述の「Y/W 複合韻母マッピング」(セクション 3) で個別処理する。
 
-| # | Final enum | ピンイン | PinyinToIpa（標準 IPA） | PinyinToMisaki | Unicode シーケンス | 差異 |
-|---|-----------|---------|------------------------|----------------|-------------------|------|
-| 1 | `A` | a | a | a | `a` | |
-| 2 | `O` | o | o | o | `o` | |
-| 3 | `E` | e | \u0264 (ɤ) | \u0264 (ɤ) | `\u0264` | |
-| 4 | `Ai` | ai | a\u026A (aɪ) | **ai\u032F** (**ai̯**) | **`ai\u032F`** | **ɪ -> i + 非音節化符号** |
-| 5 | `Ei` | ei | e\u026A (eɪ) | **ei\u032F** (**ei̯**) | **`ei\u032F`** | **ɪ -> i + 非音節化符号** |
-| 6 | `Ao` | ao | a\u028A (aʊ) | **au\u032F** (**au̯**) | **`au\u032F`** | **ʊ -> u + 非音節化符号** |
-| 7 | `Ou` | ou | o\u028A (oʊ) | **ou\u032F** (**ou̯**) | **`ou\u032F`** | **ʊ -> u + 非音節化符号** |
-| 8 | `An` | an | an | an | `an` | |
-| 9 | `En` | en | \u0259n (ən) | \u0259n (ən) | `\u0259n` | |
-| 10 | `Ang` | ang | a\u014B (aŋ) | a\u014B (aŋ) | `a\u014B` | |
-| 11 | `Eng` | eng | \u0259\u014B (əŋ) | \u0259\u014B (əŋ) | `\u0259\u014B` | |
-| 12 | `Ong` | ong | \u028A\u014B (ʊŋ) | **u\u032F\u014B** (**u̯ŋ**) | **`u\u032F\u014B`** | **ʊ -> u + 非音節化符号** |
-| 13 | `I` | i | i | i | `i` | |
-| 14 | `Ia` | ia | ia | ia | `ia` | |
-| 15 | `Ie` | ie | i\u025B (iɛ) | i\u025B (iɛ) | `i\u025B` | |
-| 16 | `Iao` | iao | ia\u028A (iaʊ) | **iau\u032F** (**iau̯**) | **`iau\u032F`** | **ʊ -> u + 非音節化符号** |
-| 17 | `Iu` | iu (iou) | io\u028A (ioʊ) | **iou\u032F** (**iou̯**) | **`iou\u032F`** | **ʊ -> u + 非音節化符号** |
-| 18 | `Ian` | ian | i\u025Bn (iɛn) | i\u025Bn (iɛn) | `i\u025Bn` | |
-| 19 | `In` | in | in | in | `in` | |
-| 20 | `Iang` | iang | ia\u014B (iaŋ) | ia\u014B (iaŋ) | `ia\u014B` | |
-| 21 | `Ing` | ing | i\u014B (iŋ) | i\u014B (iŋ) | `i\u014B` | |
-| 22 | `Iong` | iong | i\u028A\u014B (iʊŋ) | **iu\u032F\u014B** (**iu̯ŋ**) | **`iu\u032F\u014B`** | **ʊ -> u + 非音節化符号** |
-| 23 | `U` | u | u | u | `u` | |
-| 24 | `Ua` | ua | ua | ua | `ua` | |
-| 25 | `Uo` | uo | uo | uo | `uo` | |
-| 26 | `Uai` | uai | ua\u026A (uaɪ) | **uai\u032F** (**uai̯**) | **`uai\u032F`** | **ɪ -> i + 非音節化符号** |
-| 27 | `Ui` | ui (uei) | ue\u026A (ueɪ) | **uei\u032F** (**uei̯**) | **`uei\u032F`** | **ɪ -> i + 非音節化符号** |
-| 28 | `Uan` | uan | uan | uan | `uan` | |
-| 29 | `Un` | un (uen) | u\u0259n (uən) | u\u0259n (uən) | `u\u0259n` | |
-| 30 | `Uang` | uang | ua\u014B (uaŋ) | ua\u014B (uaŋ) | `ua\u014B` | |
-| 31 | `Ueng` | ueng | u\u0259\u014B (uəŋ) | u\u0259\u014B (uəŋ) | `u\u0259\u014B` | |
-| 32 | `V` | u | y | y | `y` | |
-| 33 | `Ve` | ue | y\u025B (yɛ) | y\u025B (yɛ) | `y\u025B` | |
-| 34 | `Van` | uan | yan | yan | `yan` | |
-| 35 | `Vn` | un | yn | yn | `yn` | |
-| 36 | `Er` | er | \u0259\u027B (əɻ) | \u0259\u027B (əɻ) | `\u0259\u027B` | |
+### 2.2 韻母テーブル（36 エントリ、Prefix + Suffix 方式）
+
+**Phase 1-R で判明した最重要設計変更**: 声調矢印は Misaki では**韻母末尾ではなく韻母の中間**に挿入される。具体的には `man1` → `ma→n`（`man→` ではない）、`mang1` → `ma→ŋ`（`mang→` ではない）となる。これを扱うため、韻母テーブルは **Prefix + Suffix タプル** として定義する:
+
+```csharp
+private static readonly Dictionary<Final, (string Prefix, string Suffix)> s_finalMisaki = new()
+{
+    [Final.Ai]  = ("ai",   ""),   // prefix + tone + "" = ai→
+    [Final.An]  = ("a",    "n"),  // prefix + tone + suffix = a→n
+    [Final.Ang] = ("a",    "\u014B"), // a→ŋ
+    // ...
+};
+```
+
+`ConvertSyllable` では `prefix + toneArrow + suffix` の順に結合する。Suffix が空文字の韻母は末尾付加と等価になる。
+
+| # | Final enum | ピンイン | Prefix | Suffix | tone 1 例 | 備考 | gold 例 |
+|---|-----------|---------|--------|--------|-----------|------|--------|
+| 1 | `A` | a | `a` | `` | `a→` | | `la1` → `la→` |
+| 2 | **`O`** | o | **`wo`** | `` | `wo→` | **bpmf + o は pwo/pʰwo/mwo/fwo 形式** | `bo1` → **`pwo→`** |
+| 3 | `E` | e | `\u0264` (ɤ) | `` | `ɤ→` | | `le1` → `lɤ→` |
+| 4 | **`Ai`** | ai | **`ai`** | `` | `ai→` | **U+032F strip 後（非音節化符号なし）** | `lai1` → `lai→` |
+| 5 | **`Ei`** | ei | **`ei`** | `` | `ei→` | **U+032F strip 後** | `lei1` → `lei→` |
+| 6 | **`Ao`** | ao | **`au`** | `` | `au→` | **Misaki "au"、strip 後** | `lao1` → `lau→` |
+| 7 | **`Ou`** | ou | **`ou`** | `` | `ou→` | **strip 後** | `lou1` → `lou→` |
+| 8 | **`An`** | an | **`a`** | **`n`** | **`a→n`** | **声調が中間** | `lan1` → **`la→n`** |
+| 9 | **`En`** | en | **`\u0259`** (ə) | **`n`** | **`ə→n`** | **声調が中間、U+0259** | `len1` → **`lə→n`** |
+| 10 | **`Ang`** | ang | **`a`** | **`\u014B`** (ŋ) | **`a→ŋ`** | **声調が中間、U+014B** | `lang1` → **`la→ŋ`** |
+| 11 | **`Eng`** | eng | **`\u0259`** (ə) | **`\u014B`** (ŋ) | **`ə→ŋ`** | **声調が中間** | `leng1` → **`lə→ŋ`** |
+| 12 | **`Ong`** | ong | **`\u028A`** (ʊ) | **`\u014B`** (ŋ) | **`ʊ→ŋ`** | **U+028A ʊ（旧 `u̯` は誤り）、声調が中間** | `long1` → **`lʊ→ŋ`** / `dong1` → `tʊ→ŋ` |
+| 13 | `I` | i | `i` | `` | `i→` | | `li1` → `li→` |
+| 14 | **`Ia`** | ia | **`ja`** | `` | `ja→` | **j 半母音** | `lia1` → **`lja→`** |
+| 15 | **`Ie`** | ie | **`je`** | `` | `je→` | **Misaki "je" (標準 IPA の `iɛ` とは違う、NOT `jɛ`)** | `lie1` → **`lje→`** |
+| 16 | **`Iao`** | iao | **`jau`** | `` | `jau→` | **j 半母音、strip 後** | `liao1` → **`ljau→`** |
+| 17 | **`Iu`** | iu (iou) | **`jou`** | `` | `jou→` | **Misaki "iou"、strip 後** | `liu1` → **`ljou→`** |
+| 18 | **`Ian`** | ian | **`j\u025B`** (jɛ) | **`n`** | **`jɛ→n`** | **j 半母音、ɛ (U+025B)、声調が中間** | `lian1` → **`ljɛ→n`** |
+| 19 | **`In`** | in | **`i`** | **`n`** | **`i→n`** | **j なし、声調が中間** | `lin1` → **`li→n`** |
+| 20 | **`Iang`** | iang | **`ja`** | **`\u014B`** (ŋ) | **`ja→ŋ`** | **j 半母音、声調が中間** | `liang1` → **`lja→ŋ`** |
+| 21 | **`Ing`** | ing | **`i`** | **`\u014B`** (ŋ) | **`i→ŋ`** | **j なし、声調が中間** | `ling1` → **`li→ŋ`** |
+| 22 | **`Iong`** | iong | **`j\u028A`** (jʊ) | **`\u014B`** (ŋ) | **`jʊ→ŋ`** | **j + ʊ、声調が中間** | `xiong2` → **`ɕjʊ↗ŋ`** |
+| 23 | `U` | u | `u` | `` | `u→` | | `lu1` → `lu→` |
+| 24 | **`Ua`** | ua | **`wa`** | `` | `wa→` | **w 半母音** | `lua1` → **`lwa→`** |
+| 25 | **`Uo`** | uo | **`wo`** | `` | `wo→` | **w 半母音** | `luo1` → **`lwo→`** |
+| 26 | **`Uai`** | uai | **`wai`** | `` | `wai→` | **strip 後** | `guai1` → **`kwai→`** |
+| 27 | **`Ui`** | ui (uei) | **`wei`** | `` | `wei→` | **Misaki "uei"、strip 後** | `guei1` → **`kwei→`** |
+| 28 | **`Uan`** | uan | **`wa`** | **`n`** | **`wa→n`** | **声調が中間** | `luan1` → **`lwa→n`** / `guan1` → `kwa→n` |
+| 29 | **`Un`** | un (uen) | **`w\u0259`** (wə) | **`n`** | **`wə→n`** | **Misaki "uen"、声調が中間** | `lun1` → **`lwə→n`** / `guen1` → `kwə→n` |
+| 30 | **`Uang`** | uang | **`wa`** | **`\u014B`** (ŋ) | **`wa→ŋ`** | **声調が中間** | `luang1` → **`lwa→ŋ`** |
+| 31 | **`Ueng`** | ueng | **`w\u0259`** (wə) | **`\u014B`** (ŋ) | **`wə→ŋ`** | **声調が中間** | `gueng1` → **`kwə→ŋ`** |
+| 32 | `V` (ü) | u | `y` | `` | `y→` | U+0079 | `lv1` → `ly→` |
+| 33 | **`Ve`** (üe) | ue | **`\u0265e`** (ɥe) | `` | `ɥe→` | **ɥ = U+0265（NOT y）** | `lve1` → **`lɥe→`** / `jve1` → `ʨɥe→` |
+| 34 | **`Van`** (üan) | uan | **`\u0265\u025B`** (ɥɛ) | **`n`** | **`ɥɛ→n`** | **ɥ + ɛ + n、声調が中間** | `jvan1` → **`ʨɥɛ→n`** |
+| 35 | `Vn` (ün) | un | `y` | **`n`** | **`y→n`** | **声調が中間** | `jvn1` → **`ʨy→n`** |
+| 36 | **`Er`** | er | **`\u025A`** (ɚ) | `` | `ɚ→` | **U+025A 単一記号（NOT `əɻ`）** | `er1` → **`ɚ→`** |
 
 **差異まとめ（韻母）:**
 
-全 7 箇所の差異は以下の 2 パターンに分類される:
+1. **声調位置**: An/En/Ang/Eng/Ong/In/Ing/Ian/Iang/Iong/Uan/Un/Uang/Ueng/Van/Vn の **16 韻母で声調が Prefix と Suffix の間に挿入される**（旧仕様の「末尾付加」は誤り）。
+2. **U+032F 非音節化符号なし**: Ai/Ei/Ao/Ou/Iao/Iu/Uai/Ui の 8 韻母は Misaki ではシンプルな `ai`/`ei`/`au`/`ou`/`jau`/`jou`/`wai`/`wei` である（旧仕様の `ai̯`/`ei̯`/`au̯`/`ou̯` は誤り）。
+3. **Ong は `ʊŋ`**: Misaki は `ʊ` (U+028A) を使用する（旧仕様の `u̯ŋ` (U+0075 U+032F U+014B) は誤り）。
+4. **Ian は `jɛn`**: Misaki は `j + ɛ + n` を使用する（旧仕様の `iɛn` は誤り、先頭が半母音 j）。
+5. **Ie は `je` 単純形**: Misaki は `je` であり `jɛ` ではない（旧仕様の `iɛ` とは異なる）。
+6. **Ve は `ɥe`、Van は `ɥɛn`**: Misaki は ɥ (U+0265 LATIN SMALL LETTER TURNED H) を使用する（旧仕様の `y`/`yan` は誤り）。
+7. **bpmf + o は `wo`**: Misaki で `bo1` → `pwo→` のように w が挿入される。韻母 O は Prefix=`wo` として定義する。
+8. **Er は `ɚ` 単独**: Misaki は U+025A (SCHWA WITH HOOK) 単一記号（旧仕様の `əɻ` (U+0259 U+027B) は誤り）。
 
-1. **ɪ (U+026A) -> i + 非音節化符号 (U+032F)**: Ai, Ei, Uai, Ui の 4 韻母
-2. **ʊ (U+028A) -> u + 非音節化符号 (U+032F)**: Ao, Ou, Ong, Iao, Iu, Iong の 6 韻母
+### 2.3 声調矢印テーブル（5 エントリ）
 
-**特殊韻母（そり舌・歯茎）について:**
+PinyinToIpa が IPA tone letters を使用するのに対し、Misaki は矢印記号を使用する。矢印の挿入位置は韻母の Prefix と Suffix の間（セクション 2.2 参照）。
 
-PinyinToIpa では `zh/ch/sh/r + i` をそり舌母音 `ɻ̩` (U+027B U+0329)、`z/c/s + i` を歯茎母音 `ɹ̩` (U+0279 U+0329) に変換するが、Misaki ではこれらをそのまま踏襲する（変更なし）。
+| # | Tone enum | 声調名 | PinyinToIpa（IPA tone letters） | PinyinToMisaki（矢印記号） | Unicode シーケンス |
+|---|----------|-------|-------------------------------|--------------------------|-------------------|
+| 1 | `Neutral` (0) | 軽声 | (なし) | (なし) | `""` |
+| 2 | `First` (1) | 陰平 (55) | `\u02E5\u02E5` (˥˥) | **`→`** | **`\u2192`** |
+| 3 | `Second` (2) | 陽平 (35) | `\u02E7\u02E5` (˧˥) | **`↗`** | **`\u2197`** |
+| 4 | `Third` (3) | 上声 (214) | `\u02E8\u02E9\u02E6` (˨˩˦) | **`↓`** | **`\u2193`** |
+| 5 | `Fourth` (4) | 去声 (51) | `\u02E5\u02E9` (˥˩) | **`↘`** | **`\u2198`** |
 
-### 2.3 声調テーブル（5 エントリ）
+全 4 声調（軽声を除く）が異なる。IPA tone letters（複数文字の声調レベル記号）から、単一の Unicode 矢印記号に変更される。Phase 1-R 検証済み: `ma1/2/3/4/5` → `ma→ / ma↗ / ma↓ / ma↘ / ma`
 
-PinyinToIpa が IPA tone letters を使用するのに対し、Misaki は矢印記号を使用する。
+### 2.4 特殊母音ケース（Final enum ではない差し替え、3 ケース）
 
-| # | Tone enum | 声調名 | PinyinToIpa（IPA tone letters） | PinyinToMisaki（矢印記号） | Unicode シーケンス | 差異 |
-|---|----------|-------|-------------------------------|--------------------------|-------------------|------|
-| 1 | `Neutral` (0) | 軽声 | (なし) | (なし) | `""` | |
-| 2 | `First` (1) | 陰平 (55) | **\u02E5\u02E5** (**˥˥**) | **\u2192** (**→**) | **`\u2192`** | **tone letters -> 矢印** |
-| 3 | `Second` (2) | 陽平 (35) | **\u02E7\u02E5** (**˧˥**) | **\u2197** (**↗**) | **`\u2197`** | **tone letters -> 矢印** |
-| 4 | `Third` (3) | 上声 (214) | **\u02E8\u02E9\u02E6** (**˨˩˦**) | **\u2193** (**↓**) | **`\u2193`** | **tone letters -> 矢印** |
-| 5 | `Fourth` (4) | 去声 (51) | **\u02E5\u02E9** (**˥˩**) | **\u2198** (**↘**) | **`\u2198`** | **tone letters -> 矢印** |
+以下は Final enum に一律マップするのではなく、`(Initial, Final)` コンテキストで差し替える特殊ケース:
 
-**差異まとめ（声調）:**
+| # | Context | Prefix | Suffix | 備考 | gold 例 |
+|---|---------|--------|--------|------|--------|
+| 1 | **Zh/Ch/Sh/R + Final.I** | `\u0268` (ɨ) | `` | **そり舌そり頂母音 (retroflex apical) → U+0268 直接**（旧仕様の `ɻ̩` (U+027B U+0329) は誤り） | `zhi4` → `ꭧɨ↘` / `ri3` → `ɻɨ↓` |
+| 2 | **Z/C/S + Final.I** | `\u0268` (ɨ) | `` | **歯茎そり頂母音 (alveolar apical) → U+0268 直接**（旧仕様の `ɹ̩` (U+0279 U+0329) は誤り） | `zi4` → `ʦɨ↘` / `si2` → `sɨ↗` |
+| 3 | **Initial.None + Final.O** | `\u0254` (ɔ) | `` | **単独感嘆詞 ō → U+0254 ɔ**（bpmf + o の `wo` とは異なる） | `o1` → **`ɔ→`** / `o4` → `ɔ↘` |
 
-全 4 声調（軽声を除く）が異なる。IPA tone letters（複数文字の声調レベル記号）から、単一の Unicode 矢印記号に変更される。
+**retroflex / alveolar apical の新仕様**: Phase 1-R で Misaki 公式実装は zh/ch/sh/r + i と z/c/s + i の両方で直接 `ɨ` (U+0268 CLOSE CENTRAL UNROUNDED VOWEL) を出力することが判明した。旧仕様の `ɻ̩` / `ɹ̩`（結合音節主音記号 U+0329）は誤りで、Misaki は区別せず ɨ 単一記号を使用する。
 
-### 2.4 実装ファイル
+**単独感嘆詞 o の分岐**: Misaki では bpmf + o (`bo`/`po`/`mo`/`fo`) は `pwo`/`pʰwo`/`mwo`/`fwo` 形式で Final.O = `(wo, "")` を使う一方、単独の `o` (`ō`/`ó`/`ǒ`/`ò`) は `ɔ` (U+0254) となる。`Initial.None + Final.O` のコンテキストでのみ `(ɔ, "")` に差し替える。
 
-**新規作成:** `src/DotNetG2P.Chinese/Conversion/PinyinToMisaki.cs`
+### 2.5 実装ファイル
+
+**新規作成:** `src/DotNetG2P.Chinese/Conversion/PinyinToMisaki.cs` のみ。
 
 ```csharp
 internal static class PinyinToMisaki
 {
-    // 声母テーブル: Dictionary<Initial, string>
-    // 韻母テーブル: Dictionary<Final, string>
-    // 声調テーブル: string[]
-    // そり舌母音・歯茎母音: PinyinToIpa と同一
+    // 声母テーブル: Dictionary<Initial, string>（Y/W は含めない、None も含めない）
+    private static readonly Dictionary<Initial, string> s_initialMisaki = new()
+    {
+        [Initial.B] = "p",
+        [Initial.P] = "p\u02B0",
+        // ...
+        [Initial.J] = "\u02A8",             // Misaki差異: tɕ→ʨ (U+02A8 ligature)
+        [Initial.Q] = "\u02A8\u02B0",       // Misaki差異: tɕʰ→ʨʰ
+        [Initial.X] = "\u0255",
+        [Initial.Zh] = "\uAB67",            // Misaki差異: ʈʂ→ꭧ (U+AB67)
+        [Initial.Ch] = "\uAB67\u02B0",      // Misaki差異: ʈʂʰ→ꭧʰ
+        [Initial.Sh] = "\u0282",
+        [Initial.R] = "\u027B",
+        [Initial.Z] = "\u02A6",             // Misaki差異: ts→ʦ (U+02A6 ligature)
+        [Initial.C] = "\u02A6\u02B0",       // Misaki差異: tsʰ→ʦʰ
+        [Initial.S] = "s",
+        // Y/W は含めない（compound final 層で処理）
+    };
+
+    // 韻母テーブル: Dictionary<Final, (Prefix, Suffix)>
+    private static readonly Dictionary<Final, (string Prefix, string Suffix)> s_finalMisaki = new()
+    {
+        [Final.A]    = ("a",               ""),
+        [Final.O]    = ("wo",              ""),           // bpmf+o 用、単独 o は特殊ケース
+        [Final.E]    = ("\u0264",          ""),           // ɤ
+        [Final.Ai]   = ("ai",              ""),
+        [Final.Ei]   = ("ei",              ""),
+        [Final.Ao]   = ("au",              ""),
+        [Final.Ou]   = ("ou",              ""),
+        [Final.An]   = ("a",               "n"),          // 声調が中間
+        [Final.En]   = ("\u0259",          "n"),          // 声調が中間
+        [Final.Ang]  = ("a",               "\u014B"),     // 声調が中間
+        [Final.Eng]  = ("\u0259",          "\u014B"),     // 声調が中間
+        [Final.Ong]  = ("\u028A",          "\u014B"),     // ʊŋ、声調が中間
+        [Final.I]    = ("i",               ""),
+        [Final.Ia]   = ("ja",              ""),
+        [Final.Ie]   = ("je",              ""),           // NOT jɛ
+        [Final.Iao]  = ("jau",             ""),
+        [Final.Iu]   = ("jou",             ""),
+        [Final.Ian]  = ("j\u025B",         "n"),          // jɛn、声調が中間
+        [Final.In]   = ("i",               "n"),          // 声調が中間
+        [Final.Iang] = ("ja",              "\u014B"),     // 声調が中間
+        [Final.Ing]  = ("i",               "\u014B"),     // 声調が中間
+        [Final.Iong] = ("j\u028A",         "\u014B"),     // jʊŋ、声調が中間
+        [Final.U]    = ("u",               ""),
+        [Final.Ua]   = ("wa",              ""),
+        [Final.Uo]   = ("wo",              ""),
+        [Final.Uai]  = ("wai",             ""),
+        [Final.Ui]   = ("wei",             ""),
+        [Final.Uan]  = ("wa",              "n"),          // 声調が中間
+        [Final.Un]   = ("w\u0259",         "n"),          // wən、声調が中間
+        [Final.Uang] = ("wa",              "\u014B"),     // 声調が中間
+        [Final.Ueng] = ("w\u0259",         "\u014B"),     // 声調が中間
+        [Final.V]    = ("y",               ""),
+        [Final.Ve]   = ("\u0265e",         ""),           // ɥe (U+0265)
+        [Final.Van]  = ("\u0265\u025B",    "n"),          // ɥɛn、声調が中間
+        [Final.Vn]   = ("y",               "n"),          // 声調が中間
+        [Final.Er]   = ("\u025A",          ""),           // ɚ
+    };
+
+    // 声調矢印テーブル: string[]
+    private static readonly string[] s_toneArrows = new[]
+    {
+        "",         // Neutral (0)
+        "\u2192",   // First  (1) →
+        "\u2197",   // Second (2) ↗
+        "\u2193",   // Third  (3) ↓
+        "\u2198",   // Fourth (4) ↘
+    };
+
+    // Y/W 複合韻母テーブル（セクション 3 参照）
+    // キー: (Initial, Final)、値: (Prefix, Suffix, OmitInitial)
+    private static readonly Dictionary<(Initial, Final), (string Prefix, string Suffix, bool OmitInitial)>
+        s_yWCompoundMisaki = new()
+    {
+        // Y 系
+        [(Initial.Y, Final.A)]    = ("ja",           "",        false),
+        [(Initial.Y, Final.An)]   = ("j\u025B",      "n",       false),
+        [(Initial.Y, Final.Ang)]  = ("ja",           "\u014B",  false),
+        [(Initial.Y, Final.Ao)]   = ("jau",          "",        false),
+        [(Initial.Y, Final.E)]    = ("je",           "",        false),
+        [(Initial.Y, Final.I)]    = ("i",            "",        true),
+        [(Initial.Y, Final.In)]   = ("i",            "n",       true),
+        [(Initial.Y, Final.Ing)]  = ("i",            "\u014B",  true),
+        [(Initial.Y, Final.Ong)]  = ("j\u028A",      "\u014B",  false),
+        [(Initial.Y, Final.Ou)]   = ("jou",          "",        false),
+        [(Initial.Y, Final.V)]    = ("y",            "",        true),
+        [(Initial.Y, Final.Ve)]   = ("\u0265e",      "",        false),
+        [(Initial.Y, Final.Van)]  = ("\u0265\u025B", "n",       false),
+        [(Initial.Y, Final.Vn)]   = ("y",            "n",       true),
+        // W 系
+        [(Initial.W, Final.A)]    = ("wa",           "",        false),
+        [(Initial.W, Final.Ai)]   = ("wai",          "",        false),
+        [(Initial.W, Final.An)]   = ("wa",           "n",       false),
+        [(Initial.W, Final.Ang)]  = ("wa",           "\u014B",  false),
+        [(Initial.W, Final.Ei)]   = ("wei",          "",        false),
+        [(Initial.W, Final.En)]   = ("w\u0259",      "n",       false),
+        [(Initial.W, Final.Eng)]  = ("w\u0259",      "\u014B",  false),
+        [(Initial.W, Final.O)]    = ("wo",           "",        false),
+        [(Initial.W, Final.U)]    = ("u",            "",        true),
+    };
 }
 ```
 
-テーブルのみを定義し、Convert メソッドは T02 で実装する。ただし、テーブル参照のための internal static なアクセサ（`GetInitialIpa`, `GetFinalIpa`, `GetToneMarker` 等）は本チケットで定義してもよい。
+テーブルのみを定義し、Convert メソッドは T02 で実装する。ただし、テーブル参照のための internal static なアクセサ（`GetInitialMisaki`, `GetFinalMisaki`, `GetToneArrow` 等）は本チケットで定義してもよい。
 
-## 3. 実装するために必要なエージェントチームの役割と人数
+## 3. Y/W 複合韻母変換表（23 エントリ、Phase 1-R 新規導入セクション）
+
+### 3.1 背景
+
+DotNetG2P の `PinyinParser` は "wang" を `Initial.W + Final.Ang`、"yan" を `Initial.Y + Final.An` のように parse する。これに対し Misaki の元実装では "wang" は `uang` という複合韻母として、"yan" は `ian` として扱われる。構造が異なるため、T02 の `ConvertSyllable` で `(Initial, Final)` ペアが Y/W 系の場合は以下の複合韻母テーブルを優先参照する必要がある。
+
+Phase 1-R gold standard での検証済み（`ya1/ye1/yi1/wa1/wo1/wu1` 等 23 パターン全件実測）:
+
+| # | Initial | Final | → Misaki 等価 | Prefix | Suffix | Initial 省略? | gold 検証 |
+|---|---------|-------|--------------|--------|--------|---------------|----------|
+| 1 | Y | A | Ia | `ja` | `` | No | `ya1` → `ja→` |
+| 2 | Y | An | Ian | `j\u025B` (jɛ) | `n` | No | `yan1` → `jɛ→n` |
+| 3 | Y | Ang | Iang | `ja` | `\u014B` (ŋ) | No | `yang1` → `ja→ŋ` |
+| 4 | Y | Ao | Iao | `jau` | `` | No | `yao1` → `jau→` |
+| 5 | Y | E | Ie | `je` | `` | No | `ye1` → `je→` |
+| 6 | Y | I | I | `i` | `` | **Yes（j 省略）** | `yi1` → `i→`（`ji→` ではない） |
+| 7 | Y | In | In | `i` | `n` | **Yes** | `yin1` → `i→n` |
+| 8 | Y | Ing | Ing | `i` | `\u014B` (ŋ) | **Yes** | `ying1` → `i→ŋ` |
+| 9 | Y | Ong | Iong | `j\u028A` (jʊ) | `\u014B` (ŋ) | No | `yong1` → `jʊ→ŋ` |
+| 10 | Y | Ou | Iu (iou) | `jou` | `` | No | `you1` → `jou→` |
+| 11 | Y | V | V (ü) | `y` | `` | **Yes（ɥ 省略）** | `yu1` → `y→`（`ɥy→` ではない） |
+| 12 | Y | Ve | Ve (üe) | `\u0265e` (ɥe) | `` | No | `yue1` → `ɥe→` |
+| 13 | Y | Van | Van (üan) | `\u0265\u025B` (ɥɛ) | `n` | No | `yuan1` → `ɥɛ→n` |
+| 14 | Y | Vn | Vn (ün) | `y` | `n` | **Yes（ɥ 省略）** | `yun1` → `y→n` |
+| 15 | W | A | Ua | `wa` | `` | No | `wa1` → `wa→` |
+| 16 | W | Ai | Uai | `wai` | `` | No | `wai1` → `wai→` |
+| 17 | W | An | Uan | `wa` | `n` | No | `wan1` → `wa→n` |
+| 18 | W | Ang | Uang | `wa` | `\u014B` (ŋ) | No | `wang1` → `wa→ŋ` |
+| 19 | W | Ei | Ui (uei) | `wei` | `` | No | `wei1` → `wei→` |
+| 20 | W | En | Un (uen) | `w\u0259` (wə) | `n` | No | `wen1` → `wə→n` |
+| 21 | W | Eng | Ueng | `w\u0259` (wə) | `\u014B` (ŋ) | No | `weng1` → `wə→ŋ` |
+| 22 | W | O | Uo | `wo` | `` | No | `wo1` → `wo→` |
+| 23 | W | U | U | `u` | `` | **Yes（w 省略）** | `wu1` → `u→`（`wu→` ではない） |
+
+### 3.2 Initial 省略ルールの要点
+
+計 5 エントリで Initial を省略する:
+
+- **`yi/yin/ying` (Y + I/In/Ing)**: j を出力せず `i`/`i→n`/`i→ŋ` となる
+- **`yu/yun` (Y + V/Vn)**: ɥ を出力せず `y`/`y→n` となる
+- **`wu` (W + U)**: w を出力せず `u→` となる
+
+残り 18 エントリは Initial 省略なし（prefix がすでに半母音 `j` または `w` を含む）。
+
+### 3.3 ConvertSyllable パイプライン（T02 スコープだが T01 でマッピング設計の根拠として記載）
+
+```
+ConvertSyllable(syllable, includeTones):
+  1. 声調矢印決定: includeTones && tone != Neutral ? s_toneArrows[(int)tone] : ""
+  2. 特別ケース判定:
+     a. Initial.None + Final.O → return "ɔ" + toneArrow  (単独感嘆詞)
+     b. Final.Er → return "ɚ" + toneArrow  (Er 単独)
+     c. Zh/Ch/Sh/R + Final.I → return s_initialMisaki[initial] + "ɨ" + toneArrow
+     d. Z/C/S + Final.I → return s_initialMisaki[initial] + "ɨ" + toneArrow
+  3. Y/W + Final 変換判定: ルックアップ s_yWCompoundMisaki[(initial, final)]
+     hit → (prefix, suffix, omitInitial) を取得
+     miss → standard path: prefix = s_initialMisaki[initial] (if any), (prefix, suffix) = s_finalMisaki[final]
+  4. 構築:
+     if (!omitInitial && initial != None) sb.Append(s_initialMisaki[initial])
+     sb.Append(prefix)
+     sb.Append(toneArrow)
+     sb.Append(suffix)
+  5. return sb.ToString()
+```
+
+**注意**: U+032F は事前に strip 済みのテンプレートを使うので、`ConvertSyllable` 最後で `.Replace("\u032F", "")` は不要。同様に `ɻ̩`/`ɹ̩` → `ɨ` は retroflex/alveolar テンプレを直接 `("ɨ", "")` にすることで対応済み。
+
+## 4. 実装するために必要なエージェントチームの役割と人数
 
 | 役割 | 人数 | 担当内容 |
 |------|------|---------|
-| 実装エージェント | 1 名 | `PinyinToMisaki.cs` のテーブル定義コード作成、Unicode エスケープシーケンスの正確な記述 |
-| テストエージェント | 1 名 | マッピングテーブルの全エントリに対するユニットテスト作成 |
-| レビューエージェント | 1 名 | Unicode コードポイントの正確性検証、Misaki 公式実装との照合、言語学的正確性確認 |
+| 実装エージェント | 1 名 | `PinyinToMisaki.cs` の 4 テーブル定義コード作成、Unicode エスケープシーケンスの正確な記述、Prefix+Suffix タプル実装 |
+| テストエージェント | 1 名 | マッピングテーブルの全エントリに対するユニットテスト作成、gold standard 137 件との照合テスト |
+| Unicode レビューエージェント | 1 名 | Unicode コードポイントの正確性検証（U+02A8 / U+02A6 / U+AB67 / U+0265 / U+028A / U+025A / U+0254 / U+0268 等）、Kokoro vocab 互換性確認、Misaki 公式実装との再照合 |
 
 **合計: 3 名**
 
-実装自体はテーブル定義のみのため小規模だが、Unicode 文字の正確性が極めて重要であるため、レビューエージェントの参加が必須である。
+実装自体はテーブル定義のみのため小規模だが、Unicode 文字の正確性が極めて重要であるため、Unicode レビューエージェントの参加が必須である。Phase 1-R で判明した 12 項目の差分（セクション 1 参照）を全てテストで検出する必要がある。
 
-## 4. 提供範囲とテスト項目
+## 5. 提供範囲とテスト項目
 
 ### スコープ
 
-- `PinyinToMisaki.cs` 内のマッピングテーブル（`Dictionary<Initial, string>`、`Dictionary<Final, string>`、`string[]`）の定義
-- テーブルのキーが全 enum 値を網羅していることの保証
+- `PinyinToMisaki.cs` 内の 4 マッピングテーブル:
+  - 声母テーブル 22 エントリ（`Dictionary<Initial, string>`、Y/W を除く、None を除く）
+  - 韻母テーブル 36 エントリ（`Dictionary<Final, (string Prefix, string Suffix)>`）
+  - 声調矢印テーブル 5 エントリ（`string[]`）
+  - Y/W 複合韻母テーブル 23 エントリ（`Dictionary<(Initial, Final), (string, string, bool)>`）
+- 特殊母音 3 ケース（Zh/Ch/Sh/R + I、Z/C/S + I、Initial.None + O）の定数定義
+- テーブルのキーが全 enum 値を網羅していることの保証（メタテスト）
 - 各テーブルエントリに対するユニットテスト
+- gold standard 137 件（`.claude/tmp/misaki-gold.txt`）との照合テスト（T02 で実施、T01 ではテーブル単体の検証のみ）
 
 ### スコープ外
 
-- Convert メソッドの実装（T02）
-- ChineseG2PEngine への統合（T02 以降）
+- `ConvertSyllable` メソッドの実装（T02）
+- `ChineseG2PEngine` への統合（T02 以降）
 - 既存の ToIpa / ToPiperIpa / ToZhuyin API への影響（なし）
 
 ### ユニットテスト項目
 
-**テストクラス:** `tests/DotNetG2P.Tests/Chinese/PinyinToMisakiMappingTests.cs`
+**テストクラス:** `tests/DotNetG2P.Tests/ChineseG2P/PinyinToMisakiMappingTests.cs`
 
 #### 声母テスト（22 件）
 
@@ -197,61 +418,61 @@ internal static class PinyinToMisaki
 | `InitialG_MapsToK` | `Initial.G` | `"k"` | 同一 |
 | `InitialK_MapsToKh` | `Initial.K` | `"k\u02B0"` | 同一 |
 | `InitialH_MapsToX` | `Initial.H` | `"x"` | 同一 |
-| **`InitialJ_MapsToTcLigature`** | `Initial.J` | `"\u02A8"` | **合字 U+02A8** |
-| **`InitialQ_MapsToTcLigatureAspirated`** | `Initial.Q` | `"\u02A8\u02B0"` | **合字 + 有気** |
+| **`InitialJ_MapsToTcLigature`** | `Initial.J` | `"\u02A8"` | **U+02A8 ligature** |
+| **`InitialQ_MapsToTcLigatureAspirated`** | `Initial.Q` | `"\u02A8\u02B0"` | **U+02A8 + 有気** |
 | `InitialX_MapsToAlveolopalatalFricative` | `Initial.X` | `"\u0255"` | 同一 |
-| `InitialZh_MapsToRetroflexAffricate` | `Initial.Zh` | `"\u0288\u0282"` | 同一 |
-| `InitialCh_MapsToRetroflexAffricateAspirated` | `Initial.Ch` | `"\u0288\u0282\u02B0"` | 同一 |
+| **`InitialZh_MapsToAb67`** | `Initial.Zh` | `"\uAB67"` | **U+AB67 単一文字** |
+| **`InitialCh_MapsToAb67Aspirated`** | `Initial.Ch` | `"\uAB67\u02B0"` | **U+AB67 + 有気** |
 | `InitialSh_MapsToRetroflexFricative` | `Initial.Sh` | `"\u0282"` | 同一 |
 | `InitialR_MapsToRetroflexApproximant` | `Initial.R` | `"\u027B"` | 同一 |
-| **`InitialZ_MapsToTsLigature`** | `Initial.Z` | `"\u02A6"` | **合字 U+02A6** |
-| **`InitialC_MapsToTsLigatureAspirated`** | `Initial.C` | `"\u02A6\u02B0"` | **合字 + 有気** |
+| **`InitialZ_MapsToTsLigature`** | `Initial.Z` | `"\u02A6"` | **U+02A6 ligature** |
+| **`InitialC_MapsToTsLigatureAspirated`** | `Initial.C` | `"\u02A6\u02B0"` | **U+02A6 + 有気** |
 | `InitialS_MapsToS` | `Initial.S` | `"s"` | 同一 |
-| `InitialY_MapsToPalatalApproximant` | `Initial.Y` | `"j"` | 同一 |
-| `InitialW_MapsToLabialVelarApproximant` | `Initial.W` | `"w"` | 同一 |
 
-#### 韻母テスト（32 件）
+※Y/W は声母テーブルに含めない。`InitialY_NotInInitialTable` / `InitialW_NotInInitialTable` としてテーブル非含有を検証する。
 
-各 `Final` enum 値に対して、テーブルから取得した文字列が期待する Unicode シーケンスと完全一致することを検証する。差異のある 10 韻母を重点的にテストする。
+#### 韻母テスト（36 件、Prefix + Suffix タプル）
 
-| テストケース | 入力 | 期待出力 | 検証ポイント |
-|------------|------|---------|------------|
-| `FinalA_MapsToA` | `Final.A` | `"a"` | 同一 |
-| `FinalO_MapsToO` | `Final.O` | `"o"` | 同一 |
-| `FinalE_MapsToRamishorn` | `Final.E` | `"\u0264"` | 同一 |
-| **`FinalAi_MapsToAiWithInvertedBreve`** | `Final.Ai` | `"ai\u032F"` | **非音節化符号** |
-| **`FinalEi_MapsToEiWithInvertedBreve`** | `Final.Ei` | `"ei\u032F"` | **非音節化符号** |
-| **`FinalAo_MapsToAuWithInvertedBreve`** | `Final.Ao` | `"au\u032F"` | **非音節化符号** |
-| **`FinalOu_MapsToOuWithInvertedBreve`** | `Final.Ou` | `"ou\u032F"` | **非音節化符号** |
-| `FinalAn_MapsToAn` | `Final.An` | `"an"` | 同一 |
-| `FinalEn_MapsToSchwan` | `Final.En` | `"\u0259n"` | 同一 |
-| `FinalAng_MapsToAng` | `Final.Ang` | `"a\u014B"` | 同一 |
-| `FinalEng_MapsToSchwaEng` | `Final.Eng` | `"\u0259\u014B"` | 同一 |
-| **`FinalOng_MapsToUInvertedBreveNg`** | `Final.Ong` | `"u\u032F\u014B"` | **非音節化符号** |
-| `FinalI_MapsToI` | `Final.I` | `"i"` | 同一 |
-| `FinalIa_MapsToIa` | `Final.Ia` | `"ia"` | 同一 |
-| `FinalIe_MapsToIOpenE` | `Final.Ie` | `"i\u025B"` | 同一 |
-| **`FinalIao_MapsToIauWithInvertedBreve`** | `Final.Iao` | `"iau\u032F"` | **非音節化符号** |
-| **`FinalIu_MapsToIouWithInvertedBreve`** | `Final.Iu` | `"iou\u032F"` | **非音節化符号** |
-| `FinalIan_MapsToIOpenEn` | `Final.Ian` | `"i\u025Bn"` | 同一 |
-| `FinalIn_MapsToIn` | `Final.In` | `"in"` | 同一 |
-| `FinalIang_MapsToIaEng` | `Final.Iang` | `"ia\u014B"` | 同一 |
-| `FinalIng_MapsToIEng` | `Final.Ing` | `"i\u014B"` | 同一 |
-| **`FinalIong_MapsToIuInvertedBreveNg`** | `Final.Iong` | `"iu\u032F\u014B"` | **非音節化符号** |
-| `FinalU_MapsToU` | `Final.U` | `"u"` | 同一 |
-| `FinalUa_MapsToUa` | `Final.Ua` | `"ua"` | 同一 |
-| `FinalUo_MapsToUo` | `Final.Uo` | `"uo"` | 同一 |
-| **`FinalUai_MapsToUaiWithInvertedBreve`** | `Final.Uai` | `"uai\u032F"` | **非音節化符号** |
-| **`FinalUi_MapsToUeiWithInvertedBreve`** | `Final.Ui` | `"uei\u032F"` | **非音節化符号** |
-| `FinalUan_MapsToUan` | `Final.Uan` | `"uan"` | 同一 |
-| `FinalUn_MapsToUSchwan` | `Final.Un` | `"u\u0259n"` | 同一 |
-| `FinalUang_MapsToUaEng` | `Final.Uang` | `"ua\u014B"` | 同一 |
-| `FinalUeng_MapsToUSchwaEng` | `Final.Ueng` | `"u\u0259\u014B"` | 同一 |
-| `FinalV_MapsToY` | `Final.V` | `"y"` | 同一 |
-| `FinalVe_MapsToYOpenE` | `Final.Ve` | `"y\u025B"` | 同一 |
-| `FinalVan_MapsToYan` | `Final.Van` | `"yan"` | 同一 |
-| `FinalVn_MapsToYn` | `Final.Vn` | `"yn"` | 同一 |
-| `FinalEr_MapsToSchwaRetroflex` | `Final.Er` | `"\u0259\u027B"` | 同一 |
+各 `Final` enum 値に対して、テーブルから取得した `(Prefix, Suffix)` タプルが期待する Unicode シーケンスと完全一致することを検証する。
+
+| テストケース | 入力 | 期待 Prefix | 期待 Suffix | 検証ポイント |
+|------------|------|------------|------------|------------|
+| `FinalA_MapsToAEmpty` | `Final.A` | `"a"` | `""` | 同一 |
+| **`FinalO_MapsToWoEmpty`** | `Final.O` | `"wo"` | `""` | **bpmf+o 用** |
+| `FinalE_MapsToRamishornEmpty` | `Final.E` | `"\u0264"` | `""` | ɤ |
+| **`FinalAi_MapsToAiNoNonSyllabic`** | `Final.Ai` | `"ai"` | `""` | **U+032F なし** |
+| **`FinalEi_MapsToEiNoNonSyllabic`** | `Final.Ei` | `"ei"` | `""` | **U+032F なし** |
+| **`FinalAo_MapsToAu`** | `Final.Ao` | `"au"` | `""` | **Misaki au** |
+| **`FinalOu_MapsToOu`** | `Final.Ou` | `"ou"` | `""` | **U+032F なし** |
+| **`FinalAn_MapsToASplitN`** | `Final.An` | `"a"` | `"n"` | **声調が中間** |
+| **`FinalEn_MapsToSchwaSplitN`** | `Final.En` | `"\u0259"` | `"n"` | **声調が中間** |
+| **`FinalAng_MapsToASplitNg`** | `Final.Ang` | `"a"` | `"\u014B"` | **声調が中間** |
+| **`FinalEng_MapsToSchwaSplitNg`** | `Final.Eng` | `"\u0259"` | `"\u014B"` | **声調が中間** |
+| **`FinalOng_MapsToUpperUSplitNg`** | `Final.Ong` | `"\u028A"` | `"\u014B"` | **ʊŋ** |
+| `FinalI_MapsToIEmpty` | `Final.I` | `"i"` | `""` | 同一 |
+| **`FinalIa_MapsToJa`** | `Final.Ia` | `"ja"` | `""` | **j 半母音** |
+| **`FinalIe_MapsToJe`** | `Final.Ie` | `"je"` | `""` | **Misaki je (not jɛ)** |
+| **`FinalIao_MapsToJau`** | `Final.Iao` | `"jau"` | `""` | **j + au** |
+| **`FinalIu_MapsToJou`** | `Final.Iu` | `"jou"` | `""` | **Misaki iou** |
+| **`FinalIan_MapsToJEpsilonSplitN`** | `Final.Ian` | `"j\u025B"` | `"n"` | **jɛn 声調中間** |
+| **`FinalIn_MapsToISplitN`** | `Final.In` | `"i"` | `"n"` | **j なし** |
+| **`FinalIang_MapsToJaSplitNg`** | `Final.Iang` | `"ja"` | `"\u014B"` | **声調が中間** |
+| **`FinalIng_MapsToISplitNg`** | `Final.Ing` | `"i"` | `"\u014B"` | **j なし、声調が中間** |
+| **`FinalIong_MapsToJUpperUSplitNg`** | `Final.Iong` | `"j\u028A"` | `"\u014B"` | **jʊŋ** |
+| `FinalU_MapsToUEmpty` | `Final.U` | `"u"` | `""` | 同一 |
+| **`FinalUa_MapsToWa`** | `Final.Ua` | `"wa"` | `""` | **w 半母音** |
+| **`FinalUo_MapsToWo`** | `Final.Uo` | `"wo"` | `""` | **w 半母音** |
+| **`FinalUai_MapsToWai`** | `Final.Uai` | `"wai"` | `""` | **U+032F なし** |
+| **`FinalUi_MapsToWei`** | `Final.Ui` | `"wei"` | `""` | **Misaki uei** |
+| **`FinalUan_MapsToWaSplitN`** | `Final.Uan` | `"wa"` | `"n"` | **声調が中間** |
+| **`FinalUn_MapsToWSchwaSplitN`** | `Final.Un` | `"w\u0259"` | `"n"` | **Misaki uen** |
+| **`FinalUang_MapsToWaSplitNg`** | `Final.Uang` | `"wa"` | `"\u014B"` | **声調が中間** |
+| **`FinalUeng_MapsToWSchwaSplitNg`** | `Final.Ueng` | `"w\u0259"` | `"\u014B"` | **声調が中間** |
+| `FinalV_MapsToYEmpty` | `Final.V` | `"y"` | `""` | 同一 |
+| **`FinalVe_MapsToTurnedHE`** | `Final.Ve` | `"\u0265e"` | `""` | **ɥe (U+0265)** |
+| **`FinalVan_MapsToTurnedHEpsilonSplitN`** | `Final.Van` | `"\u0265\u025B"` | `"n"` | **ɥɛn (U+0265 + U+025B)** |
+| **`FinalVn_MapsToYSplitN`** | `Final.Vn` | `"y"` | `"n"` | **声調が中間** |
+| **`FinalEr_MapsToSchwaHookEmpty`** | `Final.Er` | `"\u025A"` | `""` | **ɚ (U+025A 単一)** |
 
 #### 声調テスト（5 件）
 
@@ -263,46 +484,91 @@ internal static class PinyinToMisaki
 | **`ToneThird_MapsToDownArrow`** | `Tone.Third` (3) | `"\u2193"` | **↓** |
 | **`ToneFourth_MapsToSouthEastArrow`** | `Tone.Fourth` (4) | `"\u2198"` | **↘** |
 
-#### テーブル網羅性テスト（3 件）
+#### 特殊母音テスト（3 件）
+
+| テストケース | 入力 | 期待出力 | 検証ポイント |
+|------------|------|---------|------------|
+| **`RetroflexApical_MapsToBarredI`** | Zh/Ch/Sh/R + Final.I context | `"\u0268"` | **U+0268 直接** |
+| **`AlveolarApical_MapsToBarredI`** | Z/C/S + Final.I context | `"\u0268"` | **U+0268 直接** |
+| **`StandaloneO_MapsToOpenO`** | Initial.None + Final.O context | `"\u0254"` | **U+0254 ɔ** |
+
+#### Y/W 複合韻母テスト（23 件）
+
+セクション 3.1 の全 23 エントリに対する `(Prefix, Suffix, OmitInitial)` の検証。
+
+| テストケース | 入力 | 期待出力 |
+|------------|------|---------|
+| **`Ya_MapsToJaNoOmit`** | `(Y, A)` | `("ja", "", false)` |
+| **`Yan_MapsToJEpsilonSplitN`** | `(Y, An)` | `("j\u025B", "n", false)` |
+| **`Yang_MapsToJaSplitNg`** | `(Y, Ang)` | `("ja", "\u014B", false)` |
+| **`Yao_MapsToJau`** | `(Y, Ao)` | `("jau", "", false)` |
+| **`Ye_MapsToJeNoOmit`** | `(Y, E)` | `("je", "", false)` |
+| **`Yi_MapsToIWithOmit`** | `(Y, I)` | `("i", "", true)` |
+| **`Yin_MapsToISplitNWithOmit`** | `(Y, In)` | `("i", "n", true)` |
+| **`Ying_MapsToISplitNgWithOmit`** | `(Y, Ing)` | `("i", "\u014B", true)` |
+| **`Yong_MapsToJUpperUSplitNg`** | `(Y, Ong)` | `("j\u028A", "\u014B", false)` |
+| **`You_MapsToJou`** | `(Y, Ou)` | `("jou", "", false)` |
+| **`Yu_MapsToYWithOmit`** | `(Y, V)` | `("y", "", true)` |
+| **`Yue_MapsToTurnedHE`** | `(Y, Ve)` | `("\u0265e", "", false)` |
+| **`Yuan_MapsToTurnedHEpsilonSplitN`** | `(Y, Van)` | `("\u0265\u025B", "n", false)` |
+| **`Yun_MapsToYSplitNWithOmit`** | `(Y, Vn)` | `("y", "n", true)` |
+| **`Wa_MapsToWaNoOmit`** | `(W, A)` | `("wa", "", false)` |
+| **`Wai_MapsToWai`** | `(W, Ai)` | `("wai", "", false)` |
+| **`Wan_MapsToWaSplitN`** | `(W, An)` | `("wa", "n", false)` |
+| **`Wang_MapsToWaSplitNg`** | `(W, Ang)` | `("wa", "\u014B", false)` |
+| **`Wei_MapsToWei`** | `(W, Ei)` | `("wei", "", false)` |
+| **`Wen_MapsToWSchwaSplitN`** | `(W, En)` | `("w\u0259", "n", false)` |
+| **`Weng_MapsToWSchwaSplitNg`** | `(W, Eng)` | `("w\u0259", "\u014B", false)` |
+| **`Wo_MapsToWoNoOmit`** | `(W, O)` | `("wo", "", false)` |
+| **`Wu_MapsToUWithOmit`** | `(W, U)` | `("u", "", true)` |
+
+#### テーブル網羅性テスト（5 件）
 
 | テストケース | 検証内容 |
 |------------|---------|
-| `InitialTable_CoversAllEnumValues` | `Initial` enum の `None` 以外の全 22 値がテーブルのキーに存在する |
-| `FinalTable_CoversAllEnumValues` | `Final` enum の `None` 以外の全 35 値がテーブルのキーに存在する |
+| `InitialTable_CoversAllNonYWNonNoneEnumValues` | 声母テーブルが Y/W/None を除く 20 値を網羅する（全 22 - Y - W = 20） |
+| `FinalTable_CoversAllNonNoneEnumValues` | 韻母テーブルが None を除く全 36 値を網羅する |
 | `ToneTable_HasCorrectLength` | 声調配列の長さが 5（Neutral=0 ~ Fourth=4） |
+| `YWCompoundTable_Has23Entries` | Y/W 複合テーブルが厳密に 23 エントリであることを検証 |
+| `NoEntryContainsU032F` | いずれのテーブルにも U+032F（非音節化符号）が含まれていないことを検証（Phase 1-R で全 strip 済み） |
 
 #### E2E テスト（本チケット外、T02 で実施）
 
-T02 で Convert メソッド統合後に以下を検証する:
+T02 で `ConvertSyllable` 実装後に `.claude/tmp/misaki-gold.txt` の 137 件全件を通過することを検証する。
 
-- `"mā"` -> `"ma\u2192"` (第 1 声、矢印)
-- `"jīn"` -> `"\u02A8in\u2192"` (j の合字 + 第 1 声)
-- `"zài"` -> `"\u02A6ai\u032F\u2198"` (z の合字 + 非音節化 + 第 4 声)
-- `"zhōng"` -> `"\u0288\u0282u\u032F\u014B\u2192"` (そり舌 + ong 非音節化 + 第 1 声)
-
-## 5. 実装に関する懸念事項とレビュー項目
+## 6. 実装に関する懸念事項とレビュー項目
 
 ### Unicode 文字の正確性
 
-1. **合字文字のコードポイント確認**: `ʨ` (U+02A8) と `ʦ` (U+02A6) は IPA Extensions ブロック (U+0250-U+02AF) に属する合字文字である。これらが正しく .NET の `char` / `string` で扱えることを確認すること（BMP 内のため問題ないはず）。
+1. **合字文字のコードポイント確認**: `ʨ` (U+02A8) と `ʦ` (U+02A6) は IPA Extensions ブロック (U+0250-U+02AF)、`ꭧ` (U+AB67) は Latin Extended-E ブロック (U+AB30-U+AB6F) に属する。これらが正しく .NET の `char` / `string` で BMP 内文字として扱えることを確認すること（全て BMP 内のため UTF-16 単一 code unit で表現可能）。
 
-2. **非音節化符号の結合文字性**: U+032F (COMBINING INVERTED BREVE BELOW) は結合文字であり、先行する基底文字に付与される。テーブル内で `"ai\u032F"` のように末尾に配置した場合、`i` に結合することを確認すること。
+2. **U+0265 ɥ、U+025A ɚ、U+0254 ɔ、U+0268 ɨ、U+028A ʊ、U+025B ɛ、U+0259 ə、U+0264 ɤ の正確性**: Phase 1-R で判明した追加の IPA 特殊文字。すべて Kokoro vocab に含まれる（Inv6 verified）ことを確認済み。
 
-3. **矢印記号のフォント互換性**: U+2192/U+2197/U+2193/U+2198 は Arrows ブロックに属し、IPA 文字と同列に出力される。Kokoro TTS が実際にこれらのコードポイントを期待しているかを Misaki の公式実装と照合すること。
+3. **矢印記号のフォント互換性**: U+2192/U+2197/U+2193/U+2198 は Arrows ブロックに属し、IPA 文字と同列に出力される。Misaki 公式実装と Kokoro vocab が実際にこれらのコードポイントを期待していることは Phase 1-R で verified。
 
-### 言語学的正確性
+4. **U+032F 非音節化符号の非使用**: 旧仕様では Ai/Ei/Ao/Ou/Iao/Iu/Uai/Ui/Ong/Iong の 10 韻母で U+032F を使用していたが、Phase 1-R で **Misaki 公式実装は U+032F を全く使わない** ことが判明。テーブル定義時に U+032F を含めないこと、および `NoEntryContainsU032F` テストで全テーブル検証すること。
 
-4. **ong の Misaki 表記**: 標準 IPA では `ʊŋ` だが、Misaki が `u̯ŋ` を採用する場合、音韻論的には非音節化 u を明示する表記となる。PinyinToIpa との意味的一貫性を確認すること。
+### 言語学的正確性（Phase 1-R 検証済み）
 
-5. **iu/ui の展開形**: PinyinToIpa では `iu` を `ioʊ`、`ui` を `ueɪ` と展開しているが、Misaki でも同様に `iou̯` / `uei̯` と展開するかを確認すること。Misaki が `iu̯` / `ui̯` のような縮約形を使用している可能性がある。
+5. **Ong の音韻表記**: 標準 IPA / PinyinToIpa は `ʊŋ` (U+028A U+014B)、Misaki も同じ `ʊŋ` を使用する（旧仕様の `u̯ŋ` は Phase 1 の推測誤り）。
+
+6. **Ian/Iong は半母音 j 開始**: Misaki は "ian" を `jɛn`、"iong" を `jʊŋ` として出力する（i ではなく j 開始）。対照的に Misaki "ie" は `je` であり、`jɛ` ではない（ここは標準 IPA の `iɛ` とも異なる特殊な Misaki 仕様）。
+
+7. **Ve/Van は ɥ 開始**: Misaki は "üe" を `ɥe`、"üan" を `ɥɛn` として出力する（y ではなく U+0265 ɥ 開始）。
+
+8. **Er は ɚ 単独**: Misaki は "er" を `ɚ` (U+025A) 単一記号で出力する（`əɻ` の 2 文字ではない）。
+
+9. **retroflex/alveolar apical は共に ɨ**: Misaki は zh/ch/sh/r + i と z/c/s + i の両方で `ɨ` (U+0268) を直接使用する（`ɻ̩`/`ɹ̩` の結合音節主音記号付き 2 文字形式ではない）。
 
 ### コード品質
 
-6. **既存変換クラスとの整合性**: `PinyinToIpa.cs` / `PinyinToPiperIpa.cs` と同一の `internal static class` パターン、同一のフィールド命名規則（`s_initialIpa`, `s_finalIpa`, `s_toneLetters`）に従うこと。ただし、フィールド名は `s_initialMisaki`, `s_finalMisaki`, `s_toneMisaki` 等に変更してもよい。
+10. **既存変換クラスとの整合性**: `PinyinToIpa.cs` / `PinyinToPiperIpa.cs` と同一の `internal static class` パターン、同一のフィールド命名規則（`s_*Misaki`）に従うこと。ただし韻母テーブルは Prefix/Suffix タプルのため、既存 2 クラスの `string` 単純マップとは構造が異なる。
 
-7. **テーブルの不変性**: テーブルは `static readonly` で宣言し、実行時に変更されないことを保証すること。
+11. **テーブルの不変性**: テーブルは `static readonly` で宣言し、実行時に変更されないことを保証すること。
 
-## 6. 一から作り直すとしたら
+12. **Y/W 複合韻母テーブルの存在理由の明示**: コードコメントで「Y/W は DotNetG2P PinyinParser の都合で声母にアサインされるが、Misaki では複合韻母として扱われる」ことを明記する。
+
+## 7. 一から作り直すとしたら
 
 ### 現行設計の評価
 
@@ -314,609 +580,135 @@ T02 で Convert メソッド統合後に以下を検証する:
 
 一方で以下の課題がある:
 
-- 22+35+5 = 62 エントリ x 4 形式 = 248 テーブルエントリの管理が必要（今後さらに増加）
+- 22+36+5+23 = 86 エントリ × 4 形式 = 多数のテーブルエントリの管理が必要（今後さらに増加）
 - テーブル間の差異が暗黙的であり、どのエントリが異なるか一覧しにくい
 - 新しい Initial/Final が追加された場合、全変換クラスを更新する必要がある
 
-### 代替設計案
+### Phase 1-R の教訓（最重要、Phase 1 を一から作り直すとしたら何を変えるか）
+
+本セクションは Phase 1 で策定した旧 T01/T02 の設計が 12 項目にわたって誤っており、Phase 1-R で全面改訂となった経験を踏まえ、後続プロジェクトへの教訓として残すもの。
+
+#### 教訓 1: 公式実装を必ず fetch して実測してから設計する
+
+**Phase 1 の失敗**: Misaki の独自表記（合字・矢印声調・非音節化符号）を Kokoro リポジトリの README / Python パッケージ概要・公開サンプル出力から「推測」して設計した。結果:
+
+- `J` → `ʨ` は偶然正解だったが、`Zh` → `ʈʂ`（誤）/ 正 `ꭧ` U+AB67 を見逃した
+- 非音節化符号 U+032F の大量使用（誤）を仕様に組み込んでしまった
+- 声調位置を「末尾付加」（誤）と設計したが、実際は「韻母中間挿入」だった
+- Retroflex apical を `ɻ̩`（誤）と想定したが、実際は `ɨ` 単一文字だった
+
+**Phase 1-R での対応**:
+
+```bash
+# 公式実装を fetch
+gh api repos/hexgrad/misaki/contents/misaki/zh.py
+gh api repos/hexgrad/misaki/contents/misaki/transcription.py
+# uv で実環境を構築
+uv init misaki-verify
+uv add misaki
+# 137 件のテストケースを実測
+uv run python -c "import misaki.zh; g = misaki.zh.ZHG2P(); print(g('ma1'))"
+# → 実際の出力から逆算してマッピングを再構成
+```
+
+**後続プロジェクトへのアクション**:
+
+- Misaki/piper-plus/Kokoro/Flite 等の他言語 G2P 実装を参考にする場合、**必ず公式 GitHub リポジトリから実装ファイルを fetch し、uv / pip / docker 等で実行環境を作って実測する**
+- 実測できない場合は「推測」を明記し、T02 での実測検証を必須タスクとする
+- 最小 50 件程度の gold standard（`.claude/tmp/<lang>-gold.txt`）を作成し、T01 の時点からテストに組み込む
+
+#### 教訓 2: 声調位置・韻母構造を最初から設計に入れる
+
+**Phase 1 の失敗**: 韻母テーブルを `Dictionary<Final, string>`（単純な文字列マップ）として設計した。結果:
+
+- `man1` を `mAn→`（末尾声調）と想定したが、実際は `ma→n`（中間声調）
+- 16 韻母（An/En/Ang/Eng/Ong/In/Ing/Ian/Iang/Iong/Uan/Un/Uang/Ueng/Van/Vn）で全面修正が必要となった
+
+**Phase 1-R での対応**:
+
+韻母テーブルを `Dictionary<Final, (string Prefix, string Suffix)>`（Prefix + Tone + Suffix 方式）に変更。`ConvertSyllable` は `prefix + toneArrow + suffix` の順に結合する。
+
+**後続プロジェクトへのアクション**:
+
+- 韻母 / 音節 / スタック構造を扱う言語では、声調位置・ストレス位置・アクセント核位置を「どこに挿入するか」を最初から設計に組み込む
+- 単純な `string` マップは後から構造変更しにくい → 最初から `(Prefix, Suffix)` タプルまたは `record PhonemeTemplate(string Prefix, string Suffix, int ToneInsertPosition)` で構造化する
+- 「末尾に付加」という仮定を最初から疑う
+
+#### 教訓 3: Y/W は声母ではなく複合韻母として扱うのが Misaki 公式の設計思想
+
+**Phase 1 の失敗**: DotNetG2P の `PinyinParser` が "wang" を `Initial.W + Final.Ang` に parse するため、`W` を `w` 1 文字、`Ang` を `aŋ` とマップし、連結すれば `waŋ→` になると想定した。実際には Misaki は:
+
+- "wa" → `wa→`、"wai" → `wai→`、"wang" → `wa→ŋ`（`w` が複合韻母の一部）
+- "yu" → `y→`（`ɥy→` ではなく、ɥ は省略される）
+- "yi" → `i→`（`ji→` ではなく、j は省略される）
+- "wu" → `u→`（`wu→` ではなく、w は省略される）
+
+単純な声母マップ方式では Initial 省略ルールが表現できない。
+
+**Phase 1-R での対応**:
+
+`s_yWCompoundMisaki : Dictionary<(Initial, Final), (Prefix, Suffix, OmitInitial)>` という **23 エントリの専用テーブル** を追加。`ConvertSyllable` は Y/W 声母の場合このテーブルを最優先で参照し、Initial を省略するかどうかを `OmitInitial` フラグで判定する。
+
+**後続プロジェクトへのアクション**:
+
+- Pinyin parser の内部構造（Initial + Final）と、目的の音素表記系（中国語音韻論）の構造が一致しない場合は、**複合韻母層を個別のルックアップテーブルとして用意する**
+- 「Y/W を声母として 1 文字マップする」という設計パターンは DotNetG2P.Chinese の PinyinToIpa / PinyinToPiperIpa / PinyinToZhuyin 全てで採用されているが、音韻論的には正しくない（Y/W は中国語音韻論では半母音として Medial に属し、声母ではない）。将来的に PinyinParser を再設計する場合は Medial 層を独立させることを検討する
+
+#### 教訓 4: ligature (U+02A8/U+02A6) と U+AB67 は Kokoro vocab 互換のため必須採用
+
+**Phase 1 の失敗**: Phase 1 では `J` → `ʨ` (U+02A8) を採用したが、内部では「見た目上 tɕ と同等なのでどちらでも良い」と判断していた。同様に `Zh` → `ʈʂ` (U+0288 U+0282) を「合字にしても実質同じ」と想定していた。
+
+**Phase 1-R で判明した事実**:
+
+- **Kokoro 82M の vocab ファイルには U+02A8 / U+02A6 / U+AB67 が単一トークンとして含まれる**（Inv6 verified）
+- **`tɕ` (U+0074 U+0255) や `ʈʂ` (U+0288 U+0282) は Kokoro vocab に含まれない**
+- **非 vocab 文字を TTS に入力すると UNK トークン化され、音声品質が著しく劣化する**
+
+したがって、Kokoro 互換性を保証するためには **必ず合字を使う必要がある**。
+
+**後続プロジェクトへのアクション**:
+
+- TTS vocab 互換性を前提とする G2P 実装では、**出力対象の TTS の vocab ファイル（tokenizer.json / phoneme_set.txt 等）を最初から取得し、マッピングに含まれる全文字が vocab に存在することを検証する**
+- DotNetG2P.Chinese では Kokoro vocab との照合を CI で自動化することを将来的に検討（現状は Phase 1-R の人手検証）
+- ligature（結合済み単一文字）vs 2 文字並置の違いは視覚的に判別しづらいため、**必ず Unicode コードポイントで明記する**（`ʨ` ではなく `U+02A8`）
+
+#### 教訓 5: gold standard を T01 の時点でテストに組み込む
+
+**Phase 1 の失敗**: Phase 1 では「テーブル定義の T01 ではテーブル単体のユニットテストのみ、E2E テストは T02 で実施」という方針だった。結果、T02 実装時に初めて仕様誤りに気づいた。
+
+**Phase 1-R での対応**:
+
+`.claude/tmp/misaki-gold.txt` に 137 件の `(pinyin → misaki IPA)` ペアを実測で取得し、T01 の時点で全テーブルエントリが gold standard と整合するかを「卓上検証」（エントリを手動で組み合わせて gold 出力と比較）する。
+
+**後続プロジェクトへのアクション**:
+
+- T01（テーブル定義）の段階で gold standard に対する卓上検証を必須化する
+- 137 件の gold standard を直接テストにするのは T02 スコープだが、T01 ではサンプル 20 件程度をテーブル組み合わせテスト（`Prefix + ToneArrow + Suffix` 結合）として実装する
+- gold standard は repository 外（`.claude/tmp/`）ではなく、`tests/DotNetG2P.Tests/ChineseG2P/Fixtures/misaki-gold.txt` に埋め込みリソースとして配置することを T02 で検討する
+
+### 代替設計案（参考、Phase 1 からの継続）
 
 #### A案: 差分テーブル方式
 
-PinyinToIpa を基準テーブルとし、Misaki は差分のみ定義する。
+PinyinToIpa を基準テーブルとし、Misaki は差分のみ定義する。ただし Phase 1-R で判明したように **Misaki 差異は 6 + 16 + 4 + 23 + 3 = 52 箇所に及ぶ** ため、差分方式の利点（差異の局所化）は希薄化する。
 
-```csharp
-internal static class PinyinToMisaki
-{
-    // PinyinToIpa のテーブルを基準に、差異のあるエントリのみ上書き
-    private static readonly Dictionary<Initial, string> s_initialOverrides = new()
-    {
-        [Initial.J] = "\u02A8",         // tɕ -> ʨ
-        [Initial.Q] = "\u02A8\u02B0",   // tɕʰ -> ʨʰ
-        [Initial.Z] = "\u02A6",         // ts -> ʦ
-        [Initial.C] = "\u02A6\u02B0",   // tsʰ -> ʦʰ
-    };
+#### E案: 事前マージ方式
 
-    internal static string GetInitial(Initial i) =>
-        s_initialOverrides.TryGetValue(i, out var v) ? v : PinyinToIpa.GetInitial(i);
-}
-```
+BaseIpaTable と MisakiDiff を起動時にマージする方式。Phase 1-R での差異数増加により、現行の独立テーブル方式と実用上の差はない。
 
-利点: 差異が明示的、メンテナンスコストが低い。欠点: PinyinToIpa への依存が発生し、PinyinToIpa の変更が Misaki に波及する。
-
-#### B案: 型安全 enum + 属性方式
-
-各音素 enum 値に属性で全形式のマッピングを定義する。
-
-```csharp
-public enum Initial : byte
-{
-    [IpaMapping("tɕ")]
-    [MisakiMapping("ʨ")]
-    [PiperMapping("tɕ")]
-    J,
-    // ...
-}
-```
-
-利点: 音素と全マッピングが一箇所に集約される。欠点: 属性ベースはリフレクション依存でパフォーマンスに影響、.NET Standard 2.1 でのソース生成器非対応、既存設計との大幅な乖離。
-
-#### C案: TSV/CSV 駆動
-
-マッピングを外部 TSV ファイルとして管理し、起動時にロードする。
-
-```tsv
-Initial	IPA	Misaki	Piper	Zhuyin
-J	tɕ	ʨ	tɕ	ㄐ
-Q	tɕʰ	ʨʰ	tɕʰ	ㄑ
-```
-
-利点: マッピングの一覧性が最高、非プログラマでも編集可能。欠点: 起動時パースコスト、Unicode 文字の TSV 内表現が不安定（エディタ依存）、embedded resource 管理の複雑化。
-
-### 推奨
+#### 推奨（Phase 1-R 後の再評価）
 
 **現行の独立テーブルパターン（コピー&修正方式）を継続する。** 理由:
 
-1. 変換形式は 4 種類にとどまり、管理負荷は許容範囲内
+1. 変換形式は 4 種類（IPA / Piper IPA / Misaki / Zhuyin）にとどまり、管理負荷は許容範囲内
 2. 既存の 3 クラスとの一貫性を維持できる
 3. 各テーブルが自己完結しており、バグの局所化が容易
 4. ランタイムのパフォーマンスオーバーヘッドがゼロ
+5. **Phase 1-R で Misaki 差異が予想よりも多岐にわたることが判明したため、差分方式の利点は薄い**
 
-ただし、本チケットのテーブル設計時に差異を明確にドキュメント化し（本チケット自体がその役割を果たす）、将来的にマッピング形式が 6 種以上に増えた場合は A 案（差分テーブル方式）への移行を検討する。
+ただし、本チケットのテーブル設計時に差異を明確にドキュメント化し（本チケット自体がその役割を果たす）、Phase 1-R gold standard 137 件との照合を T02 で実施することで、将来の仕様誤り再発を防ぐ。
 
-### マッピング戦略の再検討（追加レビュー）
-
-本セクションは、マッピング戦略の観点から現行の「独立テーブル×4」方式を再検討し、より保守性の高い代替案を具体化するためのものである。観点は以下の 4 つ:
-
-1. TSV 外部ファイル化（スキーマ・ロード方式・埋め込みリソース化）
-2. 差分マッピング方式（BaseIpaTable + DialectDiff）の具体例
-3. Source Generator によるコンパイル時マッピング生成
-4. 各方式のパフォーマンス・保守性・可読性の比較
-
-#### D案: TSV 外部ファイル化の具体案
-
-##### スキーマ設計
-
-`src/DotNetG2P.Chinese/Data/pinyin_mapping.master.tsv` を単一のマスターファイルとして配置し、全変換形式のエントリを横並びで保持する。
-
-```tsv
-# pinyin_mapping.master.tsv
-# type: initial | final | tone
-# key: enum 名（Initial.J, Final.Ai, Tone.First 等）
-# ipa: PinyinToIpa の値
-# misaki: PinyinToMisaki の値
-# piper: PinyinToPiperIpa の値
-# zhuyin: PinyinToZhuyin の値
-# comment: Unicode コードポイント・音韻的コメント
-type	key	ipa	misaki	piper	zhuyin	comment
-initial	B	p	p	p	ㄅ	U+0070
-initial	J	tɕ	ʨ	tɕ	ㄐ	Misaki: U+02A8 (tc ligature)
-initial	Z	ts	ʦ	ts	ㄗ	Misaki: U+02A6 (ts ligature)
-final	Ai	aɪ	ai̯	aɪ	ㄞ	Misaki: i + U+032F
-final	Ao	aʊ	au̯	aʊ	ㄠ	Misaki: u + U+032F
-final	Ong	ʊŋ	u̯ŋ	ʊŋ	ㄨㄥ	Misaki: u + U+032F + ŋ
-tone	First	˥˥	→	˥˥	ˉ	Misaki: U+2192
-tone	Second	˧˥	↗	˧˥	ˊ	Misaki: U+2197
-```
-
-**スキーマ設計ポイント:**
-
-- **1 行 1 エントリ**: type/key を複合キーとして一意に特定
-- **空セル許容**: zhuyin など一部形式でエントリが存在しない場合は空セル
-- **コメント列**: Unicode コードポイント・音韻的メモを保持（レビュー時の視認性向上）
-- **UTF-8 BOM なし**: エディタ依存を減らすため BOM なし UTF-8 で統一
-- **`#` 行コメント**: ファイル冒頭で型定義を説明
-
-##### ロード方式
-
-```csharp
-internal static class PinyinMappingTable
-{
-    // 起動時に 1 度だけロード（lazy initialization）
-    private static readonly Lazy<MappingData> s_data = new(LoadFromResource);
-
-    private static MappingData LoadFromResource()
-    {
-        var asm = typeof(PinyinMappingTable).Assembly;
-        using var stream = asm.GetManifestResourceStream(
-            "DotNetG2P.Chinese.Data.pinyin_mapping.master.tsv");
-        using var reader = new StreamReader(stream, Encoding.UTF8);
-        return TsvParser.Parse(reader);
-    }
-
-    internal static string GetInitial(Initial i, MappingFormat fmt)
-        => s_data.Value.Initials[(i, fmt)];
-}
-```
-
-**埋め込みリソース化:**
-
-```xml
-<!-- DotNetG2P.Chinese.csproj -->
-<ItemGroup>
-  <EmbeddedResource Include="Data/pinyin_mapping.master.tsv" />
-</ItemGroup>
-```
-
-他言語パッケージ（Spanish/French/Portuguese）で採用済みの例外辞書 TSV と同一の埋め込み方式を採用することで、プロジェクト全体の一貫性が保たれる。
-
-**利点:**
-
-- マッピング一覧性が最高（全形式を横並びで確認可能）
-- 差分が視覚的に明確（差異のあるセルが目立つ）
-- 非プログラマ（言語学者・翻訳者）でも編集可能
-- 新形式追加時は列を 1 つ追加するだけ
-
-**欠点:**
-
-- 起動時パースコスト（ただし Lazy + 62 エントリで実測 < 1ms）
-- TSV 内の Unicode 結合文字（U+032F）はエディタで不可視になりがち → コメント列で補う必要
-- コンパイル時型安全性の喪失（enum 名の typo がランタイムエラーに）
-
-#### E案: 差分マッピング方式（BaseIpaTable + DialectDiff）の具体例
-
-A 案をさらに具体化し、BaseTable/DiffTable 構造を正規化する。
-
-```csharp
-// 基底テーブル（標準 IPA、すべての形式の起点）
-internal static class BaseIpaTable
-{
-    internal static readonly IReadOnlyDictionary<Initial, string> Initials = new Dictionary<Initial, string>
-    {
-        [Initial.B] = "p",
-        [Initial.J] = "t\u0255",   // tɕ
-        [Initial.Z] = "ts",
-        // ... 全 22 エントリ
-    };
-
-    internal static readonly IReadOnlyDictionary<Final, string> Finals = new Dictionary<Final, string>
-    {
-        [Initial.Ai] = "a\u026A",  // aɪ
-        // ... 全 35 エントリ
-    };
-}
-
-// 差分（Misaki 方言）
-internal static class MisakiDiff
-{
-    internal static readonly IReadOnlyDictionary<Initial, string> InitialOverrides = new Dictionary<Initial, string>
-    {
-        [Initial.J] = "\u02A8",         // ʨ
-        [Initial.Q] = "\u02A8\u02B0",
-        [Initial.Z] = "\u02A6",         // ʦ
-        [Initial.C] = "\u02A6\u02B0",
-    };
-
-    internal static readonly IReadOnlyDictionary<Final, string> FinalOverrides = new Dictionary<Final, string>
-    {
-        [Final.Ai] = "ai\u032F",
-        [Final.Ei] = "ei\u032F",
-        [Final.Ao] = "au\u032F",
-        [Final.Ou] = "ou\u032F",
-        [Final.Ong] = "u\u032F\u014B",
-        [Final.Iao] = "iau\u032F",
-        [Final.Iu] = "iou\u032F",
-        [Final.Iong] = "iu\u032F\u014B",
-        [Final.Uai] = "uai\u032F",
-        [Final.Ui] = "uei\u032F",
-    };
-
-    internal static readonly string[] ToneOverrides = new[] { "", "\u2192", "\u2197", "\u2193", "\u2198" };
-}
-
-// ルックアップ（差分優先、なければ Base）
-internal static class PinyinToMisaki
-{
-    internal static string GetInitial(Initial i)
-        => MisakiDiff.InitialOverrides.TryGetValue(i, out var v) ? v : BaseIpaTable.Initials[i];
-
-    internal static string GetFinal(Final f)
-        => MisakiDiff.FinalOverrides.TryGetValue(f, out var v) ? v : BaseIpaTable.Finals[f];
-
-    internal static string GetTone(int t) => MisakiDiff.ToneOverrides[t];
-}
-```
-
-**起動時マージによる事前計算（パフォーマンス最適化）:**
-
-```csharp
-private static readonly IReadOnlyDictionary<Initial, string> s_initialMerged = MergeBaseAndDiff(
-    BaseIpaTable.Initials, MisakiDiff.InitialOverrides);
-
-private static Dictionary<TKey, string> MergeBaseAndDiff<TKey>(
-    IReadOnlyDictionary<TKey, string> @base,
-    IReadOnlyDictionary<TKey, string> diff)
-{
-    var result = new Dictionary<TKey, string>(@base);
-    foreach (var kvp in diff) result[kvp.Key] = kvp.Value;
-    return result;
-}
-```
-
-この事前マージ方式により、ランタイムのルックアップは基底テーブルと同等のコスト（`TryGetValue` 1 回）となる。
-
-**利点:**
-
-- Misaki の差異が 15 エントリ（initial 4 + final 10 + tone 4、軽声除く）のみに集約され、視認性が最高
-- Base の変更が全方言に自動波及（意図した一貫性）
-- テストで `Diff.Count` を検証することで「想定外の差分」を検出可能
-- ランタイムオーバーヘッドなし（事前マージ時）
-
-**欠点:**
-
-- 方言間の予期せぬ結合（Base 変更の波及）が時に問題になる
-- Zhuyin のように全エントリが Base と異なる形式（ラテン→漢字由来記号）では差分方式の利点が消失
-- 「どの値が Base 由来か Diff 由来か」の区別が API 越しには見えない
-
-#### F案: Source Generator によるコンパイル時マッピング生成
-
-C# Source Generator を用いて、TSV ファイルをコンパイル時に読み込み、強型付けされた `static readonly` フィールドを自動生成する。
-
-##### 設計
-
-```csharp
-// Generators/PinyinMappingGenerator.cs
-[Generator]
-public class PinyinMappingGenerator : IIncrementalGenerator
-{
-    public void Initialize(IncrementalGeneratorInitializationContext context)
-    {
-        // AdditionalFiles から TSV を取得
-        var tsvFiles = context.AdditionalTextsProvider
-            .Where(f => f.Path.EndsWith("pinyin_mapping.master.tsv"));
-
-        context.RegisterSourceOutput(tsvFiles, (spc, file) =>
-        {
-            var content = file.GetText()?.ToString();
-            var entries = ParseTsv(content);
-            var source = GenerateCode(entries);
-            spc.AddSource("PinyinMappingTable.g.cs", source);
-        });
-    }
-}
-```
-
-##### 生成される出力例
-
-```csharp
-// PinyinMappingTable.g.cs (auto-generated)
-namespace DotNetG2P.Chinese.Conversion;
-
-internal static class PinyinToMisakiGenerated
-{
-    internal static readonly Dictionary<Initial, string> Initials = new()
-    {
-        [Initial.B] = "p",
-        [Initial.J] = "\u02A8",
-        [Initial.Z] = "\u02A6",
-        // ... 全エントリがコンパイル時に埋め込まれる
-    };
-}
-```
-
-##### プロジェクト設定
-
-```xml
-<ItemGroup>
-  <AdditionalFiles Include="Data/pinyin_mapping.master.tsv" />
-  <ProjectReference Include="..\DotNetG2P.Chinese.Generators\*.csproj"
-                    OutputItemType="Analyzer"
-                    ReferenceOutputAssembly="false" />
-</ItemGroup>
-```
-
-**利点:**
-
-- TSV の編集容易性と、コンパイル時生成によるランタイム高速性を両立
-- enum 名の typo がコンパイルエラーとして検出される（ジェネレータ側でチェック実装可能）
-- 起動時パースコストゼロ（コード生成済み）
-- IDE での F12 でジェネレート済みコードへ跳べる（デバッグ容易）
-- Base/Diff 関係をジェネレータ内で計算し、最終形式を生成可能
-
-**欠点:**
-
-- **.NET Standard 2.1 ターゲットとの互換性問題**: Source Generator は `netstandard2.0` ターゲットの Generator プロジェクトが必要。Unity IL2CPP ビルドとの相性も要検証
-- ジェネレータプロジェクトの追加によるビルド複雑化
-- デバッグ時の可読性低下（生成コードが見慣れた形と異なる場合）
-- 既存の他言語パッケージ（TSV を Runtime ロードしている）との一貫性が崩れる
-- Roslyn API の学習コスト（特に Incremental Generator）
-
-**Unity 互換性の懸念:**
-
-Unity 2021.2+ の Roslyn バージョンで Incremental Generator が動作するかは要検証。Unity パッケージ側では UPM 経由で配布するため、Generator を同梱しない「ビルド済みコード＋TSV リソース」方式のハイブリッドも検討すべき。
-
-#### 各方式のパフォーマンス・保守性・可読性比較
-
-| 方式 | ランタイム性能 | 起動時コスト | 保守性 | 可読性 | 型安全性 | Unity 互換 |
-|------|--------------|------------|--------|--------|---------|-----------|
-| **現行（独立テーブル）** | ★★★ (最速) | 無 | ★ (4 箇所同期) | ★ (差分不明瞭) | ★★★ | ★★★ |
-| **A案: 差分テーブル（遅延）** | ★★ (TryGet 2 回) | 無 | ★★★ | ★★★ | ★★★ | ★★★ |
-| **E案: 差分テーブル（事前マージ）** | ★★★ | 微小 (< 1ms) | ★★★ | ★★★ | ★★★ | ★★★ |
-| **B案: 属性方式** | ★ (リフレクション) | 中 (初回のみキャッシュ) | ★★ | ★★ | ★★★ | ★★ (IL2CPP strip 注意) |
-| **C/D案: TSV ロード** | ★★★ (ロード後は Dict 参照) | 小 (数ms) | ★★★ | ★★★★ (全形式横並び) | ★ (ランタイム検証) | ★★★ (Embedded Resource) |
-| **F案: Source Generator** | ★★★ (最速) | 無 | ★★★ | ★★★ | ★★★ | ★ (要検証) |
-
-**評価軸の詳細:**
-
-- **ランタイム性能**: 1 回のルックアップコスト。DictionaryTryGetValue は O(1) なので実際の差は微小だが、TSV 方式は起動後は埋め込み方式と同等
-- **保守性**: マッピング追加・修正時の影響範囲。差分方式と TSV 方式が最良
-- **可読性**: 全形式の差分を一覧する際の容易さ。TSV > 差分 > 独立
-- **型安全性**: enum 名の typo がコンパイル時に検出されるか
-- **Unity 互換**: IL2CPP/AOT/Embedded Resource 制約への適合度
-
-#### マッピング戦略の推奨（追加レビューの結論）
-
-**短期（T01/T02 本チケット）: 現行の独立テーブル方式を維持する。** 理由は既存の「### 推奨」セクションに記載の通り。ただし以下の追加措置を推奨:
-
-1. **Unicode 定数クラスの導入**: `Internal/ChineseUnicode.cs` に `NonSyllabicMark = "\u032F"`, `TcLigature = "\u02A8"` 等の名前付き定数を定義し、テーブル定義時に使用する。エスケープシーケンスの散在を防ぎ、レビュー時の誤読を削減する。
-
-   ```csharp
-   internal static class ChineseUnicode
-   {
-       internal const string NonSyllabicMark = "\u032F"; // COMBINING INVERTED BREVE BELOW
-       internal const string TcLigature = "\u02A8";      // ʨ
-       internal const string TsLigature = "\u02A6";      // ʦ
-       internal const string Aspirated = "\u02B0";       // ʰ
-       internal const string RightArrow = "\u2192";      // →
-       // ...
-   }
-   ```
-
-2. **差分検証テストの追加**: `PinyinToIpa` と `PinyinToMisaki` のテーブルを比較し、差異エントリ数が想定値（initial 4 + final 10 + tone 4 = 18）と一致することを検証するメタテストを追加。想定外の差分を早期検出する。
-
-3. **マスター TSV ドキュメント化**: T01 本チケットの表を元に、`docs/chinese/pinyin_mapping_reference.md` として全形式の横並び表を作成・維持する。コードとは独立したドキュメントとし、コード変更時の同期は CI で差分チェックする（目視レビュー）。
-
-**中期（5 形式目追加時・例: Kaldi lexicon / LEX 形式等）: E 案（差分テーブル・事前マージ）へ移行する。** 理由:
-
-- 形式数が 5 以上になると独立テーブルの同期コストが許容範囲を超える
-- 事前マージ方式ならランタイム性能の劣化なし
-- Unity 互換性の懸念なし（通常のコードのみ）
-- TSV 方式ほど大掛かりな変更ではなく、段階的移行が容易
-
-**長期（10 形式以上・例: 複数 TTS エンジン対応）: D 案（TSV 外部ファイル）へ移行する。** 理由:
-
-- 非プログラマによる編集が可能になり、言語学者の貢献を受け入れやすい
-- 他言語パッケージ（Es/Fr/Pt）と一貫した方式となる
-- Source Generator（F 案）は Unity 互換性の懸念があるため、ランタイムロード方式（Lazy 初期化）を推奨
-
-**Source Generator（F 案）は現時点では採用非推奨。** .NET Standard 2.1 / Unity IL2CPP 環境との互換性検証コストが高く、T01/T02 のスコープを大幅に超える。将来的に Unity が Roslyn Incremental Generator を正式サポートした時点で再検討する。
-
-### アーキテクトレビュー（統合的まとめ）
-
-上記「現行設計の評価」「代替設計案（A/B/C 案）」「推奨」および「マッピング戦略の再検討（D/E/F 案）」は網羅的だが、**ディクショナリ定義の物理構造**にしか注目していない。本節では、「`PinyinToZhuyin` を含めた 4 クラス全体の本質的な構造差」と、「既存レビューで触れられていない C# 言語機能の活用余地」の観点からレビューを補完する。
-
-#### 4 クラスの構造分類 — 対称な抽象化の限界
-
-現行 4 クラス（追加予定の Misaki 含む）の構造を分類すると、見かけ上「4 つのコピペ」に見える状況は、実は **2 つの異なるパターン** に分離できる。
-
-| クラス | キー型 | マッピング構造 | 抽象化対象 |
-|-------|-------|--------------|----------|
-| `PinyinToIpa` | `Initial`/`Final` enum | 声母/韻母/声調の 3 テーブル | **IPA ファミリ** |
-| `PinyinToPiperIpa` | `Initial`/`Final` enum | 声母/韻母の 2 テーブル（声調なし） | **IPA ファミリ** |
-| `PinyinToMisaki` (予定) | `Initial`/`Final` enum | 声母/韻母/声調（矢印） | **IPA ファミリ** |
-| `PinyinToZhuyin` | `string` (pinyin) | `string`→注音符号 | **文字列変換ファミリ**（別系統） |
-
-**重要な示唆:** `PinyinToZhuyin` は `Dictionary<string, string>` でピンイン文字列を直接変換しており、`Initial`/`Final` enum を経由しない。これは音韻論的にも正当で（注音符号は中国語固有の表記で IPA 的な音素分解が不要）、構造的に IPA ファミリとの統一は不自然である。
-
-したがって、**抽象化の対象は「IPA ファミリ 3 クラス」に限定すべき**であり、Zhuyin を巻き込む共通化は設計目標として適切ではない。本セクション以降の「共通基盤」は IPA ファミリの話に限る。
-
-#### C# 言語機能ベース 4 方式の比較
-
-本チケット既存セクション（A/B/C/D/E/F 案）は **テーブル配置戦略** に焦点を当てていたが、ここでは **共通処理の抽象化メカニズム** として C# が提供する 4 つのアプローチを比較する。T02 と共通する論点だが、T01 の視点では「マッピングテーブルをどう型として表現するか」が主題となる。
-
-##### 方式 1: interface ベース
-
-```csharp
-internal interface IPinyinMapping
-{
-    string GetInitial(Initial initial);
-    string GetFinal(Final final_);
-    string GetTone(Tone tone);
-    string RetroflexApical { get; }
-    string AlveolarApical { get; }
-}
-
-internal sealed class MisakiMapping : IPinyinMapping
-{
-    private static readonly Dictionary<Initial, string> s_initials = /* ... */;
-    public string GetInitial(Initial i) => s_initials[i];
-    // ...
-}
-```
-
-**利点:** モック化が自然（テスト時にフェイク実装注入可能）、依存反転原則（DIP）に忠実、将来の DI 導入と整合。
-**欠点:** インスタンスメソッド呼び出しが仮想メソッドディスパッチになる（JIT 最適化で軽減されるが hot path では計測差が出る）。既存 `internal static` クラス群との様式不整合。
-
-##### 方式 2: abstract class ベース
-
-```csharp
-internal abstract class PinyinMappingBase
-{
-    protected abstract IReadOnlyDictionary<Initial, string> Initials { get; }
-    protected abstract IReadOnlyDictionary<Final, string> Finals { get; }
-    protected abstract string[] ToneMarkers { get; }
-
-    // 共通ロジックを基底クラスに集約（テンプレートメソッド）
-    public virtual string Convert(PinyinSyllable s, bool includeTones)
-    {
-        // 全クラス共通の変換フロー
-    }
-
-    // 差異を許容する拡張ポイント
-    protected virtual string HandleRetroflexApical() => "\u027B\u0329";
-    protected virtual string HandleAlveolarApical() => "\u0279\u0329";
-}
-
-internal sealed class MisakiMapping : PinyinMappingBase
-{
-    protected override IReadOnlyDictionary<Initial, string> Initials => s_initials;
-    // ...
-}
-```
-
-**利点:** 共通ロジックを基底に集約できる（interface だけでは default interface methods を使わない限り不可能、default interface methods は .NET Standard 2.1 で限定的）。オーバーライドによる柔軟な差分実装が可能。
-**欠点:** 単一継承の制約、`sealed class` でない限りさらなる派生を招きやすい、interface より結合度が高い。
-
-##### 方式 3: record + switch 式ベース（推奨候補）
-
-```csharp
-// マッピングを不変の値オブジェクトとして表現
-internal sealed record PinyinMappingTable(
-    IReadOnlyDictionary<Initial, string> Initials,
-    IReadOnlyDictionary<Final, string> Finals,
-    IReadOnlyList<string> ToneMarkers,
-    string RetroflexApical,
-    string AlveolarApical,
-    bool IncludeTonesByDefault);
-
-internal static class PinyinMappingTables
-{
-    public static readonly PinyinMappingTable Ipa = new(
-        Initials: BuildIpaInitials(),
-        Finals: BuildIpaFinals(),
-        ToneMarkers: new[] { "", "\u02E5\u02E5", "\u02E7\u02E5", "\u02E8\u02E9\u02E6", "\u02E5\u02E9" },
-        RetroflexApical: "\u027B\u0329",
-        AlveolarApical: "\u0279\u0329",
-        IncludeTonesByDefault: true);
-
-    public static readonly PinyinMappingTable Misaki = Ipa with
-    {
-        Initials = new Dictionary<Initial, string>(Ipa.Initials)
-        {
-            [Initial.J] = "\u02A8",
-            [Initial.Q] = "\u02A8\u02B0",
-            [Initial.Z] = "\u02A6",
-            [Initial.C] = "\u02A6\u02B0",
-        },
-        Finals = new Dictionary<Final, string>(Ipa.Finals)
-        {
-            [Final.Ai] = "ai\u032F",
-            [Final.Ei] = "ei\u032F",
-            [Final.Ao] = "au\u032F",
-            [Final.Ou] = "ou\u032F",
-            [Final.Ong] = "u\u032F\u014B",
-            [Final.Iao] = "iau\u032F",
-            [Final.Iu] = "iou\u032F",
-            [Final.Iong] = "iu\u032F\u014B",
-            [Final.Uai] = "uai\u032F",
-            [Final.Ui] = "uei\u032F",
-        },
-        ToneMarkers = new[] { "", "\u2192", "\u2197", "\u2193", "\u2198" },
-    };
-}
-
-// 変換エンジンは record を受け取る純粋関数群
-internal static class PinyinConversionEngine
-{
-    public static string Convert(PinyinSyllable syllable, PinyinMappingTable table, bool includeTones)
-    {
-        // 中央集権的な変換ロジック
-        var sb = new StringBuilder(16);
-
-        if (syllable.Initial != Initial.None)
-        {
-            var skipSemivowel =
-                (syllable.Initial == Initial.Y || syllable.Initial == Initial.W)
-                && ShouldOmitSemivowel(syllable.Initial, syllable.Final);
-
-            if (!skipSemivowel)
-                sb.Append(table.Initials[syllable.Initial]);
-        }
-
-        if (syllable.Final != Final.None)
-        {
-            // そり舌/歯茎母音の分岐も record の値を参照
-            var finalStr = (syllable.Final, syllable.Initial) switch
-            {
-                (Final.I, var i) when IsRetroflex(i) => table.RetroflexApical,
-                (Final.I, var i) when IsAlveolar(i) => table.AlveolarApical,
-                _ => table.Finals[syllable.Final],
-            };
-            sb.Append(finalStr);
-        }
-
-        if (includeTones && syllable.Tone != Tone.Neutral)
-            sb.Append(table.ToneMarkers[(int)syllable.Tone]);
-
-        return sb.ToString();
-    }
-}
-
-// 既存の内部 API は record を渡す薄いラッパーとして維持（公開 API の互換性保証）
-internal static class PinyinToMisaki
-{
-    public static string Convert(string pinyin) => Convert(pinyin, true);
-
-    public static string Convert(string pinyin, bool includeTones)
-    {
-        if (string.IsNullOrEmpty(pinyin)) return string.Empty;
-        string normalized = ToneConverter.ToToneMarked(pinyin);
-        if (!PinyinParser.TryParse(normalized, out var syllable)) return string.Empty;
-        return PinyinConversionEngine.Convert(syllable, PinyinMappingTables.Misaki, includeTones);
-    }
-}
-```
-
-**利点:**
-- **`record` の値セマンティクスで差分記述が自然**: `Ipa with { ... }` 構文で親テーブルからの差分のみを表現できる（既存 A 案「差分テーブル」の型安全版）
-- **C# 8.0+ switch 式**でそり舌/歯茎分岐が簡潔に記述でき、分岐の網羅性チェックをコンパイラが行う
-- **.NET Standard 2.1 互換**: `record` は C# 9.0 の機能だが、`LangVersion` 指定で .NET Standard 2.1 でも使用可能（DotNetG2P.Chinese の現状設定を確認すること）
-- **純粋関数**として `PinyinConversionEngine.Convert` を実装でき、テストが容易（副作用なし、内部状態なし）
-- **既存の公開 API 互換性を維持**: `PinyinToIpa.Convert(...)` 等のファサードは薄いラッパーとして残せる
-- **テーブル網羅性テストを 1 箇所で書ける**: `PinyinMappingTables.Ipa`, `Misaki`, `PiperIpa` を `IEnumerable` で列挙し、メタテストで全テーブルを同一基準で検証
-
-**欠点:**
-- `record` の `with` 式は浅いコピーのため、Dictionary の中身を深くコピーする必要がある（上記コードでは明示的に `new Dictionary<...>(Ipa.Initials) { ... }` と書いている）
-- `IReadOnlyDictionary` プロパティへのアクセスは仮想呼び出しになるため、`Dictionary<>` 直接参照より数 ns 遅い（実測では意味のない差）
-
-##### 方式 4: source generator ベース
-
-既存 F 案で詳述済みのため簡略化するが、T01 視点では「TSV やコード片から `PinyinMappingTable` record を自動生成する」という統合的な使い方が有望。ただし、Unity/IL2CPP 互換性の懸念があるため短期的な採用は見送り。
-
-#### 4 方式の比較表（T01 視点）
-
-| 観点 | 方式 1: interface | 方式 2: abstract class | **方式 3: record+switch** | 方式 4: generator |
-|------|----------------|---------------------|-------------------------|-----------------|
-| 既存 `internal static` 様式との整合 | 低 | 低 | **中（ファサード維持）** | 高 |
-| 差分オーバーライド構文 | 手動 (override) | 手動 (override) | **`with` 式で自然** | コード生成 |
-| コンパイル時型安全性 | 中 | 中 | **高 (switch網羅性)** | 高 |
-| 既存公開 API 互換 | 要書換 | 要書換 | **維持可** | 維持可 |
-| テスト容易性 | 高 (モック) | 中 | **高 (純粋関数)** | 中 |
-| ランタイムコスト | 中 (仮想呼び出し) | 中 | **低 (record は class)** | 最低 |
-| Unity/IL2CPP 互換 | 高 | 高 | **高** | 要検証 |
-| .NET Standard 2.1 互換 | 高 | 高 | **高 (LangVersion 要設定)** | 要検証 |
-| リファクタ規模 | 大 | 大 | **中** | 大 |
-
-#### T01 のマッピング設計への実践的推奨
-
-上記の分析を踏まえ、T01 で確定すべきマッピング定義の「書き方」として以下を推奨する。
-
-**推奨 1: 現行の独立テーブル方式を踏襲しつつ、将来の `record` 化を見据えた「機械的移行可能」な書式に揃える**
-
-- マッピングは `private static readonly Dictionary<Initial, string>` で宣言する（既存 2 クラスと同一）
-- **エントリ順序を `Initial` enum の宣言順に厳密に揃える**（将来 `record PinyinMappingTable` に機械的に変換する際、diff レビューが容易になる）
-- 差異エントリには `// Misaki差異: tɕ→ʨ (U+02A8)` の形式でインラインコメントを必須化
-
-**推奨 2: Unicode 定数の名前付き化（既存レビューでも言及済み、さらに具体化）**
+### Unicode 定数クラスの導入（強く推奨）
 
 ```csharp
 // src/DotNetG2P.Chinese/Internal/ChineseUnicode.cs
@@ -924,12 +716,22 @@ internal static class ChineseUnicode
 {
     // IPA 修飾子
     public const string Aspirated = "\u02B0";           // ʰ
-    public const string SyllabicMark = "\u0329";        // 音節主音記号（下付き）
-    public const string NonSyllabicMark = "\u032F";     // 非音節化記号（下付き反転ブレーブ）
 
     // IPA 合字（Misaki 用）
     public const string TcLigature = "\u02A8";          // ʨ
     public const string TsLigature = "\u02A6";          // ʦ
+    public const string RetroflexAffricate = "\uAB67";  // ꭧ
+
+    // IPA 特殊母音（Misaki 用）
+    public const string SchwaHook = "\u025A";           // ɚ
+    public const string OpenO = "\u0254";               // ɔ
+    public const string BarredI = "\u0268";             // ɨ
+    public const string UpperU = "\u028A";              // ʊ
+    public const string Epsilon = "\u025B";             // ɛ
+    public const string Schwa = "\u0259";               // ə
+    public const string Ramshorn = "\u0264";            // ɤ
+    public const string TurnedH = "\u0265";             // ɥ
+    public const string EngNg = "\u014B";               // ŋ
 
     // 声調矢印（Misaki 用）
     public const string ArrowRight = "\u2192";          // →
@@ -942,82 +744,80 @@ internal static class ChineseUnicode
 これにより、T01 のマッピング定義は:
 
 ```csharp
-private static readonly Dictionary<Initial, string> s_initialMisaki = new Dictionary<Initial, string>
+private static readonly Dictionary<Initial, string> s_initialMisaki = new()
 {
-    // ... (IPA と同一のエントリは IPA と同じ順序で)
     [Initial.J] = ChineseUnicode.TcLigature,                              // Misaki差異: tɕ→ʨ
     [Initial.Q] = ChineseUnicode.TcLigature + ChineseUnicode.Aspirated,   // Misaki差異: tɕʰ→ʨʰ
+    [Initial.Zh] = ChineseUnicode.RetroflexAffricate,                     // Misaki差異: ʈʂ→ꭧ
     [Initial.Z] = ChineseUnicode.TsLigature,                              // Misaki差異: ts→ʦ
-    [Initial.C] = ChineseUnicode.TsLigature + ChineseUnicode.Aspirated,   // Misaki差異: tsʰ→ʦʰ
     // ...
 };
 ```
 
-と書ける。レビュー時の Unicode 誤読リスクが大幅に減り、将来 `record` 化する際もエントリの意味が明示的に保たれる。
+と書ける。レビュー時の Unicode 誤読リスクが大幅に減り、Phase 1-R で判明した 12 項目の差分検証が容易になる。
 
-**推奨 3: 差分メタテストの導入**
+### Kokoro 82M vocab 互換性（Inv6 verified）
 
-T01 のテスト項目に以下を追加:
+以下の全てが Kokoro base vocab に含まれることを Phase 1-R で確認済み:
 
-```csharp
-[Fact]
-public void MisakiDiffersFromIpa_OnlyAtKnownPositions()
-{
-    // PinyinToIpa と PinyinToMisaki の全エントリを比較し、
-    // 差異のあるエントリ数・位置が想定値と一致することを検証
-    var ipaInitials = PinyinToIpa.GetInitialMapSnapshot();     // internal テスト API
-    var misakiInitials = PinyinToMisaki.GetInitialMapSnapshot();
+- `ꭧ` (U+AB67) - Latin Extended-E
+- `ʨ` (U+02A8), `ʦ` (U+02A6) - IPA Extensions
+- `ɨ` (U+0268), `ɥ` (U+0265) - IPA Extensions
+- `ʊ` (U+028A), `ə` (U+0259), `ɤ` (U+0264) - IPA Extensions
+- `ɛ` (U+025B), `ɚ` (U+025A), `ɔ` (U+0254) - IPA Extensions
+- `→` (U+2192), `↗` (U+2197), `↓` (U+2193), `↘` (U+2198) - Arrows
 
-    var diffKeys = ipaInitials
-        .Where(kv => misakiInitials[kv.Key] != kv.Value)
-        .Select(kv => kv.Key)
-        .ToHashSet();
+したがって zh/ch に U+AB67、j/q に ʨ、z/c に ʦ を採用しても全て Kokoro に正しくトークン化される。U+032F は vocab 非含有だが、Phase 1-R の仕様ではそもそも使用しないためテンプレ側で自動的に除外される。
 
-    Assert.Equal(
-        new HashSet<Initial> { Initial.J, Initial.Q, Initial.Z, Initial.C },
-        diffKeys);
-}
-```
-
-想定外のエントリ差異を早期検出でき、コピペミスや意図せぬ挙動変更をブロックできる。
-
-#### アーキテクトレビューとしての最終推奨
-
-**T01/T02 のスコープ内では、現行の独立テーブルパターンを踏襲し、上記「推奨 1〜3」を実装する**。理由:
-
-1. `record + switch` 式の方式 3 は将来の最有力候補だが、3 クラス同時リファクタは Mi1 のスコープ外
-2. 「推奨 1」の**エントリ順序統一**と「推奨 2」の**Unicode 定数化**により、将来の `record` 化が機械的に可能な状態で残せる
-3. 「推奨 3」の**差分メタテスト**により、コピペ方式の最大の弱点（テーブル間不整合の見落とし）を補完できる
-4. `PinyinToZhuyin` は IPA ファミリとは別系統であり、共通化の対象から除外することで設計目標が明確化される
-
-**Mi1 完了後の後続タスクとして、別チケット「PinyinConverter 共通抽象化リファクタ」を起票する。** このチケットで:
-
-- `PinyinMappingTable` record 型の導入
-- `PinyinConversionEngine.Convert(syllable, table, includeTones)` の抽出
-- `PinyinToIpa` / `PinyinToPiperIpa` / `PinyinToMisaki` をファサードに変更
-- 既存 936 件 + Misaki 追加分のテストが全件通過することで安全性を保証
-
-この段階的アプローチにより、**現時点では既存パターンを維持してリスクを最小化**しつつ、**将来の構造改善への布石を残す**ことができる。
-
-## 7. 後続タスクへの連絡事項
+## 8. 後続タスクへの連絡事項
 
 ### T02（Convert メソッド統合）に伝える情報
 
-1. **テーブルフィールド名**: `s_initialMisaki`, `s_finalMisaki`, `s_toneMisaki` を使用（PinyinToIpa の `s_initialIpa` 等と区別するため）。
+以下の要点は T02 の `ConvertSyllable` 実装時に必須で参照すること。
 
-2. **そり舌・歯茎母音の処理**: `s_retroflexApical` (`ɻ̩`) と `s_alveolarApical` (`ɹ̩`) は PinyinToIpa と同一値を使用する。PinyinToMisaki 内にも同じフィールドを定義するか、共通化するかは T02 で判断すること。
+1. **テーブルフィールド名**: `s_initialMisaki`, `s_finalMisaki`, `s_toneArrows`, `s_yWCompoundMisaki` を使用。既存 PinyinToIpa の `s_initialIpa` 等と区別する。
 
-3. **声調の配置位置**: Misaki の矢印声調は音節末に付加する（PinyinToIpa と同じ位置）。
+2. **韻母テーブルの構造**: `Dictionary<Final, (string Prefix, string Suffix)>` タプル型。既存 PinyinToIpa / PinyinToPiperIpa の `Dictionary<Final, string>` とは異なるので、ConvertSyllable 実装時は必ず Prefix + ToneArrow + Suffix の順に結合すること。
 
-4. **Convert メソッドのシグネチャ**: `PinyinToIpa.Convert(string pinyin, bool includeTones)` と同一のシグネチャを推奨。PinyinToPiperIpa のように声調なし固定にはしない（Misaki は声調を使用するため）。
+3. **特殊ケース判定の順序** (セクション 3.3 参照):
+   1. Initial.None + Final.O → `"ɔ" + toneArrow`
+   2. Final.Er → `"ɚ" + toneArrow`
+   3. Zh/Ch/Sh/R + Final.I → `initialMisaki[initial] + "ɨ" + toneArrow`
+   4. Z/C/S + Final.I → `initialMisaki[initial] + "ɨ" + toneArrow`
+   5. Y/W + Final → `s_yWCompoundMisaki` lookup
+   6. それ以外 → 標準パス（initial + prefix + toneArrow + suffix）
 
-5. **ShouldOmitSemivowel ロジック**: Y/W 声母の省略判定は PinyinToIpa と同一ロジック。共通化するか PinyinToMisaki にコピーするかは T02 で判断すること。
+4. **Y/W 声母の処理**: Y/W は `s_initialMisaki` に含めない。`s_yWCompoundMisaki[(initial, final)]` を参照し、`OmitInitial` フラグに従って Initial 文字の出力を制御する（yi/yin/ying/yu/yun/wu の 6 ケースで省略）。
 
-6. **韻母テーブルの `Iu` / `Ui` の展開形**: PinyinToIpa は `Iu` -> `ioʊ`、`Ui` -> `ueɪ` と展開する。Misaki では `iou̯` / `uei̯` とした。T02 実装時に Misaki 公式出力と照合し、縮約形を使う場合はテーブルを修正すること。
+5. **そり舌・歯茎母音の処理**: PinyinToIpa とは異なり、Misaki は両者とも `ɨ` (U+0268) 単一文字を使用する。別フィールド（`s_retroflexApical` / `s_alveolarApical`）を定義せず、特殊ケース判定内で直接 `"\u0268"` を返す実装でよい。
 
-## 8. 紐づけ
+6. **声調矢印の位置**: 韻母の Prefix と Suffix の間に挿入する。Suffix が空文字の韻母の場合は末尾付加と等価になる（例: `Final.A` → `prefix="a"`, `suffix=""`, `ma1` → `m + a + → + "" = ma→`）。
+
+7. **`ShouldOmitSemivowel` ロジックは廃止**: PinyinToIpa にある `ShouldOmitSemivowel` は Y/W を声母として扱う旧実装向けのロジック。PinyinToMisaki では `s_yWCompoundMisaki.OmitInitial` フラグで代替する。
+
+8. **`U+032F` は使用しない**: Phase 1-R で判明した通り、Misaki は非音節化符号を使わない。`.Replace("\u032F", "")` 等の後処理は不要。
+
+9. **gold standard 検証**: `.claude/tmp/misaki-gold.txt` の 137 件を `Fixtures/` にコピーして E2E テストに組み込むこと。少なくとも以下のサンプルは必ず通ること:
+   - `ma1/2/3/4/5` → `ma→/ma↗/ma↓/ma↘/ma`（声調全パターン）
+   - `ji1`, `qi2`, `xi3` → `ʨi→`, `ʨʰi↗`, `ɕi↓`（ligature）
+   - `zhi4`, `chi1`, `shi2`, `ri3` → `ꭧɨ↘`, `ꭧʰɨ→`, `ʂɨ↗`, `ɻɨ↓`（retroflex apical）
+   - `zi4`, `ci1`, `si2` → `ʦɨ↘`, `ʦʰɨ→`, `sɨ↗`（alveolar apical）
+   - `bo1`, `po2`, `mo3`, `fo4` → `pwo→`, `pʰwo↗`, `mwo↓`, `fwo↘`（bpmf + o）
+   - `o1/2/3/4` → `ɔ→/ɔ↗/ɔ↓/ɔ↘`（単独感嘆詞 o）
+   - `man1`, `mang1` → `ma→n`, `ma→ŋ`（声調中間挿入）
+   - `lian1`, `jian1` → `ljɛ→n`, `ʨjɛ→n`（ian 処理）
+   - `ya1`, `yi1`, `yu1`, `yue1`, `yuan1` → `ja→`, `i→`, `y→`, `ɥe→`, `ɥɛ→n`（Y 複合）
+   - `wa1`, `wu1`, `wang1`, `wen1` → `wa→`, `u→`, `wa→ŋ`, `wə→n`（W 複合）
+   - `er1/2/3/4` → `ɚ→/ɚ↗/ɚ↓/ɚ↘`（Er 単独）
+   - `long1`, `dong1`, `xiong2` → `lʊ→ŋ`, `tʊ→ŋ`, `ɕjʊ↗ŋ`（ong / iong）
+
+10. **Convert メソッドのシグネチャ**: `PinyinToIpa.Convert(string pinyin, bool includeTones)` と同一のシグネチャを推奨。PinyinToPiperIpa のように声調なし固定にはしない（Misaki は声調を使用するため）。
+
+## 9. 紐づけ
 
 - **マイルストーン**: Mi1（PinyinToMisaki 変換クラス）
 - **依存**: なし
-- **後続**: T02（Convert メソッド統合・ChineseG2PEngine への組み込み）
+- **後続**: T02（`ConvertSyllable` メソッド統合・`ChineseG2PEngine` への組み込み）
 - **関連 Issue**: #56
+- **関連 spec**: `.claude/tmp/misaki-spec.md`（Phase 1-R verified 完全仕様）
+- **関連 gold standard**: `.claude/tmp/misaki-gold.txt`（uv misaki 0.9.4 で実測した 137 件）
