@@ -15,7 +15,7 @@ OpenJTalk互換の日本語G2Pパイプライン、CMU辞書ベースの英語G2
 |------|-----------|------|---------|------|
 | 日本語 | DotNetG2P.Core + MeCab | M1-M7完了 | 950+ | OpenJTalk互換パイプライン、独自MeCabエンジン、パフォーマンス最適化済み |
 | 英語 | DotNetG2P.English | E1-E7完了 | 511 | CMU辞書135k語 + Flite LTS CARTツリー(PER 5.26%)、同綴異音語解決、piper-plus互換IPA |
-| 中国語 | DotNetG2P.Chinese | C1-C6完了 | 1776+ | pinyin-data 44k + phrase-pinyin-data 412kエントリ、声調変調、IPA/注音/piper-plus互換、Misaki互換IPA出力(Kokoro TTS向け) |
+| 中国語 | DotNetG2P.Chinese | C1-C6 + Mi1-Mi3完了 | 1776+ | pinyin-data 44k + phrase-pinyin-data 412kエントリ、声調変調、IPA/注音/piper-plus互換、Misaki互換IPA出力(Kokoro TTS向け) |
 | 韓国語 | DotNetG2P.Korean | K1-K4完了 | 375 | Hangul-first規則ベース、IPA/PUA/Prosody API |
 | スペイン語 | DotNetG2P.Spanish | S1-S4完了 | 355 | ipa-dict PER 1.69%(base)/1.37%(allophones)、LatinAmerican/Castilian方言 |
 | フランス語 | DotNetG2P.French | F1-F4完了 | 719 | 例外辞書500+語、Metropolitan/Conservative方言 |

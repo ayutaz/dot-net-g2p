@@ -2,7 +2,7 @@
 ticket: T01
 title: PinyinToMisaki マッピングテーブル設計・実装
 milestone: Mi1
-status: 未着手
+status: 完了
 depends_on: []
 blocks: [T02]
 ---

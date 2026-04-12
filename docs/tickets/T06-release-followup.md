@@ -2,7 +2,7 @@
 ticket: T06
 title: Issue#56 フォローアップ・リリース準備
 milestone: Mi3
-status: 未着手
+status: 完了
 depends_on: [T05]
 blocks: []
 ---

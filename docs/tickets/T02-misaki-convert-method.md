@@ -2,7 +2,7 @@
 ticket: T02
 title: PinyinToMisaki Convert メソッド統合 (Phase 1-R verified)
 milestone: Mi1
-status: 未着手
+status: 完了
 depends_on: [T01]
 blocks: [T03]
 ---

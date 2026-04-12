@@ -1,13 +1,13 @@
 ---
 ticket: T03
-title: ChineseG2PEngine ToMisakiIpa API 追加
+title: ChineseG2PEngine ToMisakiIPA API 追加
 milestone: Mi2
-status: 未着手
+status: 完了
 depends_on: [T02]
 blocks: [T04]
 ---
 
-# T03: ChineseG2PEngine ToMisakiIpa API 追加
+# T03: ChineseG2PEngine ToMisakiIPA API 追加
 
 ## 1. タスク目的とゴール
 
@@ -15,13 +15,13 @@ ChineseG2PEngine に Misaki 互換 IPA 出力 API を追加し、ユーザーが
 
 ```csharp
 var engine = new ChineseG2PEngine();
-string ipa = engine.ToMisakiIpa("你好");
+string ipa = engine.ToMisakiIPA("你好");
 // => Misaki互換のIPA文字列が返る
 
-string ipaNoTones = engine.ToMisakiIpa("你好", includeTones: false);
+string ipaNoTones = engine.ToMisakiIPA("你好", includeTones: false);
 // => 声調なしMisaki互換IPA
 
-var batch = engine.ToMisakiIpaBatch(new[] { "你好", "世界" });
+var batch = engine.ToMisakiIPABatch(new[] { "你好", "世界" });
 // => 複数テキストの一括変換
 ```
 
@@ -115,7 +115,7 @@ private static string ConvertIpaBatchItem(ChineseG2PEngine engine, string text, 
 
 以下の4メソッドを `ChineseG2PEngine.cs` に追加する。配置場所は piper-plus 互換 IPA セクションの直後（PUA出力セクションの前）に新しいセクションコメントとともに挿入する。
 
-#### 2.2.1 ToMisakiIpa(string text) — 声調付きデフォルト
+#### 2.2.1 ToMisakiIPA(string text) — 声調付きデフォルト
 
 ```csharp
 // =====================================================================
@@ -127,13 +127,13 @@ private static string ConvertIpaBatchItem(ChineseG2PEngine engine, string text, 
 /// </summary>
 /// <param name="text">入力テキスト</param>
 /// <returns>Misaki 互換 IPA 文字列</returns>
-public string ToMisakiIpa(string text)
+public string ToMisakiIPA(string text)
 {
-    return ToMisakiIpa(text, true);
+    return ToMisakiIPA(text, true);
 }
 ```
 
-#### 2.2.2 ToMisakiIpa(string text, bool includeTones) — 声調制御付き
+#### 2.2.2 ToMisakiIPA(string text, bool includeTones) — 声調制御付き
 
 ```csharp
 /// <summary>
@@ -142,7 +142,7 @@ public string ToMisakiIpa(string text)
 /// <param name="text">入力テキスト</param>
 /// <param name="includeTones">声調マーカーを含めるかどうか</param>
 /// <returns>Misaki 互換 IPA 文字列</returns>
-public string ToMisakiIpa(string text, bool includeTones)
+public string ToMisakiIPA(string text, bool includeTones)
 {
     return RunPipeline(text, p => PinyinToMisaki.Convert(p, includeTones));
 }
@@ -150,7 +150,7 @@ public string ToMisakiIpa(string text, bool includeTones)
 
 **ポイント**: `RunPipeline` にラムダを渡すパターンは `ToIPA(text, includeTones)` と完全に同一。`PinyinToMisaki.Convert` は T01-T02 で実装済みの `PinyinToMisaki` 静的クラスの変換メソッドで、シグネチャは `public static string Convert(string pinyin, bool includeTones)` を想定する。
 
-#### 2.2.3 ToMisakiIpaBatch(string[] texts) — バッチ（声調付きデフォルト）
+#### 2.2.3 ToMisakiIPABatch(string[] texts) — バッチ（声調付きデフォルト）
 
 ```csharp
 /// <summary>
@@ -158,16 +158,16 @@ public string ToMisakiIpa(string text, bool includeTones)
 /// </summary>
 /// <param name="texts">入力テキストの配列</param>
 /// <returns>各テキストに対応する Misaki 互換 IPA 文字列のリスト</returns>
-public IReadOnlyList<string> ToMisakiIpaBatch(string[] texts)
+public IReadOnlyList<string> ToMisakiIPABatch(string[] texts)
 {
     ThrowIfDisposed();
-    return BatchConversionHelper.ConvertToList(texts, ToMisakiIpa);
+    return BatchConversionHelper.ConvertToList(texts, ToMisakiIPA);
 }
 ```
 
-**ポイント**: `ToPiperIPABatch` と同一パターン。`ThrowIfDisposed()` の後、`BatchConversionHelper.ConvertToList` にメソッドグループ `ToMisakiIpa`（引数1つのオーバーロード）を渡す。`ConvertToList<TResult>(IReadOnlyList<string>, Func<string, TResult>)` オーバーロードが使われる。
+**ポイント**: `ToPiperIPABatch` と同一パターン。`ThrowIfDisposed()` の後、`BatchConversionHelper.ConvertToList` にメソッドグループ `ToMisakiIPA`（引数1つのオーバーロード）を渡す。`ConvertToList<TResult>(IReadOnlyList<string>, Func<string, TResult>)` オーバーロードが使われる。
 
-#### 2.2.4 ToMisakiIpaBatch(string[] texts, bool includeTones) — バッチ（声調制御付き）
+#### 2.2.4 ToMisakiIPABatch(string[] texts, bool includeTones) — バッチ（声調制御付き）
 
 ```csharp
 /// <summary>
@@ -176,7 +176,7 @@ public IReadOnlyList<string> ToMisakiIpaBatch(string[] texts)
 /// <param name="texts">入力テキストの配列</param>
 /// <param name="includeTones">声調マーカーを含めるかどうか</param>
 /// <returns>各テキストに対応する Misaki 互換 IPA 文字列のリスト</returns>
-public IReadOnlyList<string> ToMisakiIpaBatch(string[] texts, bool includeTones)
+public IReadOnlyList<string> ToMisakiIPABatch(string[] texts, bool includeTones)
 {
     ThrowIfDisposed();
     return BatchConversionHelper.ConvertToList(
@@ -194,7 +194,7 @@ public IReadOnlyList<string> ToMisakiIpaBatch(string[] texts, bool includeTones)
 ```csharp
 private static string ConvertMisakiIpaBatchItem(ChineseG2PEngine engine, string text, bool includeTones)
 {
-    return engine.ToMisakiIpa(text, includeTones);
+    return engine.ToMisakiIPA(text, includeTones);
 }
 ```
 
@@ -244,8 +244,8 @@ using DotNetG2P.Chinese.Conversion;  // ← 既存。PinyinToMisaki もここに
 // =====================================================================
 // Misaki 互換 IPA 出力  ← ★ここに新セクションを挿入
 // =====================================================================
-    ToMisakiIpa(string text)
-    ToMisakiIpa(string text, bool includeTones)
+    ToMisakiIPA(string text)
+    ToMisakiIPA(string text, bool includeTones)
 
 // =====================================================================
 // PUA 出力  (既存: L295-L350)
@@ -254,7 +254,7 @@ using DotNetG2P.Chinese.Conversion;  // ← 既存。PinyinToMisaki もここに
     ToPuaString(string text)
 ```
 
-バッチ API セクション内では、`ToPiperIPABatch` の直後に `ToMisakiIpaBatch` 2メソッドを追加する。
+バッチ API セクション内では、`ToPiperIPABatch` の直後に `ToMisakiIPABatch` 2メソッドを追加する。
 
 静的バッチヘルパーは `ConvertIpaWithProsodyBatchItem` の直後に `ConvertMisakiIpaBatchItem` を追加する。
 
@@ -277,14 +277,14 @@ T01-T02 が完了した `PinyinToMisaki.cs` を前提とするため、実装自
 
 | テスト項目 | 内容 | 検証ポイント |
 |------------|------|-------------|
-| 基本変換 | `engine.ToMisakiIpa("你好")` が空でない Misaki 互換 IPA を返す | パイプライン全体が接続されている |
-| 声調付き | `engine.ToMisakiIpa("你好", true)` に声調マーカーが含まれる | includeTones=true の動作 |
-| 声調なし | `engine.ToMisakiIpa("你好", false)` に声調マーカーが含まれない | includeTones=false の動作 |
-| デフォルト声調 | `ToMisakiIpa(text)` と `ToMisakiIpa(text, true)` が同一結果 | デフォルト引数の一貫性 |
+| 基本変換 | `engine.ToMisakiIPA("你好")` が空でない Misaki 互換 IPA を返す | パイプライン全体が接続されている |
+| 声調付き | `engine.ToMisakiIPA("你好", true)` に声調マーカーが含まれる | includeTones=true の動作 |
+| 声調なし | `engine.ToMisakiIPA("你好", false)` に声調マーカーが含まれない | includeTones=false の動作 |
+| デフォルト声調 | `ToMisakiIPA(text)` と `ToMisakiIPA(text, true)` が同一結果 | デフォルト引数の一貫性 |
 | 声調変調 | 三声連続（"你好"）で声調変調が適用される | EnableToneSandhi 連携 |
 | 句読点区切り | `"你好，世界"` で句読点前後が正しく区切られる | FormatOutput の区切り処理 |
-| 空文字入力 | `ToMisakiIpa("")` → `""` | 空入力ガード |
-| null入力 | `ToMisakiIpa(null)` → `""` | null ガード（RunPipeline の IsNullOrWhiteSpace） |
+| 空文字入力 | `ToMisakiIPA("")` → `""` | 空入力ガード |
+| null入力 | `ToMisakiIPA(null)` → `""` | null ガード（RunPipeline の IsNullOrWhiteSpace） |
 | ASCII混在 | `"Hello你好"` で ASCII 部分がそのまま、漢字部分が IPA | 非漢字スルー |
 | Separator 設定 | `Separator = "-"` のオプションで区切り文字が変わる | Options.Separator の反映 |
 
@@ -292,25 +292,25 @@ T01-T02 が完了した `PinyinToMisaki.cs` を前提とするため、実装自
 
 | テスト項目 | 内容 | 検証ポイント |
 |------------|------|-------------|
-| バッチ基本 | `ToMisakiIpaBatch(new[] {"你好", "世界"})` が2要素を返す | バッチ変換の動作 |
-| バッチ声調制御 | `ToMisakiIpaBatch(texts, false)` で全要素が声調なし | includeTones バッチ転送 |
-| バッチ空配列 | `ToMisakiIpaBatch(Array.Empty<string>())` が空リスト | 空配列ガード |
-| バッチ null | `ToMisakiIpaBatch(null)` で `ArgumentNullException` | BatchConversionHelper の null チェック |
+| バッチ基本 | `ToMisakiIPABatch(new[] {"你好", "世界"})` が2要素を返す | バッチ変換の動作 |
+| バッチ声調制御 | `ToMisakiIPABatch(texts, false)` で全要素が声調なし | includeTones バッチ転送 |
+| バッチ空配列 | `ToMisakiIPABatch(Array.Empty<string>())` が空リスト | 空配列ガード |
+| バッチ null | `ToMisakiIPABatch(null)` で `ArgumentNullException` | BatchConversionHelper の null チェック |
 
 ### 4.3 異常系テスト
 
 | テスト項目 | 内容 | 検証ポイント |
 |------------|------|-------------|
-| Dispose 後呼び出し | `engine.Dispose(); engine.ToMisakiIpa("你好")` → `ObjectDisposedException` | ThrowIfDisposed |
-| Dispose 後バッチ | `engine.Dispose(); engine.ToMisakiIpaBatch(texts)` → `ObjectDisposedException` | バッチ側の ThrowIfDisposed |
+| Dispose 後呼び出し | `engine.Dispose(); engine.ToMisakiIPA("你好")` → `ObjectDisposedException` | ThrowIfDisposed |
+| Dispose 後バッチ | `engine.Dispose(); engine.ToMisakiIPABatch(texts)` → `ObjectDisposedException` | バッチ側の ThrowIfDisposed |
 
 ## 5. 実装に関する懸念事項とレビュー項目
 
 ### 5.1 Dispose 済みチェック
 
-- `ToMisakiIpa(string)` は `RunPipeline` 内で `ThrowIfDisposed()` が呼ばれるため、明示的なチェックは不要
-- `ToMisakiIpa(string, bool)` も同様に `RunPipeline` 経由で保護される
-- `ToMisakiIpaBatch` は `RunPipeline` の前に `ThrowIfDisposed()` を明示的に呼ぶ（既存バッチ API と同一パターン）。これは `BatchConversionHelper.ConvertToList` が内部で個別に `ToMisakiIpa` を呼ぶ前にまずエンジンの状態を検証するため
+- `ToMisakiIPA(string)` は `RunPipeline` 内で `ThrowIfDisposed()` が呼ばれるため、明示的なチェックは不要
+- `ToMisakiIPA(string, bool)` も同様に `RunPipeline` 経由で保護される
+- `ToMisakiIPABatch` は `RunPipeline` の前に `ThrowIfDisposed()` を明示的に呼ぶ（既存バッチ API と同一パターン）。これは `BatchConversionHelper.ConvertToList` が内部で個別に `ToMisakiIPA` を呼ぶ前にまずエンジンの状態を検証するため
 - レビュー時に `ThrowIfDisposed()` の呼び出し漏れがないことを確認すること
 
 ### 5.2 スレッドセーフティ
@@ -330,8 +330,8 @@ T01-T02 が完了した `PinyinToMisaki.cs` を前提とするため、実装自
 ### 5.4 命名規則の一貫性
 
 - 既存: `ToPiperIPA`（"IPA" 全大文字）、`ToIPA`（全大文字）
-- 新規: `ToMisakiIpa` — "Ipa" を PascalCase にする理由は、"Misaki" が固有名詞であり "MisakiIPA" だと "KIPA" のように読めてしまうため。ただし、既存の `ToPiperIPA` との整合性から `ToMisakiIPA` も検討すべき
-- **レビュー項目**: チーム内で `ToMisakiIpa` vs `ToMisakiIPA` の命名を統一すること。本チケットでは Issue #56 の記載に従い `ToMisakiIpa` を採用する
+- 新規: `ToMisakiIPA` — "Ipa" を PascalCase にする理由は、"Misaki" が固有名詞であり "MisakiIPA" だと "KIPA" のように読めてしまうため。ただし、既存の `ToPiperIPA` との整合性から `ToMisakiIPA` も検討すべき
+- **レビュー項目**: チーム内で `ToMisakiIPA` vs `ToMisakiIPA` の命名を統一すること。本チケットでは Issue #56 の記載に従い `ToMisakiIPA` を採用する
 
 ### 5.5 PinyinToMisaki.Convert のシグネチャ互換性
 
@@ -353,7 +353,7 @@ ToZhuyin / ToZhuyinBatch (各2オーバーロード)
 ToPiperIPA / ToPiperIpaPhonemes / ToPiperIPABatch
 ToPuaPhonemes / ToPuaString / ToPuaStringBatch
 ToIpaWithProsody / ToIpaWithProsodyBatch (各2オーバーロード)
-ToMisakiIpa / ToMisakiIpaBatch (各2オーバーロード)  ← 今回追加
+ToMisakiIPA / ToMisakiIPABatch (各2オーバーロード)  ← 今回追加
 ```
 
 合計 30 メソッド以上のフラットな API サーフェスとなり、今後さらに出力形式が増えると管理が困難になる。
@@ -417,9 +417,9 @@ var result = engine.Convert("你好")
 
 | 項目 | §6 の評価 | 本レビューでの補足 |
 |------|----------|--------------------|
-| メソッド数の把握 | 「30 メソッド以上」と概数 | 実測: 単一17 + バッチ11 + 辞書参照3 = **31 public メソッド**(`ChineseG2PEngine.cs` L104-L603)。`EnglishG2PEngine` (11 public) と比較して **約3倍**。今回の ToMisakiIpa 追加で 35 メソッドに増える |
+| メソッド数の把握 | 「30 メソッド以上」と概数 | 実測: 単一17 + バッチ11 + 辞書参照3 = **31 public メソッド**(`ChineseG2PEngine.cs` L104-L603)。`EnglishG2PEngine` (11 public) と比較して **約3倍**。今回の ToMisakiIPA 追加で 35 メソッドに増える |
 | メソッド爆発の原因分析 | 「出力形式ごとに増殖」のみ | 実際には **3軸の直積** — (出力形式 × 引数バリエーション × 単一/バッチ)。例: IPA は (style × includeTones × 単一/List/Batch) = 8通り。この構造に言及がない |
-| 命名の揺れ | `ToMisakiIpa` vs `ToMisakiIPA` のみ議論 | 既に **Chinese=`ToPiperIPA` (全大文字) / English=`ToPiperIpa` (PascalCase)** の破綻が存在 (`ChineseG2PEngine.cs:256` vs `EnglishG2PEngine.cs:345`)。パッケージ間の揺れこそが本質問題。§6 はこの既存矛盾に触れていない |
+| 命名の揺れ | `ToMisakiIPA` vs `ToMisakiIPA` のみ議論 | 既に **Chinese=`ToPiperIPA` (全大文字) / English=`ToPiperIpa` (PascalCase)** の破綻が存在 (`ChineseG2PEngine.cs:256` vs `EnglishG2PEngine.cs:345`)。パッケージ間の揺れこそが本質問題。§6 はこの既存矛盾に触れていない |
 | 戦略パターン案の具体性 | インターフェース定義のみ | `PinyinSyllable` を渡すシグネチャになっているが、現行 `RunPipeline` は `Func<string,string>` で**文字列のピンイン**を渡している。型が一致せず机上論にとどまっている |
 | フルエント API 案 | `ToFormat(OutputFormat.MisakiIpa)` | `enum` ベースだと `ToPinyinList(style)` 型の**配列戻り値**や `ToIpaWithProsody` 型の**構造体戻り値**を統一できない。ジェネリクスや型パラメータの議論が欠落 |
 | 段階的導入計画 | なし | 破壊的変更を避けるロードマップ、SemVer 上の位置付け、`[Obsolete]` の扱い方などが未記載 |
@@ -589,7 +589,7 @@ public readonly struct ChineseConvertRequest
 
 | 段階 | バージョン | 作業内容 | API 破壊 |
 |------|-----------|---------|----------|
-| **Phase 1** | v1.10.0 (Minor) | `ChineseOutputFormat` enum / `IPinyinStringConverter` / `Convert(text, format, options)` 追加。既存 `ToIPA` / `ToMisakiIpa` 等はそのまま残し、**内部で新 API に委譲**する。T03 の `ToMisakiIpa` もこの形で追加するだけでよい | なし |
+| **Phase 1** | v1.10.0 (Minor) | `ChineseOutputFormat` enum / `IPinyinStringConverter` / `Convert(text, format, options)` 追加。既存 `ToIPA` / `ToMisakiIPA` 等はそのまま残し、**内部で新 API に委譲**する。T03 の `ToMisakiIPA` もこの形で追加するだけでよい | なし |
 | **Phase 2** | v1.11.0 (Minor) | Fluent API (`engine.For(...).AsMisakiIpa()` 等) を追加。XML ドキュメントで Fluent 版を推奨 | なし |
 | **Phase 3** | v1.12.0 (Minor) | 既存個別メソッドに `[Obsolete("v2.0 で削除予定。Convert(text, Format.X) を使用してください", error: false)]` を付与。CHANGELOG で周知 | なし（警告のみ） |
 | **Phase 4** | v2.0.0 (Major) | Obsolete 済みメソッドを削除。Fluent + `Convert(...)` の2系統のみに集約 | **あり** |
@@ -597,7 +597,7 @@ public readonly struct ChineseConvertRequest
 **ポイント**:
 - Phase 1-3 はすべて **Minor** バージョンで完結 → ユーザーコードに影響なし
 - Phase 3 で `error: false` にすることで、ビルド警告としてのみ表示される（CI を壊さない）
-- `ToMisakiIpa` は Phase 1 の一部として追加される「最後の個別メソッド」と位置付ける
+- `ToMisakiIPA` は Phase 1 の一部として追加される「最後の個別メソッド」と位置付ける
 
 #### E. 他言語モジュールとの整合性
 
@@ -610,7 +610,7 @@ public readonly struct ChineseConvertRequest
 | Portuguese | `ToIPA` | `ToXSampa` | — | — |
 | Spanish | `ToIPA` | `ToXSampa` | — | — |
 
-`ToPiperIPA` (Chinese) と `ToPiperIpa` (English) の **大小文字揺れ** が既に存在する。これはコードレビューで見落とされた既存バグであり、T03 で `ToMisakiIpa` を追加する際に **英語側のスタイル (`ToMisakiIpa`, PascalCase)** に合わせることで、新規追加分は正しい方向に揃う。
+`ToPiperIPA` (Chinese) と `ToPiperIpa` (English) の **大小文字揺れ** が既に存在する。これはコードレビューで見落とされた既存バグであり、T03 で `ToMisakiIPA` を追加する際に **英語側のスタイル (`ToMisakiIPA`, PascalCase)** に合わせることで、新規追加分は正しい方向に揃う。
 
 **推奨**:
 - 今後の命名規則を **「3文字以上の頭字語は PascalCase」** と明文化（.NET 設計ガイドライン準拠: `Xml`, `Html`, `Ipa`）
@@ -619,9 +619,9 @@ public readonly struct ChineseConvertRequest
 
 #### F. T03 への即時推奨
 
-本チケット (T03) のスコープはあくまで `ToMisakiIpa` 追加のため、上記リファクタはこのチケットでは**行わない**。ただし以下の点は T03 実装時点で配慮すべき:
+本チケット (T03) のスコープはあくまで `ToMisakiIPA` 追加のため、上記リファクタはこのチケットでは**行わない**。ただし以下の点は T03 実装時点で配慮すべき:
 
-1. **命名**: `ToMisakiIpa` (PascalCase) を採用 → 既に §5.4 で決定済みで正解
+1. **命名**: `ToMisakiIPA` (PascalCase) を採用 → 既に §5.4 で決定済みで正解
 2. **型シグネチャ**: 将来 Strategy 実装 (`MisakiIpaStrategy`) に置き換えやすいよう、`PinyinToMisaki.Convert` は引き続き **静的メソッド + ステートレス** を維持する
 3. **XML ドキュメント**: `<seealso cref="ToPiperIPA"/>` / `<seealso cref="ToIPA"/>` を追加し、相互参照により IntelliSense でのディスカバリを改善
 4. **新規 enum 追加の先取り**: T03 では不要だが、次のチケット (T05 以降) で `ChineseOutputFormat` 追加を計画に入れておくと、Phase 1 への移行コストが下がる
@@ -638,7 +638,7 @@ public readonly struct ChineseConvertRequest
 
 問題点:
 
-- `IIpaTextBatchProcessor` は「標準 IPA」しか表現できない。`ToMisakiIpa` を ChineseG2PEngine に追加しても、Multilingual 経由で呼び出す経路が存在しない
+- `IIpaTextBatchProcessor` は「標準 IPA」しか表現できない。`ToMisakiIPA` を ChineseG2PEngine に追加しても、Multilingual 経由で呼び出す経路が存在しない
 - Issue #56 の本質は「Kokoro TTS 用の Misaki 互換出力を多言語混在テキストから取得したい」であり、Multilingual 層に Misaki 能力が伝搬しない限り、ユーザーは中英混在テキストを手動でセグメント分割して ChineseG2PEngine を個別にインスタンス化する必要がある
 - 将来 Kokoro 対応を英語・日本語に拡張する際、能力インターフェースが爆発する（`IMisakiEnglishTextBatchProcessor` / `IMisakiJapaneseTextBatchProcessor` 等）
 
@@ -649,22 +649,22 @@ public readonly struct ChineseConvertRequest
 // 追加: Misaki プロファイル（標準 IPA とは別軸の能力）
 internal interface IMisakiCapableProcessor
 {
-    string ConvertToMisakiIpa(string text, bool includeTones = true);
-    IReadOnlyList<string> ConvertToMisakiIpaBatch(
+    string ConvertToMisakiIPA(string text, bool includeTones = true);
+    IReadOnlyList<string> ConvertToMisakiIPABatch(
         IReadOnlyList<string> texts, bool includeTones = true);
 }
 
 // DelegateIpaTextBatchProcessor と同様に DelegateMisakiTextBatchProcessor を追加
 // LanguageCapabilityRouter.CreateLazy に Chinese 用の Misaki デリゲートを注入
-//   text => lazyChineseEngine.Value.ToMisakiIpa(text),
-//   texts => lazyChineseEngine.Value.ToMisakiIpaBatch(texts.ToArray())
+//   text => lazyChineseEngine.Value.ToMisakiIPA(text),
+//   texts => lazyChineseEngine.Value.ToMisakiIPABatch(texts.ToArray())
 ```
 
-`LanguageCapabilityRouter.TryGetMisaki(Language, out IMisakiCapableProcessor?)` を追加し、`MultilingualG2PEngine.ToMisakiIpa(string text)` が Chinese セグメントだけを Misaki で処理し、他言語セグメントは現状の IPA でフォールバックする（または将来的に各言語の Misaki 変換で置き換える）。`TryGetMisakiIpa` が `false` を返せばフォールバック経路を明示できる設計にする。
+`LanguageCapabilityRouter.TryGetMisaki(Language, out IMisakiCapableProcessor?)` を追加し、`MultilingualG2PEngine.ToMisakiIPA(string text)` が Chinese セグメントだけを Misaki で処理し、他言語セグメントは現状の IPA でフォールバックする（または将来的に各言語の Misaki 変換で置き換える）。`TryGetMisakiIpa` が `false` を返せばフォールバック経路を明示できる設計にする。
 
-**T03 への具体影響**: 本チケットで追加する `ToMisakiIpa` / `ToMisakiIpaBatch` のシグネチャは、後述の `IMisakiCapableProcessor` の契約と 1:1 で対応させること。具体的には:
+**T03 への具体影響**: 本チケットで追加する `ToMisakiIPA` / `ToMisakiIPABatch` のシグネチャは、後述の `IMisakiCapableProcessor` の契約と 1:1 で対応させること。具体的には:
 
-- メソッド名は `ToMisakiIpa`（`ToMisakiIPA` ではない）で統一 → 将来の `IMisakiCapableProcessor.ConvertToMisakiIpa` との整合性を担保（これは §API設計の追加レビュー §E の「3文字以上の頭字語は PascalCase」方針とも一致）
+- メソッド名は `ToMisakiIPA`（`ToMisakiIPA` ではない）で統一 → 将来の `IMisakiCapableProcessor.ConvertToMisakiIPA` との整合性を担保（これは §API設計の追加レビュー §E の「3文字以上の頭字語は PascalCase」方針とも一致）
 - `includeTones` パラメータの既定値は `true` → Kokoro Python の `misaki` デフォルトと一致、`IMisakiCapableProcessor` と揃える
 - バッチ版の戻り値は `IReadOnlyList<string>` を維持 → Multilingual の既存契約（`ITextBatchProcessor<string>.ConvertBatch`）と同型なので、将来のアダプタ実装でシグネチャ変換が不要
 
@@ -678,7 +678,7 @@ internal interface IMisakiCapableProcessor
 4. **トリム警告（IL2026 / IL3050）**: `PinyinToMisaki` が reflection や dynamic code generation を使わない限り、新規警告は発生しない。T02 で実装する `PinyinToMisaki.Convert` がリフレクションベースの辞書ロード（例: `Assembly.GetManifestResourceStream` 経由で辞書を遅延ロード）を含む場合は、`[RequiresUnreferencedCode]` 属性の付与と `ILLink.xml` の更新が必要になる可能性がある
 5. **`ILLink.xml` の更新は原則不要**: `[Preserve]` 属性で十分。ただし将来 `IMisakiCapableProcessor` をリフレクションで解決する設計に移行する場合は、`ILLink.xml` に `<type fullname="DotNetG2P.Chinese.ChineseG2PEngine" preserve="all"/>` を明示することを検討
 
-**レビュー項目追加**: T03 実装後、Unity 2022.3 LTS + IL2CPP + iOS/Android Build Target の組み合わせで `engine.ToMisakiIpa("你好")` がランタイムで動作することを簡易確認すること。具体的には UPM パッケージ `com.dotnetg2p.chinese` を含む空の Unity プロジェクトで IL2CPP ビルドし、起動時に例外が出ないことを Log で確認する。Unity Editor の Managed Stripping Level は `Low` / `Medium` / `High` の 3 段階を順に試すことが理想だが、最低でも `Medium`（デフォルト）で通ることを保証する。
+**レビュー項目追加**: T03 実装後、Unity 2022.3 LTS + IL2CPP + iOS/Android Build Target の組み合わせで `engine.ToMisakiIPA("你好")` がランタイムで動作することを簡易確認すること。具体的には UPM パッケージ `com.dotnetg2p.chinese` を含む空の Unity プロジェクトで IL2CPP ビルドし、起動時に例外が出ないことを Log で確認する。Unity Editor の Managed Stripping Level は `Low` / `Medium` / `High` の 3 段階を順に試すことが理想だが、最低でも `Medium`（デフォルト）で通ることを保証する。
 
 #### C. KokoroSharp 統合のサンプルコード（ユーザー視点の期待）
 
@@ -690,7 +690,7 @@ using KokoroSharp;
 
 // DotNetG2P 側: Misaki 互換 IPA を取得
 using var g2p = new ChineseG2PEngine();
-string misakiIpa = g2p.ToMisakiIpa("你好世界");
+string misakiIpa = g2p.ToMisakiIPA("你好世界");
 // 出力例: "ni↗ xau̯↓ ʂɨ↘ ʨie↘"
 
 // KokoroSharp 側: Misaki IPA を直接フィード
@@ -703,7 +703,7 @@ File.WriteAllBytes("output.wav", audioSamples.ToWav());
 
 ```csharp
 var lines = new[] { "你好", "世界", "再见" };
-IReadOnlyList<string> misakiLines = g2p.ToMisakiIpaBatch(lines);
+IReadOnlyList<string> misakiLines = g2p.ToMisakiIPABatch(lines);
 // 各要素が Misaki 互換 IPA。順序は入力配列と 1:1 対応
 foreach (var ipa in misakiLines)
 {
@@ -724,7 +724,7 @@ if (multi.TryGetMisakiIpa("你好 Hello 世界", out string? misaki))
 }
 ```
 
-**T03 への反映**: 上記サンプルが動作するために本チケットで必要な公開 API は `ToMisakiIpa(string)` / `ToMisakiIpaBatch(string[])` の 2 つのみ（既存スコープに含まれる）。ただし XML ドキュメンテーションコメントに「KokoroSharp 等の Kokoro TTS C# 実装にそのまま入力可能」の 1 行を `<remarks>` に追加すると、IntelliSense で用途が明確になりユーザー体験が向上する。具体的には:
+**T03 への反映**: 上記サンプルが動作するために本チケットで必要な公開 API は `ToMisakiIPA(string)` / `ToMisakiIPABatch(string[])` の 2 つのみ（既存スコープに含まれる）。ただし XML ドキュメンテーションコメントに「KokoroSharp 等の Kokoro TTS C# 実装にそのまま入力可能」の 1 行を `<remarks>` に追加すると、IntelliSense で用途が明確になりユーザー体験が向上する。具体的には:
 
 ```csharp
 /// <summary>
@@ -734,7 +734,7 @@ if (multi.TryGetMisakiIpa("你好 Hello 世界", out string? misaki))
 /// 出力形式は Python の misaki ライブラリと互換性があり、
 /// KokoroSharp などの Kokoro TTS C# 実装にそのまま入力可能です。
 /// </remarks>
-public string ToMisakiIpa(string text) { ... }
+public string ToMisakiIPA(string text) { ... }
 ```
 
 #### D. NuGet / UPM 両配布における制約
@@ -755,20 +755,20 @@ Kokoro TTS は中国語以外に日本語・英語・韓国語・スペイン語
 
 | 言語 | API 例 | 備考 |
 |------|--------|------|
-| 中国語 | `ChineseG2PEngine.ToMisakiIpa(string)` | **T03 で実装** |
-| 英語 | `EnglishG2PEngine.ToMisakiIpa(string)` | misaki-en の置換規則を適用 |
-| 日本語 | `G2PEngine.ToMisakiIpa(string)` | misaki-ja (OpenJTalk ベース) の置換規則 |
-| 韓国語 | `KoreanG2PEngine.ToMisakiIpa(string)` | Hangul-first で Misaki 互換 |
-| スペイン語 | `SpanishG2PEngine.ToMisakiIpa(string)` | ipa-dict ベースに Kokoro 変換 |
-| フランス語 | `FrenchG2PEngine.ToMisakiIpa(string)` | 例外辞書 + Kokoro 変換 |
-| ポルトガル語 | `PortugueseG2PEngine.ToMisakiIpa(string)` | 同上 |
-| スウェーデン語 | `SwedishG2PEngine.ToMisakiIpa(string)` | Kokoro 未対応だが将来に備え予約 |
+| 中国語 | `ChineseG2PEngine.ToMisakiIPA(string)` | **T03 で実装** |
+| 英語 | `EnglishG2PEngine.ToMisakiIPA(string)` | misaki-en の置換規則を適用 |
+| 日本語 | `G2PEngine.ToMisakiIPA(string)` | misaki-ja (OpenJTalk ベース) の置換規則 |
+| 韓国語 | `KoreanG2PEngine.ToMisakiIPA(string)` | Hangul-first で Misaki 互換 |
+| スペイン語 | `SpanishG2PEngine.ToMisakiIPA(string)` | ipa-dict ベースに Kokoro 変換 |
+| フランス語 | `FrenchG2PEngine.ToMisakiIPA(string)` | 例外辞書 + Kokoro 変換 |
+| ポルトガル語 | `PortugueseG2PEngine.ToMisakiIPA(string)` | 同上 |
+| スウェーデン語 | `SwedishG2PEngine.ToMisakiIPA(string)` | Kokoro 未対応だが将来に備え予約 |
 
 **統一規則**:
 
-- メソッド名: `ToMisakiIpa` で固定（「Ipa」は PascalCase）。`ToMisakiIPA` は採用しない → T03 の §5.4 の決定を全言語に適用（これは §API設計の追加レビュー §E で指摘された既存の `ToPiperIPA` vs `ToPiperIpa` 揺れ問題の修正方向とも一致）
-- オーバーロード: `ToMisakiIpa(string text)` と `ToMisakiIpa(string text, bool includeTones)` の 2 種類を全言語で提供
-- バッチ版: `ToMisakiIpaBatch(string[] texts)` と `ToMisakiIpaBatch(string[] texts, bool includeTones)`
+- メソッド名: `ToMisakiIPA` で固定（「Ipa」は PascalCase）。`ToMisakiIPA` は採用しない → T03 の §5.4 の決定を全言語に適用（これは §API設計の追加レビュー §E で指摘された既存の `ToPiperIPA` vs `ToPiperIpa` 揺れ問題の修正方向とも一致）
+- オーバーロード: `ToMisakiIPA(string text)` と `ToMisakiIPA(string text, bool includeTones)` の 2 種類を全言語で提供
+- バッチ版: `ToMisakiIPABatch(string[] texts)` と `ToMisakiIPABatch(string[] texts, bool includeTones)`
 - 名前空間: 各言語パッケージの `Conversion` 名前空間内に `PinyinToMisaki` / `CmuToMisaki` / `KanaToMisaki` / `HangulToMisaki` のような対応クラスを配置（言語ごとに中間表現は異なるが、クラス名の末尾 `ToMisaki` で命名を揃える）
 
 **T03 の構造的寄与**: 本チケットの実装パターン（`RunPipeline` + 静的変換クラス + `BatchConversionHelper` 利用）は、他言語の Misaki 対応にそのまま再利用可能なテンプレートとなる。コードレビュー時に「この実装パターンが他言語でも再現可能か？」を確認し、困難な箇所があれば T03 の段階で `Conversion/PinyinToMisaki.cs` の命名・責務分離を修正すること。特に `PinyinToMisaki.Convert(pinyin, includeTones)` の静的メソッドシグネチャは、他言語のシングルエントリとして引数型を除いて**完全に同じ形**になる設計を目指す。
@@ -780,7 +780,7 @@ Kokoro TTS は中国語以外に日本語・英語・韓国語・スペイン語
 - `ToMisakiPhonemes` → 出力は「音素」ではなく IPA 文字列なので不正確（既存の `ToPhonemes` が「音素列」を返すメソッドと衝突する）
 - `ToIPA(IpaFormat.Misaki)` のようなオプション経由 → 他言語展開時に `IpaFormat` 列挙型が肥大化し、§API設計の追加レビュー §B の戦略パターン案（`ChineseOutputFormat` enum）と衝突する。Kokoro 互換は独立した "音素系の変換軸" であり、`Format` enum には混ぜないこと
 
-**§API設計の追加レビュー との整合性**: §B の `ChineseOutputFormat.MisakiIpa` と本節の `ToMisakiIpa` メソッドは、**Phase 1 (v1.10.0)** 時点では共存する設計となる — すなわち `ToMisakiIpa(text)` の内部実装が `Convert(text, ChineseOutputFormat.MisakiIpa)` を呼び出す、という委譲関係になる。この 2 つの視点（クラス内部の型設計 / 外部配布・統合）は矛盾せず、同じ Phase 1 計画のもとで同期的に実装可能である。
+**§API設計の追加レビュー との整合性**: §B の `ChineseOutputFormat.MisakiIpa` と本節の `ToMisakiIPA` メソッドは、**Phase 1 (v1.10.0)** 時点では共存する設計となる — すなわち `ToMisakiIPA(text)` の内部実装が `Convert(text, ChineseOutputFormat.MisakiIpa)` を呼び出す、という委譲関係になる。この 2 つの視点（クラス内部の型設計 / 外部配布・統合）は矛盾せず、同じ Phase 1 計画のもとで同期的に実装可能である。
 
 ## 7. 後続タスクへの連絡事項
 
@@ -792,7 +792,7 @@ T04（テスト実装）担当者への伝達事項:
 4. **声調変調の検証**: `"你好"` は三声連続（nǐ + hǎo）で声調変調が適用される（nǐ → ní）。声調変調後の Misaki IPA 出力が正しいことを検証するテストを必ず含めること
 5. **Separator テスト**: `ChineseG2POptions` の `Separator` プロパティが Misaki 出力にも反映されることを確認するテストを含めること。デフォルト（スペース区切り）と カスタム区切り文字の両方をテストする
 6. **Dispose テスト**: `ObjectDisposedException` のテストは `Assert.Throws<ObjectDisposedException>` で検証する。単一 API とバッチ API の両方で確認すること
-7. **バッチ API の戻り値型**: `ToMisakiIpaBatch` の戻り値は `IReadOnlyList<string>` であることに注意。`List<string>` や `string[]` ではない
+7. **バッチ API の戻り値型**: `ToMisakiIPABatch` の戻り値は `IReadOnlyList<string>` であることに注意。`List<string>` や `string[]` ではない
 
 ## 8. 紐づけ
 

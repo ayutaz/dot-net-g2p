@@ -2,7 +2,7 @@
 ticket: T05
 title: ドキュメント更新・品質保証
 milestone: Mi3
-status: 未着手
+status: 完了
 depends_on: [T04]
 blocks: [T06]
 ---
@@ -11,13 +11,13 @@ blocks: [T06]
 
 ## 1. タスク目的とゴール
 
-T01-T04 で実装・テスト完了した Misaki 互換中国語 G2P 出力（`ToMisakiIpa()` / `ToMisakiIpaBatch()`）について、ドキュメント整備と品質保証を行い、利用者が Misaki 互換出力を正しく使えるようにする。
+T01-T04 で実装・テスト完了した Misaki 互換中国語 G2P 出力（`ToMisakiIPA()` / `ToMisakiIPABatch()`）について、ドキュメント整備と品質保証を行い、利用者が Misaki 互換出力を正しく使えるようにする。
 
 **ゴール:**
 
-- 利用者が README.md を読むだけで `ToMisakiIpa()` の使い方と出力形式を理解できる
+- 利用者が README.md を読むだけで `ToMisakiIPA()` の使い方と出力形式を理解できる
 - Kokoro TTS (KokoroSharp) との連携に必要な情報がドキュメントに揃っている
-- パフォーマンス面で `ToMisakiIpa` が `ToIPA` と同等の速度であることが確認されている
+- パフォーマンス面で `ToMisakiIPA` が `ToIPA` と同等の速度であることが確認されている
 - CLAUDE.md の進捗テーブルが最新状態に更新されている
 - 設計ドキュメント・マイルストーンドキュメントの完了状態が反映されている
 
@@ -41,7 +41,7 @@ zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 
 ```csharp
 // 中国語G2P（Misaki互換IPA — Kokoro TTS向け）
-zhEngine.ToMisakiIpa("你好世界");  // => "ni↗xau̯↓ʂʐ̩↘ʨiɛ↘"
+zhEngine.ToMisakiIPA("你好世界");  // => "ni↗xau̯↓ʂʐ̩↘ʨiɛ↘"
 ```
 
 #### 2.1.2 特徴セクション（L78付近）の中国語G2P説明への追記
@@ -62,18 +62,18 @@ zhEngine.ToMisakiIpa("你好世界");  // => "ni↗xau̯↓ʂʐ̩↘ʨiɛ↘"
 
 ```csharp
 // Misaki 互換 IPA（Kokoro TTS向け）
-string misakiIpa = zhEngine.ToMisakiIpa("你好");
+string misakiIpa = zhEngine.ToMisakiIPA("你好");
 // => "ni↗xau̯↓"
 // 声調記号: → (1声), ↗ (2声), ↓ (3声), ↘ (4声)
 // 声母: j→ʨ, q→ʨʰ, z→ʦ, c→ʦʰ
 // 韻母: ai→ai̯, ao→au̯, ei→ei̯, ou→ou̯ (非音節化符号)
 
 // 声調なし Misaki 互換 IPA
-string misakiNoTone = zhEngine.ToMisakiIpa("你好", includeTones: false);
+string misakiNoTone = zhEngine.ToMisakiIPA("你好", includeTones: false);
 // => "nixau̯"
 
 // バッチ変換
-string[] misakiBatch = zhEngine.ToMisakiIpaBatch(new[] { "你好", "世界" });
+string[] misakiBatch = zhEngine.ToMisakiIPABatch(new[] { "你好", "世界" });
 ```
 
 #### 2.1.4 API リファレンステーブル（L481-512付近、ChineseG2PEngine セクション）への追記
@@ -81,10 +81,10 @@ string[] misakiBatch = zhEngine.ToMisakiIpaBatch(new[] { "你好", "世界" });
 既存テーブルの `ToIpaWithProsodyBatch(texts, includeTones)` 行の後に以下の行を追加:
 
 ```
-| `ToMisakiIpa(text)` | `string` | Misaki互換IPA文字列（矢印声調記号付き） |
-| `ToMisakiIpa(text, includeTones)` | `string` | 声調制御付きMisaki互換IPA |
-| `ToMisakiIpaBatch(texts)` | `string[]` | バッチMisaki互換IPA変換 |
-| `ToMisakiIpaBatch(texts, includeTones)` | `string[]` | バッチMisaki互換IPA変換（声調制御） |
+| `ToMisakiIPA(text)` | `string` | Misaki互換IPA文字列（矢印声調記号付き） |
+| `ToMisakiIPA(text, includeTones)` | `string` | 声調制御付きMisaki互換IPA |
+| `ToMisakiIPABatch(texts)` | `string[]` | バッチMisaki互換IPA変換 |
+| `ToMisakiIPABatch(texts, includeTones)` | `string[]` | バッチMisaki互換IPA変換（声調制御） |
 ```
 
 ### 2.2 CLAUDE.md の更新
@@ -155,8 +155,8 @@ string[] misakiBatch = zhEngine.ToMisakiIpaBatch(new[] { "你好", "世界" });
 ### 4.1 ドキュメント正確性チェック
 
 - [ ] README.md のコードサンプルが実際にコンパイル・実行できること
-  - `ToMisakiIpa("你好")` のコメントに書かれた出力例が実際の出力と一致すること
-  - `ToMisakiIpa("你好世界")` のコメントに書かれた出力例が実際の出力と一致すること
+  - `ToMisakiIPA("你好")` のコメントに書かれた出力例が実際の出力と一致すること
+  - `ToMisakiIPA("你好世界")` のコメントに書かれた出力例が実際の出力と一致すること
   - バッチ API のサンプルが正しいこと
 - [ ] API リファレンステーブルのメソッドシグネチャが実装と一致すること
   - 戻り値型（`string` / `string[]`）が正しいこと
@@ -171,9 +171,9 @@ string[] misakiBatch = zhEngine.ToMisakiIpaBatch(new[] { "你好", "世界" });
 
 ### 4.3 パフォーマンステスト
 
-- [ ] `ToMisakiIpa` が `ToIPA` と同等の処理速度であることを確認
+- [ ] `ToMisakiIPA` が `ToIPA` と同等の処理速度であることを確認
   - 測定方法: 同一テキストセット（100文以上）を各メソッドで1000回変換し、平均処理時間を比較
-  - 許容範囲: `ToMisakiIpa` の処理時間が `ToIPA` の 1.2 倍以内
+  - 許容範囲: `ToMisakiIPA` の処理時間が `ToIPA` の 1.2 倍以内
   - 根拠: `PinyinToMisaki` は `PinyinToIpa` と同じく静的辞書参照のみでアルゴリズム計算量は同等。声調マッピングが配列インデックスアクセスのため差が出にくい
 - [ ] テストクラス `ChineseMisakiPerformanceTests.cs` の作成（任意）
   - BenchmarkDotNet または Stopwatch による簡易ベンチマーク
@@ -212,7 +212,7 @@ string[] misakiBatch = zhEngine.ToMisakiIpaBatch(new[] { "你好", "世界" });
 
 ### 5.3 レビュー項目
 
-- [ ] README.md のコードサンプル内のコメント出力例が、実際の `ToMisakiIpa()` 出力と完全一致すること
+- [ ] README.md のコードサンプル内のコメント出力例が、実際の `ToMisakiIPA()` 出力と完全一致すること
 - [ ] Unicode 文字（矢印声調記号 → ↗ ↓ ↘、非音節化符号 U+032F）がドキュメント内で正しくレンダリングされること（GitHub Markdown ビューアで確認）
 - [ ] CLAUDE.md の更新が他のセクション（プロジェクト概要、技術スタック等）と整合していること
 - [ ] API リファレンステーブルの追加行が既存行のフォーマット（パイプ区切り、等幅フォント等）と一致していること
@@ -275,14 +275,14 @@ string[] misakiBatch = zhEngine.ToMisakiIpaBatch(new[] { "你好", "世界" });
   - `<example>` — 実行可能な C# コードブロック（README/DocFX 共用）
   - `<returns>` / `<param>` — API テーブル生成用
 - `tools/GenerateReadmeSnippets` というビルドタスクを新設し、XMLDoc の `<example>` タグから C# コードブロックを抽出して `docs/_generated/snippets/` へ出力
-- README.md / README_EN.md 内では `<!-- @snippet:ChineseG2PEngine.ToMisakiIpa -->` のようなプレースホルダを使い、ビルド時に `_generated/snippets/` の内容へ置換する（Markdown インクルード方式）
+- README.md / README_EN.md 内では `<!-- @snippet:ChineseG2PEngine.ToMisakiIPA -->` のようなプレースホルダを使い、ビルド時に `_generated/snippets/` の内容へ置換する（Markdown インクルード方式）
 - これにより「コード例の変更は XMLDoc の修正だけで全ドキュメントに波及」する構造になり、T05 第 4 節で懸念している「コメント出力例と実装の乖離」を根本解決できる
 
 **B-2. API テーブルの自動生成**
 
 - `tools/GenerateApiTable` ビルドタスクを新設し、DocFX の `metadata` ステージで生成される中間 YAML (`api/*.yml`) をパースして、言語パッケージごとに README 用の Markdown テーブル (`docs/_generated/api-tables/{lang}.md`) を出力
 - README.md の「API リファレンス」節は手書きをやめ、`<!-- @include:api-tables/chinese.md -->` 形式の include プレースホルダにする
-- 現在 T05 第 2.1.4 節で手作業追加している `ToMisakiIpa(text)` 等の行が自動追記されるようになる
+- 現在 T05 第 2.1.4 節で手作業追加している `ToMisakiIPA(text)` 等の行が自動追記されるようになる
 
 **B-3. 進捗テーブルの CLAUDE.md ↔ README.md 同期**
 
@@ -310,7 +310,7 @@ string[] misakiBatch = zhEngine.ToMisakiIpaBatch(new[] { "你好", "世界" });
 
 - `tools/TranslateDocs` というユーティリティを作成し、以下の翻訳戦略を段階的に検討:
   - **段階 1: DeepL API (Pro)** — 技術用語の精度が高い。月 50 万文字まで有料プラン。README 規模（3 言語 × 600 行）なら月 \$10 程度でカバー
-  - **段階 2: OpenAI API / Anthropic API** — プロンプトで「音声学専門用語は保持、`ToMisakiIpa` 等のコードは翻訳しない」と制御可能。コスト \$5〜20/月
+  - **段階 2: OpenAI API / Anthropic API** — プロンプトで「音声学専門用語は保持、`ToMisakiIPA` 等のコードは翻訳しない」と制御可能。コスト \$5〜20/月
   - **段階 3: ローカル LLM (Qwen2.5-7B 等)** — コスト 0 だが品質は要評価
 - 翻訳対象は `<!-- @translate:start -->` / `<!-- @translate:end -->` マーカーで区切り、コードブロック・表・リンクはスキップ
 - CI で翻訳差分を PR として自動作成（`github-actions[bot]` が `docs: auto-translate README to EN/ZH` PR を作成）
@@ -331,7 +331,7 @@ T05 第 6.1 節の `[Fact]` の DisplayName / InlineData からサンプル抽�
 - `tests/DotNetG2P.Tests/` 配下のテストに `[Trait("DocSample", "chinese.misaki-ipa")]` のようなタグを付与
 - `tools/ExtractTestSamples` ツールが MSTest の test assembly を Reflection で読み、`DocSample` トレイト付きテストから:
   - `[InlineData("你好", "ni↗xau̯↓")]` などの引数 → `input = "你好", expected = "ni↗xau̯↓"` の形で抽出
-  - テストメソッド本体の 1 行分を「使用例」として抽出（`engine.ToMisakiIpa("你好")` の行）
+  - テストメソッド本体の 1 行分を「使用例」として抽出（`engine.ToMisakiIPA("你好")` の行）
 - 抽出結果を `docs/_generated/examples/chinese.misaki-ipa.md` に出力し、README と DocFX に include する
 
 **D-2. DocFX `<example>` タグとの統合**
@@ -486,7 +486,7 @@ T06（Issue #56 フォローアップ）に伝えるべき情報:
 
 - T05 完了後、Issue #56 に実装完了の報告コメントを投稿すること
 - コメントには以下を含める:
-  - `ToMisakiIpa()` の使用例コード
+  - `ToMisakiIPA()` の使用例コード
   - NuGet パッケージバージョン（Mi3 リリース後のバージョン番号）
   - 既知の制限事項（Legacy パスのみ対応、Multilingual 層未統合等）
 
@@ -499,12 +499,12 @@ T06（Issue #56 フォローアップ）に伝えるべき情報:
 ### 7.3 Multilingual 層への統合検討
 
 - T01-T04 の実装では `DotNetG2P.Multilingual` への統合は見送っている
-- `MultilingualG2PEngine` に `ToMisakiIpa()` を追加するかは T06 で検討すること
+- `MultilingualG2PEngine` に `ToMisakiIPA()` を追加するかは T06 で検討すること
 - 追加する場合、`MultilingualG2POptions` に Misaki 出力モードの設定が必要になる可能性がある
 
 ### 7.4 パフォーマンステスト結果の引き継ぎ
 
-- T05 で実施したパフォーマンステスト結果（ToMisakiIpa vs ToIPA の処理時間比較）を T06 に引き継ぐ
+- T05 で実施したパフォーマンステスト結果（ToMisakiIPA vs ToIPA の処理時間比較）を T06 に引き継ぐ
 - 性能劣化が見られた場合はその原因と改善案を記録しておくこと
 
 ### 7.5 Misaki 仕様追従の監視
