@@ -519,6 +519,744 @@ Portuguese/Spanish パッケージで採用されている方式:
 
 **判断**: Mi3 で検討。本 T04 では単一ファイル集約で開始し、保守性に問題が出たら分割する。
 
+### テスト戦略の追加レビュー
+
+本節は T04 の「一から作り直すとしたら」セクション (6-1 〜 6-5) をテスト戦略エンジニア視点で再レビューし、現在の記載内容に対する評価と具体的な改善案を追記したものである。
+
+#### A. 現在の記載内容の評価
+
+| 項目 | 現状記載の評価 | 課題 |
+|------|---------------|------|
+| 6-1 パラメタライズドテスト中心 | 方向性は正しいが `InlineData` へのベタ書き前提で、データとロジックが混在する設計になっている | テスト追加の度にソース編集が必要、非エンジニアが期待値を更新できない |
+| 6-2 TSV データ駆動テスト | Portuguese/Spanish の例に言及されているが「Mi3 で検討」として先送り | T04 時点で `ChinesePiperIpaTests.cs` (512行) 相当のベタ書きが量産されるリスク。後から移行コストが増す |
+| 6-3 Misaki 差分レポート自動生成ツール | `tools/DotNetG2P.MisakiEval/` 新規作成の構想があるだけでスコープ外扱い | Python 依存をどう切り離すか、CI で回せる範囲はどこかの議論が欠落 |
+| 6-4 Snapshot Testing | 「既存パターンから逸脱」との理由だけで棄却 | Unicode 結合記号 (`U+032F`, `U+0329`) を含む長い期待値には Snapshot が相性抜群であり、機械的棄却は勿体ない |
+| 6-5 カテゴリ分割 | 将来検討で妥当 | 判断時期の基準が「保守性に問題が出たら」と曖昧で、誰が判断するか不明 |
+
+**総合評価**: 「現状維持 + Mi3 送り」の判断が多く、T04 段階での改善余地を捨ててしまっている。既存の `KoreanBenchmarkSeedEvaluationTests.cs` + `KoreanBenchmarkDataLoader.cs` がまさに本ライブラリ内の TSV + MemberData パターンの確立例であり、これを参照しない理由はない。以下で T04 スコープ内で追加すべき具体策を示す。
+
+#### B. TSV データ駆動テストの具体的な実装コード
+
+既存の `KoreanBenchmarkDataLoader` / `PortugueseDatasetEvaluationTests.cs` を手本に、以下の構成を T04 に追加することを提案する。
+
+**B-1. TSV ファイル配置**
+
+```
+tests/TestData/ChineseG2P/
+├── misaki_tones.tsv         # 声調矢印マッピング（セクション1相当）
+├── misaki_initials.tsv      # 声母マッピング（セクション2相当）
+├── misaki_finals.tsv        # 韻母マッピング（セクション3相当）
+├── misaki_apical_vowels.tsv # そり舌/歯茎母音（セクション4相当）
+├── misaki_sandhi.tsv        # 声調変調（セクション5相当）
+├── misaki_issue56.tsv       # Issue #56 再現（セクション7相当）
+└── README.md                # データ生成元・ライセンス・更新手順
+```
+
+各 TSV のヘッダ例（6カラム、欠損は空文字）:
+
+```tsv
+input	expected_equal	expected_contains	options	category	notes
+妈	ma→		default	tone-1	第1声矢印
+麻	ma↗		default	tone-2	第2声矢印
+爱		ai̯	default	final-ai	二重母音非音節化符号
+你好	ni↗ xau̯↓		default	sandhi-3+3	三声連読
+一个		i↗	default	yi-sandhi	一+4声→2声変調
+妈	ma		include_tones=false	tone-off	声調記号抑制
+你好	ni↓ xau̯↓		sandhi=false	sandhi-disabled	変調無効化
+```
+
+設計ポイント:
+- `expected_equal` と `expected_contains` は**排他**（片方だけ使う）。`Assert.Equal` で落ちやすい Unicode 正規化問題を回避するため、基本は `expected_contains` を推奨
+- `options` カラムで `includeTones` や `enableToneSandhi` を切り替え可能にし、セクション5-7, 1-6 を統合
+- `category` は xUnit の Trait 相当で、後でフィルタ実行可能
+- ファイルは UTF-8 (BOM なし) で保存し、CI で BOM 検出を行う
+
+**B-2. データローダの実装**
+
+```csharp
+// tests/DotNetG2P.Tests/ChineseG2P/MisakiData/MisakiTestCase.cs
+namespace DotNetG2P.Tests.ChineseG2P.MisakiData
+{
+    internal sealed record MisakiTestCase(
+        string DatasetFileName,
+        string Input,
+        string? ExpectedEqual,
+        string? ExpectedContains,
+        MisakiTestOptions Options,
+        string Category,
+        string Notes);
+
+    internal sealed record MisakiTestOptions(
+        bool IncludeTones = true,
+        bool EnableToneSandhi = true)
+    {
+        public static MisakiTestOptions Parse(string? raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw) || raw == "default")
+                return new MisakiTestOptions();
+
+            var includeTones = true;
+            var sandhi = true;
+            foreach (var kv in raw.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var pair = kv.Split('=', 2);
+                if (pair.Length != 2) continue;
+                switch (pair[0].Trim())
+                {
+                    case "include_tones":
+                        includeTones = bool.Parse(pair[1]);
+                        break;
+                    case "sandhi":
+                        sandhi = bool.Parse(pair[1]);
+                        break;
+                }
+            }
+            return new MisakiTestOptions(includeTones, sandhi);
+        }
+    }
+}
+
+// tests/DotNetG2P.Tests/ChineseG2P/MisakiData/MisakiTestCaseLoader.cs
+namespace DotNetG2P.Tests.ChineseG2P.MisakiData
+{
+    internal static class MisakiTestCaseLoader
+    {
+        private const string ExpectedHeader =
+            "input\texpected_equal\texpected_contains\toptions\tcategory\tnotes";
+
+        private static readonly string[] s_datasetFiles =
+        {
+            "misaki_tones.tsv",
+            "misaki_initials.tsv",
+            "misaki_finals.tsv",
+            "misaki_apical_vowels.tsv",
+            "misaki_sandhi.tsv",
+            "misaki_issue56.tsv",
+        };
+
+        public static IReadOnlyList<MisakiTestCase> LoadAllCases()
+        {
+            var cases = new List<MisakiTestCase>();
+            foreach (var fileName in s_datasetFiles)
+                cases.AddRange(LoadCases(fileName));
+            return cases;
+        }
+
+        public static IReadOnlyList<MisakiTestCase> LoadCases(string fileName)
+        {
+            var path = ResolveDataPath(fileName);
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Misaki test data not found: {path}", path);
+
+            var lines = File.ReadAllLines(path);
+            if (lines.Length == 0 || lines[0] != ExpectedHeader)
+                throw new InvalidDataException($"Unexpected header in {fileName}: {(lines.Length > 0 ? lines[0] : "(empty)")}");
+
+            var cases = new List<MisakiTestCase>(lines.Length);
+            for (var i = 1; i < lines.Length; i++)
+            {
+                var line = lines[i];
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#", StringComparison.Ordinal))
+                    continue;
+
+                var parts = line.Split('\t');
+                if (parts.Length != 6)
+                    throw new InvalidDataException($"Expected 6 columns in {fileName} line {i + 1}, got {parts.Length}");
+
+                var expectedEqual = string.IsNullOrEmpty(parts[1]) ? null : parts[1];
+                var expectedContains = string.IsNullOrEmpty(parts[2]) ? null : parts[2];
+                if (expectedEqual == null && expectedContains == null)
+                    throw new InvalidDataException($"Both expected_equal and expected_contains empty at {fileName}:{i + 1}");
+
+                cases.Add(new MisakiTestCase(
+                    DatasetFileName: fileName,
+                    Input: parts[0],
+                    ExpectedEqual: expectedEqual,
+                    ExpectedContains: expectedContains,
+                    Options: MisakiTestOptions.Parse(parts[3]),
+                    Category: parts[4],
+                    Notes: parts[5]));
+            }
+            return cases;
+        }
+
+        private static string ResolveDataPath(string fileName)
+        {
+            var candidates = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+                    "tests", "TestData", "ChineseG2P", fileName),
+                Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..",
+                    "TestData", "ChineseG2P", fileName),
+                Path.GetFullPath(Path.Combine("tests", "TestData", "ChineseG2P", fileName)),
+            };
+            foreach (var candidate in candidates)
+            {
+                var full = Path.GetFullPath(candidate);
+                if (File.Exists(full)) return full;
+            }
+            return candidates[0];
+        }
+    }
+}
+```
+
+**B-3. MemberData 方式の Theory テスト**
+
+```csharp
+// tests/DotNetG2P.Tests/ChineseG2P/ChineseMisakiIpaTests.cs の一部
+public class ChineseMisakiIpaTests : IDisposable
+{
+    private readonly ChineseG2PEngine _engine = new();
+    private readonly ITestOutputHelper _output;
+
+    public ChineseMisakiIpaTests(ITestOutputHelper output) => _output = output;
+
+    public void Dispose() => _engine.Dispose();
+
+    // MemberData はカテゴリ別に分割するとログで追跡しやすい
+    public static IEnumerable<object[]> TonesCases()
+        => MisakiTestCaseLoader.LoadCases("misaki_tones.tsv")
+            .Select(c => new object[] { c });
+
+    public static IEnumerable<object[]> InitialsCases()
+        => MisakiTestCaseLoader.LoadCases("misaki_initials.tsv")
+            .Select(c => new object[] { c });
+
+    // ... Finals / ApicalVowels / Sandhi / Issue56 も同様
+
+    [Theory]
+    [MemberData(nameof(TonesCases))]
+    [MemberData(nameof(InitialsCases))]
+    [MemberData(nameof(FinalsCases))]
+    [MemberData(nameof(ApicalVowelsCases))]
+    [MemberData(nameof(SandhiCases))]
+    [MemberData(nameof(Issue56Cases))]
+    public void ToMisakiIpa_DataDriven(MisakiTestCase c)
+    {
+        var result = _engine.ToMisakiIpa(
+            c.Input,
+            includeTones: c.Options.IncludeTones,
+            enableToneSandhi: c.Options.EnableToneSandhi);
+
+        _output.WriteLine($"[{c.DatasetFileName}/{c.Category}] {c.Input} => {Escape(result)} (expected {Describe(c)})");
+
+        if (c.ExpectedEqual is not null)
+            Assert.Equal(c.ExpectedEqual, result);
+        if (c.ExpectedContains is not null)
+            Assert.Contains(c.ExpectedContains, result, StringComparison.Ordinal);
+    }
+
+    private static string Escape(string s)
+        => string.Concat(s.Select(ch => ch < 0x20 || ch > 0x7E
+            ? $"\\u{(int)ch:X4}" : ch.ToString()));
+
+    private static string Describe(MisakiTestCase c)
+        => c.ExpectedEqual is not null
+            ? $"equal={Escape(c.ExpectedEqual)}"
+            : $"contains={Escape(c.ExpectedContains!)}";
+}
+```
+
+注記:
+- xUnit v2.9.3 は単一テストメソッドに複数の `[MemberData]` を積めるため、上記の 1 メソッドで 6 カテゴリを網羅できる
+- `MisakiTestCase` は `record` (C# 9+) で `IXunitSerializable` 相当の動作を得られる。必要なら `record` 継承クラスに `ToString` を実装し、xUnit のテスト名に期待値が表示されるようにする
+- `MemberData` を使うと **xUnit のテストエクスプローラ上で個別のサブテストとして並列実行される** ため、CI 並列化の恩恵を自動で受ける
+
+**B-4. TSV 追加・レビュー運用**
+
+- `tests/TestData/ChineseG2P/README.md` に「新規ケース追加手順」「Misaki Python 実装との照合方法」「文字コード要件 (UTF-8, no BOM, LF)」を明記
+- Git の `.gitattributes` で `tests/TestData/ChineseG2P/*.tsv text eol=lf working-tree-encoding=UTF-8` を設定し、Windows での CRLF 混入を防止
+- PR レビュー時は TSV 差分を `git diff --color-words` でレビュアーが見やすい形で確認
+
+#### C. Verify.Xunit による Snapshot Testing の適用例
+
+セクション 6-4 では「既存パターンから逸脱」として棄却されているが、以下の**限定的な用途**では Snapshot Testing が著しく有効である。
+
+**C-1. 適用すべきシナリオ**
+
+1. **複合シナリオの長文出力**: `"你好世界，我爱北京天安门。"` のような複数音節+句読点混在テキスト。完全一致を `Assert.Equal` で書くと Unicode エスケープで可読性が壊滅する
+2. **Issue #56 の完全一致検証**: `"你好"` の 4 パターン (`ToMisakiIpa` / `includeTones=false` / `sandhi=false` / バッチAPI) をまとめて記録
+3. **既存 API への回帰**: `ToIPA` / `ToPiperIPA` / `ToZhuyin` を含む 4 API × 頻出 100 漢字のマトリクスを 1 ファイルにまとめる
+
+**C-2. 実装例 (Verify.Xunit 28.x 系)**
+
+```csharp
+// tests/DotNetG2P.Tests/DotNetG2P.Tests.csproj に追加:
+// <PackageReference Include="Verify.Xunit" Version="28.*" />
+
+// tests/DotNetG2P.Tests/ChineseG2P/ChineseMisakiSnapshotTests.cs
+[UsesVerify]
+public class ChineseMisakiSnapshotTests : IDisposable
+{
+    private readonly ChineseG2PEngine _engine = new();
+    public void Dispose() => _engine.Dispose();
+
+    [Fact]
+    public Task Issue56_你好_全パターン()
+    {
+        var result = new
+        {
+            Default      = _engine.ToMisakiIpa("你好"),
+            NoTones      = _engine.ToMisakiIpa("你好", includeTones: false),
+            NoSandhi     = _engine.ToMisakiIpa("你好", enableToneSandhi: false),
+            BatchDefault = _engine.ToMisakiIpaBatch(new[] { "你好" }).ToArray(),
+        };
+        return Verify(result)
+            .UseDirectory("Snapshots")
+            .UseFileName("Issue56_你好");
+    }
+
+    [Fact]
+    public Task APIMatrix_頻出漢字100()
+    {
+        var hanzi = new[] { "的", "一", "是", "不", "了", /* ... 100字 */ };
+        var matrix = hanzi.Select(h => new
+        {
+            Hanzi    = h,
+            Standard = _engine.ToIPA(h),
+            Piper    = _engine.ToPiperIPA(h),
+            Misaki   = _engine.ToMisakiIpa(h),
+            Zhuyin   = _engine.ToZhuyin(h),
+        }).ToArray();
+        return Verify(matrix).UseDirectory("Snapshots");
+    }
+}
+```
+
+**C-3. 運用ルール**
+
+- `Snapshots/Issue56_你好.verified.txt` を Git 管理、`.received.txt` を `.gitignore` に追加
+- 意図的な変更時は `dotnet test --environment Verify.AutoVerify=true` で一括承認
+- CI では `--environment DiffEngine_Disabled=true` を設定して diff ツールの起動を抑制
+- Snapshot の差分レビューは人間必須（自動マージ禁止）
+
+**C-4. 既存パターンとの共存**
+
+- 既存の `[Fact]` / `[Theory]` スタイルは維持し、Snapshot は**補完的に**使用
+- 1 ファイル内にのみ Verify 依存を閉じ込めることで、他のテストへの波及を最小化
+- `[UsesVerify]` 属性を付けたクラスだけが Verify を使うため、ライブラリ追加のリスクは限定的
+
+**判断案の修正**: 6-4 の「採用見送り」は上記 (C-1) のシナリオに限っては**見直しを推奨**。最低でも Issue #56 の 4 パターン記録は Snapshot の方が明らかに保守性が高い。
+
+#### D. Misaki 差分レポート自動生成ツールの設計
+
+セクション 6-3 の `tools/DotNetG2P.MisakiEval/` 構想を具体化する。既存の `tools/DotNetG2P.PortugueseEval/` が手本になる。
+
+**D-1. ツール全体構成**
+
+```
+tools/DotNetG2P.MisakiEval/
+├── DotNetG2P.MisakiEval.csproj     # net8.0, OutputType=Exe, Core/Chinese 参照
+├── Program.cs                       # CLI エントリ
+├── MisakiCorpusLoader.cs            # TSV コーパスのロード
+├── MisakiEvaluator.cs               # 予測と参照の比較、距離計算
+├── DiffReportWriter.cs              # Markdown/TSV/JSON レポート出力
+├── EvalThresholds.cs                # misaki_eval_thresholds.json の型
+└── ReferenceProviders/
+    ├── IReferenceProvider.cs        # 参照音素列の提供抽象
+    ├── StaticTsvReferenceProvider.cs # 事前生成 TSV
+    └── PythonBridgeProvider.cs      # Python Misaki 実装を subprocess 呼び出し (開発環境限定)
+
+tools/
+├── misaki_eval_thresholds.json       # データセット毎の PER 閾値
+├── refresh_misaki_eval_data.ps1      # artifacts/misaki-eval/corpora 再生成
+└── run_misaki_full_evaluation.ps1    # フル評価 + レポート生成
+```
+
+**D-2. Python 依存の切り離し方針**
+
+| 段階 | 参照源 | 環境 | 備考 |
+|------|-------|------|------|
+| 1. 静的 TSV (推奨) | `artifacts/misaki-eval/corpora/misaki_reference_*.tsv` | 任意 | Misaki Python 実装で**事前に**生成した参照を Git 管理外の artifacts に保存。CI でダウンロード |
+| 2. Python bridge (開発者向け) | `python -m misaki_cli ...` | Python 環境あり | 開発者のローカル検証用。CI 禁止 |
+| 3. テスト統合 (`SkippableFact`) | 静的 TSV が存在する場合のみ動作 | CI 含む全環境 | `PortugueseDatasetEvaluationTests.cs` と同じ `SkippableFact` パターン |
+
+**D-3. CLI 仕様**
+
+```bash
+# フル評価
+dotnet run --project tools/DotNetG2P.MisakiEval -- \
+  --corpus-dir artifacts/misaki-eval/corpora \
+  --output-dir artifacts/misaki-eval/reports/$(date -u +%Y%m%d-%H%M%S) \
+  --thresholds tools/misaki_eval_thresholds.json \
+  --enforce-thresholds
+
+# 差分比較のみ(閾値無視)
+dotnet run --project tools/DotNetG2P.MisakiEval -- \
+  --mismatch-limit 100 \
+  --categories tone-sandhi,apical-vowel
+```
+
+**D-4. レポート構造 (出力例)**
+
+```
+artifacts/misaki-eval/reports/20260412-120000/
+├── summary.tsv        # dataset, profile, cases, PER, WER, exact_match_rate
+├── summary.json       # 上記の JSON 版
+├── mismatches/
+│   ├── frequency_1000__default.tsv   # 頻出 1000 字で一致しなかったケース
+│   └── sandhi_patterns__default.tsv
+├── categories.tsv     # カテゴリ別平均距離 (initial / final / tone / sandhi)
+└── report.md          # 人間可読の日本語レポート (PR コメント投入用)
+```
+
+`summary.tsv` の列定義:
+
+```tsv
+dataset	profile	cases	exact_match	per	wer	threshold	passed
+frequency_1000	default	1000	945	0.0082	0.0550	0.01	true
+sandhi_patterns	default	150	148	0.0031	0.0133	0.01	true
+issue56_variants	default	4	4	0.0000	0.0000	0.00	true
+```
+
+**D-5. CI での扱い**
+
+- **PR CI (必須)**: `tests/DotNetG2P.Tests` 内の `MisakiDatasetEvaluationTests` (`SkippableFact`) を実行。TSV が存在しないときは Skip
+- **Nightly (任意)**: `tools/DotNetG2P.MisakiEval` をフル実行し、Markdown レポートを artifact として公開
+- **リリース時**: PER 閾値超過で Red。`misaki_eval_thresholds.json` の変更は別 PR で明示レビュー
+
+**D-6. Mi3 送りではなく T04 段階で着手すべきか**
+
+現状 6-3 は「Mi3 で検討」だが、**最小構成 (`IReferenceProvider` + 静的 TSV 1 本 + `summary.tsv` 出力のみ)** なら T04 スコープ内に追加可能。Issue #56 の `"你好"` 4 パターン計測だけでも PR への根拠提示になり、T05 ドキュメント更新の材料になる。
+
+#### E. 既存 Piper/IPA テストへの波及 (統一戦略として適用可能か)
+
+現状 `ChinesePiperIpaTests.cs` (512行) も InlineData ベタ書きで、`ChinesePiperIpaComparisonTests.cs` と合わせて同種の保守性問題を抱えている。本レビューで提案する TSV + MemberData 方式は**統一戦略として横展開可能**である。
+
+**E-1. 移行ロードマップ (推奨順)**
+
+| 順序 | 対象 | 内容 | 対象マイルストーン |
+|------|------|------|-------------------|
+| 1 | `ChineseMisakiIpaTests` (新規) | TSV 駆動で**最初から**実装 | T04 (本チケット) |
+| 2 | `ChinesePiperIpaComparisonTests` | `misaki_standard_piper_diff.tsv` に統合し、3-API 差分を 1 ファイルで表現 | Mi3 |
+| 3 | `ChinesePiperIpaTests` | カテゴリ別 TSV (`piper_initials.tsv`, `piper_finals.tsv`, `piper_apical_vowels.tsv`, `piper_edge_cases.tsv`) に移行 | Mi3 |
+| 4 | `ChineseG2PEngineC4Tests` (IPA/注音) | `standard_ipa_{initials,finals}.tsv` / `zhuyin_map.tsv` に移行 | Mi4 |
+| 5 | `MisakiTestCase` を `ChineseG2PTestCase` に一般化 | `target` カラム (standard/piper/misaki/zhuyin) を追加し、1 つのローダで 4 API すべて扱う | Mi4 以降 |
+
+**E-2. 共通化する際のポイント**
+
+- TSV ヘッダを**全 API 共通**に揃える (`input\ttarget\texpected_equal\texpected_contains\toptions\tcategory\tnotes`)
+- `target` カラムで `ToIPA` / `ToPiperIPA` / `ToMisakiIpa` / `ToZhuyin` を切り替え
+- ローダは `Dictionary<string, Func<ChineseG2PEngine, string, string, string>>` で API 毎のアダプタを持つ
+- テストクラスは API 毎に分離 (`ChineseIpaTests` / `ChinesePiperIpaTests` / `ChineseMisakiIpaTests` / `ChineseZhuyinTests`) するが、**ローダとケース型は共通** にする
+
+**E-3. 波及による効果 (定量)**
+
+| 指標 | 現状 (InlineData) | TSV 駆動後 (推定) |
+|------|------------------|-----------------|
+| `tests/DotNetG2P.Tests/ChineseG2P/*.cs` 総行数 | 約 2,500 行 | 約 800 行 (68% 削減) |
+| 新規テストケース追加コスト | C# 編集 + リビルド必須 | TSV 編集のみ |
+| 非エンジニアによるレビュー | 困難 | TSV は表形式で容易 |
+| CI 並列実行での粒度 | クラス単位 | 個別ケース単位 (MemberData) |
+| Unicode エスケープの可読性 | `\u032F` がソース散在 | TSV は実文字で記述可能 |
+
+**E-4. 横展開のリスクと対策**
+
+| リスク | 対策 |
+|-------|------|
+| Mi3/Mi4 で既存テストを書き換えると PR が巨大化 | カテゴリ毎に小 PR に分割。1 PR あたり 1 TSV を原則とする |
+| TSV 編集ミスでテストが静かに Skip される | ローダで **件数の下限アサート**を入れる (`Assert.True(cases.Count >= 10)`) |
+| xUnit の `MemberData` は `static` メソッドが必要で、`DotNetG2P.Tests` の既存構造を変更しない | `ChineseG2PTestDataLoaders` 静的クラスを `tests/DotNetG2P.Tests/ChineseG2P/TestData/` に新設して吸収 |
+| レビュアーが TSV 差分を見落とす | PR テンプレートに「TSV 追加・編集時は diff を本文に貼る」を明記 |
+
+#### F. 結論とアクションアイテム
+
+**現状 T04 記載に対する判断の更新提案**:
+
+| セクション | 現状判断 | 提案 |
+|-----------|---------|------|
+| 6-1 パラメタライズド | 既に Theory 使用 | 維持 + TSV 併用 |
+| 6-2 TSV データ駆動 | Mi3 送り | **T04 で採用** (上記 B 案) |
+| 6-3 差分レポートツール | Mi3 送り | **T04 で最小構成を着手** (上記 D-6) |
+| 6-4 Snapshot Testing | 棄却 | **Issue #56 限定で採用**再検討 (上記 C-1) |
+| 6-5 カテゴリ分割 | Mi3 送り | 維持 (TSV 採用で単一ファイルでも十分) |
+
+**T04 完了条件に追加すべきアイテム**:
+
+- [ ] `tests/TestData/ChineseG2P/` に最低 6 本の TSV を作成し、合計 100 ケース以上を収録
+- [ ] `MisakiTestCaseLoader` と `ChineseMisakiIpaTests` を TSV + MemberData 方式で実装
+- [ ] `tests/TestData/ChineseG2P/README.md` にデータ生成元と更新手順を記載
+- [ ] `.gitattributes` に TSV 用のエンコーディング/改行コード設定を追加
+- [ ] (任意) `tools/DotNetG2P.MisakiEval` の最小構成 (静的 TSV ベース) を追加し、`summary.tsv` 出力を確認
+- [ ] (任意) `Verify.Xunit` を参照に追加し、Issue #56 用の Snapshot テスト 1 ファイルのみ作成
+
+### システム統合観点の追加レビュー
+
+本節は、T04 のテスト設計を「DotNetG2P.Multilingual（多言語ファサード）／Unity UPM／NuGet／KokoroSharp」との連携前提でレビューした結果と、テスト統合観点での改善案を示す。上記 §テスト戦略の追加レビュー が「`ChineseG2PEngine` 単体のテスト品質」に主眼を置いていたのに対し、本節は **テスト対象の外** — 上位層・配布チャネル・下流ランタイム — からテストをどう検証するかに焦点を当てる。T04 の成果物は `ChineseG2PEngine.ToMisakiIpa` の正確性だけでなく、それが Multilingual 経由・Unity ランタイム上・KokoroSharp 統合で期待通り動くことを保証する必要がある。
+
+#### A. Multilingual 層を経由したテスト（将来の布石）
+
+現状の T04 スコープ（§2-1〜2-3）は `ChineseG2PEngine` 単体のみを対象にしており、`MultilingualG2PEngine` 経由の Misaki 出力テストは一切含まれていない。これは T03 が Multilingual 層を触らないためで妥当だが、Mi3 で Multilingual 統合が実装された際にテストが後追いになるリスクがある。
+
+T04 の段階で以下の「**将来に備えた空テストクラス**」を用意しておくと、Mi3 実装時のテストカバレッジ漏れを防げる:
+
+```csharp
+namespace DotNetG2P.Tests.Multilingual
+{
+    /// <summary>
+    /// Multilingual 層経由の Misaki 互換出力テスト。
+    /// T04 時点では Chinese 単体のみが Misaki 対応しているため、
+    /// 多言語混在テキストのテストは Mi3 で有効化する。
+    /// </summary>
+    public class MultilingualMisakiIpaTests : IDisposable
+    {
+        private readonly MultilingualG2PEngine _engine;
+
+        public MultilingualMisakiIpaTests()
+        {
+            _engine = new MultilingualG2PEngine();
+        }
+
+        public void Dispose() => _engine.Dispose();
+
+        [Fact(Skip = "Mi3: Multilingual 層への Misaki 統合実装後に有効化")]
+        public void ToMisakiIpa_Chinese単独セグメント_Misaki出力()
+        {
+            // var result = _engine.ToMisakiIpa("你好");
+            // Assert.Contains("\u2197", result);
+        }
+
+        [Fact(Skip = "Mi3: 中英混在 + フォールバック処理実装後")]
+        public void ToMisakiIpa_中英混在_Chinese部分のみMisaki_English部分はIPA()
+        {
+            // var result = _engine.ToMisakiIpa("你好 Hello 世界");
+            // Assert.Contains("ni\u2197", result);  // Chinese 部分は Misaki
+            // Assert.Contains("həloʊ", result);     // English 部分は標準 IPA
+        }
+
+        [Fact(Skip = "Mi3: TryGetMisakiIpa 実装後")]
+        public void TryGetMisakiIpa_Korean単独_false返却()
+        {
+            // Assert.False(_engine.TryGetMisakiIpa("안녕", out _));
+        }
+    }
+}
+```
+
+**判断**: T04 では **`Skip` 属性付きのプレースホルダクラスのみ配置**し、実装は Mi3 に委ねる。これにより:
+
+1. テストファイルのディレクトリ構造が Mi3 時点で確定し、ファイル作成の PR が不要になる
+2. `Skip` 理由に「Mi3」と明記することで、後続担当者が実装順序を把握できる
+3. 既存 `MultilingualG2PEngineTests` のパターン（`src/DotNetG2P.Multilingual/MultilingualG2PEngine.cs` を参照するテスト）に合流できる
+
+#### B. Unity ランタイムでの動作検証テスト
+
+T04 のテストは `dotnet test DotNetG2P.slnx`（net8.0 環境）でのみ実行される。Unity IL2CPP ビルドで実際にランタイムエラーが起きないかは、通常の xUnit テストでは検出できない。この観点で以下のテストを追加することを推奨する:
+
+**B-1. `[Preserve]` 属性の存在確認テスト（静的解析）**
+
+```csharp
+[Fact]
+public void ChineseG2PEngine_Preserve属性が付与されている()
+{
+    var type = typeof(ChineseG2PEngine);
+    var attrs = type.GetCustomAttributes(inherit: false);
+    var hasPreserve = attrs.Any(a => a.GetType().FullName == "UnityEngine.Scripting.PreserveAttribute");
+    Assert.True(hasPreserve,
+        $"{type.FullName} に [Preserve] が付与されていません。Unity IL2CPP 環境で strip される可能性があります。");
+}
+
+[Fact]
+public void ChineseG2PEngine_ToMisakiIpa_メソッドが公開されている()
+{
+    var type = typeof(ChineseG2PEngine);
+    var method = type.GetMethod(nameof(ChineseG2PEngine.ToMisakiIpa),
+        new[] { typeof(string), typeof(bool) });
+    Assert.NotNull(method);
+    Assert.True(method!.IsPublic);
+    // public メソッドはクラスレベル [Preserve] により自動保護される
+}
+```
+
+このテストは実装コードの変更ではなくリフレクションによる構造検証のみのため、`DotNetG2P.Tests` (net8.0) でそのまま動く。Unity プロジェクトへの依存は一切ない。
+
+**B-2. Unity ビルドスモークテスト（CI 統合）**
+
+`tests/DotNetG2P.Tests/ChineseG2P/` とは別に、`.github/workflows/ci.yml` にジョブを追加:
+
+```yaml
+unity-il2cpp-smoke:
+  runs-on: ubuntu-latest
+  needs: [test]
+  steps:
+    - name: Unity IL2CPP ビルド検証
+      uses: game-ci/unity-builder@v4
+      with:
+        unityVersion: 2022.3.20f1
+        targetPlatform: StandaloneLinux64
+        buildMethod: DotNetG2P.Tests.Unity.SmokeBuilder.Build
+        # Packages/com.dotnetg2p.chinese を含む最小 Unity プロジェクトで
+        # engine.ToMisakiIpa("你好") を実行し、ランタイム例外が出ないことを確認
+```
+
+**判断**: **B-1 は T04 で実装必須**、B-2 は Mi3/Mi4 で検討。B-1 だけでも「`[Preserve]` 属性の外し忘れ」という最頻出の IL2CPP バグを検出できる。
+
+#### C. KokoroSharp 統合テストの位置付け
+
+T03 で追加される `ToMisakiIpa` API は KokoroSharp（または類似の Kokoro TTS C# 実装）から呼び出されることを前提としている。しかし KokoroSharp 自体への依存をテストプロジェクトに追加すると:
+
+- NuGet 依存関係の複雑化
+- KokoroSharp のバージョン互換性への配慮
+- ONNX モデルファイル（>100MB）のダウンロードと CI での実行
+
+等の問題がある。このため T04 では **KokoroSharp を参照しない「契約テスト」** を実装する:
+
+```csharp
+public class KokoroSharpContractTests : IDisposable
+{
+    private readonly ChineseG2PEngine _engine;
+
+    public KokoroSharpContractTests()
+    {
+        _engine = new ChineseG2PEngine();
+    }
+
+    public void Dispose() => _engine.Dispose();
+
+    /// <summary>
+    /// KokoroSharp が期待する入力仕様を満たしていることを確認する契約テスト。
+    /// Kokoro TTS のトークナイザ仕様に基づき、以下を検証:
+    /// 1. 出力は string 型
+    /// 2. Unicode IPA + 矢印記号のみで構成される（制御文字なし）
+    /// 3. セグメント区切りは半角スペース固定
+    /// 4. 空入力時は空文字列を返す（例外を投げない）
+    /// </summary>
+    [Theory]
+    [InlineData("你好")]
+    [InlineData("你好世界")]
+    [InlineData("我爱北京天安门")]
+    public void ToMisakiIpa_KokoroSharp契約_制御文字を含まない(string input)
+    {
+        var result = _engine.ToMisakiIpa(input);
+
+        Assert.NotNull(result);
+        foreach (var ch in result)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(ch);
+            // Cc (Control), Cf (Format), Cs (Surrogate) を許可しない
+            Assert.NotEqual(UnicodeCategory.Control, category);
+            Assert.NotEqual(UnicodeCategory.Format, category);
+        }
+    }
+
+    [Fact]
+    public void ToMisakiIpa_KokoroSharp契約_セグメント区切りはスペース()
+    {
+        var result = _engine.ToMisakiIpa("中国");
+        // KokoroSharp の tokenizer は " " (0x20) でセグメント分割する
+        Assert.Contains(" ", result);
+    }
+
+    [Fact]
+    public void ToMisakiIpa_KokoroSharp契約_空入力で例外なし()
+    {
+        // KokoroSharp は空文字列を「無音」として扱う前提
+        var result = _engine.ToMisakiIpa("");
+        Assert.Equal("", result);
+    }
+}
+```
+
+**利点**:
+
+- KokoroSharp 本体に依存しないため、CI 時間・依存管理が簡素化される
+- KokoroSharp 側の仕様変更があった場合、契約テストを更新するだけで追従できる
+- 将来 Kokoro Python 実装と互換性比較をする際の SSOT としても機能する
+
+#### D. NuGet / UPM 両配布のテスト整合性
+
+`DotNetG2P.Chinese` は NuGet（`DotNetG2P.Chinese`）と UPM（`com.dotnetg2p.chinese`）の両方で配布されるが、T04 のテストはすべて NuGet / .csproj プロジェクト参照経由で実行される。以下の観点で UPM 配布版の品質を担保する必要がある:
+
+1. **埋め込みリソースのロード経路**: `EmbeddedChineseDictionaryCache` は `Assembly.GetManifestResourceStream` で辞書をロードするが、Unity UPM 環境では Assembly の扱いが異なる場合がある。T04 で以下のテストを追加:
+
+```csharp
+[Fact]
+public void ChineseG2PEngine_デフォルトコンストラクタ_埋め込み辞書をロードできる()
+{
+    // このテストは NuGet 環境で動くが、UPM 環境でも同じロジックが使われる
+    using var engine = new ChineseG2PEngine();
+    var result = engine.ToMisakiIpa("你好");
+    Assert.NotEmpty(result);
+    // 埋め込み辞書が正しくロードされた証左として、
+    // 三声連読変調が適用されていることを確認
+    Assert.Contains("\u2197", result);
+}
+```
+
+2. **.meta ファイル整合性**: T04 で `tests/TestData/ChineseG2P/` 配下に TSV を新規作成する場合、Unity UPM パッケージのルートには **含めない**（`tests/` ディレクトリは UPM パッケージに含まれないため問題なし）。ただし `tools/sync-shared-internals.ps1` の同期対象に `.meta` 整合性チェックが含まれる場合は、TSV ファイルが誤って同期されないことを確認
+3. **パッケージ独立性テスト**: `DotNetG2P.Chinese` は `DotNetG2P.Core` を参照しない独立パッケージ。T04 のテストが誤って Core の型（`G2PEngine` 等）に依存していないことを確認:
+
+```csharp
+[Fact]
+public void ChineseG2PEngine_Core参照なし_単独で動作する()
+{
+    // このテストの存在自体が、ChineseG2PEngine が独立パッケージであることの保証
+    var assembly = typeof(ChineseG2PEngine).Assembly;
+    var referencedAssemblies = assembly.GetReferencedAssemblies();
+    Assert.DoesNotContain(referencedAssemblies,
+        a => a.Name == "DotNetG2P" || a.Name == "DotNetG2P.Core");
+}
+```
+
+#### E. 将来の他言語 Kokoro 互換追加に備えたテスト命名規則
+
+T03 §E で他言語の `ToMisakiIpa` 命名規則を統一することを推奨した。T04 のテストファイル命名もこれに揃えることで、Mi3/Mi4 で他言語の Misaki テストを追加する際のレビューコストを下げる:
+
+**推奨テストクラス命名**:
+
+| 言語 | テストクラス | 実装タイミング |
+|------|------------|----------------|
+| 中国語 | `ChineseMisakiIpaTests` | **T04 で実装** |
+| 英語 | `EnglishMisakiIpaTests` | Mi3 以降 |
+| 日本語 | `JapaneseMisakiIpaTests` | Mi3 以降 |
+| 韓国語 | `KoreanMisakiIpaTests` | Mi3 以降 |
+| スペイン語 | `SpanishMisakiIpaTests` | Mi3 以降 |
+| フランス語 | `FrenchMisakiIpaTests` | Mi3 以降 |
+| ポルトガル語 | `PortugueseMisakiIpaTests` | Mi3 以降 |
+| Multilingual | `MultilingualMisakiIpaTests` | Mi3 以降（上記 A 節で先行プレースホルダ） |
+
+**統一規則**:
+
+- テストクラス名: `{言語名}MisakiIpaTests` で固定
+- 配置: `tests/DotNetG2P.Tests/{言語名}G2P/` 配下（例: `tests/DotNetG2P.Tests/ChineseG2P/ChineseMisakiIpaTests.cs`）
+- TSV データ配置: `tests/TestData/{言語名}G2P/misaki_*.tsv`
+- コンストラクタ/Dispose パターン: 全言語で統一（`IDisposable` + `_engine` フィールド）
+- テストメソッド命名: 既存の日本語命名ルール（例: `ToMisakiIpa_第1声_矢印右向き`）を他言語にも適用
+
+**契約テストの共通基底クラス**（Mi3 以降）:
+
+```csharp
+// 将来の構想: 全言語で共有される KokoroSharp 契約テスト基底
+public abstract class KokoroSharpContractTestsBase<TEngine> : IDisposable
+    where TEngine : IDisposable
+{
+    protected abstract TEngine CreateEngine();
+    protected abstract string ConvertToMisakiIpa(TEngine engine, string text);
+
+    [Theory]
+    [MemberData(nameof(InputSamples))]
+    public void 契約_制御文字なし(string input) { /* ... */ }
+
+    public static IEnumerable<object[]> InputSamples => /* 各言語共通のサンプル */;
+    // Dispose パターン省略
+}
+```
+
+**T04 での判断**: **基底クラスは T04 では作らず、Mi3 で各言語テストクラスが 2 つ以上できた段階で抽出する**。T04 で先行して作ると YAGNI（You Aren't Gonna Need It）に該当するリスクがある。ただし、T04 で実装する `ChineseMisakiIpaTests` と `KokoroSharpContractTests` のメソッド命名は、後に基底クラスへ抽出しやすい形（`契約_XXX_YYY` プレフィックス）にすること。
+
+#### F. T04 完了条件への追加アイテム（本節）
+
+§F（結論とアクションアイテム）の末尾に、以下を追加で検討する:
+
+- [ ] `MultilingualMisakiIpaTests.cs` を `[Fact(Skip="Mi3")]` 付きプレースホルダとして作成（上記 A 節）
+- [ ] `[Preserve]` 属性存在確認テストを `ChineseG2PEngineTests` に追加（上記 B-1 節）
+- [ ] `KokoroSharpContractTests.cs` を新規作成し、制御文字・スペース区切り・空入力契約を検証（上記 C 節）
+- [ ] `ChineseG2PEngine_Core参照なし_単独で動作する` テストを追加し、パッケージ独立性を保証（上記 D-3 節）
+- [ ] テストクラス命名が `{言語名}MisakiIpaTests` パターンに準拠していることを確認（上記 E 節）
+
+**§テスト戦略の追加レビュー との整合性**: §B の TSV データ駆動テスト採用案と、本節の Multilingual / Unity / KokoroSharp 契約テスト案は相互補完関係にある。TSV は「言語固有の変換ロジックの正確性」を保証し、本節の統合テストは「クラス間の契約・配布環境・外部ランタイム互換性」を保証する。両者を併用することで T04 の完了条件が堅牢になる。
+
 ---
 
 ## 7. 後続タスクへの連絡事項
