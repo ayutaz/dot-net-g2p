@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-04-13
+
+### Added
+- **DotNetG2P.Chinese**: Misaki (Kokoro TTS) 互換 IPA 出力 API を追加 (#56)
+  - `ChineseG2PEngine.ToMisakiIPA(text)` — Misaki 互換 IPA 文字列（矢印声調記号付き）
+  - `ChineseG2PEngine.ToMisakiIPA(text, includeTones)` — 声調制御付き
+  - `ChineseG2PEngine.ToMisakiIPABatch(texts)` / `ToMisakiIPABatch(texts, includeTones)` — バッチ変換
+  - `PinyinToMisaki` 内部変換クラス — Misaki 0.9.4 実測ゴールドデータ (137件) で検証済み
+  - 統合テスト 130 件追加
+
+### Changed
+- (なし)
+
+### Fixed
+- (なし)
+
 ## [1.9.0] - 2026-04-02
 
 ### Added
@@ -303,7 +319,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - LibNMeCab依存を削除
 
-[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/ayutaz/dot-net-g2p/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/ayutaz/dot-net-g2p/compare/v1.8.2...v1.9.0
 [1.8.2]: https://github.com/ayutaz/dot-net-g2p/compare/v1.8.1...v1.8.2
 [1.8.1]: https://github.com/ayutaz/dot-net-g2p/compare/v1.8.0...v1.8.1

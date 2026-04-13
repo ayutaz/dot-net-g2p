@@ -1,7 +1,7 @@
 {
   "name": "com.dotnetg2p.swedish",
   "displayName": "DotNetG2P.Swedish",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "unity": "2021.2",
   "description": "Swedish Grapheme-to-Phoneme (G2P) library for .NET and Unity. Rule-based IPA conversion with syllabification, stress assignment, pitch accent prediction, and Central/Finland Swedish dialect options.",
   "keywords": [

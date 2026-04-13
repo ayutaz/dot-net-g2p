@@ -22,6 +22,7 @@ enEngine.ToPhonemes("hello world");  // => "HH AH0 L OW1 W ER1 L D"
 // 中国語G2P（ピンイン変換）
 using var zhEngine = new ChineseG2PEngine();
 zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
+zhEngine.ToMisakiIPA("你好世界");  // => Misaki互換IPA（Kokoro TTS向け）
 
 // 韓国語G2P
 using var koEngine = new KoreanG2PEngine();
@@ -75,7 +76,7 @@ multiEngine.ToPhonemes("今日は안녕하세요 hello");  // 日本語部分は
 - **Unity対応** — .NET Standard 2.1（Unity 2021.2+）ターゲット、UPMパッケージ提供
 - **拡張可能な設計** — `ITokenizer`インターフェースにより形態素解析エンジンを差し替え可能
 - **英語G2P対応** — CMU辞書（135,000語）+ Flite LTSルールによるOOV推定、IPA/X-SAMPA出力、テキスト正規化、同綴異音語解決、piper-plus 互換 IPA/PUA/Prosody API
-- **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、3種の出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力、piper-plus 互換 IPA/PUA/Prosody API
+- **中国語G2P対応** — pinyin-data単字辞書（44,000語）+ phrase-pinyin-dataフレーズ辞書（411,000語）による多音字自動解決、声調変調（三声連読・一/不変調）、多彩な出力スタイル、IPA（国際音声記号）・注音符号（ボポモフォ）出力、Misaki互換IPA出力（Kokoro TTS向け）、piper-plus 互換 IPA/PUA/Prosody API
 - **韓国語G2P対応** — Hangul-first の規則ベース変換、Jamo 分解、例外辞書、軽量正規化、`ㅎ` 系変化・終声中和・連音・濃音化・鼻音化・流音化を含む標準発音寄り rule engine、piper-plus 互換 IPA/PUA/Prosody API、benchmark harness、external corpus gate、performance test を実装
 - **スペイン語G2P対応** — ルールベースIPA変換、音節分割、ストレス付与、Castilian/Latin American 切り替え、異音処理オプション、略語/数値/通貨/割合の正規化、例外辞書、全量コーパス評価ツールを実装。桁区切り/小数点の解釈分離と不正な日付/時刻の安全なフォールバックにも対応。PUA/Prosody API
 - **フランス語G2P対応** — ルールベース6フェーズG2P変換（ダイグラフ→文脈依存→鼻母音化→半母音化→位置の法則→黙字）、音素ベース音節分割、Metropolitan/Conservative方言切り替え、異音処理（R無声化・阻害音有声性同化）、例外辞書500+エントリ（外来語/不規則語/動詞3複/学術語/同綴異音語）、テキスト正規化（数値/日付/時刻/通貨/単位/略語/記号）、IPA/X-SAMPA出力、全量コーパス評価ツール、PUA/Prosody API を実装
@@ -238,6 +239,18 @@ string[] zhPua = zhEngine.ToPuaPhonemes("你好世界");
 
 // Prosody 情報
 var zhResult = zhEngine.ToIpaWithProsody("你好世界");
+
+// Misaki 互換 IPA（Kokoro TTS向け）
+string misakiIpa = zhEngine.ToMisakiIPA("你好");
+// => "ni↗ xau↓"（三声連読適用: 你3+好3 → 你2+好3）
+// 声調記号: → (1声), ↗ (2声), ↓ (3声), ↘ (4声)
+
+// 声調なし Misaki 互換 IPA
+string misakiNoTone = zhEngine.ToMisakiIPA("你好", includeTones: false);
+// => "ni xau"
+
+// バッチ変換
+var misakiBatch = zhEngine.ToMisakiIPABatch(new[] { "你好", "世界" });
 
 // === 英語G2P ===
 using DotNetG2P.English;
@@ -510,6 +523,10 @@ using var multiUnityEngine = new MultilingualG2PEngine(japaneseDicPath, unityOpt
 | `ToPuaStringBatch(texts)` | `IReadOnlyList<string>` | バッチ PUA 文字列変換 |
 | `ToIpaWithProsodyBatch(texts)` | `IReadOnlyList<ChineseProsodyResult>` | バッチ IPA+Prosody 変換 |
 | `ToIpaWithProsodyBatch(texts, includeTones)` | `IReadOnlyList<ChineseProsodyResult>` | バッチ IPA+Prosody 変換（声調制御） |
+| `ToMisakiIPA(text)` | `string` | Misaki互換IPA文字列（矢印声調記号付き） |
+| `ToMisakiIPA(text, includeTones)` | `string` | 声調制御付きMisaki互換IPA |
+| `ToMisakiIPABatch(texts)` | `IReadOnlyList<string>` | バッチMisaki互換IPA変換 |
+| `ToMisakiIPABatch(texts, includeTones)` | `IReadOnlyList<string>` | バッチMisaki互換IPA変換（声調制御） |
 
 ### KoreanG2PEngine
 

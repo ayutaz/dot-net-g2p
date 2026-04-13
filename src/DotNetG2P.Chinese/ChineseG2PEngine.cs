@@ -291,6 +291,41 @@ namespace DotNetG2P.Chinese
         }
 
         // =====================================================================
+        // Misaki 互換 IPA 出力
+        // =====================================================================
+
+        /// <summary>
+        /// テキストを Misaki (Kokoro TTS) 互換 IPA 文字列に変換する（声調マーカー付き）。
+        /// </summary>
+        /// <remarks>
+        /// <para>声調変調（三声連読、一/不の変調）は <see cref="ChineseG2POptions.EnableToneSandhi"/> に従います。</para>
+        /// <para>Misaki Python 実装 (legacy) は声調変調を適用しませんが、本メソッドはデフォルトで適用します。
+        /// Misaki legacy と完全一致させるには <c>EnableToneSandhi = false</c> でエンジンを初期化してください。</para>
+        /// </remarks>
+        /// <param name="text">入力テキスト</param>
+        /// <returns>Misaki 互換 IPA 文字列</returns>
+        public string ToMisakiIPA(string text)
+        {
+            return ToMisakiIPA(text, true);
+        }
+
+        /// <summary>
+        /// テキストを Misaki (Kokoro TTS) 互換 IPA 文字列に変換する。
+        /// </summary>
+        /// <remarks>
+        /// <para>声調変調（三声連読、一/不の変調）は <see cref="ChineseG2POptions.EnableToneSandhi"/> に従います。</para>
+        /// <para>Misaki Python 実装 (legacy) は声調変調を適用しませんが、本メソッドはデフォルトで適用します。
+        /// Misaki legacy と完全一致させるには <c>EnableToneSandhi = false</c> でエンジンを初期化してください。</para>
+        /// </remarks>
+        /// <param name="text">入力テキスト</param>
+        /// <param name="includeTones">声調マーカーを含めるかどうか</param>
+        /// <returns>Misaki 互換 IPA 文字列</returns>
+        public string ToMisakiIPA(string text, bool includeTones)
+        {
+            return RunPipeline(text, p => PinyinToMisaki.Convert(p, includeTones));
+        }
+
+        // =====================================================================
         // PUA 出力
         // =====================================================================
 
@@ -556,6 +591,33 @@ namespace DotNetG2P.Chinese
         {
             ThrowIfDisposed();
             return BatchConversionHelper.ConvertToList(texts, ToPiperIPA);
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で Misaki 互換 IPA に変換する（声調マーカー付き）。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <returns>各テキストに対応する Misaki 互換 IPA 文字列のリスト</returns>
+        public IReadOnlyList<string> ToMisakiIPABatch(string[] texts)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToList(texts, ToMisakiIPA);
+        }
+
+        /// <summary>
+        /// 複数テキストを一括で Misaki 互換 IPA に変換する。
+        /// </summary>
+        /// <param name="texts">入力テキストの配列</param>
+        /// <param name="includeTones">声調マーカーを含めるかどうか</param>
+        /// <returns>各テキストに対応する Misaki 互換 IPA 文字列のリスト</returns>
+        public IReadOnlyList<string> ToMisakiIPABatch(string[] texts, bool includeTones)
+        {
+            ThrowIfDisposed();
+            return BatchConversionHelper.ConvertToList(
+                texts,
+                this,
+                includeTones,
+                ConvertMisakiIPABatchItem);
         }
 
         /// <summary>
@@ -894,6 +956,11 @@ namespace DotNetG2P.Chinese
         private static ChineseProsodyResult ConvertIpaWithProsodyBatchItem(ChineseG2PEngine engine, string text, bool includeTones)
         {
             return engine.ToIpaWithProsody(text, includeTones);
+        }
+
+        private static string ConvertMisakiIPABatchItem(ChineseG2PEngine engine, string text, bool includeTones)
+        {
+            return engine.ToMisakiIPA(text, includeTones);
         }
 
         /// <summary>

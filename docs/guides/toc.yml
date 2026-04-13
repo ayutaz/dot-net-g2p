@@ -1,1 +1,4 @@
-[]
+- name: Misaki互換 中国語G2P出力モード
+  href: misaki-compatible-chinese.md
+- name: Misaki互換 マイルストーン計画
+  href: misaki-milestones.md
