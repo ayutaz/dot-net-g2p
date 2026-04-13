@@ -8,13 +8,13 @@ DotNetG2P.Chinese に Misaki 互換出力モードを追加する。全3マイ�
 
 ## チケット一覧
 
-詳細は [../tickets/README.md](../tickets/README.md) を参照。
+詳細は `docs/tickets/README.md` を参照。
 
 | マイルストーン | チケット |
 |-------------|---------|
-| Mi1 | [T01 マッピングテーブル](../tickets/T01-misaki-mapping-tables.md), [T02 Convert統合](../tickets/T02-misaki-convert-method.md) |
-| Mi2 | [T03 API追加](../tickets/T03-engine-api-integration.md), [T04 テスト実装](../tickets/T04-misaki-tests.md) |
-| Mi3 | [T05 ドキュメント・QA](../tickets/T05-documentation-qa.md), [T06 リリース準備](../tickets/T06-release-followup.md) |
+| Mi1 | T01 マッピングテーブル, T02 Convert統合 |
+| Mi2 | T03 API追加, T04 テスト実装 |
+| Mi3 | T05 ドキュメント・QA, T06 リリース準備 |
 
 ---
 
