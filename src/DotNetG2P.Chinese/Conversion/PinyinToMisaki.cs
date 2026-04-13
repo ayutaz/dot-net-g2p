@@ -236,6 +236,13 @@ namespace DotNetG2P.Chinese
                 ? s_toneArrows[(int)syllable.Tone]
                 : string.Empty;
 
+            // ステップ 2 の前に: Y/W の未定義組み合わせを早期リターン
+            if ((syllable.Initial == Initial.Y || syllable.Initial == Initial.W)
+                && !s_yWCompoundMisaki.ContainsKey((syllable.Initial, syllable.Final)))
+            {
+                return string.Empty;
+            }
+
             // ステップ 2: 特別ケース判定
 
             // a. Initial.None + Final.O → 単独感嘆詞 "ɔ" (NOT wo)
@@ -273,11 +280,6 @@ namespace DotNetG2P.Chinese
                 prefix = compound.Prefix;
                 suffix = compound.Suffix;
                 omitInitial = compound.OmitInitial;
-            }
-            else if (syllable.Initial == Initial.Y || syllable.Initial == Initial.W)
-            {
-                // Y/W が compound テーブルにない組み合わせ ("yei" 等) は無効
-                return string.Empty;
             }
             else
             {

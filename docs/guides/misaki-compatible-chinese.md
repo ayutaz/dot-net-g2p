@@ -14,9 +14,9 @@ DotNetG2P.ChineseにMisaki互換出力モードを追加することで、C#/Uni
 
 | 項目 | Misaki (Legacy) | DotNetG2P 現行 |
 |------|----------------|----------------|
-| 出力例 | `ni↓xau↓` | `ni˧˥ xaʊ˨˩˦` |
+| 出力例 | `ni↓ xau↓` | `ni˧˥ xaʊ˨˩˦` |
 | 声調記号 | 矢印 (`→` `↗` `↓` `↘`) | IPA tone letters (`˥˥` `˧˥` `˨˩˦` `˥˩`) |
-| 音節区切り | スペース (語間) | スペース (音節間) |
+| 音節区切り | スペース (音節間) | スペース (音節間) |
 | 声母 j/q | `ʨ` / `ʨʰ` | `tɕ` / `tɕʰ` |
 | 二重母音 | `ai` `au` `ei` `ou` (非音節化符号は出力に含まれない) | `aɪ` `aʊ` `eɪ` `oʊ` (別字母) |
 | zh/ch/sh+i | `ɻ̩` / `ʐ̩` | `ɻ̩` |
@@ -187,7 +187,7 @@ public IReadOnlyList<string> ToMisakiIPABatch(string[] texts, bool includeTones)
 3. **韻母マッピング**: 二重母音の非音節化符号が正しいこと
 4. **声調変調**: ToneSandhi の結果が Misaki 出力にも反映されること
 5. **エッジケース**: 軽声、er化、句読点、空文字列等
-6. **Misaki 出力例との比較**: issue #56 の `ni↓xau↓` 等
+6. **Misaki 出力例との比較**: issue #56 の `ni↓ xau↓` 等
 
 ## 備考
 

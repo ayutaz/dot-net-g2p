@@ -831,6 +831,32 @@ namespace DotNetG2P.Tests.ChineseG2P
         }
 
         // =====================================================================
+        // 10b. Separator オプション
+        // =====================================================================
+
+        [Fact]
+        public void ToMisakiIPA_Separator空文字_スペースなしで連結()
+        {
+            var options = new ChineseG2POptions(separator: "");
+            using var engine = new ChineseG2PEngine(options);
+            var result = engine.ToMisakiIPA("\u4F60\u597D"); // 你好
+            Assert.DoesNotContain(" ", result);
+            // デフォルトのスペース区切り結果からスペースを除去した値と一致
+            var defaultResult = _engine.ToMisakiIPA("\u4F60\u597D");
+            Assert.Equal(defaultResult.Replace(" ", ""), result);
+        }
+
+        [Fact]
+        public void ToMisakiIPA_Separatorハイフン_区切り文字が変更される()
+        {
+            var options = new ChineseG2POptions(separator: "-");
+            using var engine = new ChineseG2PEngine(options);
+            var result = engine.ToMisakiIPA("\u4F60\u597D"); // 你好
+            Assert.Contains("-", result);
+            Assert.DoesNotContain(" ", result);
+        }
+
+        // =====================================================================
         // 11. 標準 IPA / piper-plus との比較
         // =====================================================================
 
