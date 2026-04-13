@@ -14,11 +14,11 @@ DotNetG2P.ChineseにMisaki互換出力モードを追加することで、C#/Uni
 
 | 項目 | Misaki (Legacy) | DotNetG2P 現行 |
 |------|----------------|----------------|
-| 出力例 | `ni↓xau̯↓` | `ni˧˥ xaʊ˨˩˦` |
+| 出力例 | `ni↓xau↓` | `ni˧˥ xaʊ˨˩˦` |
 | 声調記号 | 矢印 (`→` `↗` `↓` `↘`) | IPA tone letters (`˥˥` `˧˥` `˨˩˦` `˥˩`) |
 | 音節区切り | スペース (語間) | スペース (音節間) |
 | 声母 j/q | `ʨ` / `ʨʰ` | `tɕ` / `tɕʰ` |
-| 二重母音 | `ai̯` `au̯` `ei̯` `ou̯` (非音節化符号) | `aɪ` `aʊ` `eɪ` `oʊ` (別字母) |
+| 二重母音 | `ai` `au` `ei` `ou` (非音節化符号は出力に含まれない) | `aɪ` `aʊ` `eɪ` `oʊ` (別字母) |
 | zh/ch/sh+i | `ɻ̩` / `ʐ̩` | `ɻ̩` |
 | z/c/s+i | `ɹ̩` / `z̩` | `ɹ̩` |
 
@@ -44,13 +44,13 @@ DotNetG2P.ChineseにMisaki互換出力モードを追加することで、C#/Uni
 
 | 韻母 | DotNetG2P | Misaki |
 |------|-----------|--------|
-| ai | `aɪ` (U+026A) | `ai̯` (i + U+032F) |
-| ei | `eɪ` | `ei̯` |
-| ao | `aʊ` (U+028A) | `au̯` (u + U+032F) |
-| ou | `oʊ` | `ou̯` |
-| uai | `uaɪ` | `uai̯` |
-| ui | `ueɪ` | `uei̯` |
-| iu | `ioʊ` | `iou̯` |
+| ai | `aɪ` (U+026A) | `ai` (非音節化符号は出力に含まれない) |
+| ei | `eɪ` | `ei` |
+| ao | `aʊ` (U+028A) | `au` |
+| ou | `oʊ` | `ou` |
+| uai | `uaɪ` | `uai` |
+| ui | `ueɪ` | `uei` |
+| iu | `ioʊ` | `iou` |
 
 ## 実装方式
 
@@ -140,15 +140,15 @@ private static readonly Dictionary<Initial, string> s_initialIpa = new()
 ### 韻母マッピング (二重母音の差異)
 
 ```csharp
-// 主な差異: ɪ→i̯, ʊ→u̯ (非音節化符号 U+032F 付き)
-[Final.Ai]  = "ai\u032F",    // aɪ → ai̯
-[Final.Ei]  = "ei\u032F",    // eɪ → ei̯
-[Final.Ao]  = "au\u032F",    // aʊ → au̯
-[Final.Ou]  = "ou\u032F",    // oʊ → ou̯
-[Final.Iao] = "iau\u032F",   // iaʊ → iau̯
-[Final.Iu]  = "iou\u032F",   // ioʊ → iou̯
-[Final.Uai] = "uai\u032F",   // uaɪ → uai̯
-[Final.Ui]  = "uei\u032F",   // ueɪ → uei̯
+// 主な差異: ɪ→i, ʊ→u (非音節化符号 U+032F は出力に含まれない)
+[Final.Ai]  = "ai",     // aɪ → ai
+[Final.Ei]  = "ei",     // eɪ → ei
+[Final.Ao]  = "au",     // aʊ → au
+[Final.Ou]  = "ou",     // oʊ → ou
+[Final.Iao] = "iau",    // iaʊ → iau
+[Final.Iu]  = "iou",    // ioʊ → iou
+[Final.Uai] = "uai",    // uaɪ → uai
+[Final.Ui]  = "uei",    // ueɪ → uei
 ```
 
 ### 声調マッピング
@@ -174,8 +174,8 @@ public string ToMisakiIPA(string text)
 public string ToMisakiIPA(string text, bool includeTones)
 
 // バッチ出力
-public string[] ToMisakiIPABatch(string[] texts)
-public string[] ToMisakiIPABatch(string[] texts, bool includeTones)
+public IReadOnlyList<string> ToMisakiIPABatch(string[] texts)
+public IReadOnlyList<string> ToMisakiIPABatch(string[] texts, bool includeTones)
 ```
 
 ## テスト方針
@@ -187,15 +187,15 @@ public string[] ToMisakiIPABatch(string[] texts, bool includeTones)
 3. **韻母マッピング**: 二重母音の非音節化符号が正しいこと
 4. **声調変調**: ToneSandhi の結果が Misaki 出力にも反映されること
 5. **エッジケース**: 軽声、er化、句読点、空文字列等
-6. **Misaki 出力例との比較**: issue #56 の `ni↓xau̯↓` 等
+6. **Misaki 出力例との比較**: issue #56 の `ni↓xau↓` 等
 
 ## 備考
 
 - Misaki には Legacy パス (IPA+矢印) と v1.1 パス (注音符号) の2つが存在するが、Kokoro-82M で使用されるのは Legacy パスのみ。本対応は Legacy パスを対象とする
-- Misaki が `ꭧ` (U+AB67) を zh/ch の子音IPAに使用する件は、Kokoro vocab に含まれない可能性があるため初期対応では見送り、必要に応じて追加する
+- Misaki が `ꭧ` (U+AB67) を zh/ch の子音IPAに使用する件は、現行実装で ꭧ (U+AB67) / ꭧʰ を使用している
 - Multilingual 層への統合は将来の追加作業とする
 
 ### Phase 1-R 実装知見
 
 - Misaki legacy は 3-3 tone sandhi (三声連読変調) を適用しない。DotNetG2P では `EnableToneSandhi` オプションで制御可能。Misaki legacy と完全一致させるには `EnableToneSandhi = false` でエンジンを初期化する
-- U+032F (COMBINING INVERTED BREVE BELOW, 非音節化符号) は Misaki テンプレート側で事前除去されるため、実際の出力には含まれない。DotNetG2P の `ToMisakiIPA()` はマッピングテーブルに U+032F を含むが、Kokoro TTS に渡す前にテンプレート処理で除去される想定
+- U+032F (COMBINING INVERTED BREVE BELOW, 非音節化符号) は Misaki テンプレート側で事前除去されるため、`ToMisakiIPA()` の出力には含まれない

@@ -41,7 +41,7 @@ zhEngine.ToPinyin("你好世界");  // => "ní hǎo shì jiè"
 
 ```csharp
 // 中国語G2P（Misaki互換IPA — Kokoro TTS向け）
-zhEngine.ToMisakiIPA("你好世界");  // => "ni↗xau̯↓ʂʐ̩↘ʨiɛ↘"
+zhEngine.ToMisakiIPA("你好世界");  // Misaki互換IPA文字列（矢印声調記号付き、スペース区切り）
 ```
 
 #### 2.1.2 特徴セクション（L78付近）の中国語G2P説明への追記
@@ -73,7 +73,7 @@ string misakiNoTone = zhEngine.ToMisakiIPA("你好", includeTones: false);
 // => "nixau̯"
 
 // バッチ変換
-string[] misakiBatch = zhEngine.ToMisakiIPABatch(new[] { "你好", "世界" });
+IReadOnlyList<string> misakiBatch = zhEngine.ToMisakiIPABatch(new[] { "你好", "世界" });
 ```
 
 #### 2.1.4 API リファレンステーブル（L481-512付近、ChineseG2PEngine セクション）への追記
@@ -83,8 +83,8 @@ string[] misakiBatch = zhEngine.ToMisakiIPABatch(new[] { "你好", "世界" });
 ```
 | `ToMisakiIPA(text)` | `string` | Misaki互換IPA文字列（矢印声調記号付き） |
 | `ToMisakiIPA(text, includeTones)` | `string` | 声調制御付きMisaki互換IPA |
-| `ToMisakiIPABatch(texts)` | `string[]` | バッチMisaki互換IPA変換 |
-| `ToMisakiIPABatch(texts, includeTones)` | `string[]` | バッチMisaki互換IPA変換（声調制御） |
+| `ToMisakiIPABatch(texts)` | `IReadOnlyList<string>` | バッチMisaki互換IPA変換 |
+| `ToMisakiIPABatch(texts, includeTones)` | `IReadOnlyList<string>` | バッチMisaki互換IPA変換（声調制御） |
 ```
 
 ### 2.2 CLAUDE.md の更新

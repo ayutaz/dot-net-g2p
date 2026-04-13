@@ -36,8 +36,8 @@ DotNetG2P.Chinese に Misaki 互換出力モードを追加する。全3マイ�
   - `z/c` → `ʦ/ʦʰ` (DotNetG2Pの `ts/tsʰ` から変更)
   - 他は標準IPA と同一
 - [x] 韻母マッピングテーブル `s_finalIpa` (32エントリ)
-  - 二重母音: `ɪ` → `i̯` (i + U+032F)、`ʊ` → `u̯` (u + U+032F)
-  - 例: `aɪ` → `ai̯`、`aʊ` → `au̯`、`eɪ` → `ei̯`、`oʊ` → `ou̯`
+  - 二重母音: `ɪ` → `i`、`ʊ` → `u` (非音節化符号 U+032F は出力に含まれない)
+  - 例: `aɪ` → `ai`、`aʊ` → `au`、`eɪ` → `ei`、`oʊ` → `ou`
 - [x] 声調マッピング `s_toneArrows` (5エントリ)
   - 1声 → `→`、2声 → `↗`、3声 → `↓`、4声 → `↘`、軽声 → 空
 - [x] `Convert(string pinyin)` / `Convert(string pinyin, bool includeTones)` メソッド
@@ -49,9 +49,9 @@ DotNetG2P.Chinese に Misaki 互換出力モードを追加する。全3マイ�
 ### 完了条件
 
 - `PinyinToMisaki.Convert("mā")` → `"ma→"` が返ること
-- `PinyinToMisaki.Convert("hǎo")` → `"xau̯↓"` が返ること
+- `PinyinToMisaki.Convert("hǎo")` → `"xau↓"` が返ること
 - `PinyinToMisaki.Convert("jī")` → `"ʨi→"` が返ること (声母差異)
-- `PinyinToMisaki.Convert("māi")` → `"mai̯→"` が返ること (韻母差異)
+- `PinyinToMisaki.Convert("māi")` → `"mai→"` が返ること (韻母差異)
 - ビルドが通ること (`dotnet build`)
 
 ---
@@ -69,10 +69,10 @@ DotNetG2P.Chinese に Misaki 互換出力モードを追加する。全3マイ�
 
 ### 実装内容 — API
 
-- [x] `ToMisakiIpa(string text)` — Misaki互換IPA文字列を返す
-- [x] `ToMisakiIpa(string text, bool includeTones)` — 声調有無指定オーバーロード
-- [x] `ToMisakiIpaBatch(string[] texts)` — バッチ変換
-- [x] `ToMisakiIpaBatch(string[] texts, bool includeTones)` — バッチ変換 (声調有無指定)
+- [x] `ToMisakiIPA(string text)` — Misaki互換IPA文字列を返す
+- [x] `ToMisakiIPA(string text, bool includeTones)` — 声調有無指定オーバーロード
+- [x] `ToMisakiIPABatch(string[] texts)` — バッチ変換
+- [x] `ToMisakiIPABatch(string[] texts, bool includeTones)` — バッチ変換 (声調有無指定)
 - [x] 内部実装: `RunPipeline(text, p => PinyinToMisaki.Convert(p, includeTones))` パターン
 
 ### 実装内容 — テスト
@@ -82,9 +82,9 @@ DotNetG2P.Chinese に Misaki 互換出力モードを追加する。全3マイ�
 - [x] **声母テスト**: Misaki固有の声母マッピング
   - `j/q` → `ʨ/ʨʰ`、`z/c` → `ʦ/ʦʰ`
 - [x] **韻母テスト**: 二重母音の非音節化符号
-  - `ai/ei/ao/ou` → `ai̯/ei̯/au̯/ou̯`
+  - `ai/ei/ao/ou` → `ai/ei/au/ou`
 - [x] **声調変調テスト**: ToneSandhi結果がMisaki出力にも反映
-  - 三声連読: `你好` → 3+3 → 2+3 → `ni↗xau̯↓`
+  - 三声連読: `你好` → 3+3 → 2+3 → `ni↗xau↓`
   - 「一」変調: `一个` → `i↘kɤ↘` (一 + 4声 → 2声に変調)
 - [x] **エッジケーステスト**
   - 空文字列 → 空文字列
@@ -98,7 +98,7 @@ DotNetG2P.Chinese に Misaki 互換出力モードを追加する。全3マイ�
 
 - `dotnet test` で ChineseMisakiIpaTests 全件パス
 - 既存テスト (936件) に回帰なし
-- `engine.ToMisakiIpa("你好")` が Misaki と同等の出力を返すこと
+- `engine.ToMisakiIPA("你好")` が Misaki と同等の出力を返すこと
 
 ---
 
@@ -119,13 +119,13 @@ DotNetG2P.Chinese に Misaki 互換出力モードを追加する。全3マイ�
 
 - [x] **README.md 更新**
   - 中国語セクションに Misaki 互換出力の使用例を追加
-  - `ToMisakiIpa()` の API 説明
+  - `ToMisakiIPA()` の API 説明
   - Kokoro TTS との連携例
 - [x] **CLAUDE.md 更新**
   - 中国語パッケージの備考に「Misaki互換出力対応」を追記
 - [x] **品質保証**
   - Misaki の Python 実装との出力比較テスト (可能な範囲で)
-  - パフォーマンステスト: `ToMisakiIpa` が `ToIPA` と同等の速度であること
+  - パフォーマンステスト: `ToMisakiIPA` が `ToIPA` と同等の速度であること
 - [x] **Issue #56 へのフォローアップコメント**
   - 実装完了の報告
   - 使用例コード提示
