@@ -274,6 +274,11 @@ namespace DotNetG2P.Chinese
                 suffix = compound.Suffix;
                 omitInitial = compound.OmitInitial;
             }
+            else if (syllable.Initial == Initial.Y || syllable.Initial == Initial.W)
+            {
+                // Y/W が compound テーブルにない組み合わせ ("yei" 等) は無効
+                return string.Empty;
+            }
             else
             {
                 // Standard path: 韻母テンプレートから (Prefix, Suffix) を取得

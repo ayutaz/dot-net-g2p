@@ -640,11 +640,7 @@ namespace DotNetG2P.Tests.ChineseG2P
         public void YWCompound_Y_NoMatchingFinal_ReturnsFalse()
         {
             // Y + Ei のような未定義の組み合わせはテーブルにないので false
-            // (pinyin-data の "yei" は極めて稀で Misaki テーブルにない)
-            var found = PinyinToMisaki.TryGetYWCompound(Initial.Y, Final.Ei, out var _);
-            // 現仕様では Y+Ei は定義外なので false、ただし実装により変わり得るため
-            // ここでは結果を取得できること自体を確認 (出力が bool であるかチェック)
-            Assert.IsType<bool>(found);
+            Assert.False(PinyinToMisaki.TryGetYWCompound(Initial.Y, Final.Ei, out _));
         }
 
         // ============================================================
