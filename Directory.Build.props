@@ -38,6 +38,6 @@
     <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Condition="!Exists('$(MSBuildProjectDirectory)\README.md')" />
     <None Include="$(MSBuildThisFileDirectory)NOTICE" Pack="true" PackagePath="\" />
     <None Include="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="" Condition="Exists('THIRD-PARTY-NOTICES.md')" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.201" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="All" />
   </ItemGroup>
 </Project>
