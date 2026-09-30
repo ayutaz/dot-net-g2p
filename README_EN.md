@@ -134,22 +134,6 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.Swedish` | Apache-2.0 | Swedish G2P engine (rule-based + exception dictionary 500+ words, Central/FinlandSwedish dialects) |
 | `DotNetG2P.Multilingual` | Apache-2.0 | Multilingual G2P engine (mixed Japanese-English-Chinese-Korean-Spanish-French-Portuguese-Swedish text support) |
 
-## Related Documentation
-
-- [CONTRIBUTING.md](CONTRIBUTING.md): contributor setup, build/test workflow, architecture, and PR expectations
-- [CHANGELOG.md](CHANGELOG.md): release history, including unreleased infrastructure and API updates
-- Package-specific READMEs:
-  - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
-  - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
-  - [`DotNetG2P.English`](src/DotNetG2P.English/README.md)
-  - [`DotNetG2P.Chinese`](src/DotNetG2P.Chinese/README.md)
-  - [`DotNetG2P.Korean`](src/DotNetG2P.Korean/README.md)
-  - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
-  - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
-  - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
-  - [`DotNetG2P.Swedish`](src/DotNetG2P.Swedish/README.md)
-  - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
-
 ### Unity (UPM)
 
 Add the following URLs via Unity Package Manager's **Add package from git URL**:
@@ -682,6 +666,17 @@ Regression coverage:
 - `PortugueseDatasetEvaluationTests`: `9` threshold-backed corpus checks
 - `PortugueseAllophoneEvaluationTests`: `7` allophone profile checks
 
+## Swedish Evaluation
+
+Rule-based Swedish G2P with a 500+ word exception dictionary. Supports the Central and FinlandSwedish dialects.
+
+### Dialect Support
+
+| Dialect | Enum value | Description |
+|---------|------------|-------------|
+| Central | `SwedishDialect.Central` (default) | Standard Central Swedish (Stockholm) |
+| FinlandSwedish | `SwedishDialect.FinlandSwedish` | Finland Swedish |
+
 ## Configuration Options
 
 `G2POptions` allows you to toggle each processing stage individually (immutable design).
@@ -701,12 +696,28 @@ using var engine = new G2PEngine(tokenizer, options);
 | `enableUnvoicedVowel` | `true` | Vowel devoicing (6 rules) |
 | `expandLongVowels` | `true` | Expand long vowels as repeated vowels (`false` = use `"-"` symbol) |
 
+## Related Documentation
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): contributor setup, build/test workflow, architecture, and PR expectations
+- [CHANGELOG.md](CHANGELOG.md): release history, including unreleased infrastructure and API updates
+- Package-specific READMEs:
+  - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
+  - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
+  - [`DotNetG2P.English`](src/DotNetG2P.English/README.md)
+  - [`DotNetG2P.Chinese`](src/DotNetG2P.Chinese/README.md)
+  - [`DotNetG2P.Korean`](src/DotNetG2P.Korean/README.md)
+  - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
+  - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
+  - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
+  - [`DotNetG2P.Swedish`](src/DotNetG2P.Swedish/README.md)
+  - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
+
 ## Building
 
 ### Requirements
 
-- `.slnx` contributor workflows require .NET SDK 9.0 or later
-- CI also validates .NET 8 compatibility by building `tests/`, `samples/`, and `tools/` project files directly
+- `.slnx` contributor workflows require .NET SDK 9.0.200 or later (an SDK with `.slnx` support)
+- CI builds `DotNetG2P.slnx` on an Ubuntu / Windows / macOS × .NET 8 / .NET 9 matrix and runs the tests (`net8.0` target)
 
 ### Commands
 
@@ -738,7 +749,7 @@ In multi-threaded environments, create a separate instance for each thread.
 Dictionary data (`DictionaryBundle`) is automatically shared via an internal WeakReference cache,
 so creating multiple instances incurs minimal memory overhead.
 
-`EnglishG2PEngine`, `ChineseG2PEngine`, `KoreanG2PEngine`, `SpanishG2PEngine`, `FrenchG2PEngine`, and `PortugueseG2PEngine` perform stateless conversions,
+`EnglishG2PEngine`, `ChineseG2PEngine`, `KoreanG2PEngine`, `SpanishG2PEngine`, `FrenchG2PEngine`, `PortugueseG2PEngine`, and `SwedishG2PEngine` perform stateless conversions,
 so a single instance can safely be called from multiple threads.
 
 `MultilingualG2PEngine` protects its internal Japanese engine with a `lock`,
@@ -756,7 +767,8 @@ so it can safely be called from multiple threads. However, Japanese text convers
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | Spanish G2P engine |
 | **DotNetG2P.French** | [Apache-2.0](LICENSE) | French G2P engine |
 | **DotNetG2P.Portuguese** | [Apache-2.0](LICENSE) | Portuguese G2P engine |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine (Japanese-English-Chinese-Korean-Spanish-French-Portuguese) |
+| **DotNetG2P.Swedish** | [Apache-2.0](LICENSE) | Swedish G2P engine |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | Multilingual G2P engine (Japanese-English-Chinese-Korean-Spanish-French-Portuguese-Swedish) |
 
 All components are available under the **Apache-2.0 License**.
 For third-party component licenses, see the [NOTICE](NOTICE) file.

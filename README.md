@@ -133,22 +133,6 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.Swedish` | Apache-2.0 | スウェーデン語G2Pエンジン（ルールベース + 例外辞書500+語、Central/FinlandSwedish方言） |
 | `DotNetG2P.Multilingual` | Apache-2.0 | 多言語G2Pエンジン（日英中韓西仏葡瑞混在テキスト対応） |
 
-## 関連ドキュメント
-
-- [CONTRIBUTING.md](CONTRIBUTING.md): 開発環境構築、ビルド、テスト、アーキテクチャ、PR の基本方針
-- [CHANGELOG.md](CHANGELOG.md): 未リリース変更を含む変更履歴
-- パッケージ別 README:
-  - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
-  - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
-  - [`DotNetG2P.English`](src/DotNetG2P.English/README.md)
-  - [`DotNetG2P.Chinese`](src/DotNetG2P.Chinese/README.md)
-  - [`DotNetG2P.Korean`](src/DotNetG2P.Korean/README.md)
-  - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
-  - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
-  - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
-  - [`DotNetG2P.Swedish`](src/DotNetG2P.Swedish/README.md)
-  - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
-
 ### Unity (UPM)
 
 Unity Package Managerの **Add package from git URL** で以下を追加:
@@ -893,12 +877,28 @@ using var engine = new G2PEngine(tokenizer, options);
 | `enableUnvoicedVowel` | `true` | 無声母音化（6ルール） |
 | `expandLongVowels` | `true` | 長音を母音繰り返しで出力（`false`=`"-"`記号を使用） |
 
+## 関連ドキュメント
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): 開発環境構築、ビルド、テスト、アーキテクチャ、PR の基本方針
+- [CHANGELOG.md](CHANGELOG.md): 未リリース変更を含む変更履歴
+- パッケージ別 README:
+  - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
+  - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
+  - [`DotNetG2P.English`](src/DotNetG2P.English/README.md)
+  - [`DotNetG2P.Chinese`](src/DotNetG2P.Chinese/README.md)
+  - [`DotNetG2P.Korean`](src/DotNetG2P.Korean/README.md)
+  - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
+  - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
+  - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
+  - [`DotNetG2P.Swedish`](src/DotNetG2P.Swedish/README.md)
+  - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
+
 ## ビルド
 
 ### 要件
 
-- `DotNetG2P.slnx` を使う場合は .NET SDK 9.0 以上
-- CI では `tests/` `samples/` `tools/` の project file を使って .NET 8 互換性も検証
+- `DotNetG2P.slnx` を使う場合は .NET SDK 9.0.200 以上（`.slnx` 形式に対応した SDK）
+- CI では Ubuntu / Windows / macOS × .NET 8 / .NET 9 のマトリクスで `DotNetG2P.slnx` をビルドし、テスト（`net8.0` ターゲット）を実行
 
 ### コマンド
 
