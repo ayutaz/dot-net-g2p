@@ -130,22 +130,6 @@ dotnet add package DotNetG2P.Multilingual
 | `DotNetG2P.Swedish` | Apache-2.0 | 瑞典语 G2P 引擎（规则驱动 + 例外词典 500+ 词、Central/FinlandSwedish 方言） |
 | `DotNetG2P.Multilingual` | Apache-2.0 | 多语言 G2P 引擎（日英中韩西法葡瑞混合文本支持） |
 
-## 相关文档
-
-- [CONTRIBUTING.md](CONTRIBUTING.md)：贡献环境准备、构建/测试流程、架构概述以及 PR 约定
-- [CHANGELOG.md](CHANGELOG.md)：包含未发布变更在内的版本历史
-- 各包 README：
-  - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
-  - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
-  - [`DotNetG2P.English`](src/DotNetG2P.English/README.md)
-  - [`DotNetG2P.Chinese`](src/DotNetG2P.Chinese/README.md)
-  - [`DotNetG2P.Korean`](src/DotNetG2P.Korean/README.md)
-  - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
-  - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
-  - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
-  - [`DotNetG2P.Swedish`](src/DotNetG2P.Swedish/README.md)
-  - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
-
 ### Unity (UPM)
 
 通过 Unity Package Manager 的 **Add package from git URL** 添加以下地址：
@@ -683,6 +667,17 @@ pwsh -File tools/run_portuguese_full_evaluation.ps1 -EnforceThresholds
 - `PortugueseDatasetEvaluationTests`: `9` 个基于阈值的语料测试
 - `PortugueseAllophoneEvaluationTests`: `7` 个异音配置测试
 
+## 瑞典语评估
+
+基于规则 + 500+ 词例外词典的瑞典语 G2P。支持 Central / FinlandSwedish 方言。
+
+### 方言支持
+
+| 方言 | 枚举值 | 说明 |
+|------|--------|------|
+| Central | `SwedishDialect.Central`（默认） | 斯德哥尔摩标准瑞典语 |
+| FinlandSwedish | `SwedishDialect.FinlandSwedish` | 芬兰瑞典语 |
+
 ## 选项配置
 
 通过 `G2POptions` 可以单独开启或关闭各处理阶段（不可变设计）。
@@ -702,12 +697,28 @@ using var engine = new G2PEngine(tokenizer, options);
 | `enableUnvoicedVowel` | `true` | 元音清化（6 条规则） |
 | `expandLongVowels` | `true` | 以元音重复输出长音（`false` = 使用 `"-"` 符号） |
 
+## 相关文档
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)：贡献环境准备、构建/测试流程、架构概述以及 PR 约定
+- [CHANGELOG.md](CHANGELOG.md)：包含未发布变更在内的版本历史
+- 各包 README：
+  - [`DotNetG2P`](src/DotNetG2P.Core/README.md)
+  - [`DotNetG2P.MeCab`](src/DotNetG2P.MeCab/README.md)
+  - [`DotNetG2P.English`](src/DotNetG2P.English/README.md)
+  - [`DotNetG2P.Chinese`](src/DotNetG2P.Chinese/README.md)
+  - [`DotNetG2P.Korean`](src/DotNetG2P.Korean/README.md)
+  - [`DotNetG2P.Spanish`](src/DotNetG2P.Spanish/README.md)
+  - [`DotNetG2P.French`](src/DotNetG2P.French/README.md)
+  - [`DotNetG2P.Portuguese`](src/DotNetG2P.Portuguese/README.md)
+  - [`DotNetG2P.Swedish`](src/DotNetG2P.Swedish/README.md)
+  - [`DotNetG2P.Multilingual`](src/DotNetG2P.Multilingual/README.md)
+
 ## 构建
 
 ### 环境要求
 
-- 使用根目录 `DotNetG2P.slnx` 的贡献者工作流需要 .NET SDK 9.0 或更高版本
-- CI 也会直接构建 `tests/`、`samples/`、`tools/` 下的项目文件，以验证 .NET 8 兼容性
+- 使用根目录 `DotNetG2P.slnx` 的贡献者工作流需要 .NET SDK 9.0.200 或更高版本（支持 `.slnx` 格式的 SDK）
+- CI 在 Ubuntu / Windows / macOS × .NET 8 / .NET 9 矩阵上构建 `DotNetG2P.slnx` 并运行测试（`net8.0` 目标）
 
 ### 命令
 
@@ -739,7 +750,7 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 字典数据（`DictionaryBundle`）通过内部 WeakReference 缓存自动共享，
 因此创建多个实例的内存开销极小。
 
-`EnglishG2PEngine`、`ChineseG2PEngine`、`KoreanG2PEngine`、`SpanishG2PEngine`、`FrenchG2PEngine`、`PortugueseG2PEngine` 执行无状态转换，
+`EnglishG2PEngine`、`ChineseG2PEngine`、`KoreanG2PEngine`、`SpanishG2PEngine`、`FrenchG2PEngine`、`PortugueseG2PEngine`、`SwedishG2PEngine` 执行无状态转换，
 因此可以从多个线程安全地调用单个实例。
 
 `MultilingualG2PEngine` 通过 `lock` 保护内部的日语引擎，
@@ -757,7 +768,8 @@ dotnet run --project samples/DotNetG2P.Console -- /path/to/naist-jdic
 | **DotNetG2P.Spanish** | [Apache-2.0](LICENSE) | 西班牙语 G2P 引擎 |
 | **DotNetG2P.French** | [Apache-2.0](LICENSE) | 法语 G2P 引擎 |
 | **DotNetG2P.Portuguese** | [Apache-2.0](LICENSE) | 葡萄牙语 G2P 引擎 |
-| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎（日英中韩西法葡对应） |
+| **DotNetG2P.Swedish** | [Apache-2.0](LICENSE) | 瑞典语 G2P 引擎 |
+| **DotNetG2P.Multilingual** | [Apache-2.0](LICENSE) | 多语言 G2P 引擎（日英中韩西法葡瑞对应） |
 
 所有组件均以 **Apache-2.0 许可证** 提供。
 有关第三方组件的许可证信息，请参阅 [NOTICE](NOTICE) 文件。

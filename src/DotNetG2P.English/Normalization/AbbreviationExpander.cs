@@ -64,6 +64,9 @@ namespace DotNetG2P.English.Normalization
             ["dec"] = "December",
         };
 
+        // 辞書内最長キーは6文字（"approx"）
+        private const int MaxKeyLength = 6;
+
         /// <summary>
         /// トークンが既知の略語であれば展開形を返す。未知の場合はnullを返す。
         /// ピリオド付き（"Dr."）/なし（"Dr"）のどちらにも対応する。
@@ -72,9 +75,6 @@ namespace DotNetG2P.English.Normalization
         /// </summary>
         /// <param name="token">入力トークン</param>
         /// <returns>展開形。未知の略語の場合はnull。</returns>
-        // 辞書内最長キーは6文字（"approx"）
-        private const int MaxKeyLength = 6;
-
         public static string? TryExpand(string token)
         {
             if (string.IsNullOrEmpty(token))

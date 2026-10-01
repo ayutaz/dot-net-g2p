@@ -10,7 +10,7 @@ namespace DotNetG2P.MeCab.Dictionary
     /// 同一パスの辞書はWeakReferenceキャッシュにより複数インスタンス間で共有される。
     /// </summary>
     /// <remarks>
-    /// このクラスの <see cref="Load"/> および <see cref="Dispose"/> メソッドはスレッドセーフです。
+    /// このクラスの <see cref="Load(string)"/> および <see cref="Dispose"/> メソッドはスレッドセーフです。
     /// 辞書データ（<see cref="SystemDic"/>, <see cref="Matrix"/> 等）は読み取り専用のため、
     /// 複数の <see cref="MeCabTokenizer"/> インスタンスで安全に共有できます。
     /// </remarks>

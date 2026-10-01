@@ -73,7 +73,7 @@ namespace DotNetG2P.Models
                 {
                     pronunciation = Pronunciation.FromKatakana(pronStr, accentPosition);
                 }
-                catch (ArgumentException ex)
+                catch (ArgumentException)
                 {
                     // 発音フィールドのパース失敗 → Readingフィールドからリトライ
                     string readingStr = token.Reading;

@@ -5,7 +5,7 @@ This repository contains packable libraries, test projects, evaluation tools, an
 
 ## Development Prerequisites
 
-- .NET SDK 9.0 or later for the root `DotNetG2P.slnx` workflow
+- .NET SDK 9.0.200 or later (an SDK with `.slnx` support) for the root `DotNetG2P.slnx` workflow
 - PowerShell 7 for the helper scripts under `tools/`
 - `naist-jdic` when working on Japanese or multilingual flows that route through Japanese tokenization
 
@@ -31,7 +31,7 @@ dotnet test DotNetG2P.slnx --configuration Release --filter "Category!=Performan
 ```
 
 The root solution is `.slnx`, so the full solution workflow requires a .NET SDK with SLNX support.
-The CI matrix also validates the library and test projects with .NET 8 by building project files directly.
+The CI matrix (`.NET 8` / `.NET 9` lanes on Windows, Linux, and macOS) builds `DotNetG2P.slnx` and runs the `net8.0` test project.
 The DocFX configuration reads the Release assemblies under `.build/bin`, so run the Release build before generating docs.
 
 Useful targeted commands:
